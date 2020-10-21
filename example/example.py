@@ -4,8 +4,8 @@ import time
 import pandas as pd
 from oemof.solph import views, processing
 
-from enaq_meta_model import ENaQMetaModel
-from physics import celsius_to_kelvin
+from meta_model.enaq_meta_model import ENaQMetaModel
+from meta_model.physics import celsius_to_kelvin
 
 
 def main():
@@ -70,13 +70,16 @@ def main():
                       'thermal_output': 0.150,  # MW
                       'gas_input': 0.270},  # MW
                  'pv':
-                     {'feed_in_tariff': 75,  # €/MWh
+                     {'nominal_power': 1,
+                      'feed_in_tariff': 75,  # €/MWh
                       'generation': generation['PV']},  # MW (timeseries)
                  'wind_turbine':
-                     {'feed_in_tariff': 75,  # €/MWh
+                     {'nominal_power': 1,
+                      'feed_in_tariff': 75,  # €/MWh
                       'generation': generation['WT']},  # MW (timeseries)
                  'solar_thermal':
-                     {'generation': generation.filter(regex='ST')},  # MW (timeseries)
+                     {'nominal_power': 1,
+                      'generation': generation.filter(regex='ST')},  # MW (timeseries)
                  'power_to_heat':
                      {'thermal_output': 0.05},  # MW
                  'battery':
