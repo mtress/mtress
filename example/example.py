@@ -1,8 +1,10 @@
 import sys
 
+import time
 import pandas as pd
+from oemof.solph import views, processing
 
-from meta_model import MetaModel
+from enaq_meta_model import ENaQMetaModel
 from physics import celsius_to_kelvin
 
 
@@ -20,7 +22,7 @@ def main():
     demand = pd.read_csv('demand.csv',
                          comment='#', index_col=0,
                          sep=',',
-                        parse_dates=True)
+                         parse_dates=True)
 
     generation = pd.read_csv('generation.csv',
                          comment='#', index_col=0,
@@ -80,7 +82,8 @@ def main():
                  'battery':
                      {'power': 50,  # MW
                       'capacity': 250,  # MWh
-                      'efficiency': 0.98,
+                      'efficiency_inflow': 0.98,
+                      'efficiency_outflow': 0.98,
                       'self_discharge': 1E-6},
                  'heat_storage':
                      {'volume': 10,  # m³
@@ -88,8 +91,8 @@ def main():
                       'insulation_thickness': 0.10},  # m
                  'energy_cost':
                      {'electricity':
-                          {'AP': day_ahead['price'] + 17,  # €/MWh
-                           'LP': 15000},  # €/MW
+                         {'AP': day_ahead['price'] + 17,  # €/MWh
+                          'LP': 15000},  # €/MW
                       'natural_gas': 35,  # €/MWh
                       'biomethane': 95,  # €/MWh
                       'wood_pellet': 300,  # €/MWh
@@ -100,7 +103,33 @@ def main():
                       'dhw': demand['dhw']}  # MW (timeseries)
                  }
 
-    meta = MetaModel(**variables)
+    meta_model = ENaQMetaModel(**variables)
+
+    print('Start solving')
+    start = time.time()
+    meta_model.model.solve(solver="cbc",
+                           solve_kwargs={'tee': False},
+                           solver_io='lp',
+                           cmdline_options={'ratio': 0.01})
+    end = time.time()
+    print("Time to solve: " + str(end-start) + " Seconds")
+
+    energy_system = meta_model.energy_system
+    energy_system.results['valid'] = True
+    energy_system.results['main'] = processing.results(
+        meta_model.model)
+    energy_system.results['main'] = views.convert_keys_to_strings(
+        energy_system.results['main'])
+    energy_system.results['meta'] = processing.meta_results(
+        meta_model.model)
+
+    heat_demand = meta_model.thermal_demand()
+
+    print("Heat demand", heat_demand)
+    print("Geothermal coverage", meta_model.heat_geothermal()/heat_demand)
+    print("Solar coverage", meta_model.heat_solar_thermal()/heat_demand)
+    print("CHP coverage", meta_model.heat_chp()/heat_demand)
+    print("Pellet coverage", meta_model.heat_pellet()/heat_demand)
 
 
 if __name__ == '__main__':
