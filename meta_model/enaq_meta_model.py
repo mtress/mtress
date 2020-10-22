@@ -102,9 +102,6 @@ class ENaQMetaModel:
 
         # Time range of the data (in a)
         demand['electricity'].index.freq = pd.infer_freq(demand['electricity'].index)
-        time_range = (demand['electricity'].index[-1] -
-                      demand['electricity'].index[0]) \
-                      / pd.Timedelta('365D')
 
         ############################
         # Create energy system model
