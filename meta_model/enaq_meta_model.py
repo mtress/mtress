@@ -86,14 +86,8 @@ class ENaQMetaModel:
             st = None
 
         # Create relevant temperature list
-        temperature_levels = list()
-        temperature_levels.append(temps['intermediate'])
-        temperature_levels.append([temps['heating']])
-
-        temperature_levels = [item for sublist in temperature_levels for item in sublist]
-
-        # Heating temperature should be the highest one
-        assert temps['heating'] == max(temperature_levels)
+        temperature_levels = temps['intermediate']
+        temperature_levels.append(temps['heating'])
 
         # Temperature might have to be boosted for DHW.
         if temps['dhw'] > max(temperature_levels):
