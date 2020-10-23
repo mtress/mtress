@@ -4,7 +4,7 @@ import pandas as pd
 
 from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          Model, Investment, constraints, custom,
-                         GenericStorage)
+                         GenericStorage, NonConvex)
 from oemof.thermal import stratified_thermal_storage as sts
 
 from .physics import (celsius_to_kelvin, kelvin_to_celsius, HHV_WP,
@@ -97,12 +97,14 @@ class ENaQMetaModel:
             # Ensure that DHW temperature is considered
             temperature_levels.append(temps['dhw'])
 
-        temperature_levels = list(set(temperature_levels))  # Ensure unique temperatures
+        # Ensure unique temperatures
+        temperature_levels = list(set(temperature_levels))
         temperature_levels.sort()
 
         # Time range of the data (in a)
-        demand['electricity'].index.freq = pd.infer_freq(demand['electricity'].index)
-
+        index = demand['electricity'].index
+        index.freq = pd.infer_freq(index)
+        time_range = (index[-1] - index[0] + index.freq)/ pd.Timedelta('365D')
         ############################
         # Create energy system model
         ############################
@@ -119,11 +121,33 @@ class ENaQMetaModel:
         # Create main buses
         b_eldist = Bus(label="b_eldist")  # Local distribution network
         b_elprod = Bus(label="b_elprod",  # local production network
-                       outputs={b_eldist: Flow()})
+                       outputs={b_eldist: Flow(
+                           variable_costs=energy_cost['eeg_levy'])})
+        b_elgrid = Bus(label="b_elgrid")
         b_elxprt = Bus(label="b_elxprt")  # electricity export network
         b_gas = Bus(label="b_gas")
 
-        energy_system.add(b_eldist, b_elprod, b_elxprt, b_gas)
+        energy_system.add(b_eldist, b_elprod, b_elxprt, b_gas, b_elgrid)
+
+        ###################################################################
+        # unidirectional grid connection
+        grid_connection = custom.Link(
+            label="grid_connection",
+            inputs={b_elgrid: Flow(),
+                    b_elxprt: Flow(nonconvex=NonConvex(),
+                                   nominal_value=1,
+                                   exclusive_connection=True)},
+            outputs={b_eldist: Flow(nonconvex=NonConvex(),
+                                    nominal_value=1,
+                                    exclusive_connection=True),
+                     b_elgrid: Flow()},
+            conversion_factors={(b_elxprt, b_elgrid): 1,
+                                (b_elgrid, b_eldist): 1}
+        )
+
+        energy_system.add(grid_connection)
+
+
         ###################################################################
         # Solar Thermal
         b_st = Bus(label="b_st", )
@@ -359,34 +383,24 @@ class ENaQMetaModel:
 
         ###########################################################################
 
-        b_grid = Bus(label="b_grid")
-        b_pregrid = Bus(label="b_pregrid",
-                        inputs={b_elxprt: Flow()},
-                        outputs={b_eldist: Flow()})
-
         # create external markets
         # RLM customer for district and larger buildings
         m_el_in = Source(label='m_el_in',
-                         outputs={b_grid: Flow(
+                         outputs={b_elgrid: Flow(
                              variable_costs=energy_cost['electricity']['AP'],
                              investment=Investment(
-                                 ep_costs=energy_cost['electricity']['LP']))})
+                                 ep_costs=energy_cost['electricity']['LP']
+                                          * time_range))})
 
-        m_el_out = Sink(label='m_el_out', inputs={b_grid: Flow()})
-
-        grid_connection = custom.Link(
-            label="grid_connection",
-            inputs={b_grid: Flow(), b_pregrid: Flow()},
-            outputs={b_grid: Flow(), b_pregrid: Flow()},
-            conversion_factors={(b_pregrid, b_grid): 1,
-                                (b_grid, b_pregrid): 1})
+        m_el_out = Sink(label='m_el_out', inputs={b_elgrid: Flow(
+            variable_costs=-energy_cost['electricity']['market']
+        )})
 
         m_gas = Source(label='m_gas',
                        outputs={b_gas: Flow(
                            variable_costs=energy_cost['natural_gas'])})
 
-        energy_system.add(m_el_in, m_el_out, m_gas,
-                          b_grid, b_pregrid, grid_connection)
+        energy_system.add(m_el_in, m_el_out, m_gas)
 
         # create local energy demand
         d_el = Sink(label='d_el',
@@ -474,19 +488,17 @@ class ENaQMetaModel:
                                    + chp['biomethane_fraction']
                                    * energy_cost['biomethane'])})
 
-            b_el_chp_fund = Bus(label="b_el_chp_fund",
-                                outputs={b_elxprt:
-                                             Flow(variable_costs=
-                                                  -chp['feed_in_tariff_funded']),
-                                         b_elprod:
-                                             Flow(variable_costs=
-                                                  -chp['own_consumption_tariff_funded'])})
+            b_el_chp_fund = Bus(
+                label="b_el_chp_fund",
+                outputs={
+                    b_elxprt: Flow(
+                        variable_costs=-chp['feed_in_tariff_funded']),
+                    b_elprod: Flow(
+                        variable_costs=-chp['own_consumption_tariff_funded'])})
 
             b_el_chp_unfund = Bus(label="b_el_chp_unfund",
-                                  outputs={b_elxprt: Flow(variable_costs=
-                                                          -chp['feed_in_tariff_unfunded']),
-                                           b_elprod: Flow(variable_costs=
-                                                          energy_cost['eeg_levy'])})
+                                  outputs={b_elxprt: Flow(),
+                                           b_elprod: Flow()})
 
             b_el_chp = Bus(label="b_el_chp",
                            outputs={b_el_chp_fund: Flow(summed_max=chp['funding_hours_per_year'],
@@ -501,9 +513,9 @@ class ENaQMetaModel:
                                     b_th_in[temperature_levels[-1]]:
                                         Flow(nominal_value=chp['thermal_output'])},
                                 conversion_factors={
-                                    b_el_chp: chp['electric_output'] / chp['gas_input'],
+                                    b_el_chp: chp['electric_efficiency'],
                                     b_th_in[temperature_levels[-1]]:
-                                        chp['thermal_output'] / chp['gas_input']})
+                                        chp['thermal_efficiency']})
 
             self.chp_flows.append((t_chp.label,
                                    b_th_in[temperature_levels[-1]].label))
@@ -515,7 +527,7 @@ class ENaQMetaModel:
             b_el_pv = Bus(label="b_el_pv",
                           outputs={
                               b_elxprt: Flow(variable_costs=-pv['feed_in_tariff']),
-                              b_elprod: Flow(variable_costs=energy_cost['eeg_levy'])})
+                              b_elprod: Flow()})
 
             t_pv = Source(label='t_pv',
                           outputs={b_el_pv: Flow(nominal_value=1.0, max=pv['generation'])})
@@ -564,6 +576,11 @@ class ENaQMetaModel:
             energy_system.add(s_battery)
 
         model = Model(energy_system)
+
+        constraints.limit_active_flow_count_by_keyword(model,
+                                                       "exclusive_connection",
+                                                       lower_limit=0,
+                                                       upper_limit=1)
 
         if hs:
             # Heat Storage Constraints
