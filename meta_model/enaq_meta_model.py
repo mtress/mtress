@@ -398,7 +398,7 @@ class ENaQMetaModel:
 
         m_gas = Source(label='m_gas',
                        outputs={b_gas: Flow(
-                           variable_costs=energy_cost['natural_gas'])})
+                           variable_costs=energy_cost['fossil_gas'])})
 
         energy_system.add(m_el_in, m_el_out, m_gas)
 
@@ -427,7 +427,7 @@ class ENaQMetaModel:
                                  outputs={b_th[temps['dhw']]: Flow()},
                                  conversion_factors={
                                      b_eldist: 1 - heater_ratio,
-                                     b_th[temp_low]: heater_ratio,
+                                     b_th[temp_max]: heater_ratio,
                                      b_th[temps['dhw']]: 1})
             energy_system.add(b_th[temps['dhw']], heater)
 
@@ -484,7 +484,7 @@ class ENaQMetaModel:
                                outputs={b_gas_chp: Flow(
                                    variable_costs=
                                    (1 - chp['biomethane_fraction'])
-                                   * energy_cost['natural_gas']
+                                   * energy_cost['fossil_gas']
                                    + chp['biomethane_fraction']
                                    * energy_cost['biomethane'])})
 
