@@ -81,7 +81,7 @@ class ENaQMetaModel:
             del hs
             hs = None
         st = kwargs.get('solar_thermal')
-        if st and st["nominal_power"] <= 0:
+        if st and st["st_area"] <= 0:
             del st
             st = None
 
