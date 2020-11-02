@@ -551,7 +551,7 @@ class ENaQMetaModel:
             b_el_wt = Bus(label="b_el_wt",
                           outputs={
                               b_elxprt: Flow(variable_costs=-wt['feed_in_tariff']),
-                              b_elprod: Flow(variable_costs=energy_cost['eeg_levy'])})
+                              b_elprod: Flow()})
 
             t_wt = Source(label='t_wt',
                           outputs={b_el_wt: Flow(nominal_value=1.0, max=wt['generation'])})
