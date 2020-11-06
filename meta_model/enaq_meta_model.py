@@ -134,12 +134,8 @@ class ENaQMetaModel:
         grid_connection = custom.Link(
             label="grid_connection",
             inputs={b_elgrid: Flow(),
-                    b_elxprt: Flow(nonconvex=NonConvex(),
-                                   nominal_value=1,
-                                   exclusive_connection=True)},
-            outputs={b_eldist: Flow(nonconvex=NonConvex(),
-                                    nominal_value=1,
-                                    exclusive_connection=True),
+                    b_elxprt: Flow()},
+            outputs={b_eldist: Flow(),
                      b_elgrid: Flow()},
             conversion_factors={(b_elxprt, b_elgrid): 1,
                                 (b_elgrid, b_eldist): 1}
@@ -576,11 +572,6 @@ class ENaQMetaModel:
             energy_system.add(s_battery)
 
         model = Model(energy_system)
-
-        constraints.limit_active_flow_count_by_keyword(model,
-                                                       "exclusive_connection",
-                                                       lower_limit=0,
-                                                       upper_limit=1)
 
         if hs:
             # Heat Storage Constraints
