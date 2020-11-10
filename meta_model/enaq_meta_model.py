@@ -27,6 +27,7 @@ class ENaQMetaModel:
         temps = kwargs.get('temperatures')
         energy_cost = kwargs.get('energy_cost')
         demand = kwargs.get('demand')
+        co2 = kwargs.get('co2')
 
         bhp = kwargs.get('heat_pump')
         if bhp and bhp["electric_input"] <= 0:
@@ -383,18 +384,18 @@ class ENaQMetaModel:
         # RLM customer for district and larger buildings
         m_el_in = Source(label='m_el_in',
                          outputs={b_elgrid: Flow(
-                             variable_costs=energy_cost['electricity']['AP'],
+                             variable_costs=energy_cost['electricity']['AP'] +
+                                            co2['el_in'] * co2['price'],
                              investment=Investment(
                                  ep_costs=energy_cost['electricity']['LP']
                                           * time_range))})
 
-        m_el_out = Sink(label='m_el_out', inputs={b_elgrid: Flow(
-            variable_costs=-energy_cost['electricity']['market']
-        )})
+        m_el_out = Sink(label='m_el_out',
+                        inputs={b_elgrid: Flow(variable_costs=co2['el_out'] * co2['price'])})
 
+        gas_price = energy_cost['fossil_gas'] + co2['fossil_gas'] * co2['price']
         m_gas = Source(label='m_gas',
-                       outputs={b_gas: Flow(
-                           variable_costs=energy_cost['fossil_gas'])})
+                       outputs={b_gas: Flow(variable_costs=gas_price)})
 
         energy_system.add(m_el_in, m_el_out, m_gas)
 
@@ -456,7 +457,8 @@ class ENaQMetaModel:
             b_pellet = Bus(label="b_pellet")
             m_pellet = Source(label='m_pellet',
                               outputs={b_pellet:
-                                           Flow(variable_costs=energy_cost['wood_pellet'])})
+                                           Flow(variable_costs=energy_cost['wood_pellet']
+                                                               + co2['wood_pellet'] * co2['price'])})
 
             t_pellet = Transformer(label='t_pellet',
                                    inputs={b_pellet: Flow()},
@@ -476,13 +478,14 @@ class ENaQMetaModel:
             # CHP
             b_gas_chp = Bus(label="b_gas_chp")
 
+            biomethane_price = energy_cost['biomethane'] + co2['biomethane'] * co2['price']
             m_gas_chp = Source(label='m_gas_chp',
                                outputs={b_gas_chp: Flow(
                                    variable_costs=
                                    (1 - chp['biomethane_fraction'])
-                                   * energy_cost['fossil_gas']
+                                   * gas_price
                                    + chp['biomethane_fraction']
-                                   * energy_cost['biomethane'])})
+                                   * biomethane_price)})
 
             b_el_chp_fund = Bus(
                 label="b_el_chp_fund",
