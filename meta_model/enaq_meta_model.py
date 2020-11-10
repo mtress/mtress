@@ -319,7 +319,7 @@ class ENaQMetaModel:
                     label=st_level_label,
                     inputs={b_st: Flow(nominal_value=1)},
                     outputs={b_th_in_level: Flow(nominal_value=1)},
-                    conversion_factors={b_st: 1 / st['generation']['ST_' + str(temp)]})
+                    conversion_factors={b_st: (1 / st['generation']['ST_' + str(temp)]).to_list()})
 
                 self.st_input_flows.append((st_level_label, b_th_in_label))
                 energy_system.add(t_st_level)
