@@ -4,7 +4,7 @@ import pandas as pd
 
 from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          Model, Investment, constraints, custom,
-                         GenericStorage, NonConvex)
+                         GenericStorage)
 from oemof.thermal import stratified_thermal_storage as sts
 
 from .physics import (celsius_to_kelvin, kelvin_to_celsius, HHV_WP,
@@ -398,6 +398,12 @@ class ENaQMetaModel:
                        outputs={b_gas: Flow(variable_costs=gas_price)})
 
         energy_system.add(m_el_in, m_el_out, m_gas)
+
+        # create expensive source for missing heat to ensure model is solvable
+        missing_heat = Source(label='missing_heat',
+                              outputs={b_th[temps['heating']]:
+                                  Flow(variable_costs=1000)})
+        energy_system.add(missing_heat)
 
         # create local energy demand
         d_el = Sink(label='d_el',
