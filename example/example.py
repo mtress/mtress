@@ -36,6 +36,7 @@ def main():
                       'dhw': celsius_to_kelvin(60),  # K
                       'heat_drop_exchanger_dhw': 5,  # K
                       'heating': celsius_to_kelvin(40),  # K
+                      'heat_drop_heating': 10,
                       'intermediate': [celsius_to_kelvin(20),  # K
                                        celsius_to_kelvin(30)]},  # K
                  'heat_pump':
@@ -67,7 +68,9 @@ def main():
                       'own_consumption_tariff_funded': day_ahead['price'] + 3.5,  # €/MWh
                       'funding_hours_per_year': 3500,  # h/a
                       'electric_output': 0.100,  # MW
+                      'electric_efficiency': 0.4,
                       'thermal_output': 0.150,  # MW
+                      'thermal_efficiency': 0.5,
                       'gas_input': 0.270},  # MW
                  'pv':
                      {'nominal_power': 1,
@@ -78,7 +81,7 @@ def main():
                       'feed_in_tariff': 75,  # €/MWh
                       'generation': generation['WT']},  # MW (timeseries)
                  'solar_thermal':
-                     {'nominal_power': 1,
+                     {'st_area': 1,
                       'generation': generation.filter(regex='ST')},  # MW (timeseries)
                  'power_to_heat':
                      {'thermal_output': 0.05},  # MW
@@ -96,14 +99,21 @@ def main():
                      {'electricity':
                          {'AP': day_ahead['price'] + 17,  # €/MWh
                           'LP': 15000},  # €/MW
-                      'natural_gas': 35,  # €/MWh
+                      'fossil_gas': 35,  # €/MWh
                       'biomethane': 95,  # €/MWh
                       'wood_pellet': 300,  # €/MWh
                       'eeg_levy': 64.123},  # €/MWh
                  'demand':
                      {'electricity': demand['electricity'],  # MW (timeseries)
                       'heating': demand['heating'],  # MW (timeseries)
-                      'dhw': demand['dhw']}  # MW (timeseries)
+                      'dhw': demand['dhw']},  # MW (timeseries),
+                 'co2':
+                     {'fossil_gas': 0.202,
+                      'biomethane': 0.148,
+                      'wood_pellet': 0.023,
+                      'el_in': 0.401,
+                      'el_out': -0.401,
+                      'price': 0}
                  }
 
     meta_model = ENaQMetaModel(**variables)
@@ -136,4 +146,4 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
