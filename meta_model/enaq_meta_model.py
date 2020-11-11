@@ -89,6 +89,8 @@ class ENaQMetaModel:
         # Create relevant temperature list
         temperature_levels = temps['intermediate']
         temperature_levels.append(temps['heating'])
+        temperature_levels.append(temps['heating']
+                                  - temps['heat_drop_heating'])
 
         # Temperature might have to be boosted for DHW.
         if temps['dhw'] > max(temperature_levels):
@@ -402,7 +404,7 @@ class ENaQMetaModel:
         # create expensive source for missing heat to ensure model is solvable
         missing_heat = Source(label='missing_heat',
                               outputs={b_th[temps['heating']]:
-                                  Flow(variable_costs=1000)})
+                                       Flow(variable_costs=1000)})
         energy_system.add(missing_heat)
 
         # create local energy demand
@@ -410,12 +412,31 @@ class ENaQMetaModel:
                     inputs={b_eldist: Flow(fix=demand['electricity'],
                                            nominal_value=1)})
 
+        b_heating = Bus(label="b_heating")
+
+        heater_ratio = temps['heat_drop_heating'] / (temps['heating']
+                                                     - temps['reference'])
+
+        heating_system = Transformer(
+            label='heating_system',
+            inputs={b_th[temps['heating']]: Flow()},
+            outputs={b_heating: Flow(),
+                     b_th[temps['heating']
+                          - temps['heat_drop_heating']]: Flow()},
+            conversion_factors={
+                b_th[temps['heating']]: 1,
+                b_heating: heater_ratio,
+                b_th[temps['heating']
+                     - temps['heat_drop_heating']]:
+                         1 - heater_ratio})
+
+        energy_system.add(heating_system, b_heating)
+
         d_heat = Sink(label='d_heat',
-                      inputs={b_th[temps['heating']]: Flow(
+                      inputs={b_heating: Flow(
                           nominal_value=1,
                           fix=demand['heating'])})
-        self.th_demand_flows.append((b_th[temps['heating']].label,
-                                     d_heat.label))
+        self.th_demand_flows.append((b_heating.label, d_heat.label))
 
         if boost_dhw:
             b_th[temps['dhw']] = Bus(label="b_th_dhw")
@@ -461,10 +482,11 @@ class ENaQMetaModel:
         if pellet_boiler:
             # wood pellet boiler
             b_pellet = Bus(label="b_pellet")
-            m_pellet = Source(label='m_pellet',
-                              outputs={b_pellet:
-                                           Flow(variable_costs=energy_cost['wood_pellet']
-                                                               + co2['wood_pellet'] * co2['price'])})
+            m_pellet = Source(
+                label='m_pellet',
+                outputs={b_pellet: Flow(
+                    variable_costs=energy_cost['wood_pellet']
+                                   + co2['wood_pellet'] * co2['price'])})
 
             t_pellet = Transformer(label='t_pellet',
                                    inputs={b_pellet: Flow()},
