@@ -43,18 +43,37 @@ def main():
                              comment='#', index_col=0,
                              sep=',',
                              parse_dates=True)
+
+    spec_co2 = pd.read_csv('spec_co2_de.csv',
+                           comment='#', index_col=0,
+                           sep=',',
+                           parse_dates=True)
+
+    data = meteo.join(day_ahead)
+    data = data.join(demand)
+    data = data.join(generation)
+    data = data.join(spec_co2)
+
+    del day_ahead
+    del demand
+    del generation
+    del spec_co2
+
+    data = data.dropna()
+    data = data.resample("1h").mean()
+
     variables = {
         'meteorology': {
             'temp_air': meteo['temp_air'],  # K (timeseries)
             'temp_soil': meteo['temp_soil']},  # K (timeseries)
-            'temperatures': {
-                'reference': celsius_to_kelvin(0),  # K
-                'dhw': celsius_to_kelvin(60),  # K
-                'heat_drop_exchanger_dhw': 5,  # K
-                'heating': celsius_to_kelvin(40),  # K
-                'heat_drop_heating': 10,
-                'intermediate': [celsius_to_kelvin(20),  # K
-                                 celsius_to_kelvin(30)]},  # K
+        'temperatures': {
+            'reference': celsius_to_kelvin(0),  # K
+            'dhw': celsius_to_kelvin(60),  # K
+            'heat_drop_exchanger_dhw': 5,  # K
+            'heating': celsius_to_kelvin(40),  # K
+            'heat_drop_heating': 10,
+            'intermediate': [celsius_to_kelvin(20),  # K
+                             celsius_to_kelvin(30)]},  # K
         'heat_pump': {
             'electric_input': 0.100},  # MW
         'near_surface_heat_source': {
@@ -79,9 +98,9 @@ def main():
             'thermal_output': 0.100},  # MW
         'chp': {
             'biomethane_fraction': 0.2,
-            'feed_in_tariff_funded': day_ahead['price'] + 7.5,  # €/MWh
-            'feed_in_tariff_unfunded': day_ahead['price'],  # €/MWh
-            'own_consumption_tariff_funded': day_ahead['price'] + 3.5,  # €/MWh
+            'feed_in_tariff_funded': data['price'] + 7.5,  # €/MWh
+            'feed_in_tariff_unfunded': data['price'],  # €/MWh
+            'own_consumption_tariff_funded': data['price'] + 3.5,  # €/MWh
             'funding_hours_per_year': 3500,  # h/a
             'electric_output': 0.100,  # MW
             'electric_efficiency': 0.4,
@@ -91,14 +110,14 @@ def main():
         'pv': {
             'nominal_power': 1,
             'feed_in_tariff': 75,  # €/MWh
-            'generation': generation['PV']},  # MW (timeseries)
+            'generation': data['PV']},  # MW (timeseries)
         'wind_turbine': {
             'nominal_power': 1,
             'feed_in_tariff': 75,  # €/MWh
-            'generation': generation['WT']},  # MW (timeseries)
+            'generation': data['WT']},  # MW (timeseries)
         'solar_thermal': {
             'st_area': 1,
-            'generation': generation.filter(regex='ST')},  # MW (timeseries)
+            'generation': data.filter(regex='ST')},  # MW (timeseries)
         'power_to_heat': {
             'thermal_output': 0.05},  # MW
         'battery': {
@@ -113,22 +132,22 @@ def main():
             'insulation_thickness': 0.10},  # m
         'energy_cost': {
             'electricity': {
-                'AP': day_ahead['price'] + 17,  # €/MWh
+                'AP': data['price'] + 17,  # €/MWh
                 'LP': 15000},  # €/MW
             'fossil_gas': 35,  # €/MWh
             'biomethane': 95,  # €/MWh
             'wood_pellet': 300,  # €/MWh
             'eeg_levy': 64.123},  # €/MWh
         'demand': {
-            'electricity': demand['electricity'],  # MW (time series)
-            'heating': demand['heating'],  # MW (time series)
-            'dhw': demand['dhw']},  # MW (time series),
+            'electricity': data['electricity'],  # MW (time series)
+            'heating': data['heating'],  # MW (time series)
+            'dhw': data['dhw']},  # MW (time series),
         'co2': {
             'fossil_gas': 0.202,
             'biomethane': 0.148,
             'wood_pellet': 0.023,
-            'el_in': 0.401,
-            'el_out': -0.401,
+            'el_in': data['spec_co2 (g/kWh)'],
+            'el_out': -data['spec_co2 (g/kWh)'],
             'price': 0}
         }
 
@@ -154,18 +173,19 @@ def main():
 
     heat_demand = meta_model.thermal_demand()
 
-    print("Heat demand", heat_demand)
-    print("Geothermal coverage", meta_model.heat_geothermal()/heat_demand)
-    print("Solar coverage", meta_model.heat_solar_thermal()/heat_demand)
-    print("CHP coverage", meta_model.heat_chp()/heat_demand)
-    print("Pellet coverage", meta_model.heat_pellet()/heat_demand)
-
-    results = energy_system.results['main']
-    result_sequences_heat = extract_result_sequence(
-        results, 'heat_exchanger')
-    result_sequences_heat.plot(drawstyle="steps-post")
-
-    plt.show()
+    print("Heat demand: {:.3f}".format(heat_demand))
+    print("{:04.1f} % geothermal coverage".format(
+        100*meta_model.heat_geothermal()/heat_demand))
+    print("{:04.1f} % solar coverage".format(
+        100*meta_model.heat_solar_thermal()/heat_demand))
+    print("{:04.1f} % CHP coverage".format(
+        100*meta_model.heat_chp()/heat_demand))
+    print("{:04.1f} % pellet coverage".format(
+        100*meta_model.heat_pellet()/heat_demand))
+    print("{:04.1f} % boiler coverage".format(
+        100*meta_model.heat_boiler()/heat_demand))
+    print("{:04.1f} % power2heat coverage".format(
+        100*meta_model.heat_p2h()/heat_demand))
 
 
 if __name__ == '__main__':
