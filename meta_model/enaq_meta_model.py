@@ -418,7 +418,7 @@ class ENaQMetaModel:
                                                      - temps['reference'])
 
         heat_exchanger = Transformer(
-            label='heating_system',
+            label='heat_exchanger',
             inputs={b_th[temps['heating']]: Flow()},
             outputs={b_th_buildings: Flow(),
                      b_th[temps['heating']

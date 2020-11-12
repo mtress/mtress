@@ -2,10 +2,25 @@ import sys
 
 import time
 import pandas as pd
+import matplotlib.pyplot as plt
+
 from oemof.solph import views, processing
 
 from meta_model.enaq_meta_model import ENaQMetaModel
 from meta_model.physics import celsius_to_kelvin
+
+
+def extract_result_sequence(results, label, resample=None):
+    """
+    :param results:
+    :param label:
+    :param resample: resampling frequency identifier (e.g. 'D')
+    :return:
+    """
+    sequences = views.node(results, label)['sequences']
+    if resample is not None:
+        sequences = sequences.resample(resample).mean()
+    return sequences
 
 
 def main():
@@ -144,6 +159,13 @@ def main():
     print("Solar coverage", meta_model.heat_solar_thermal()/heat_demand)
     print("CHP coverage", meta_model.heat_chp()/heat_demand)
     print("Pellet coverage", meta_model.heat_pellet()/heat_demand)
+
+    results = energy_system.results['main']
+    result_sequences_heat = extract_result_sequence(
+        results, 'heat_exchanger')
+    result_sequences_heat.plot(drawstyle="steps-post")
+
+    plt.show()
 
 
 if __name__ == '__main__':
