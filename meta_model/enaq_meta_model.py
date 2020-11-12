@@ -412,34 +412,34 @@ class ENaQMetaModel:
                     inputs={b_eldist: Flow(fix=demand['electricity'],
                                            nominal_value=1)})
 
-        b_heating = Bus(label="b_heating")
+        b_th_buildings = Bus(label="b_heating")
 
         heater_ratio = temps['heat_drop_heating'] / (temps['heating']
                                                      - temps['reference'])
 
-        heating_system = Transformer(
+        heat_exchanger = Transformer(
             label='heating_system',
             inputs={b_th[temps['heating']]: Flow()},
-            outputs={b_heating: Flow(),
+            outputs={b_th_buildings: Flow(),
                      b_th[temps['heating']
                           - temps['heat_drop_heating']]: Flow()},
             conversion_factors={
                 b_th[temps['heating']]: 1,
-                b_heating: heater_ratio,
+                b_th_buildings: heater_ratio,
                 b_th[temps['heating']
                      - temps['heat_drop_heating']]:
                          1 - heater_ratio})
 
-        energy_system.add(heating_system, b_heating)
+        energy_system.add(heat_exchanger, b_th_buildings)
 
         d_heat = Sink(label='d_heat',
-                      inputs={b_heating: Flow(
+                      inputs={b_th_buildings: Flow(
                           nominal_value=1,
                           fix=demand['heating'])})
-        self.th_demand_flows.append((b_heating.label, d_heat.label))
+        self.th_demand_flows.append((b_th_buildings.label, d_heat.label))
 
         if boost_dhw:
-            b_th[temps['dhw']] = Bus(label="b_th_dhw")
+            b_th_dhw = Bus(label="b_th_dhw")
             temp_max = max(temperature_levels)
             heater_ratio = (temp_max - temps['heat_drop_exchanger_dhw']
                             - temps['reference']) / (temps['dhw']
@@ -447,20 +447,20 @@ class ENaQMetaModel:
 
             heater = Transformer(label="dhw_booster",
                                  inputs={b_eldist: Flow(),
-                                         b_th[temp_max]: Flow()},
-                                 outputs={b_th[temps['dhw']]: Flow()},
+                                         b_th_buildings: Flow()},
+                                 outputs={b_th_dhw: Flow()},
                                  conversion_factors={
                                      b_eldist: 1 - heater_ratio,
-                                     b_th[temp_max]: heater_ratio,
-                                     b_th[temps['dhw']]: 1})
-            energy_system.add(b_th[temps['dhw']], heater)
+                                     b_th_buildings: heater_ratio,
+                                     b_th_dhw: 1})
+            energy_system.add(b_th_dhw, heater)
 
         d_dhw = Sink(label='d_dhw',
-                     inputs={b_th[temps['dhw']]: Flow(
+                     inputs={b_th_dhw: Flow(
                          nominal_value=1,
                          fix=demand['dhw'])})
 
-        self.th_demand_flows.append((b_th[temps['dhw']].label,
+        self.th_demand_flows.append((b_th_dhw.label,
                                      d_dhw.label))
 
         energy_system.add(d_el, d_heat, d_dhw)
