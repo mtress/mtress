@@ -107,7 +107,7 @@ class ENaQMetaModel:
         # Time range of the data (in a)
         index = demand['electricity'].index
         index.freq = pd.infer_freq(index)
-        time_range = (index[-1] - index[0] + index.freq)/ pd.Timedelta('365D')
+        time_range = (index[-1] - index[0] + index.freq) / pd.Timedelta('365D')
         ############################
         # Create energy system model
         ############################
@@ -116,6 +116,8 @@ class ENaQMetaModel:
         # list of flows to identify different sources and sinks later
         # which use units of power
         self.chp_flows = list()
+        self.p2h_flows = list()
+        self.boiler_flows = list()
         self.pellet_flows = list()
         self.gt_input_flows = list()
         self.st_input_flows = list()
@@ -453,6 +455,8 @@ class ENaQMetaModel:
                                      b_eldist: 1 - heater_ratio,
                                      b_th_buildings: heater_ratio,
                                      b_th_dhw: 1})
+            self.p2h_flows.append((heater.label,
+                                   b_th_dhw.label))
             energy_system.add(b_th_dhw, heater)
 
         d_dhw = Sink(label='d_dhw',
@@ -477,6 +481,9 @@ class ENaQMetaModel:
                     b_gas: HS_PER_HI_GAS,
                     b_th_in[temperature_levels[-1]]:
                         boiler['efficiency']})
+
+            self.boiler_flows.append((t_boiler.label,
+                                      b_th_in[temperature_levels[-1]].label))
             energy_system.add(t_boiler)
 
         if pellet_boiler:
@@ -572,6 +579,8 @@ class ENaQMetaModel:
                                     b_eldist: 1,
                                     b_th_in[temperature_levels[-1]]: 1})
             energy_system.add(t_p2h)
+            self.p2h_flows.append((t_p2h.label,
+                                   b_th_in[temperature_levels[-1]].label))
 
         # wind turbine
         if wt:
@@ -669,6 +678,32 @@ class ENaQMetaModel:
                 'sequences']['flow'].sum()
 
         return e_pellet_th
+
+    def heat_boiler(self):
+        """
+        Calculates and returns thermal energy from pallet boiler
+
+        :return: integrated pallet power
+        """
+        e_boiler_th = 0
+        for res in self.boiler_flows:
+            e_boiler_th += self.energy_system.results['main'][res][
+                'sequences']['flow'].sum()
+
+        return e_boiler_th
+
+    def heat_p2h(self):
+        """
+        Calculates and returns thermal energy from pallet boiler
+
+        :return: integrated pallet power
+        """
+        e_p2h_th = 0
+        for res in self.p2h_flows:
+            e_p2h_th += self.energy_system.results['main'][res][
+                'sequences']['flow'].sum()
+
+        return e_p2h_th
 
     def thermal_demand(self):
         """
