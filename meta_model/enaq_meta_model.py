@@ -107,7 +107,7 @@ class ENaQMetaModel:
         # Time range of the data (in a)
         index = demand['electricity'].index
         index.freq = pd.infer_freq(index)
-        time_range = (index[-1] - index[0] + index.freq)/ pd.Timedelta('365D')
+        time_range = (index[-1] - index[0] + index.freq) / pd.Timedelta('365D')
         ############################
         # Create energy system model
         ############################
@@ -116,6 +116,8 @@ class ENaQMetaModel:
         # list of flows to identify different sources and sinks later
         # which use units of power
         self.chp_flows = list()
+        self.p2h_flows = list()
+        self.boiler_flows = list()
         self.pellet_flows = list()
         self.gt_input_flows = list()
         self.st_input_flows = list()
@@ -413,34 +415,34 @@ class ENaQMetaModel:
                     inputs={b_eldist: Flow(fix=demand['electricity'],
                                            nominal_value=1)})
 
-        b_heating = Bus(label="b_heating")
+        b_th_buildings = Bus(label="b_heating")
 
         heater_ratio = temps['heat_drop_heating'] / (temps['heating']
                                                      - temps['reference'])
 
-        heating_system = Transformer(
-            label='heating_system',
+        heat_exchanger = Transformer(
+            label='heat_exchanger',
             inputs={b_th[temps['heating']]: Flow()},
-            outputs={b_heating: Flow(),
+            outputs={b_th_buildings: Flow(),
                      b_th[temps['heating']
                           - temps['heat_drop_heating']]: Flow()},
             conversion_factors={
                 b_th[temps['heating']]: 1,
-                b_heating: heater_ratio,
+                b_th_buildings: heater_ratio,
                 b_th[temps['heating']
                      - temps['heat_drop_heating']]:
                          1 - heater_ratio})
 
-        energy_system.add(heating_system, b_heating)
+        energy_system.add(heat_exchanger, b_th_buildings)
 
         d_heat = Sink(label='d_heat',
-                      inputs={b_heating: Flow(
+                      inputs={b_th_buildings: Flow(
                           nominal_value=1,
                           fix=demand['heating'])})
-        self.th_demand_flows.append((b_heating.label, d_heat.label))
+        self.th_demand_flows.append((b_th_buildings.label, d_heat.label))
 
         if boost_dhw:
-            b_th[temps['dhw']] = Bus(label="b_th_dhw")
+            b_th_dhw = Bus(label="b_th_dhw")
             temp_max = max(temperature_levels)
             heater_ratio = (temp_max - temps['heat_drop_exchanger_dhw']
                             - temps['reference']) / (temps['dhw']
@@ -448,20 +450,22 @@ class ENaQMetaModel:
 
             heater = Transformer(label="dhw_booster",
                                  inputs={b_eldist: Flow(),
-                                         b_th[temp_max]: Flow()},
-                                 outputs={b_th[temps['dhw']]: Flow()},
+                                         b_th_buildings: Flow()},
+                                 outputs={b_th_dhw: Flow()},
                                  conversion_factors={
                                      b_eldist: 1 - heater_ratio,
-                                     b_th[temp_max]: heater_ratio,
-                                     b_th[temps['dhw']]: 1})
-            energy_system.add(b_th[temps['dhw']], heater)
+                                     b_th_buildings: heater_ratio,
+                                     b_th_dhw: 1})
+            self.p2h_flows.append((heater.label,
+                                   b_th_dhw.label))
+            energy_system.add(b_th_dhw, heater)
 
         d_dhw = Sink(label='d_dhw',
-                     inputs={b_th[temps['dhw']]: Flow(
+                     inputs={b_th_dhw: Flow(
                          nominal_value=1,
                          fix=demand['dhw'])})
 
-        self.th_demand_flows.append((b_th[temps['dhw']].label,
+        self.th_demand_flows.append((b_th_dhw.label,
                                      d_dhw.label))
 
         energy_system.add(d_el, d_heat, d_dhw)
@@ -478,6 +482,9 @@ class ENaQMetaModel:
                     b_gas: HS_PER_HI_GAS,
                     b_th_in[temperature_levels[-1]]:
                         boiler['efficiency']})
+
+            self.boiler_flows.append((t_boiler.label,
+                                      b_th_in[temperature_levels[-1]].label))
             energy_system.add(t_boiler)
 
         if pellet_boiler:
@@ -573,6 +580,8 @@ class ENaQMetaModel:
                                     b_eldist: 1,
                                     b_th_in[temperature_levels[-1]]: 1})
             energy_system.add(t_p2h)
+            self.p2h_flows.append((t_p2h.label,
+                                   b_th_in[temperature_levels[-1]].label))
 
         # wind turbine
         if wt:
@@ -670,6 +679,32 @@ class ENaQMetaModel:
                 'sequences']['flow'].sum()
 
         return e_pellet_th
+
+    def heat_boiler(self):
+        """
+        Calculates and returns thermal energy from pallet boiler
+
+        :return: integrated pallet power
+        """
+        e_boiler_th = 0
+        for res in self.boiler_flows:
+            e_boiler_th += self.energy_system.results['main'][res][
+                'sequences']['flow'].sum()
+
+        return e_boiler_th
+
+    def heat_p2h(self):
+        """
+        Calculates and returns thermal energy from pallet boiler
+
+        :return: integrated pallet power
+        """
+        e_p2h_th = 0
+        for res in self.p2h_flows:
+            e_p2h_th += self.energy_system.results['main'][res][
+                'sequences']['flow'].sum()
+
+        return e_p2h_th
 
     def thermal_demand(self):
         """
