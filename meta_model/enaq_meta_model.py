@@ -27,7 +27,6 @@ class ENaQMetaModel:
         temps = kwargs.get('temperatures')
         energy_cost = kwargs.get('energy_cost')
         demand = kwargs.get('demand')
-        co2 = kwargs.get('co2')
 
         bhp = kwargs.get('heat_pump')
         if bhp and bhp["electric_input"] <= 0:
@@ -58,6 +57,7 @@ class ENaQMetaModel:
             del pellet_boiler
             pellet_boiler = None
         chp = kwargs.get('chp')
+        self.biomethane_fraction = chp['biomethane_fraction']
         if chp and chp["electric_output"] <= 0:
             del chp
             chp = None
@@ -85,6 +85,8 @@ class ENaQMetaModel:
         if st and st["st_area"] <= 0:
             del st
             st = None
+
+        self.spec_co2 = kwargs.get('co2')
 
         # Create relevant temperature list
         temperature_levels = temps['intermediate']
@@ -115,13 +117,22 @@ class ENaQMetaModel:
 
         # list of flows to identify different sources and sinks later
         # which use units of power
-        self.chp_flows = list()
+        self.th_demand_flows = list()
+        self.pv_flows = list()
+        self.wt_flows = list()
+        self.chp_el_flows = list()
+        self.chp_heat_flows = list()
         self.p2h_flows = list()
         self.boiler_flows = list()
-        self.pellet_flows = list()
+        self.pellet_heat_flows = list()
         self.gt_input_flows = list()
         self.st_input_flows = list()
-        self.th_demand_flows = list()
+        self.fossil_gas_flows = list()
+        self.biomethane_flows = list()
+        self.chp_gas_flows = list()
+        self.electricity_import_flows = list()
+        self.electricity_export_flows = list()
+        self.wood_pellets_flows = list()
 
         # Create main buses
         b_eldist = Bus(label="b_eldist")  # Local distribution network
@@ -390,15 +401,20 @@ class ENaQMetaModel:
         m_el_in = Source(label='m_el_in',
                          outputs={b_elgrid: Flow(
                              variable_costs=energy_cost['electricity']['AP'] +
-                                            co2['el_in'] * co2['price'],
+                                            self.spec_co2['el_in'] * self.spec_co2['price'],
                              investment=Investment(
                                  ep_costs=energy_cost['electricity']['LP']
                                           * time_range))})
+        self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
 
         m_el_out = Sink(label='m_el_out',
-                        inputs={b_elgrid: Flow(variable_costs=co2['el_out'] * co2['price'])})
+                        inputs={b_elgrid: Flow(variable_costs=self.spec_co2['el_out']
+                                                              * self.spec_co2['price'])})
+        self.electricity_export_flows.append((b_elgrid.label, m_el_out.label))
 
-        gas_price = energy_cost['fossil_gas'] + co2['fossil_gas'] * co2['price']
+
+        gas_price = energy_cost['fossil_gas'] \
+                    + self.spec_co2['fossil_gas'] * self.spec_co2['price']
         m_gas = Source(label='m_gas',
                        outputs={b_gas: Flow(variable_costs=gas_price)})
 
@@ -460,13 +476,19 @@ class ENaQMetaModel:
                                    b_th_dhw.label))
             energy_system.add(b_th_dhw, heater)
 
-        d_dhw = Sink(label='d_dhw',
-                     inputs={b_th_dhw: Flow(
-                         nominal_value=1,
-                         fix=demand['dhw'])})
-
-        self.th_demand_flows.append((b_th_dhw.label,
-                                     d_dhw.label))
+            d_dhw = Sink(label='d_dhw',
+                         inputs={b_th_dhw: Flow(
+                             nominal_value=1,
+                             fix=demand['dhw'])})
+            self.th_demand_flows.append((b_th_dhw.label,
+                                         d_dhw.label))
+        else:
+            d_dhw = Sink(label='d_dhw',
+                         inputs={b_th_buildings: Flow(
+                             nominal_value=1,
+                             fix=demand['dhw'])})
+            self.th_demand_flows.append((b_th_buildings.label,
+                                         d_dhw.label))
 
         energy_system.add(d_el, d_heat, d_dhw)
 
@@ -485,6 +507,7 @@ class ENaQMetaModel:
 
             self.boiler_flows.append((t_boiler.label,
                                       b_th_in[temperature_levels[-1]].label))
+            self.fossil_gas_flows.append((m_gas.label, b_gas.label))
             energy_system.add(t_boiler)
 
         if pellet_boiler:
@@ -494,7 +517,7 @@ class ENaQMetaModel:
                 label='m_pellet',
                 outputs={b_pellet: Flow(
                     variable_costs=energy_cost['wood_pellet']
-                                   + co2['wood_pellet'] * co2['price'])})
+                                   + self.spec_co2['wood_pellet'] * self.spec_co2['price'])})
 
             t_pellet = Transformer(label='t_pellet',
                                    inputs={b_pellet: Flow()},
@@ -506,15 +529,17 @@ class ENaQMetaModel:
                                        b_th_in[temperature_levels[-1]]:
                                            pellet_boiler['efficiency']})
 
-            self.pellet_flows.append((t_pellet.label,
-                                      b_th_in[temperature_levels[-1]].label))
+            self.pellet_heat_flows.append((t_pellet.label,
+                                           b_th_in[temperature_levels[-1]].label))
+            self.wood_pellets_flows.append((m_pellet.label, b_pellet.label))
             energy_system.add(b_pellet, m_pellet, t_pellet)
 
         if chp:
             # CHP
             b_gas_chp = Bus(label="b_gas_chp")
 
-            biomethane_price = energy_cost['biomethane'] + co2['biomethane'] * co2['price']
+            biomethane_price = energy_cost['biomethane'] \
+                               + self.spec_co2['biomethane'] * self.spec_co2['price']
             m_gas_chp = Source(label='m_gas_chp',
                                outputs={b_gas_chp: Flow(
                                    variable_costs=
@@ -522,6 +547,7 @@ class ENaQMetaModel:
                                    * gas_price
                                    + chp['biomethane_fraction']
                                    * biomethane_price)})
+            self.chp_gas_flows.append((m_gas_chp.label, b_gas_chp.label))
 
             b_el_chp_fund = Bus(
                 label="b_el_chp_fund",
@@ -552,8 +578,9 @@ class ENaQMetaModel:
                                     b_th_in[temperature_levels[-1]]:
                                         chp['thermal_efficiency']})
 
-            self.chp_flows.append((t_chp.label,
-                                   b_th_in[temperature_levels[-1]].label))
+            self.chp_heat_flows.append((t_chp.label,
+                                        b_th_in[temperature_levels[-1]].label))
+            self.chp_el_flows.append((t_chp.label, b_el_chp.label))
             energy_system.add(m_gas_chp, b_gas_chp, b_el_chp, t_chp,
                               b_el_chp_fund, b_el_chp_unfund)
 
@@ -566,6 +593,7 @@ class ENaQMetaModel:
 
             t_pv = Source(label='t_pv',
                           outputs={b_el_pv: Flow(nominal_value=1.0, max=pv['generation'])})
+            self.pv_flows.append((t_pv.label, b_el_pv.label))
 
             energy_system.add(t_pv, b_el_pv)
 
@@ -592,6 +620,7 @@ class ENaQMetaModel:
 
             t_wt = Source(label='t_wt',
                           outputs={b_el_wt: Flow(nominal_value=1.0, max=wt['generation'])})
+            self.pv_flows.append((t_wt.label, b_el_wt.label))
 
             energy_system.add(t_wt, b_el_wt)
 
@@ -635,7 +664,7 @@ class ENaQMetaModel:
         :return: integrated chp power
         """
         e_chp_th = 0
-        for res in self.chp_flows:
+        for res in self.chp_heat_flows:
             e_chp_th += self.energy_system.results['main'][res][
                 'sequences']['flow'].sum()
 
@@ -674,7 +703,7 @@ class ENaQMetaModel:
         :return: integrated pallet power
         """
         e_pellet_th = 0
-        for res in self.pellet_flows:
+        for res in self.pellet_heat_flows:
             e_pellet_th += self.energy_system.results['main'][res][
                 'sequences']['flow'].sum()
 
@@ -718,3 +747,211 @@ class ENaQMetaModel:
                 'sequences']['flow'].sum()
 
         return d_th
+
+    def el_pv(self):
+        """
+        Calculates the energy yield from pv
+
+        :return: integrated pv electricity generation
+        """
+        e_pv_el = 0
+        for res in self.pv_flows:
+            e_pv_el += self.energy_system.results['main'][res][
+                'sequences']['flow'].sum()
+
+        return e_pv_el
+
+    def el_wt(self):
+        """
+        Calculates the energy yield from wind
+
+        :return: integrated wind turbine electricity generation
+        """
+        e_wt_el = 0
+        for res in self.wt_flows:
+            e_wt_el += self.energy_system.results['main'][res][
+                'sequences']['flow'].sum()
+
+        return e_wt_el
+
+    def el_chp(self):
+        """
+        Calculates the electricity generation from chp
+
+        :return: integrated chp electricity generation
+        """
+        e_chp_el = 0
+        for res in self.chp_el_flows:
+            e_chp_el += self.energy_system.results['main'][res][
+                'sequences']['flow'].sum()
+
+        return e_chp_el
+
+    def el_production(self):
+        """
+        Electricity generated on site by distributed generation
+
+        :return: integrated distributed electricity generation
+        """
+        return self.el_chp() + self.el_pv() + self.el_wt()
+
+    def el_demand(self):
+        """
+        Energy demand calculated as balance of production, import and export
+
+        :return: integrated electricity demand
+        """
+        return self.el_production().sum() + self.el_import().sum() - self.el_export().sum()
+
+    def el_import(self):
+        """
+        Electricity imported from the public grid
+
+        :return: Electricity import
+        """
+        el_in = 0
+        for res in self.electricity_import_flows:
+            el_in += self.energy_system.results['main'][res][
+                'sequences']['flow']
+
+        return el_in
+
+    def el_import_peak(self):
+        """
+        Maximum electricity import
+
+        :return: Peak electricity import
+        """
+        return self.el_import().max()
+
+    def el_export(self):
+        """
+        Electricity exported to the public grid
+
+        :return: Electricity export
+        """
+        el_out = 0
+        for res in self.electricity_export_flows:
+            el_out += self.energy_system.results['main'][res][
+                'sequences']['flow']
+
+        return el_out
+
+    def pellet_import(self):
+        """
+        Imported wood pellets from some supplier
+
+        :return: Wood pellet import
+        """
+        wp_in = 0
+        for res in self.wood_pellets_flows:
+            wp_in += self.energy_system.results['main'][res][
+                'sequences']['flow'].sum()
+
+        return wp_in
+
+    def chp_gas_import(self):
+        """
+        Imported gas for use in the chp which can be fossil or biomethane or mixtures
+
+        :return: Gas import for chp
+        """
+        chp_gas_in = 0
+        for res in self.chp_gas_flows:
+            chp_gas_in += self.energy_system.results['main'][res][
+                          'sequences']['flow'].sum()
+
+        return chp_gas_in
+
+    def chp_fossil_gas_import(self):
+        """
+        Share of fossil gas for chp import
+
+        :return: Fossil Gas import for chp
+        """
+        return self.chp_gas_import() * (1 - self.biomethane_fraction)
+
+    def chp_biomethane_import(self):
+        """
+        Share of biomethane for chp import
+
+        :return: Biomethane import for chp
+        """
+        return self.chp_gas_import() * self.biomethane_fraction
+
+    def fossil_gas_import(self):
+        """
+        Overall import of natural gas from the public grid
+
+        :return: Import fossil gas
+        """
+        fg_in = 0
+        for res in self.fossil_gas_flows:
+            fg_in += self.energy_system.results['main'][res][
+                'sequences']['flow'].sum()
+        fg_in += self.chp_fossil_gas_import()
+
+        return fg_in
+
+    def biomethane_import(self):
+        """
+        Overall import of biomethane from the public grid
+
+        :return: Import biomethane
+        """
+        bm_in = 0
+        for res in self.biomethane_flows:
+            bm_in += self.energy_system.results['main'][res][
+                'sequences']['flow'].sum()
+        bm_in += self.chp_biomethane_import()
+
+        return bm_in
+
+    def gas_import(self):
+        """
+        Overall import of gas from the public grid
+        which is the sum of fossil gas and biomethane
+
+        :return: Import gas
+        """
+        return self.fossil_gas_import() + self.biomethane_import()
+
+    def co2_emission(self):
+        """
+        Calculates the CO2 Emission acc. to
+        https://doi.org/10.3390/en13112967
+
+        :return: Integrated CO2 emission in operation
+        """
+        CO2_import_natural_gas = self.fossil_gas_import() * self.spec_co2['fossil_gas']
+        CO2_import_biomethane = self.biomethane_import() * self.spec_co2['biomethane']
+        CO2_import_pellet = self.pellet_import() * self.spec_co2['wood_pellet']
+        CO2_import_el = (self.el_import() * self.spec_co2['el_in']).sum()
+        CO2_export_el = (-self.el_export() * self.spec_co2['el_out']).sum()
+        res = (CO2_import_natural_gas + CO2_import_biomethane
+               + CO2_import_el + CO2_import_pellet
+               - CO2_export_el)
+        return np.round(res, 1)
+
+    def own_consumption(self):
+        """
+        Calculates the own consumption of distributed generation
+
+        :return: Own consumption
+        """
+        if self.el_production().sum() > 0:
+            oc = 1 - (self.el_export().sum()
+                      / self.el_production().sum())
+        else:
+            oc = 1
+        return np.round(oc, 3)
+
+    def self_sufficiency(self):
+        """
+        Calculates the self sufficiency of the district
+
+        :return: Self sufficiency
+        """
+        res = 1 - (self.el_import().sum()
+                   / self.el_demand().sum())
+        return np.round(res, 3)
