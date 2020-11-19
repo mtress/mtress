@@ -57,10 +57,12 @@ class ENaQMetaModel:
             del pellet_boiler
             pellet_boiler = None
         chp = kwargs.get('chp')
-        self.biomethane_fraction = chp['biomethane_fraction']
+        self.biomethane_fraction = 0
         if chp and chp["electric_output"] <= 0:
             del chp
             chp = None
+        if chp and chp["electric_output"] > 0:
+            self.biomethane_fraction = chp['biomethane_fraction']
         pv = kwargs.get('pv')
         if pv and pv["nominal_power"] <= 0:
             del pv
@@ -164,7 +166,7 @@ class ENaQMetaModel:
         # Solar Thermal
         b_st = Bus(label="b_st", )
         s_st = Source(label="s_st",
-                            outputs={b_st: Flow(nominal_value=1)})
+                      outputs={b_st: Flow(nominal_value=1)})
 
         energy_system.add(s_st, b_st)
 
@@ -420,12 +422,6 @@ class ENaQMetaModel:
 
         energy_system.add(m_el_in, m_el_out, m_gas)
 
-        # create expensive source for missing heat to ensure model is solvable
-        missing_heat = Source(label='missing_heat',
-                              outputs={b_th[temps['heating']]:
-                                       Flow(variable_costs=1000)})
-        energy_system.add(missing_heat)
-
         # create local energy demand
         d_el = Sink(label='d_el',
                     inputs={b_eldist: Flow(fix=demand['electricity'],
@@ -456,6 +452,11 @@ class ENaQMetaModel:
                           nominal_value=1,
                           fix=demand['heating'])})
         self.th_demand_flows.append((b_th_buildings.label, d_heat.label))
+
+        # create expensive source for missing heat to ensure model is solvable
+        missing_heat = Source(label='missing_heat',
+                              outputs={b_th_buildings: Flow(variable_costs=1000)})
+        energy_system.add(missing_heat)
 
         if boost_dhw:
             b_th_dhw = Bus(label="b_th_dhw")
