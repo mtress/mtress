@@ -84,7 +84,7 @@ class ENaQMetaModel:
             del hs
             hs = None
         st = kwargs.get('solar_thermal')
-        if st and st["st_area"] <= 0:
+        if st and st["generation"].sum().max() <= 0:
             del st
             st = None
 
@@ -518,7 +518,9 @@ class ENaQMetaModel:
                 label='m_pellet',
                 outputs={b_pellet: Flow(
                     variable_costs=energy_cost['wood_pellet']
-                                   + self.spec_co2['wood_pellet'] * self.spec_co2['price'])})
+                                   + self.spec_co2['wood_pellet']
+                                   * self.spec_co2['price']
+                                   * HHV_WP)})
 
             t_pellet = Transformer(label='t_pellet',
                                    inputs={b_pellet: Flow()},
@@ -926,7 +928,7 @@ class ENaQMetaModel:
         """
         CO2_import_natural_gas = self.fossil_gas_import() * self.spec_co2['fossil_gas']
         CO2_import_biomethane = self.biomethane_import() * self.spec_co2['biomethane']
-        CO2_import_pellet = self.pellet_import() * self.spec_co2['wood_pellet']
+        CO2_import_pellet = self.pellet_import() * self.spec_co2['wood_pellet'] * HHV_WP
         CO2_import_el = (self.el_import() * self.spec_co2['el_in']).sum()
         CO2_export_el = (-self.el_export() * self.spec_co2['el_out']).sum()
         res = (CO2_import_natural_gas + CO2_import_biomethane
