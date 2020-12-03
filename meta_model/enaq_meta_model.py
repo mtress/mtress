@@ -319,7 +319,7 @@ class ENaQMetaModel:
             # (near surface) geothermal source heat pump
             if bhp and shp:
                 bhp_label = 't_shp_' + temp_str
-                shp_cop = calc_cop(meteo['temp_soil'], temp)
+                shp_cop = calc_cop(shp['temperature'], temp)
                 t_shp = Transformer(label=bhp_label,
                                     inputs={b_el_bhp: Flow(),
                                             b_shp: Flow()},

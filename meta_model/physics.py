@@ -79,8 +79,10 @@ def lorenz_cop(temp_in, temp_out):
     return temp_out / np.maximum(temp_out - temp_in, 1e-3)
 
 
-def calc_cop(temp_input_high, temp_input_low,
-             temp_output_high, temp_output_low):
+def calc_cop(temp_input_high,
+             temp_output_high,
+             temp_input_low=None,
+             temp_output_low=None):
     """
     Calculating COP of heat pump acc. to Reinholdt et.al. 2016
     https://backend.orbit.dtu.dk/ws/files/149827036/Contribution_1380_final.pdf
@@ -91,6 +93,17 @@ def calc_cop(temp_input_high, temp_input_low,
     :param temp_output_low: Return Temperature of the heating system
     :return: Realistic COP for the given temperatures
     """
+    if not temp_input_low:
+        temp_input = temp_input_high
+    else:
+        temp_input = mean_logarithmic_temperature(temp_input_high,
+                                                  temp_input_low)
+    if not temp_output_low:
+        temp_output = temp_output_high
+    else:
+        temp_output = mean_logarithmic_temperature(temp_output_high,
+                                                   temp_output_low)
+
     cop_norm = 4.6
 
     # Acc. to EN14511 (B0/W35)
@@ -99,37 +112,27 @@ def calc_cop(temp_input_high, temp_input_low,
     temp_output_high_norm = celsius_to_kelvin(35)
     temp_output_low_norm = celsius_to_kelvin(30)
 
-    lorentz_efficiency = 0.6
+    lorenz_efficiency = 0.6
 
-    temp_input_logarithmic_norm = \
+    temp_input_norm = \
         mean_logarithmic_temperature(temp_input_high_norm,
                                      temp_input_low_norm)
-    temp_output_logarithmic_norm = \
+    temp_output_norm = \
         mean_logarithmic_temperature(temp_output_high_norm,
                                      temp_output_low_norm)
 
-    cpf_norm = cop_norm \
-               / lorenz_cop(temp_input_logarithmic_norm,
-                            temp_output_logarithmic_norm)
+    cpf_norm = cop_norm / lorenz_cop(temp_input_norm,
+                                     temp_output_norm)
 
-    temp_input_logarithmic = \
-        mean_logarithmic_temperature(temp_input_high,
-                                     temp_input_low)
-    temp_output_logarithmic = \
-        mean_logarithmic_temperature(temp_output_high,
-                                     temp_output_low)
+    theoretical_cop = cpf_norm * lorenz_cop(temp_input,
+                                            temp_output)
 
-    theoretical_cop = cpf_norm * lorenz_cop(temp_input_logarithmic,
-                                            temp_output_logarithmic)
-
-    cop = theoretical_cop * lorentz_efficiency
+    cop = theoretical_cop * lorenz_efficiency
 
     return cop
 
 
-if __name__ =='__main__':
-    print(calc_cop(celsius_to_kelvin(10),
-                   celsius_to_kelvin(7),
+if __name__ == '__main__':
+    print(calc_cop(celsius_to_kelvin(12.8),
                    celsius_to_kelvin(20),
-                   celsius_to_kelvin(15)
                    ))
