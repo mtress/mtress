@@ -1,8 +1,5 @@
-import sys
-
 import time
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from oemof.solph import views, processing
 
@@ -133,7 +130,8 @@ def main():
         'energy_cost': {
             'electricity': {
                 'AP': data['price'] + 17,  # €/MWh
-                'LP': 15000},  # €/MW
+                'LP': 15000,  # €/MW
+                'market': data['price']},  # €/MW
             'fossil_gas': 35,  # €/MWh
             'biomethane': 95,  # €/MWh
             'wood_pellet': 300,  # €/MWh
@@ -143,12 +141,12 @@ def main():
             'heating': data['heating'],  # MW (time series)
             'dhw': data['dhw']},  # MW (time series),
         'co2': {
-            'fossil_gas': 0.202,
-            'biomethane': 0.148,
-            'wood_pellet': 0.023,
-            'el_in': data['spec_co2 (g/kWh)'],
-            'el_out': -data['spec_co2 (g/kWh)'],
-            'price': 0}
+            'fossil_gas': 0.202,  # t/MWh
+            'biomethane': 0.148,  # t/MWh
+            'wood_pellet': 0.023,  # t/MWh
+            'el_in': data['spec_co2 (g/kWh)'],  # t/MWh
+            'el_out': -data['spec_co2 (g/kWh)'],  # t/MWh
+            'price': 0}  # €/t
         }
 
     meta_model = ENaQMetaModel(**variables)
