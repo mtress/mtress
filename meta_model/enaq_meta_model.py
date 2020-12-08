@@ -9,8 +9,8 @@ from oemof.thermal import stratified_thermal_storage as sts
 
 from .physics import (celsius_to_kelvin, kelvin_to_celsius, HHV_WP,
                       TC_CONCRETE, H2O_HEAT_FUSION, H2O_DENSITY,
-                      HS_PER_HI_GAS, kJ_to_MWh, H2O_HEAT_CAPACITY,
-                      TC_INSULATION, kilo_to_mega, calc_cop)
+                      kJ_to_MWh, H2O_HEAT_CAPACITY, TC_INSULATION,
+                      kilo_to_mega, calc_cop)
 
 
 class ENaQMetaModel:

@@ -144,8 +144,8 @@ def main():
             'fossil_gas': 0.202,  # t/MWh
             'biomethane': 0.148,  # t/MWh
             'wood_pellet': 0.023,  # t/MWh
-            'el_in': data['spec_co2 (g/kWh)'],  # t/MWh
-            'el_out': -data['spec_co2 (g/kWh)'],  # t/MWh
+            'el_in': data['spec_co2 (t/MWh)'],  # t/MWh
+            'el_out': -data['spec_co2 (t/MWh)'],  # t/MWh
             'price': 0}  # €/t
         }
 
