@@ -124,6 +124,7 @@ class ENaQMetaModel:
         self.wt_flows = list()
         self.chp_el_flows = list()
         self.chp_heat_flows = list()
+        self.hp_flows = list()
         self.p2h_flows = list()
         self.boiler_flows = list()
         self.pellet_heat_flows = list()
@@ -288,6 +289,7 @@ class ENaQMetaModel:
                                         b_thp: (thp_cop - 1) / thp_cop,
                                         b_th_in_level: 1})
 
+                self.hp_flows.append((t_thp.label, b_th_in_level.label))
                 energy_system.add(t_thp)
 
             # ice storage as source for heat pumps
@@ -301,6 +303,7 @@ class ENaQMetaModel:
                                     conversion_factors={b_el_bhp: 1 / ihp_cop,
                                                         b_ihs: (ihp_cop - 1) / ihp_cop,
                                                         b_th_in_level: 1})
+                self.hp_flows.append((t_ihp.label, b_th_in_level.label))
                 energy_system.add(t_ihp)
 
             # (deep) geothermal source heat pump
@@ -314,12 +317,13 @@ class ENaQMetaModel:
                                     conversion_factors={b_el_bhp: 1 / ghp_cop,
                                                         b_ghp: (ghp_cop - 1) / ghp_cop,
                                                         b_th_in_level: 1})
+                self.hp_flows.append((t_ghp.label, b_th_in_level.label))
                 energy_system.add(t_ghp)
 
             # (near surface) geothermal source heat pump
             if bhp and shp:
                 bhp_label = 't_shp_' + temp_str
-                shp_cop = calc_cop(meteo['temp_soil'], temp)
+                shp_cop = calc_cop(shp['temperature'], temp)
                 t_shp = Transformer(label=bhp_label,
                                     inputs={b_el_bhp: Flow(),
                                             b_shp: Flow()},
@@ -328,6 +332,7 @@ class ENaQMetaModel:
                                         b_el_bhp: 1 / shp_cop,
                                         b_shp: (shp_cop - 1) / shp_cop,
                                         b_th_in_level: 1})
+                self.hp_flows.append((t_shp.label, b_th_in_level.label))
                 energy_system.add(t_shp)
 
             ###############################################################
@@ -413,7 +418,6 @@ class ENaQMetaModel:
                         inputs={b_elgrid: Flow(variable_costs=self.spec_co2['el_out']
                                                               * self.spec_co2['price'])})
         self.electricity_export_flows.append((b_elgrid.label, m_el_out.label))
-
 
         gas_price = energy_cost['fossil_gas'] \
                     + self.spec_co2['fossil_gas'] * self.spec_co2['price']
@@ -502,7 +506,6 @@ class ENaQMetaModel:
                     b_th_in[temperature_levels[-1]]:
                         Flow(nominal_value=boiler['thermal_output'])},
                 conversion_factors={
-                    b_gas: HS_PER_HI_GAS,
                     b_th_in[temperature_levels[-1]]:
                         boiler['efficiency']})
 
@@ -561,7 +564,7 @@ class ENaQMetaModel:
                         variable_costs=-chp['own_consumption_tariff_funded'])})
 
             b_el_chp_unfund = Bus(label="b_el_chp_unfund",
-                                  outputs={b_elxprt: Flow(),
+                                  outputs={b_elxprt: Flow(variable_costs=-energy_cost['electricity']['market']),
                                            b_elprod: Flow()})
 
             b_el_chp = Bus(label="b_el_chp",
@@ -638,9 +641,7 @@ class ENaQMetaModel:
                 loss_rate=battery['self_discharge'],
                 nominal_storage_capacity=battery['capacity'],
                 inflow_conversion_factor=battery['efficiency_inflow'],
-                outflow_conversion_factor=battery['efficiency_outflow'],
-                initial_storage_level=0,
-                balanced=False)
+                outflow_conversion_factor=battery['efficiency_outflow'])
 
             energy_system.add(s_battery)
 
@@ -685,6 +686,19 @@ class ENaQMetaModel:
                 'sequences']['flow'].sum()
 
         return e_gt_th
+
+    def heat_heat_pump(self):
+        """
+        Calculates and returns heat pump heat
+
+        :return: integrated het pump power
+        """
+        e_hp_th = 0
+        for res in self.hp_flows:
+            e_hp_th += self.energy_system.results['main'][res][
+                'sequences']['flow'].sum()
+
+        return e_hp_th
 
     def heat_solar_thermal(self):
         """
