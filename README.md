@@ -2,7 +2,7 @@
 
 This is a generic model for [oemof.solph](https://github.com/oemof/oemof-solph/)
 that provides a variety of possible technology combinations for energy supply systems.
-It is tailored for optimising controll strategies fulfilling fiexed demand time series
+It is tailored for optimising control strategies fulfilling fixed demand time series
 for electricity, heat, and domestic hot water using any selected combination
 of the implemented supply technologies.
 
