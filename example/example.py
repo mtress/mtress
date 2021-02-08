@@ -118,8 +118,8 @@ def main():
         'power_to_heat': {
             'thermal_output': 0.05},  # MW
         'battery': {
-            'power': 0.050,  # MW
-            'capacity': 0.025,  # MWh
+            'power': 0.125,  # MW
+            'capacity': 0.250,  # MWh
             'efficiency_inflow': 0.98,
             'efficiency_outflow': 0.98,
             'self_discharge': 1E-6},
