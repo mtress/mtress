@@ -60,20 +60,20 @@ def main():
     data = data.dropna()
     data = data.resample("1h").mean()
 
-    variables = {
+    time_series = {
         'meteorology': {
-            'temp_air': meteo['temp_air'],  # K (timeseries)
-            'temp_soil': meteo['temp_soil']},  # K (timeseries)
+            'temp_air': meteo['temp_air'],  # K
+            'temp_soil': meteo['temp_soil']},  # K
         'chp': {
             'feed_in_tariff_funded': data['price'] + 7.5,  # €/MWh
             'feed_in_tariff_unfunded': data['price'],  # €/MWh
             'own_consumption_tariff_funded': data['price'] + 3.5},  # €/MWh
         'pv': {
-            'generation': data['PV']},  # MW (timeseries)
+            'generation': data['PV']},  # MW
         'wind_turbine': {
-            'generation': data['WT']},  # MW (timeseries)
+            'generation': data['WT']},  # MW
         'solar_thermal': {
-            'generation': data.filter(regex='ST')},  # MW (timeseries)
+            'generation': data.filter(regex='ST')},  # MW
         'energy_cost': {
             'electricity': {
                 'AP': data['price'] + 17,  # €/MWh
@@ -88,21 +88,18 @@ def main():
     }
 
     with open('variables.json') as f:
-        variables_json = json.load(f)
+        variables = json.load(f)
 
-    for key in variables:
-        inputted = []
-        if key in variables_json:
-            for key_2 in variables_json[key]:
-                if type(variables_json[key][key_2]) == dict:
-                    for key_3 in variables_json[key][key_2]:
-                        variables[key][key_2][key_3] = variables_json[key][key_2][key_3]
+    for key1 in time_series:
+        if key1 not in variables:
+            variables[key1] = time_series[key1]
+        else:
+            for key2 in time_series[key1]:
+                if type(time_series[key1][key2]) == dict:
+                    for key3 in time_series[key1][key2]:
+                        variables[key1][key2][key3] = time_series[key1][key2][key3]
                 else:
-                    variables[key][key_2] = variables_json[key][key_2]
-                    inputted.append(key)
-    for key in variables_json:
-        if not key in variables:
-            variables[key] = variables_json[key]
+                    variables[key1][key2] = time_series[key1][key2]
 
     meta_model = ENaQMetaModel(**variables)
 
