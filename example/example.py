@@ -5,7 +5,6 @@ import json
 from oemof.solph import views, processing
 
 from meta_model.enaq_meta_model import ENaQMetaModel
-from meta_model.physics import celsius_to_kelvin
 
 
 def extract_result_sequence(results, label, resample=None):
@@ -21,7 +20,7 @@ def extract_result_sequence(results, label, resample=None):
     return sequences
 
 
-def main():
+def main(number_of_time_steps=365*24):
     meteo = pd.read_csv('meteo.csv',
                         comment='#', index_col=0,
                         sep=',',
@@ -59,6 +58,8 @@ def main():
 
     data = data.dropna()
     data = data.resample("1h").mean()
+
+    data = data.head(number_of_time_steps)
 
     time_series = {
         'meteorology': {
