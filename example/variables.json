@@ -63,8 +63,8 @@
         "thermal_output": 0.05
     },
     "battery": {
-        "power": 50,
-        "capacity": 250,
+        "power": 0.05,
+        "capacity": 0.25,
         "efficiency_inflow": 0.98,
         "efficiency_outflow": 0.98,
         "self_discharge": 1e-06
