@@ -1,0 +1,92 @@
+{
+    "temperatures": {
+        "reference": 273.15,
+        "dhw": 333.15,
+        "heat_drop_exchanger_dhw": 5,
+        "heating": 313.15,
+        "heat_drop_heating": 10,
+        "intermediate": [
+            293.15,
+            303.15
+        ]
+    },
+    "heat_pump": {
+        "electric_input": 0.1
+    },
+    "near_surface_heat_source": {
+        "thermal_output": 0
+    },
+    "geothermal_heat_source": {
+        "thermal_output": 0,
+        "temperature": 15
+    },
+    "ice_storage": {
+        "volume": 100,
+        "height": 3,
+        "wall_thickness": 0.1,
+        "ceil_thickness": 0.2
+    },
+    "thermal_ground_storage": {
+        "volume": 100,
+        "temperature": 283.15,
+        "heat_capacity": 0.025
+    },
+    "gas_boiler": {
+        "efficiency": 0.85,
+        "thermal_output": 0.1
+    },
+    "pellet_boiler": {
+        "efficiency": 0.8,
+        "thermal_output": 0.1
+    },
+    "chp": {
+        "biomethane_fraction": 0.2,
+        "funding_hours_per_year": 3500,
+        "electric_output": 0.1,
+        "electric_efficiency": 0.4,
+        "thermal_output": 0.15,
+        "thermal_efficiency": 0.5,
+        "gas_input": 0.27
+    },
+    "pv": {
+        "nominal_power": 1,
+        "feed_in_tariff": 75
+    },
+    "wind_turbine": {
+        "nominal_power": 1,
+        "feed_in_tariff": 75
+    },
+    "solar_thermal": {
+        "st_area": 1
+    },
+    "power_to_heat": {
+        "thermal_output": 0.05
+    },
+    "battery": {
+        "power": 0.05,
+        "capacity": 0.25,
+        "efficiency_inflow": 0.98,
+        "efficiency_outflow": 0.98,
+        "self_discharge": 1e-06
+    },
+    "heat_storage": {
+        "volume": 10,
+        "diameter": 2,
+        "insulation_thickness": 0.1
+    },
+    "energy_cost": {
+        "electricity": {
+            "LP": 15000
+        },
+        "fossil_gas": 35,
+        "biomethane": 95,
+        "wood_pellet": 300,
+        "eeg_levy": 64.123
+    },
+    "co2": {
+        "fossil_gas": 0.202,
+        "biomethane": 0.148,
+        "wood_pellet": 0.023,
+        "price": 0
+    }
+}
