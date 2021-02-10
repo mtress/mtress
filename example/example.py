@@ -20,7 +20,7 @@ def extract_result_sequence(results, label, resample=None):
     return sequences
 
 
-def main(number_of_time_steps=365*24):
+def example(number_of_time_steps=365*24):
     meteo = pd.read_csv('meteo.csv',
                         comment='#', index_col=0,
                         sep=',',
@@ -140,4 +140,4 @@ def main(number_of_time_steps=365*24):
 
 
 if __name__ == '__main__':
-    main()
+    example(number_of_time_steps=7*24)
