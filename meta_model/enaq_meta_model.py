@@ -263,7 +263,6 @@ class ENaQMetaModel:
             # Naming of new temperature bus
             temp_str = "{0:.0f}".format(temp)
 
-            b_th_level = b_th[temp]
             b_th_in_level = b_th_in[temp]
 
             if tgs and bhp:
@@ -455,14 +454,14 @@ class ENaQMetaModel:
                 label='t_boiler',
                 inputs={b_gas: Flow()},
                 outputs={
-                    b_th_in[temperature_levels[-1]]:
+                    heat_layers.b_th_in_highest:
                         Flow(nominal_value=boiler['thermal_output'])},
                 conversion_factors={
-                    b_th_in[temperature_levels[-1]]:
+                    heat_layers.b_th_in_highest:
                         boiler['efficiency']})
 
             self.boiler_flows.append((t_boiler.label,
-                                      b_th_in[temperature_levels[-1]].label))
+                                      heat_layers.b_th_in_highest.label))
             self.fossil_gas_flows.append((m_gas.label, b_gas.label))
             energy_system.add(t_boiler)
 
@@ -480,15 +479,15 @@ class ENaQMetaModel:
             t_pellet = Transformer(label='t_pellet',
                                    inputs={b_pellet: Flow()},
                                    outputs={
-                                       b_th_in[temperature_levels[-1]]:
+                                       heat_layers.b_th_in_highest:
                                            Flow(nominal_value=pellet_boiler['thermal_output'])},
                                    conversion_factors={
                                        b_pellet: HHV_WP,
-                                       b_th_in[temperature_levels[-1]]:
+                                       heat_layers.b_th_in_highest:
                                            pellet_boiler['efficiency']})
 
             self.pellet_heat_flows.append((t_pellet.label,
-                                           b_th_in[temperature_levels[-1]].label))
+                                           heat_layers.b_th_in_highest.label))
             self.wood_pellets_flows.append((m_pellet.label, b_pellet.label))
             energy_system.add(b_pellet, m_pellet, t_pellet)
 
@@ -529,15 +528,15 @@ class ENaQMetaModel:
                                     nominal_value=chp['gas_input'])},
                                 outputs={
                                     b_el_chp: Flow(nominal_value=chp['electric_output']),
-                                    b_th_in[temperature_levels[-1]]:
+                                    heat_layers.b_th_in_highest:
                                         Flow(nominal_value=chp['thermal_output'])},
                                 conversion_factors={
                                     b_el_chp: chp['electric_efficiency'],
-                                    b_th_in[temperature_levels[-1]]:
+                                    heat_layers.b_th_in_highest:
                                         chp['thermal_efficiency']})
 
             self.chp_heat_flows.append((t_chp.label,
-                                        b_th_in[temperature_levels[-1]].label))
+                                        heat_layers.b_th_in_highest.label))
             self.chp_el_flows.append((t_chp.label, b_el_chp.label))
             energy_system.add(m_gas_chp, b_gas_chp, b_el_chp, t_chp,
                               b_el_chp_fund, b_el_chp_unfund)
@@ -560,14 +559,14 @@ class ENaQMetaModel:
             t_p2h = Transformer(label='t_p2h',
                                 inputs={b_eldist: Flow()},
                                 outputs={
-                                    b_th_in[temperature_levels[-1]]:
+                                    heat_layers.b_th_in_highest:
                                         Flow(nominal_value=p2h['thermal_output'])},
                                 conversion_factors={
                                     b_eldist: 1,
-                                    b_th_in[temperature_levels[-1]]: 1})
+                                    heat_layers.b_th_in_highest: 1})
             energy_system.add(t_p2h)
             self.p2h_flows.append((t_p2h.label,
-                                   b_th_in[temperature_levels[-1]].label))
+                                   heat_layers.b_th_in_highest.label))
 
         # wind turbine
         if wt:

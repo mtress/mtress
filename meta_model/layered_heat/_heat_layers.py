@@ -30,11 +30,12 @@ class HeatLayers:
         self.energy_system = energy_system
         self.b_th = dict()
         self.b_th_in = dict()
+        temperature_levels.sort()
         self.TEMPERATURE_LEVELS = temperature_levels
         self.REFERENCE_TEMPERATURE = reference_temperature
 
         temp_low = None
-        for temperature in temperature_levels:
+        for temperature in self.TEMPERATURE_LEVELS:
             # Naming of new temperature bus
             temperature_str = "{0:.0f}".format(temperature)
             b_th_label = 'b_th_' + temperature_str
@@ -53,6 +54,7 @@ class HeatLayers:
                     label=b_th_in_label,
                     outputs={self.b_th_in[temp_low]: solph.Flow(),
                              b_th_level: solph.Flow()})
+                self.b_th_in_highest = b_th_in_level
 
             self.b_th[temperature] = b_th_level
             self.b_th_in[temperature] = b_th_in_level
