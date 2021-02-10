@@ -1,13 +1,13 @@
 {
     "temperatures": {
-        "reference": 273.15,
-        "dhw": 333.15,
+        "reference": 0,
+        "dhw": 60,
         "heat_drop_exchanger_dhw": 5,
-        "heating": 313.15,
+        "heating": 40,
         "heat_drop_heating": 10,
         "intermediate": [
-            293.15,
-            303.15
+            20,
+            30
         ]
     },
     "heat_pump": {
@@ -28,7 +28,7 @@
     },
     "thermal_ground_storage": {
         "volume": 100,
-        "temperature": 283.15,
+        "temperature": 10,
         "heat_capacity": 0.025
     },
     "gas_boiler": {

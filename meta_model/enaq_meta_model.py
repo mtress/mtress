@@ -7,7 +7,8 @@ from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          GenericStorage)
 from oemof.thermal import stratified_thermal_storage as sts
 
-from .physics import (celsius_to_kelvin, kelvin_to_celsius, HHV_WP,
+from .layered_heat import HeatLayers, MultiLayerStorage
+from .physics import (celsius_to_kelvin, HHV_WP,
                       TC_CONCRETE, H2O_HEAT_FUSION, H2O_DENSITY,
                       kJ_to_MWh, H2O_HEAT_CAPACITY, TC_INSULATION,
                       kilo_to_mega, calc_cop)
@@ -162,6 +163,21 @@ class ENaQMetaModel:
 
         energy_system.add(grid_connection)
 
+        ###################################################################
+        # Thermal components
+        heat_layers = HeatLayers(energy_system=energy_system,
+                                 temperature_levels=temperature_levels,
+                                 reference_temperature=temps['reference'])
+
+        if hs:
+            thermal_storage = MultiLayerStorage(
+                diameter=hs['diameter'],
+                volume=hs['volume'],
+                insulation_thickness=hs['insulation_thickness'],
+                ambient_temperature=meteo['temp_air'],
+                heat_layers=heat_layers)
+        else:
+            thermal_storage = None
 
         ###################################################################
         # Solar Thermal
@@ -200,7 +216,8 @@ class ENaQMetaModel:
             ####################################################################
             # Ice storage
             if ihs:
-                b_ihs = Bus(label='b_ihs')  # bus for interconnections
+                b_ihs = Bus(label='b_ihs',
+                            inputs={heat_layers.b_th_lowest: Flow()})
 
                 # Calculate dimensions for loss/gain estimation
                 ihs_surface_top = ihs['volume'] / ihs['height']
@@ -235,36 +252,19 @@ class ENaQMetaModel:
 
         ####################################################################
         # Create object collections for temperature dependent technologies
-        b_th = dict()
-        b_th_in = dict()
+        b_th = heat_layers.b_th
+        b_th_in = heat_layers.b_th_in
+
         h_storage_comp = list()
 
         # ...and know what was the temperature level before.
         temp_low = None
         for temp in temperature_levels:
             # Naming of new temperature bus
-            temp_str = "{0:.0f}".format(kelvin_to_celsius(temp))
-            b_th_label = 'b_th_' + temp_str
-            b_th_in_label = 'b_th_in_' + temp_str
+            temp_str = "{0:.0f}".format(temp)
 
-            if temp_low is None:
-                if bhp and ihs:
-                    b_th_level = Bus(label=b_th_label,
-                                     outputs={b_ihs: Flow()})
-                else:
-                    b_th_level = Bus(label=b_th_label)
-                b_th_in_level = Bus(label=b_th_in_label,
-                                    outputs={b_th_level: Flow()})
-            else:  # connects to the previous temperature level
-                b_th_level = Bus(label=b_th_label)
-                b_th_in_level = Bus(label=b_th_in_label,
-                                    outputs={b_th_in[temp_low]: Flow(),
-                                             b_th_level: Flow()})
-
-            b_th[temp] = b_th_level
-            b_th_in[temp] = b_th_in_level
-
-            energy_system.add(b_th_level, b_th_in_level)
+            b_th_level = b_th[temp]
+            b_th_in_level = b_th_in[temp]
 
             if tgs and bhp:
                 # thermal ground storage as source for heat pumps
@@ -279,7 +279,8 @@ class ENaQMetaModel:
                                            outputs={b_thp: Flow()})
                     energy_system.add(s_tgs, b_thp)
 
-                thp_cop = calc_cop(tgs['temperature'], temp)
+                thp_cop = calc_cop(tgs['temperature'],
+                                   celsius_to_kelvin(temp))
                 t_thp = Transformer(label=thp_label,
                                     inputs={b_el_bhp: Flow(),
                                             b_thp: Flow()},
@@ -295,7 +296,8 @@ class ENaQMetaModel:
             # ice storage as source for heat pumps
             if bhp and ihs:
                 ihp_label = 't_ihp_' + temp_str
-                ihp_cop = calc_cop(celsius_to_kelvin(0), temp)
+                ihp_cop = calc_cop(celsius_to_kelvin(0),
+                                   celsius_to_kelvin(temp))
                 t_ihp = Transformer(label=ihp_label,
                                     inputs={b_el_bhp: Flow(),
                                             b_ihs: Flow()},
@@ -345,60 +347,10 @@ class ENaQMetaModel:
                     outputs={b_th_in_level: Flow(nominal_value=1)},
                     conversion_factors={b_st: (1 / st['generation']['ST_' + str(temp)]).to_list()})
 
-                self.st_input_flows.append((st_level_label, b_th_in_label))
+                self.st_input_flows.append((st_level_label,
+                                            b_th_in_level.label))
                 energy_system.add(t_st_level)
 
-            ###########################################################
-            # thermal storage
-            if hs:
-                storage_label = 's_heat_' + temp_str
-
-                hs_capacity = hs['volume'] * \
-                              kJ_to_MWh((temp - temps['reference']) *
-                                        H2O_DENSITY *
-                                        H2O_HEAT_CAPACITY)
-
-                hs_loss_rate, hs_fixed_losses_relative, hs_fixed_losses_absolute = \
-                    sts.calculate_losses(
-                        u_value=TC_INSULATION / hs['insulation_thickness'],
-                        diameter=hs['diameter'],
-                        temp_h=temp,
-                        temp_c=temps['reference'],
-                        temp_env=meteo['temp_air'])
-
-                s_heat = GenericStorage(
-                    label=storage_label,
-                    inputs={b_th_level: Flow()},
-                    outputs={b_th_level: Flow()},
-                    nominal_storage_capacity=hs_capacity,
-                    loss_rate=hs_loss_rate,
-                    fixed_losses_absolute=hs_fixed_losses_absolute,
-                    fixed_losses_relative=hs_fixed_losses_relative
-                )
-
-                h_storage_comp.append(s_heat)
-
-                energy_system.add(s_heat)
-
-            ################################################################
-            # Temperature risers
-            if temp_low is not None:
-                temp_low_str = "{0:.0f}".format(kelvin_to_celsius(temp_low))
-                temp_high_str = "{0:.0f}".format(kelvin_to_celsius(temp))
-                heater_label = 'rise_' + temp_low_str + '_' + temp_high_str
-                heater_ratio = (temp_low - temps['reference']) / \
-                               (temp - temps['reference'])
-                heater = Transformer(label=heater_label,
-                                     inputs={b_th_in_level: Flow(),
-                                             b_th[temp_low]: Flow()},
-                                     outputs={b_th[temp]: Flow()},
-                                     conversion_factors={b_th_in_level:
-                                                             1 - heater_ratio,
-                                                         b_th[temp_low]:
-                                                             heater_ratio,
-                                                         b_th[temp]: 1})
-
-                energy_system.add(heater)
             temp_low = temp
 
         ###########################################################################
@@ -647,16 +599,8 @@ class ENaQMetaModel:
 
         model = Model(energy_system)
 
-        if hs:
-            # Heat Storage Constraints
-            w_factor = [1 / kilo_to_mega(H2O_HEAT_CAPACITY
-                                         * H2O_DENSITY * (temp - temps['reference']))
-                        for temp in temperature_levels]
-
-            constraints.shared_limit(
-                model, model.GenericStorageBlock.storage_content,
-                'storage_limit', h_storage_comp, w_factor,
-                upper_limit=hs['volume'])
+        if thermal_storage:
+            thermal_storage.add_shared_limit(model=model)
 
         self.energy_system = energy_system
         self.model = model

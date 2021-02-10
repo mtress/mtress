@@ -23,25 +23,29 @@ class MultiLayerStorage:
     def __init__(self,
                  diameter,
                  volume,
+                 insulation_thickness,
                  ambient_temperature,
                  heat_layers):
         """
+        :param diameter: numeric scalar (in m)
+        :param volume: numeric scalar (in m³)
+        :param ambient_temperature: numeric scalar or sequence (in °C)
         :param heat_layers: HeatLayers object
         """
         self._h_storage_comp = list()
 
         self.energy_system = heat_layers.energy_system
-        self.temperature_levels = heat_layers.temperature_levels
+        self.TEMPERATURE_LEVELS = heat_layers.TEMPERATURE_LEVELS
         self.REFERENCE_TEMPERATURE = heat_layers.REFERENCE_TEMPERATURE
 
         self.heat_storage_volume = volume
 
-        self.HEAT_STORAGE_INSULATION = 0.2
+        self.HEAT_STORAGE_INSULATION = insulation_thickness
 
-        for temperature in self.temperature_levels:
+        for temperature in self.TEMPERATURE_LEVELS:
             temperature_str = "{0:.0f}".format(temperature)
             storage_label = 's_heat_' + temperature_str
-            b_th_level = heat_layers[temperature]
+            b_th_level = heat_layers.b_th[temperature]
 
             hs_capacity = self.heat_storage_volume * \
                           kJ_to_MWh((celsius_to_kelvin(temperature)
@@ -78,7 +82,7 @@ class MultiLayerStorage:
                                      * H2O_DENSITY
                                      * (celsius_to_kelvin(temp)
                                         - self.REFERENCE_TEMPERATURE))
-                    for temp in self.temperature_levels]
+                    for temp in self.TEMPERATURE_LEVELS]
 
         solph.constraints.shared_limit(
             model, model.GenericStorageBlock.storage_content,

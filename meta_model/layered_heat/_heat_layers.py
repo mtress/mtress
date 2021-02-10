@@ -24,6 +24,7 @@ class HeatLayers:
         """
         :param energy_system: solph.EnergySystem
         :param temperature_levels: list [temperature]
+        :param reference_temperature: reference temperature for energy (°C)
         """
         # Create object collections for temperature dependent technologies
         self.energy_system = energy_system
@@ -46,6 +47,7 @@ class HeatLayers:
             if temp_low is None:
                 b_th_in_level = solph.Bus(label=b_th_in_label,
                                           outputs={b_th_level: solph.Flow()})
+                self.b_th_lowest = b_th_level
             else:
                 b_th_in_level = solph.Bus(
                     label=b_th_in_label,
