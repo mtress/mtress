@@ -22,15 +22,16 @@ class LayeredHeatPump:
                  energy_system,
                  heat_layers,
                  electricity_source,
-                 temperature_levels_primary,
-                 temperature_levels_secondary,
+                 heat_sources,
                  cop_0_35=4.7,
                  label=""):
         """
         :param energy_system:
         :param heat_layers:
-        :param temperature_levels_primary:
-        :param temperature_levels_secondary:
+        :param electricity_source:
+        :param heat_sources:
+        :param cop_0_35:
+        :param label:
         """
         self.b_th_in = dict()
         self.cop = dict()
@@ -43,23 +44,23 @@ class LayeredHeatPump:
 
         energy_system.add(electricity_bus)
 
-        for temperature_lower in temperature_levels_primary:
-            temperature_lower_str = "{0:.0f}".format(temperature_lower)
+        for source in heat_sources:
+            temperature_lower = heat_sources[source]
             heat_source = solph.Bus(
-                label=label+"in_"+temperature_lower_str)
-            self.b_th_in[temperature_lower] = heat_source
+                label=label+"in_"+source)
+            self.b_th_in[source] = heat_source
             energy_system.add(heat_source)
 
-            for temperature_higher in temperature_levels_secondary:
-                temperature_higher_str = "{0:.0f}".format(temperature_higher)
-                hp_str = label+temperature_lower_str+"_"+temperature_higher_str
+            for target_temperature in heat_layers.TEMPERATURE_LEVELS:
+                temperature_higher_str = "{0:.0f}".format(target_temperature)
+                hp_str = label+source+"_"+temperature_higher_str
 
                 cop = calc_cop(
                     temp_input_high=celsius_to_kelvin(temperature_lower),
-                    temp_output_high=celsius_to_kelvin(temperature_higher),
+                    temp_output_high=celsius_to_kelvin(target_temperature),
                     cop_0_35=cop_0_35)
 
-                self.cop[(temperature_lower, temperature_higher)] = cop
+                self.cop[(source, target_temperature)] = cop
 
                 heat_pump_level = solph.Transformer(
                     label=hp_str,
@@ -67,10 +68,10 @@ class LayeredHeatPump:
                         heat_source: solph.Flow(),
                         electricity_bus: solph.Flow()},
                     outputs={
-                        heat_layers.b_th_in[temperature_higher]: solph.Flow()},
+                        heat_layers.b_th_in[target_temperature]: solph.Flow()},
                     conversion_factors={
                         heat_source: (cop-1) / cop,
                         electricity_bus: 1/cop,
-                        heat_layers.b_th_in[temperature_higher]: 1})
+                        heat_layers.b_th_in[target_temperature]: 1})
 
                 energy_system.add(heat_pump_level)

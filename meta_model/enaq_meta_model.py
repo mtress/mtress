@@ -7,7 +7,7 @@ from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          GenericStorage)
 from oemof.thermal import stratified_thermal_storage as sts
 
-from .layered_heat import HeatLayers, MultiLayerStorage
+from .layered_heat import HeatLayers, LayeredHeatPump, MultiLayerStorage
 from .physics import (celsius_to_kelvin, HHV_WP,
                       TC_CONCRETE, H2O_HEAT_FUSION, H2O_DENSITY,
                       kJ_to_MWh, H2O_HEAT_CAPACITY, TC_INSULATION,
@@ -179,25 +179,27 @@ class ENaQMetaModel:
         else:
             thermal_storage = None
 
-        ###################################################################
-        # Solar Thermal
-        b_st = Bus(label="b_st", )
-        s_st = Source(label="s_st",
-                      outputs={b_st: Flow(nominal_value=1)})
-
-        energy_system.add(s_st, b_st)
-
         ####################################################################
-        # heat pump
+        # Heat pump
         if bhp:
-            b_el_bhp = Bus(label='b_el_bhp',
-                           inputs={b_eldist: Flow(nominal_value=bhp['electric_input'])})
+            b_el_bhp = Bus(
+                label='b_el_bhp',
+                inputs={b_eldist: Flow(nominal_value=bhp['electric_input'])})
             energy_system.add(b_el_bhp)
-
+            heat_pump = LayeredHeatPump(energy_system=energy_system,
+                                        heat_layers=heat_layers,
+                                        electricity_source=b_el_bhp,
+                                        heat_sources={
+                                            "ice": 0,
+                                            "soil": meteo['temp_soil'],
+                                            "sonde": ghp['temperature'],
+                                            "pit_storage": tgs["temperature"]},
+                                        label="heat_pump")
             # heat pump sources
             # near surface source
             if shp:
-                b_shp = Bus(label="b_bhp")
+                b_shp = Bus(label="b_bhp",
+                            outputs={heat_pump.b_th_in["soil"]: Flow()})
                 s_shp = Source(label="s_shp",
                                outputs={b_shp: Flow(nominal_value=shp['thermal_output'])})
 
@@ -206,7 +208,8 @@ class ENaQMetaModel:
 
             # deep geothermal
             if ghp:
-                b_ghp = Bus(label="b_ghp")
+                b_ghp = Bus(label="b_ghp",
+                            outputs={heat_pump.b_th_in["sonde"]: Flow()})
                 s_ghp = Source(label="s_ghp",
                                outputs={b_ghp: Flow(nominal_value=ghp['thermal_output'])})
 
@@ -217,7 +220,8 @@ class ENaQMetaModel:
             # Ice storage
             if ihs:
                 b_ihs = Bus(label='b_ihs',
-                            inputs={heat_layers.b_th_lowest: Flow()})
+                            inputs={heat_layers.b_th_lowest: Flow()},
+                            outputs={heat_pump.b_th_in["ice"]: Flow()})
 
                 # Calculate dimensions for loss/gain estimation
                 ihs_surface_top = ihs['volume'] / ihs['height']
@@ -250,107 +254,44 @@ class ENaQMetaModel:
 
                 energy_system.add(b_ihs, s_ihs, s_ihs_excess)
 
-        ####################################################################
-        # Create object collections for temperature dependent technologies
-        b_th = heat_layers.b_th
-        b_th_in = heat_layers.b_th_in
+            if tgs:
+                b_thp = Bus(label='b_ehp',
+                            inputs={heat_layers.b_th_lowest: Flow()},
+                            outputs={heat_pump.b_th_in["pit_storage"]: Flow()})
 
-        h_storage_comp = list()
+                s_tgs = GenericStorage(
+                    label='s_tgs',
+                    nominal_storage_capacity=tgs['heat_capacity'],
+                    inputs={b_thp: Flow()},
+                    outputs={b_thp: Flow()})
+                energy_system.add(s_tgs, b_thp)
 
-        # ...and know what was the temperature level before.
-        temp_low = None
-        for temp in temperature_levels:
-            # Naming of new temperature bus
-            temp_str = "{0:.0f}".format(temp)
+        ###############################################################
+        # Solar thermal
+        if st:
+            b_st = Bus(label="b_st")
+            s_st = Source(label="s_st",
+                          outputs={b_st: Flow(nominal_value=1)})
 
-            b_th_in_level = b_th_in[temp]
+            energy_system.add(s_st, b_st)
 
-            if tgs and bhp:
-                # thermal ground storage as source for heat pumps
-                thp_label = 't_thp_' + temp_str
+            for temp in heat_layers.TEMPERATURE_LEVELS:
+                # Naming of new temperature bus
+                temp_str = "{0:.0f}".format(temp)
 
-                if temp_low is None:
-                    b_thp = Bus(label='b_ehp', inputs={b_th[temp]: Flow()})
-
-                    s_tgs = GenericStorage(label='s_tgs',
-                                           nominal_storage_capacity=tgs['heat_capacity'],
-                                           inputs={b_thp: Flow()},
-                                           outputs={b_thp: Flow()})
-                    energy_system.add(s_tgs, b_thp)
-
-                thp_cop = calc_cop(tgs['temperature'],
-                                   celsius_to_kelvin(temp))
-                t_thp = Transformer(label=thp_label,
-                                    inputs={b_el_bhp: Flow(),
-                                            b_thp: Flow()},
-                                    outputs={b_th_in_level: Flow()},
-                                    conversion_factors={
-                                        b_el_bhp: 1 / thp_cop,
-                                        b_thp: (thp_cop - 1) / thp_cop,
-                                        b_th_in_level: 1})
-
-                self.hp_flows.append((t_thp.label, b_th_in_level.label))
-                energy_system.add(t_thp)
-
-            # ice storage as source for heat pumps
-            if bhp and ihs:
-                ihp_label = 't_ihp_' + temp_str
-                ihp_cop = calc_cop(celsius_to_kelvin(0),
-                                   celsius_to_kelvin(temp))
-                t_ihp = Transformer(label=ihp_label,
-                                    inputs={b_el_bhp: Flow(),
-                                            b_ihs: Flow()},
-                                    outputs={b_th_in_level: Flow()},
-                                    conversion_factors={b_el_bhp: 1 / ihp_cop,
-                                                        b_ihs: (ihp_cop - 1) / ihp_cop,
-                                                        b_th_in_level: 1})
-                self.hp_flows.append((t_ihp.label, b_th_in_level.label))
-                energy_system.add(t_ihp)
-
-            # (deep) geothermal source heat pump
-            if bhp and ghp:
-                ghp_label = 't_ghp_' + temp_str
-                ghp_cop = calc_cop(ghp['temperature'], temp)
-                t_ghp = Transformer(label=ghp_label,
-                                    inputs={b_el_bhp: Flow(),
-                                            b_ghp: Flow()},
-                                    outputs={b_th_in_level: Flow()},
-                                    conversion_factors={b_el_bhp: 1 / ghp_cop,
-                                                        b_ghp: (ghp_cop - 1) / ghp_cop,
-                                                        b_th_in_level: 1})
-                self.hp_flows.append((t_ghp.label, b_th_in_level.label))
-                energy_system.add(t_ghp)
-
-            # (near surface) geothermal source heat pump
-            if bhp and shp:
-                bhp_label = 't_shp_' + temp_str
-                shp_cop = calc_cop(shp['temperature'], temp)
-                t_shp = Transformer(label=bhp_label,
-                                    inputs={b_el_bhp: Flow(),
-                                            b_shp: Flow()},
-                                    outputs={b_th_in_level: Flow()},
-                                    conversion_factors={
-                                        b_el_bhp: 1 / shp_cop,
-                                        b_shp: (shp_cop - 1) / shp_cop,
-                                        b_th_in_level: 1})
-                self.hp_flows.append((t_shp.label, b_th_in_level.label))
-                energy_system.add(t_shp)
-
-            ###############################################################
-            # solar thermal sources
-            if st:
+                b_th_in_level = heat_layers.b_th_in[temp]
                 st_level_label = 't_st_' + temp_str
                 t_st_level = Transformer(
                     label=st_level_label,
                     inputs={b_st: Flow(nominal_value=1)},
                     outputs={b_th_in_level: Flow(nominal_value=1)},
-                    conversion_factors={b_st: (1 / st['generation']['ST_' + str(temp)]).to_list()})
+                    conversion_factors={
+                        b_st: (1 / st['generation'][
+                            'ST_' + str(temp)]).to_list()})
 
                 self.st_input_flows.append((st_level_label,
                                             b_th_in_level.label))
                 energy_system.add(t_st_level)
-
-            temp_low = temp
 
         ###########################################################################
 
@@ -389,14 +330,14 @@ class ENaQMetaModel:
 
         heat_exchanger = Transformer(
             label='heat_exchanger',
-            inputs={b_th[temps['heating']]: Flow()},
+            inputs={heat_layers.b_th[temps['heating']]: Flow()},
             outputs={b_th_buildings: Flow(),
-                     b_th[temps['heating']
+                     heat_layers.b_th[temps['heating']
                           - temps['heat_drop_heating']]: Flow()},
             conversion_factors={
-                b_th[temps['heating']]: 1,
+                heat_layers.b_th[temps['heating']]: 1,
                 b_th_buildings: heater_ratio,
-                b_th[temps['heating']
+                heat_layers.b_th[temps['heating']
                      - temps['heat_drop_heating']]:
                          1 - heater_ratio})
 
@@ -409,8 +350,9 @@ class ENaQMetaModel:
         self.th_demand_flows.append((b_th_buildings.label, d_heat.label))
 
         # create expensive source for missing heat to ensure model is solvable
-        missing_heat = Source(label='missing_heat',
-                              outputs={b_th_buildings: Flow(variable_costs=1000)})
+        missing_heat = Source(
+            label='missing_heat',
+            outputs={b_th_buildings: Flow(variable_costs=1000)})
         energy_system.add(missing_heat)
 
         if boost_dhw:

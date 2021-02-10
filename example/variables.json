@@ -14,10 +14,10 @@
         "electric_input": 0.1
     },
     "near_surface_heat_source": {
-        "thermal_output": 0
+        "thermal_output": 0.1
     },
     "geothermal_heat_source": {
-        "thermal_output": 0,
+        "thermal_output": 0.1,
         "temperature": 15
     },
     "ice_storage": {
