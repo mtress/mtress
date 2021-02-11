@@ -328,12 +328,8 @@ class ENaQMetaModel:
             backward_flow_temperature=(temps['heating']
                                        - temps['heat_drop_heating']))
 
-        # create expensive source for missing heat to ensure model is solvable
-        missing_heat = Source(
-            label='missing_heat',
-            outputs={heat_layers.b_th_in_highest: Flow(variable_costs=1000)})
-        energy_system.add(missing_heat)
-
+        # Domestic hot water is not attached to the layered heat,
+        # as it might have to be boosted.
         if boost_dhw:
             b_th_dhw = Bus(label="b_th_dhw")
             temp_max = max(temperature_levels)
@@ -369,6 +365,12 @@ class ENaQMetaModel:
                                          d_dhw.label))
 
         energy_system.add(d_el, d_dhw)
+
+        # create expensive source for missing heat to ensure model is solvable
+        missing_heat = Source(
+            label='missing_heat',
+            outputs={heat_layers.b_th_in_highest: Flow(variable_costs=1000)})
+        energy_system.add(missing_heat)
 
         if boiler:
             # boiler
