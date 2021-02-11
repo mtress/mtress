@@ -32,10 +32,10 @@ class HeatDemands:
         """
         energy_system = heat_layers.energy_system
 
-        thermal_sink_bus = solph.Bus(label=label + "_sink_bus")
+        self.thermal_sink_bus = solph.Bus(label=label + "_sink_bus")
 
         thermal_sink = solph.Sink(label=label+"_sink",
-                                  inputs={thermal_sink_bus: solph.Flow()})
+                                  inputs={self.thermal_sink_bus: solph.Flow()})
 
         heat_drop_ratio = ((celsius_to_kelvin(backward_flow_temperature)
                             - heat_layers.REFERENCE_TEMPERATURE)
@@ -46,11 +46,11 @@ class HeatDemands:
             label=label+"_drop",
             inputs={heat_layers.b_th[forward_flow_temperature]: solph.Flow()},
             outputs={heat_layers.b_th[backward_flow_temperature]: solph.Flow(),
-                     thermal_sink_bus: solph.Flow(nominal_value=1,
-                                                  fix=heat_demands)},
+                     self.thermal_sink_bus: solph.Flow(nominal_value=1,
+                                                       fix=heat_demands)},
             conversion_factors={
                 heat_layers.b_th[forward_flow_temperature]: 1,
                 heat_layers.b_th[backward_flow_temperature]: heat_drop_ratio,
-                thermal_sink_bus: 1 - heat_drop_ratio})
+                self.thermal_sink_bus: 1 - heat_drop_ratio})
 
-        energy_system.add(thermal_sink, thermal_sink_bus, heat_drop)
+        energy_system.add(thermal_sink, self.thermal_sink_bus, heat_drop)
