@@ -53,4 +53,17 @@ class HeatDemands:
                 heat_layers.b_th[backward_flow_temperature]: heat_drop_ratio,
                 self.thermal_sink_bus: 1 - heat_drop_ratio})
 
+        self.forward_flow = (heat_layers.b_th[forward_flow_temperature].label,
+                             heat_drop.label)
+        self.backward_flow = (
+            heat_drop.label,
+            heat_layers.b_th[backward_flow_temperature].label)
+
         energy_system.add(thermal_sink, self.thermal_sink_bus, heat_drop)
+
+    def total_demand(self, results_dict):
+        """
+        Total energy
+        """
+        return (results_dict[self.forward_flow]['sequences']['flow']
+                - results_dict[self.backward_flow]['sequences']['flow'])

@@ -117,7 +117,6 @@ class ENaQMetaModel:
 
         # list of flows to identify different sources and sinks later
         # which use units of power
-        self.th_demand_flows = list()
         self.pv_flows = list()
         self.wt_flows = list()
         self.chp_el_flows = list()
@@ -320,7 +319,7 @@ class ENaQMetaModel:
                     inputs={b_eldist: Flow(fix=demand['electricity'],
                                            nominal_value=1)})
 
-        heat_demand = HeatDemands(
+        self.heat_demand = HeatDemands(
             heat_layers=heat_layers,
             heat_demands=demand['heating'],
             label="heating",
@@ -340,11 +339,11 @@ class ENaQMetaModel:
             heater = Transformer(
                 label="dhw_booster",
                 inputs={b_eldist: Flow(),
-                        heat_demand.thermal_sink_bus: Flow()},
+                        self.heat_demand.thermal_sink_bus: Flow()},
                 outputs={b_th_dhw: Flow()},
                 conversion_factors={
                     b_eldist: 1 - heater_ratio,
-                    heat_demand.thermal_sink_bus: heater_ratio,
+                    self.heat_demand.thermal_sink_bus: heater_ratio,
                     b_th_dhw: 1})
             self.p2h_flows.append((heater.label,
                                    b_th_dhw.label))
@@ -354,15 +353,11 @@ class ENaQMetaModel:
                          inputs={b_th_dhw: Flow(
                              nominal_value=1,
                              fix=demand['dhw'])})
-            self.th_demand_flows.append((b_th_dhw.label,
-                                         d_dhw.label))
         else:
             d_dhw = Sink(label='d_dhw',
-                         inputs={heat_demand.thermal_sink_bus: Flow(
+                         inputs={self.heat_demand.thermal_sink_bus: Flow(
                              nominal_value=1,
                              fix=demand['dhw'])})
-            self.th_demand_flows.append((heat_demand.thermal_sink_bus.label,
-                                         d_dhw.label))
 
         energy_system.add(d_el, d_dhw)
 
@@ -625,12 +620,8 @@ class ENaQMetaModel:
 
         :return: integrated thermal demand
         """
-        d_th = 0
-        for res in self.th_demand_flows:
-            d_th += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
-
-        return d_th
+        return self.heat_demand.total_demand(
+            self.energy_system.results['main']).sum()
 
     def el_pv(self):
         """
