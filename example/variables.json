@@ -11,7 +11,7 @@
         ]
     },
     "heat_pump": {
-        "electric_input": 0
+        "electric_input": 0.1
     },
     "near_surface_heat_source": {
         "thermal_output": 0
