@@ -11,13 +11,13 @@
         ]
     },
     "heat_pump": {
-        "electric_input": 0.1
+        "electric_input": 0
     },
     "near_surface_heat_source": {
-        "thermal_output": 0.1
+        "thermal_output": 0
     },
     "geothermal_heat_source": {
-        "thermal_output": 0.1,
+        "thermal_output": 0,
         "temperature": 15
     },
     "ice_storage": {
