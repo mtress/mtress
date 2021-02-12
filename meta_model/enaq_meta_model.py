@@ -251,7 +251,7 @@ class ENaQMetaModel:
                 # So we add excess heat to allow not using it.
                 # We charge money for this to make it unattractive to use
                 s_ihs_excess = Sink(label="ihs_excess",
-                                    inputs={b_ihs: Flow(variable_costs=100)})
+                                    inputs={b_ihs: Flow()})
 
                 energy_system.add(b_ihs, s_ihs, s_ihs_excess)
 
@@ -266,6 +266,8 @@ class ENaQMetaModel:
                     inputs={b_thp: Flow()},
                     outputs={b_thp: Flow()})
                 energy_system.add(s_tgs, b_thp)
+        else:
+            self.heat_pump = None
 
         ###############################################################
         # Solar thermal
@@ -561,8 +563,11 @@ class ENaQMetaModel:
 
         :return: integrated het pump power
         """
-        return self.heat_pump.heat_output(
-            self.energy_system.results['main']).sum()
+        if self.heat_pump:
+            return self.heat_pump.heat_output(
+                self.energy_system.results['main']).sum()
+        else:
+            return 0
 
     def heat_solar_thermal(self):
         """
