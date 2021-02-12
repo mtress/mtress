@@ -182,15 +182,19 @@ class ENaQMetaModel:
                 label='b_el_bhp',
                 inputs={b_eldist: Flow(nominal_value=bhp['electric_input'])})
             energy_system.add(b_el_bhp)
-            heat_pump = LayeredHeatPump(energy_system=energy_system,
-                                        heat_layers=heat_layers,
-                                        electricity_source=b_el_bhp,
-                                        heat_sources={
-                                            "ice": 0,
-                                            "soil": meteo['temp_soil'],
-                                            "sonde": ghp['temperature'],
-                                            "pit_storage": tgs["temperature"]},
-                                        label="heat_pump")
+            if 'thermal_output' not in bhp:
+                bhp['thermal_output'] = None
+            heat_pump = LayeredHeatPump(
+                energy_system=energy_system,
+                heat_layers=heat_layers,
+                electricity_source=b_el_bhp,
+                thermal_power_limit=bhp['thermal_output'],
+                heat_sources={
+                    "ice": 0,
+                    "soil": meteo['temp_soil'],
+                    "sonde": ghp['temperature'],
+                    "pit_storage": tgs["temperature"]},
+                label="heat_pump")
             self.heat_pump = heat_pump
             # heat pump sources
             # near surface source

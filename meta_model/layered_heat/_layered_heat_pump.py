@@ -24,6 +24,7 @@ class LayeredHeatPump:
                  heat_layers,
                  electricity_source,
                  heat_sources,
+                 thermal_power_limit=None,
                  cop_0_35=4.7,
                  label=""):
         """
@@ -44,7 +45,23 @@ class LayeredHeatPump:
         electricity_bus = solph.Bus(label=label+"heat_pump_electricity",
                                     inputs={electricity_source: solph.Flow()})
 
-        energy_system.add(electricity_bus)
+        heat_budget_split = solph.Bus(label=label+"heat_budget_split")
+        if thermal_power_limit:
+            heat_budget = solph.Source(
+                label=label+"heat_budget",
+                outputs={
+                    heat_budget_split: solph.Flow(
+                        nominal_value=thermal_power_limit)})
+        else:
+            heat_budget = solph.Source(
+                label=label+"heat_budget",
+                outputs={
+                    heat_budget_split: solph.Flow()})
+
+        self.heat_budget_flow = (heat_budget.label,
+                                 heat_budget_split.label)
+
+        energy_system.add(electricity_bus, heat_budget_split, heat_budget)
 
         for source in heat_sources:
             temperature_lower = heat_sources[source]
@@ -68,7 +85,8 @@ class LayeredHeatPump:
                     label=hp_str,
                     inputs={
                         heat_source: solph.Flow(),
-                        electricity_bus: solph.Flow()},
+                        electricity_bus: solph.Flow(),
+                        heat_budget_split: solph.Flow()},
                     outputs={
                         heat_layers.b_th_in[target_temperature]: solph.Flow()},
                     conversion_factors={
@@ -77,19 +95,9 @@ class LayeredHeatPump:
                         heat_layers.b_th_in[target_temperature]: 1})
 
                 energy_system.add(heat_pump_level)
-                self.heat_out_flows.append(
-                    (heat_pump_level.label,
-                     heat_layers.b_th_in[target_temperature].label))
 
     def heat_output(self, results_dict):
         """
         Total energy
         """
-
-        e_hp_th = np.zeros(len(results_dict[
-                               self.heat_out_flows[0]]['sequences']['flow']))
-        for flow in self.heat_out_flows:
-            the_flow = results_dict[flow]['sequences']['flow']
-            e_hp_th += the_flow
-
-        return e_hp_th
+        return results_dict[self.heat_budget_flow]['sequences']['flow']
