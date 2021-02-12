@@ -35,6 +35,7 @@ class LayeredHeatPump:
         """
         self.b_th_in = dict()
         self.cop = dict()
+        self.heat_out_flows = list()
 
         if len(label) > 0:
             label = label + "_"
@@ -75,3 +76,16 @@ class LayeredHeatPump:
                         heat_layers.b_th_in[target_temperature]: 1})
 
                 energy_system.add(heat_pump_level)
+                self.heat_out_flows.append(
+                    (heat_pump_level.label,
+                     heat_layers.b_th_in[target_temperature].label()))
+
+    def heat_output(self, results_dict):
+        """
+        Total energy
+        """
+
+        e_hp_th = 0
+        for flow in self.heat_out_flows:
+            the_flow = results_dict[flow]['sequences']['flow']
+            e_hp_th += the_flow

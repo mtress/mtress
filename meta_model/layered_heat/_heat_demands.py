@@ -61,9 +61,12 @@ class HeatDemands:
 
         energy_system.add(thermal_sink, self.thermal_sink_bus, heat_drop)
 
-    def total_demand(self, results_dict):
+    def heat_output(self, results_dict):
         """
-        Total energy
+        :param results_dict: dictionary containing result sequences
+
+        Total energy calculated as
+        difference between forward and backward flows
         """
         return (results_dict[self.forward_flow]['sequences']['flow']
                 - results_dict[self.backward_flow]['sequences']['flow'])

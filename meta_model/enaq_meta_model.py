@@ -191,6 +191,7 @@ class ENaQMetaModel:
                                             "sonde": ghp['temperature'],
                                             "pit_storage": tgs["temperature"]},
                                         label="heat_pump")
+            self.heat_pump = heat_pump
             # heat pump sources
             # near surface source
             if shp:
@@ -556,12 +557,8 @@ class ENaQMetaModel:
 
         :return: integrated het pump power
         """
-        e_hp_th = 0
-        for res in self.hp_flows:
-            e_hp_th += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
-
-        return e_hp_th
+        return self.heat_pump.heat_output(
+            self.energy_system.results['main']).sum()
 
     def heat_solar_thermal(self):
         """
@@ -621,7 +618,7 @@ class ENaQMetaModel:
 
         :return: integrated thermal demand
         """
-        return (self.heat_demand.total_demand(
+        return (self.heat_demand.heat_output(
             self.energy_system.results['main'])
                 + self.energy_system.results['main'][
                     self.booster_flow]['sequences']['flow']).sum()
