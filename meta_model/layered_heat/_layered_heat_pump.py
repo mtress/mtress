@@ -11,6 +11,7 @@ SPDX-FileCopyrightText: Lucas Schmeling
 SPDX-License-Identifier: MIT
 """
 
+import numpy as np
 from oemof import solph
 
 from meta_model.physics import (calc_cop,
@@ -78,14 +79,17 @@ class LayeredHeatPump:
                 energy_system.add(heat_pump_level)
                 self.heat_out_flows.append(
                     (heat_pump_level.label,
-                     heat_layers.b_th_in[target_temperature].label()))
+                     heat_layers.b_th_in[target_temperature].label))
 
     def heat_output(self, results_dict):
         """
         Total energy
         """
 
-        e_hp_th = 0
+        e_hp_th = np.zeros(len(results_dict[
+                               self.heat_out_flows[0]]['sequences']['flow']))
         for flow in self.heat_out_flows:
             the_flow = results_dict[flow]['sequences']['flow']
             e_hp_th += the_flow
+
+        return e_hp_th
