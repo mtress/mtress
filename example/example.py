@@ -125,18 +125,27 @@ def example(number_of_time_steps=365*24):
     heat_demand = meta_model.thermal_demand()
 
     print("Heat demand: {:.3f}".format(heat_demand))
-    print("{:04.1f} % geothermal coverage".format(
-        100 * meta_model.heat_geothermal() / heat_demand))
-    print("{:04.1f} % solar coverage".format(
-        100 * meta_model.heat_solar_thermal() / heat_demand))
-    print("{:04.1f} % CHP coverage".format(
-        100 * meta_model.heat_chp() / heat_demand))
-    print("{:04.1f} % pellet coverage".format(
-        100 * meta_model.heat_pellet() / heat_demand))
-    print("{:04.1f} % boiler coverage".format(
-        100 * meta_model.heat_boiler() / heat_demand))
-    print("{:04.1f} % power2heat coverage".format(
-        100 * meta_model.heat_p2h() / heat_demand))
+    print("{:04.1f} % geothermal coverage: {:.3f}".format(
+        100 * meta_model.heat_geothermal() / heat_demand,
+        meta_model.heat_geothermal()))
+    print("{:04.1f} % heat pump coverage: {:.3f}".format(
+        100 * meta_model.heat_heat_pump() / heat_demand,
+        meta_model.heat_heat_pump()))
+    print("{:04.1f} % solar coverage: {:.3f}".format(
+        100 * meta_model.heat_solar_thermal() / heat_demand,
+        meta_model.heat_solar_thermal()))
+    print("{:04.1f} % CHP coverage: {:.3f}".format(
+        100 * meta_model.heat_chp() / heat_demand,
+        meta_model.heat_chp()))
+    print("{:04.1f} % pellet coverage: {:.3f}".format(
+        100 * meta_model.heat_pellet() / heat_demand,
+        meta_model.heat_pellet()))
+    print("{:04.1f} % boiler coverage: {:.3f}".format(
+        100 * meta_model.heat_boiler() / heat_demand,
+        meta_model.heat_boiler()))
+    print("{:04.1f} % power2heat coverage: {:.3f}".format(
+        100 * meta_model.heat_p2h() / heat_demand,
+        meta_model.heat_p2h()))
 
 
 if __name__ == '__main__':
