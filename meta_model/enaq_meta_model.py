@@ -178,23 +178,32 @@ class ENaQMetaModel:
         ####################################################################
         # Heat pump
         if bhp:
-            b_el_bhp = Bus(
-                label='b_el_bhp',
-                inputs={b_eldist: Flow(nominal_value=bhp['electric_input'])})
-            energy_system.add(b_el_bhp)
-            if 'thermal_output' not in bhp:
-                bhp['thermal_output'] = None
-            heat_pump = LayeredHeatPump(
-                energy_system=energy_system,
-                heat_layers=heat_layers,
-                electricity_source=b_el_bhp,
-                thermal_power_limit=bhp['thermal_output'],
-                heat_sources={
-                    "ice": 0,
-                    "soil": meteo['temp_soil'],
-                    "sonde": ghp['temperature'],
-                    "pit_storage": tgs["temperature"]},
-                label="heat_pump")
+            heat_sources = dict()
+            if ihs:
+                heat_sources["ice"] = 0
+            if shp:
+                heat_sources["soil"] = meteo['temp_soil']
+            if ghp:
+                heat_sources["sonde"] = ghp['temperature']
+            if tgs:
+                heat_sources["pit_storage"] = tgs["temperature"]
+
+            if len(heat_sources) > 0:
+                b_el_bhp = Bus(
+                    label='b_el_bhp',
+                    inputs={b_eldist: Flow(nominal_value=bhp['electric_input'])})
+                energy_system.add(b_el_bhp)
+                if 'thermal_output' not in bhp:
+                    bhp['thermal_output'] = None
+                heat_pump = LayeredHeatPump(
+                    energy_system=energy_system,
+                    heat_layers=heat_layers,
+                    electricity_source=b_el_bhp,
+                    thermal_power_limit=bhp['thermal_output'],
+                    heat_sources=heat_sources,
+                    label="heat_pump")
+            else:
+                heat_pump = None
             self.heat_pump = heat_pump
             # heat pump sources
             # near surface source
