@@ -7,7 +7,7 @@ from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          GenericStorage)
 
 from .layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
-                           HeatDemands)
+                           HeatExchanger)
 from .physics import (HHV_WP, TC_CONCRETE, H2O_HEAT_FUSION, H2O_DENSITY)
 
 
@@ -94,14 +94,6 @@ class ENaQMetaModel:
         temperature_levels.append(temps['heating']
                                   - temps['heat_drop_heating'])
 
-        # Temperature might have to be boosted for DHW.
-        if temps['dhw'] > max(temperature_levels):
-            boost_dhw = True
-        else:
-            boost_dhw = False
-            # Ensure that DHW temperature is considered
-            temperature_levels.append(temps['dhw'])
-
         # Ensure unique temperatures
         temperature_levels = list(set(temperature_levels))
         temperature_levels.sort()
@@ -121,6 +113,7 @@ class ENaQMetaModel:
         self.wt_flows = list()
         self.chp_el_flows = list()
         self.chp_heat_flows = list()
+        self.demand_flows = list()
         self.hp_flows = list()
         self.p2h_flows = list()
         self.boiler_flows = list()
@@ -330,53 +323,52 @@ class ENaQMetaModel:
 
         energy_system.add(m_el_in, m_el_out, m_gas)
 
-        # create local energy demand
+        # create local electricity demand
         d_el = Sink(label='d_el',
                     inputs={b_eldist: Flow(fix=demand['electricity'],
                                            nominal_value=1)})
 
-        self.heat_demand = HeatDemands(
+        energy_system.add(d_el)
+
+        # create building heat
+        building_temp_in = temps['heating'] - temps["heat_drop_exchanger_dhw"]
+        building = HeatLayers(
+                energy_system=energy_system,
+                temperature_levels=[building_temp_in, temps['dhw']],
+                reference_temperature=temps['reference'],
+                label="building")
+
+        self.heat_exchanger_buildings = HeatExchanger(
             heat_layers=heat_layers,
-            heat_demands=demand['heating'],
+            heat_demand=building.b_th_in[building_temp_in],
             label="heating",
             forward_flow_temperature=temps['heating'],
             backward_flow_temperature=(temps['heating']
                                        - temps['heat_drop_heating']))
 
-        # Domestic hot water is not attached to the layered heat,
-        # as it might have to be boosted.
-        if boost_dhw:
-            b_th_dhw = Bus(label="b_th_dhw")
-            temp_max = max(temperature_levels)
-            heater_ratio = (temp_max - temps['heat_drop_exchanger_dhw']
-                            - temps['reference']) / (temps['dhw']
-                                                     - temps['reference'])
+        d_sh = Sink(label='d_sh',
+                    inputs={building.b_th[building_temp_in]: Flow(
+                        fix=demand['heating'],
+                        nominal_value=1)})
+        self.demand_flows.append((building.b_th[building_temp_in].label,
+                                  d_sh.label))
 
-            heater = Transformer(
+        d_dhw = Sink(label='d_dhw',
+                     inputs={building.b_th[temps['dhw']]: Flow(
+                         fix=demand['dhw'],
+                         nominal_value=1)})
+        self.demand_flows.append((building.b_th[temps['dhw']].label,
+                                  d_dhw.label))
+
+        energy_system.add(d_sh, d_dhw)
+
+        dhw_booster = Transformer(
                 label="dhw_booster",
-                inputs={b_eldist: Flow(),
-                        self.heat_demand.thermal_sink_bus: Flow()},
-                outputs={b_th_dhw: Flow()},
-                conversion_factors={
-                    b_eldist: 1 - heater_ratio,
-                    self.heat_demand.thermal_sink_bus: heater_ratio,
-                    b_th_dhw: 1})
-            self.booster_flow = (heater.label,
-                                 b_th_dhw.label)
-            self.p2h_flows.append(self.booster_flow)
-            energy_system.add(b_th_dhw, heater)
-
-            d_dhw = Sink(label='d_dhw',
-                         inputs={b_th_dhw: Flow(
-                             nominal_value=1,
-                             fix=demand['dhw'])})
-        else:
-            d_dhw = Sink(label='d_dhw',
-                         inputs={self.heat_demand.thermal_sink_bus: Flow(
-                             nominal_value=1,
-                             fix=demand['dhw'])})
-
-        energy_system.add(d_el, d_dhw)
+                inputs={b_eldist: Flow()},
+                outputs={building.b_th_in_highest: Flow()})
+        energy_system.add(dhw_booster)
+        self.p2h_flows.append((dhw_booster.label,
+                               building.b_th_in_highest.label))
 
         # create expensive source for missing heat to ensure model is solvable
         missing_heat = Source(
@@ -636,10 +628,12 @@ class ENaQMetaModel:
 
         :return: integrated thermal demand
         """
-        return (self.heat_demand.heat_output(
-            self.energy_system.results['main'])
-                + self.energy_system.results['main'][
-                    self.booster_flow]['sequences']['flow']).sum()
+        demand = 0
+        for res in self.demand_flows:
+            demand += self.energy_system.results['main'][res][
+                'sequences']['flow'].sum()
+
+        return demand
 
     def el_pv(self):
         """

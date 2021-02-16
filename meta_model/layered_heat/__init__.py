@@ -8,6 +8,6 @@ SPDX-License-Identifier: MIT
 """
 
 from ._heat_layers import HeatLayers
-from ._heat_demands import HeatDemands
+from ._heat_exchanger import HeatExchanger
 from ._layered_heat_pump import LayeredHeatPump
 from ._multi_layer_storage import MultiLayerStorage

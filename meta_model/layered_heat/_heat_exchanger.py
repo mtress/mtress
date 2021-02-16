@@ -16,26 +16,21 @@ from oemof import solph
 from meta_model.physics import celsius_to_kelvin
 
 
-class HeatDemands:
+class HeatExchanger:
     def __init__(self,
                  heat_layers,
-                 heat_demands,
+                 heat_demand,
                  label,
                  forward_flow_temperature,
                  backward_flow_temperature):
         """
         :param heat_layers:
-        :param heat_demands:
+        :param heat_demand:
         :param label:
         :param forward_flow_temperature:
         :param backward_flow_temperature:
         """
         energy_system = heat_layers.energy_system
-
-        self.thermal_sink_bus = solph.Bus(label=label + "_sink_bus")
-
-        thermal_sink = solph.Sink(label=label+"_sink",
-                                  inputs={self.thermal_sink_bus: solph.Flow()})
 
         heat_drop_ratio = ((celsius_to_kelvin(backward_flow_temperature)
                             - heat_layers.REFERENCE_TEMPERATURE)
@@ -43,15 +38,14 @@ class HeatDemands:
                               - heat_layers.REFERENCE_TEMPERATURE))
         self.heat_drop_ratio = heat_drop_ratio
         heat_drop = solph.Transformer(
-            label=label+"_drop",
+            label=label,
             inputs={heat_layers.b_th[forward_flow_temperature]: solph.Flow()},
             outputs={heat_layers.b_th[backward_flow_temperature]: solph.Flow(),
-                     self.thermal_sink_bus: solph.Flow(nominal_value=1,
-                                                       fix=heat_demands)},
+                     heat_demand: solph.Flow()},
             conversion_factors={
                 heat_layers.b_th[forward_flow_temperature]: 1,
                 heat_layers.b_th[backward_flow_temperature]: heat_drop_ratio,
-                self.thermal_sink_bus: 1 - heat_drop_ratio})
+                heat_demand: 1 - heat_drop_ratio})
 
         self.forward_flow = (heat_layers.b_th[forward_flow_temperature].label,
                              heat_drop.label)
@@ -59,7 +53,9 @@ class HeatDemands:
             heat_drop.label,
             heat_layers.b_th[backward_flow_temperature].label)
 
-        energy_system.add(thermal_sink, self.thermal_sink_bus, heat_drop)
+        self.supply_flow = (heat_drop.label, heat_demand)
+
+        energy_system.add(heat_drop)
 
     def heat_output(self, results_dict):
         """
@@ -68,5 +64,4 @@ class HeatDemands:
         Total energy calculated as
         difference between forward and backward flows
         """
-        return (results_dict[self.forward_flow]['sequences']['flow']
-                - results_dict[self.backward_flow]['sequences']['flow'])
+        return results_dict[self.supply_flow]['sequences']['flow']
