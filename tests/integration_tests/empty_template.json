@@ -2,7 +2,7 @@
     "temperatures": {
         "reference": 273.15,
         "dhw": 333.15,
-        "heat_drop_exchanger_dhw": 5,
+        "heat_drop_exchanger_dhw": 0,
         "heating": 313.15,
         "heat_drop_heating": 10,
         "intermediate": []
@@ -33,21 +33,21 @@
         "heat_capacity": 0.025
     },
     "gas_boiler": {
-        "efficiency": 0.85,
+        "efficiency": 1,
         "thermal_output": 0
     },
     "pellet_boiler": {
-        "efficiency": 0.8,
+        "efficiency": 1,
         "thermal_output": 0
     },
     "chp": {
         "biomethane_fraction": 0,
         "funding_hours_per_year": 3500,
         "electric_output": 0,
-        "electric_efficiency": 0.4,
+        "electric_efficiency": 0.5,
         "thermal_output": 0,
         "thermal_efficiency": 0.5,
-        "gas_input": 0.27,
+        "gas_input": 0,
         "feed_in_tariff_funded": [7.5, 7.5, 0],
         "feed_in_tariff_unfunded": [0, 0, 0],
         "own_consumption_tariff_funded": [3.5, 3.5, 3.5]
@@ -72,9 +72,9 @@
     "battery": {
         "power": 0,
         "capacity": 0,
-        "efficiency_inflow": 0.98,
-        "efficiency_outflow": 0.98,
-        "self_discharge": 1e-06
+        "efficiency_inflow": 1,
+        "efficiency_outflow": 1,
+        "self_discharge": 0
     },
     "heat_storage": {
         "volume": 0,
