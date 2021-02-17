@@ -71,7 +71,7 @@ def test_booster():
 
     assert math.isclose(meta_model.thermal_demand(), 0.9)
     assert math.isclose(meta_model.heat_boiler(), 0.8, rel_tol=1e-5)
-    assert math.isclose(meta_model.heat_p2h(), 0.3, rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_p2h(), 0.1, rel_tol=1e-5)
     assert math.isclose(meta_model.el_demand(), 0.1, rel_tol=1e-5)
 
 
@@ -86,7 +86,7 @@ def test_booster_heat_drop():
 
     assert math.isclose(meta_model.thermal_demand(), 0.9)
     assert math.isclose(meta_model.heat_boiler(), 0.75, rel_tol=1e-5)
-    assert math.isclose(meta_model.heat_p2h(), 0.3, rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_p2h(), 0.15, rel_tol=1e-5)
     assert math.isclose(meta_model.el_demand(), 0.15, rel_tol=1e-5)
 
 

@@ -478,8 +478,8 @@ class ENaQMetaModel:
                                      b_eldist: 1 - heater_ratio,
                                      b_th_buildings: heater_ratio,
                                      b_th_dhw: 1})
-            self.p2h_flows.append((heater.label,
-                                   b_th_dhw.label))
+            self.p2h_flows.append((b_eldist.label,
+                                   heater.label))
             energy_system.add(b_th_dhw, heater)
 
             d_dhw = Sink(label='d_dhw',
