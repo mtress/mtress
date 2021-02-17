@@ -332,44 +332,53 @@ class ENaQMetaModel:
         energy_system.add(d_el)
 
         # create building heat
-        building_temp_in = temps['heating'] - temps["heat_drop_exchanger_dhw"]
-        building = HeatLayers(
-                energy_system=energy_system,
-                temperature_levels=[building_temp_in, temps['dhw']],
-                reference_temperature=temps['reference'],
-                label="building")
+        b_th_buildings = Bus(label="b_th_buildings")
+        energy_system.add(b_th_buildings)
 
         self.heat_exchanger_buildings = HeatExchanger(
             heat_layers=heat_layers,
-            heat_demand=building.b_th_in[building_temp_in],
+            heat_demand=b_th_buildings,
             label="heating",
             forward_flow_temperature=temps['heating'],
             backward_flow_temperature=(temps['heating']
                                        - temps['heat_drop_heating']))
 
         d_sh = Sink(label='d_sh',
-                    inputs={building.b_th[building_temp_in]: Flow(
+                    inputs={b_th_buildings: Flow(
                         fix=demand['heating'],
                         nominal_value=1)})
-        self.demand_flows.append((building.b_th[building_temp_in].label,
+        self.demand_flows.append((b_th_buildings.label,
                                   d_sh.label))
 
+        b_th_dhw = Bus(label="b_th_dhw")
+
         d_dhw = Sink(label='d_dhw',
-                     inputs={building.b_th[temps['dhw']]: Flow(
+                     inputs={b_th_dhw: Flow(
                          fix=demand['dhw'],
                          nominal_value=1)})
-        self.demand_flows.append((building.b_th[temps['dhw']].label,
+        self.demand_flows.append((b_th_dhw.label,
                                   d_dhw.label))
 
-        energy_system.add(d_sh, d_dhw)
+        energy_system.add(b_th_dhw, d_sh, d_dhw)
 
-        dhw_booster = Transformer(
-                label="dhw_booster",
-                inputs={b_eldist: Flow()},
-                outputs={building.b_th_in_highest: Flow()})
+        # We assume a heat drop but no energy loss due to the heat exchanger.
+        heater_ratio = (max(heat_layers.TEMPERATURE_LEVELS)
+                        - temps['heat_drop_exchanger_dhw']
+                        - temps['reference']) / (temps['dhw']
+                                                 - temps['reference'])
+
+        dhw_booster = Transformer(label="dhw_booster",
+                                  inputs={b_eldist: Flow(),
+                                          b_th_buildings: Flow()},
+                                  outputs={b_th_dhw: Flow()},
+                                  conversion_factors={
+                                      b_eldist: 1 - heater_ratio,
+                                      b_th_buildings: heater_ratio,
+                                      b_th_dhw: 1})
+
         energy_system.add(dhw_booster)
-        self.p2h_flows.append((dhw_booster.label,
-                               building.b_th_in_highest.label))
+        self.p2h_flows.append((b_eldist.label,
+                               dhw_booster.label))
 
         # create expensive source for missing heat to ensure model is solvable
         missing_heat = Source(
