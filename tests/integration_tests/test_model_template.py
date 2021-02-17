@@ -61,32 +61,34 @@ def test_empty_template():
     assert meta_model.el_production() == 0
 
 
-def test_power2heat_nodrop():
+def test_booster():
     p2h_params = {
-        "power_to_heat": {"thermal_output": 1},
+        "gas_boiler": {"thermal_output": 1},
         "demand": {
             "heating": [0.2, 0.2, 0.2],  # Sum: 0.6
             "dhw": [0.1, 0.1, 0.1]}}  # Sum: 0.3
     meta_model = run_model_template(custom_params=p2h_params)
 
     assert math.isclose(meta_model.thermal_demand(), 0.9)
-    assert math.isclose(meta_model.heat_p2h(), 0.9)
-    assert math.isclose(meta_model.el_demand(), 0.9)
+    assert math.isclose(meta_model.heat_boiler(), 0.8, rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_p2h(), 0.3, rel_tol=1e-5)
+    assert math.isclose(meta_model.el_demand(), 0.1, rel_tol=1e-5)
 
 
-def test_power2heat_heat_drop():
+def test_booster_heat_drop():
     p2h_params = {
-        "power_to_heat": {"thermal_output": 1},
+        "gas_boiler": {"thermal_output": 1},
         "demand": {
             "heating": [0.2, 0.2, 0.2],  # Sum: 0.6
             "dhw": [0.1, 0.1, 0.1]},  # Sum: 0.3
-        "temperatures": {"heat_drop_exchanger_dhw": 10}}  # +50% DHW demand
+        "temperatures": {"heat_drop_exchanger_dhw": 10}}  # +50% for booster
     meta_model = run_model_template(custom_params=p2h_params)
 
     assert math.isclose(meta_model.thermal_demand(), 0.9)
-    assert math.isclose(meta_model.heat_p2h(), 1.05)
-    assert math.isclose(meta_model.el_demand(), 0.9)
+    assert math.isclose(meta_model.heat_boiler(), 0.75, rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_p2h(), 0.3, rel_tol=1e-5)
+    assert math.isclose(meta_model.el_demand(), 0.15, rel_tol=1e-5)
 
 
 if __name__ == "__main__":
-    test_empty_template()
+    test_booster()
