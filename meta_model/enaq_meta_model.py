@@ -82,7 +82,7 @@ class ENaQMetaModel:
             del hs
             hs = None
         st = kwargs.get('solar_thermal')
-        if st and st["generation"].sum().max() <= 0:
+        if st and (st["st_area"] <= 0 or st["generation"].sum().max() <= 0):
             del st
             st = None
 
@@ -311,9 +311,10 @@ class ENaQMetaModel:
                                           * time_range))})
         self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
 
+        co2_costs = np.array(self.spec_co2['el_out']) * self.spec_co2['price']
         m_el_out = Sink(label='m_el_out',
-                        inputs={b_elgrid: Flow(variable_costs=self.spec_co2['el_out']
-                                                              * self.spec_co2['price'])})
+                        inputs={b_elgrid: Flow(
+                            variable_costs=co2_costs)})
         self.electricity_export_flows.append((b_elgrid.label, m_el_out.label))
 
         gas_price = energy_cost['fossil_gas'] \
@@ -688,7 +689,9 @@ class ENaQMetaModel:
 
         :return: integrated electricity demand
         """
-        return self.el_production().sum() + self.el_import().sum() - self.el_export().sum()
+        return (self.el_production()
+                + self.el_import().sum()
+                - self.el_export().sum())
 
     def el_import(self):
         """
