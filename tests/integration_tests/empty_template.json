@@ -90,7 +90,7 @@
         "electricity": {
             "LP": 15000,
             "AP": [17, 17, 17],
-            "market": [0, 0, 0]
+            "market": [100, 100, 100]
         },
         "fossil_gas": 35,
         "biomethane": 95,
