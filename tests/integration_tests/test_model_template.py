@@ -61,6 +61,21 @@ def test_empty_template():
     assert meta_model.el_production() == 0
 
 
+def test_heating():
+    HEAT_DEMAND = 0.3
+
+    p2h_params = {
+        "gas_boiler": {"thermal_output": 1},
+        "demand": {
+            "heating": 3* [HEAT_DEMAND/3]}}
+    meta_model = run_model_template(custom_params=p2h_params)
+
+    assert math.isclose(meta_model.thermal_demand(), HEAT_DEMAND)
+    assert math.isclose(meta_model.heat_boiler(), HEAT_DEMAND, rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_p2h(), 0, rel_tol=1e-5)
+    assert math.isclose(meta_model.el_demand(), 0, rel_tol=1e-5)
+
+
 def test_booster():
     DHW_DEMAND = 0.3
 
@@ -70,10 +85,10 @@ def test_booster():
             "dhw": 3* [DHW_DEMAND/3]}}
     meta_model = run_model_template(custom_params=p2h_params)
 
-    assert math.isclose(meta_model.thermal_demand(), 0.3)
-    assert math.isclose(meta_model.heat_boiler(), 0.2, rel_tol=1e-5)
-    assert math.isclose(meta_model.heat_p2h(), 0.1, rel_tol=1e-5)
-    assert math.isclose(meta_model.el_demand(), 0.1, rel_tol=1e-5)
+    assert math.isclose(meta_model.thermal_demand(), DHW_DEMAND)
+    assert math.isclose(meta_model.heat_boiler(), DHW_DEMAND*2/3, rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_p2h(), DHW_DEMAND/3, rel_tol=1e-5)
+    assert math.isclose(meta_model.el_demand(), DHW_DEMAND/3, rel_tol=1e-5)
 
 
 def test_booster_heat_drop():
@@ -85,10 +100,10 @@ def test_booster_heat_drop():
         "temperatures": {"heat_drop_exchanger_dhw": 10}}  # +50% for booster
     meta_model = run_model_template(custom_params=p2h_params)
 
-    assert math.isclose(meta_model.thermal_demand(), 0.3)
-    assert math.isclose(meta_model.heat_boiler(), 0.15, rel_tol=1e-5)
-    assert math.isclose(meta_model.heat_p2h(), 0.15, rel_tol=1e-5)
-    assert math.isclose(meta_model.el_demand(), 0.15, rel_tol=1e-5)
+    assert math.isclose(meta_model.thermal_demand(), DHW_DEMAND)
+    assert math.isclose(meta_model.heat_boiler(), DHW_DEMAND/2, rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_p2h(), DHW_DEMAND/2, rel_tol=1e-5)
+    assert math.isclose(meta_model.el_demand(), DHW_DEMAND/2, rel_tol=1e-5)
 
 
 if __name__ == "__main__":
