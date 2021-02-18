@@ -107,8 +107,13 @@ def test_booster_heat_drop():
 
 
 def test_partly_solar():
+    """
+    Solar thermal is present would provide enough heat.
+    However, only half of it can be used because of the temperature level
+    right in the middle between forward and backward flow temperatures.
+    """
     heat_demand = 1
-    st_generation = 0.25
+    st_generation = 1
 
     st_generation = {"ST_20": 3 * [1e-9],
                      "ST_30": 3 * [st_generation / 3],
@@ -135,11 +140,45 @@ def test_partly_solar():
                         heat_demand,
                         rel_tol=1e-5)
     assert math.isclose(meta_model.heat_boiler(),
-                        heat_demand*3/4,
+                        heat_demand/2,
                         rel_tol=1e-5)
     assert math.isclose(meta_model.heat_solar_thermal(),
-                        heat_demand/4,
+                        heat_demand/2,
                         rel_tol=1e-5)
+
+
+def test_useless_solar():
+    """
+    Solar thermal is present but useless,
+    as it only provides heat at backward flow temperature.
+    """
+    heat_demand = 1
+    st_generation = 1
+
+    st_generation = {"ST_20": 3 * [st_generation / 3],
+                     "ST_30": 3 * [1e-9],
+                     "ST_40": 3 * [1e-9]}
+    st_generation = pd.DataFrame(
+        st_generation,
+        index=pd.date_range('1/1/2000', periods=3, freq='H'))
+
+    p2h_params = {
+        "gas_boiler": {"thermal_output": 1},
+        "solar_thermal": {
+            "st_area": 1,
+            "generation": st_generation
+        },
+        "demand": {
+            "heating": 3 * [heat_demand / 3]
+        },
+        "temperatures": {
+            "heat_drop_heating": 20,
+            "intermediate": [30]}}
+    meta_model = run_model_template(custom_params=p2h_params)
+
+    assert math.isclose(meta_model.thermal_demand(), heat_demand, rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_boiler(), heat_demand, rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_solar_thermal(), 0, abs_tol=1e-8)
 
 
 if __name__ == "__main__":
