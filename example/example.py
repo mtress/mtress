@@ -152,17 +152,6 @@ def example(number_of_time_steps=365*24):
         100 * meta_model.heat_p2h() / heat_demand,
         meta_model.heat_p2h()))
 
-    if plt:
-        th_building_str = (
-                "building_b_th_"
-                + str(variables["temperatures"]['heating']
-                      - variables["temperatures"]["heat_drop_exchanger_dhw"]))
-        upper_heat_layer_results = views.node(energy_system.results['main'],
-                                              th_building_str)["sequences"]
-        upper_heat_layer_results.plot()
-
-        plt.show()
-
 
 if __name__ == '__main__':
     example(number_of_time_steps=7*24)
