@@ -106,6 +106,38 @@ def test_booster_heat_drop():
     assert math.isclose(meta_model.el_demand(), dhw_demand/2, rel_tol=1e-5)
 
 
+def test_fully_solar():
+    """
+    Solar thermal is present would provide enough heat.
+    However, only half of it can be used because of the temperature level
+    right in the middle between forward and backward flow temperatures.
+    """
+    heat_demand = 1
+    st_generation = 1
+
+    st_generation = {"ST_293.15": 3 * [1e-9],
+                     "ST_313.15": 3 * [st_generation / 3]}
+    st_generation = pd.DataFrame(
+        st_generation,
+        index=pd.date_range('1/1/2000', periods=3, freq='H'))
+
+    params = {
+        "solar_thermal": {
+            "st_area": 1,
+            "generation": st_generation
+        },
+        "demand": {
+            "heating": 3 * [heat_demand / 3]
+        },
+        "temperatures": {
+            "heat_drop_heating": 20}}
+    meta_model = run_model_template(custom_params=params)
+
+    assert math.isclose(meta_model.heat_solar_thermal(),
+                        heat_demand,
+                        rel_tol=1e-5)
+
+
 def test_partly_solar():
     """
     Solar thermal is present would provide enough heat.
