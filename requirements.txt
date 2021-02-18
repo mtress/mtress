@@ -1,0 +1,4 @@
+oemof.solph>=0.4.1,<0.5
+oemof.thermal>=0.0.3
+pandas>=1.0
+
