@@ -62,49 +62,85 @@ def test_empty_template():
 
 
 def test_heating():
-    HEAT_DEMAND = 0.3
+    heat_demand = 0.3
 
     p2h_params = {
         "gas_boiler": {"thermal_output": 1},
         "demand": {
-            "heating": 3* [HEAT_DEMAND/3]}}
+            "heating": 3 * [heat_demand / 3]}}
     meta_model = run_model_template(custom_params=p2h_params)
 
-    assert math.isclose(meta_model.thermal_demand(), HEAT_DEMAND)
-    assert math.isclose(meta_model.heat_boiler(), HEAT_DEMAND, rel_tol=1e-5)
+    assert math.isclose(meta_model.thermal_demand(), heat_demand)
+    assert math.isclose(meta_model.heat_boiler(), heat_demand, rel_tol=1e-5)
     assert math.isclose(meta_model.heat_p2h(), 0, rel_tol=1e-5)
     assert math.isclose(meta_model.el_demand(), 0, rel_tol=1e-5)
 
 
 def test_booster():
-    DHW_DEMAND = 0.3
+    dhw_demand = 0.3
 
     p2h_params = {
         "gas_boiler": {"thermal_output": 1},
         "demand": {
-            "dhw": 3* [DHW_DEMAND/3]}}
+            "dhw": 3 * [dhw_demand / 3]}}
     meta_model = run_model_template(custom_params=p2h_params)
 
-    assert math.isclose(meta_model.thermal_demand(), DHW_DEMAND)
-    assert math.isclose(meta_model.heat_boiler(), DHW_DEMAND*2/3, rel_tol=1e-5)
-    assert math.isclose(meta_model.heat_p2h(), DHW_DEMAND/3, rel_tol=1e-5)
-    assert math.isclose(meta_model.el_demand(), DHW_DEMAND/3, rel_tol=1e-5)
+    assert math.isclose(meta_model.thermal_demand(), dhw_demand)
+    assert math.isclose(meta_model.heat_boiler(), dhw_demand*2/3, rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_p2h(), dhw_demand/3, rel_tol=1e-5)
+    assert math.isclose(meta_model.el_demand(), dhw_demand/3, rel_tol=1e-5)
 
 
 def test_booster_heat_drop():
-    DHW_DEMAND = 0.3
+    dhw_demand = 0.3
     p2h_params = {
         "gas_boiler": {"thermal_output": 1},
         "demand": {
-            "dhw": 3* [DHW_DEMAND/3]},
+            "dhw": 3 * [dhw_demand / 3]},
         "temperatures": {"heat_drop_exchanger_dhw": 10}}  # +50% for booster
     meta_model = run_model_template(custom_params=p2h_params)
 
-    assert math.isclose(meta_model.thermal_demand(), DHW_DEMAND)
-    assert math.isclose(meta_model.heat_boiler(), DHW_DEMAND/2, rel_tol=1e-5)
-    assert math.isclose(meta_model.heat_p2h(), DHW_DEMAND/2, rel_tol=1e-5)
-    assert math.isclose(meta_model.el_demand(), DHW_DEMAND/2, rel_tol=1e-5)
+    assert math.isclose(meta_model.thermal_demand(), dhw_demand)
+    assert math.isclose(meta_model.heat_boiler(), dhw_demand/2, rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_p2h(), dhw_demand/2, rel_tol=1e-5)
+    assert math.isclose(meta_model.el_demand(), dhw_demand/2, rel_tol=1e-5)
+
+
+def test_partly_solar():
+    heat_demand = 1
+    st_generation = 0.25
+
+    st_generation = {"ST_20": 3 * [1e-9],
+                     "ST_30": 3 * [st_generation / 3],
+                     "ST_40": 3 * [1e-9]}
+    st_generation = pd.DataFrame(
+        st_generation,
+        index=pd.date_range('1/1/2000', periods=3, freq='H'))
+
+    p2h_params = {
+        "gas_boiler": {"thermal_output": 1},
+        "solar_thermal": {
+            "st_area": 1,
+            "generation": st_generation
+        },
+        "demand": {
+            "heating": 3 * [heat_demand / 3]
+        },
+        "temperatures": {
+            "heat_drop_heating": 20,
+            "intermediate": [30]}}
+    meta_model = run_model_template(custom_params=p2h_params)
+
+    assert math.isclose(meta_model.thermal_demand(),
+                        heat_demand,
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_boiler(),
+                        heat_demand*3/4,
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_solar_thermal(),
+                        heat_demand/4,
+                        rel_tol=1e-5)
 
 
 if __name__ == "__main__":
-    test_booster()
+    test_partly_solar()
