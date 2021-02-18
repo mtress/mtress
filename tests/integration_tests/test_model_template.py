@@ -108,9 +108,7 @@ def test_booster_heat_drop():
 
 def test_fully_solar():
     """
-    Solar thermal is present would provide enough heat.
-    However, only half of it can be used because of the temperature level
-    right in the middle between forward and backward flow temperatures.
+    Solar thermal is present provides enough heat.
     """
     heat_demand = 1
     st_generation = 1
