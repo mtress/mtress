@@ -184,7 +184,8 @@ class ENaQMetaModel:
             if len(heat_sources) > 0:
                 b_el_bhp = Bus(
                     label='b_el_bhp',
-                    inputs={b_eldist: Flow(nominal_value=bhp['electric_input'])})
+                    inputs={
+                        b_eldist: Flow(nominal_value=bhp['electric_input'])})
                 energy_system.add(b_el_bhp)
                 if 'thermal_output' not in bhp:
                     bhp['thermal_output'] = None
@@ -203,8 +204,9 @@ class ENaQMetaModel:
             if shp:
                 b_shp = Bus(label="b_bhp",
                             outputs={heat_pump.b_th_in["soil"]: Flow()})
-                s_shp = Source(label="s_shp",
-                               outputs={b_shp: Flow(nominal_value=shp['thermal_output'])})
+                s_shp = Source(
+                    label="s_shp",
+                    outputs={b_shp: Flow(nominal_value=shp['thermal_output'])})
 
                 self.gt_input_flows.append((s_shp.label, b_shp.label))
                 energy_system.add(s_shp, b_shp)
@@ -213,13 +215,14 @@ class ENaQMetaModel:
             if ghp:
                 b_ghp = Bus(label="b_ghp",
                             outputs={heat_pump.b_th_in["sonde"]: Flow()})
-                s_ghp = Source(label="s_ghp",
-                               outputs={b_ghp: Flow(nominal_value=ghp['thermal_output'])})
+                s_ghp = Source(
+                    label="s_ghp",
+                    outputs={b_ghp: Flow(nominal_value=ghp['thermal_output'])})
 
                 self.gt_input_flows.append((s_ghp.label, b_ghp.label))
                 energy_system.add(s_ghp, b_ghp)
 
-            ####################################################################
+            ###################################################################
             # Ice storage
             if ihs:
                 b_ihs = Bus(label='b_ihs',
@@ -244,8 +247,11 @@ class ENaQMetaModel:
                     label='s_ihs',
                     inputs={b_ihs: Flow()},
                     outputs={b_ihs: Flow()},
-                    fixed_losses_relative=-(ihs_gains_air + ihs_gains_ground) / 1e6,
-                    nominal_storage_capacity=H2O_HEAT_FUSION * H2O_DENSITY * ihs['volume']
+                    fixed_losses_relative=-1e-6 * (ihs_gains_air
+                                                   + ihs_gains_ground),
+                    nominal_storage_capacity=(H2O_HEAT_FUSION
+                                              * H2O_DENSITY
+                                              * ihs['volume'])
                 )
 
                 # For most ambient temperatures,
@@ -298,17 +304,17 @@ class ENaQMetaModel:
                                             b_th_in_level.label))
                 energy_system.add(t_st_level)
 
-        ###########################################################################
-
+        ###############################################################
         # create external markets
         # RLM customer for district and larger buildings
-        m_el_in = Source(label='m_el_in',
-                         outputs={b_elgrid: Flow(
-                             variable_costs=energy_cost['electricity']['AP'] +
-                                            self.spec_co2['el_in'] * self.spec_co2['price'],
-                             investment=Investment(
-                                 ep_costs=energy_cost['electricity']['LP']
-                                          * time_range))})
+        m_el_in = Source(
+            label='m_el_in',
+            outputs={b_elgrid: Flow(
+                variable_costs=energy_cost['electricity']['AP'] +
+                               self.spec_co2['el_in'] * self.spec_co2['price'],
+                investment=Investment(
+                    ep_costs=energy_cost['electricity']['LP']
+                             * time_range))})
         self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
 
         co2_costs = np.array(self.spec_co2['el_out']) * self.spec_co2['price']
@@ -414,15 +420,16 @@ class ENaQMetaModel:
                                    * self.spec_co2['price']
                                    * HHV_WP)})
 
-            t_pellet = Transformer(label='t_pellet',
-                                   inputs={b_pellet: Flow()},
-                                   outputs={
-                                       heat_layers.b_th_in_highest:
-                                           Flow(nominal_value=pellet_boiler['thermal_output'])},
-                                   conversion_factors={
-                                       b_pellet: HHV_WP,
-                                       heat_layers.b_th_in_highest:
-                                           pellet_boiler['efficiency']})
+            t_pellet = Transformer(
+                label='t_pellet',
+                inputs={b_pellet: Flow()},
+                outputs={
+                    heat_layers.b_th_in_highest:
+                        Flow(nominal_value=pellet_boiler['thermal_output'])},
+                conversion_factors={
+                    b_pellet: HHV_WP,
+                    heat_layers.b_th_in_highest:
+                        pellet_boiler['efficiency']})
 
             self.pellet_heat_flows.append((t_pellet.label,
                                            heat_layers.b_th_in_highest.label))
@@ -433,8 +440,9 @@ class ENaQMetaModel:
             # CHP
             b_gas_chp = Bus(label="b_gas_chp")
 
-            biomethane_price = energy_cost['biomethane'] \
-                               + self.spec_co2['biomethane'] * self.spec_co2['price']
+            biomethane_price = (energy_cost['biomethane']
+                                + self.spec_co2['biomethane']
+                                * self.spec_co2['price'])
             m_gas_chp = Source(label='m_gas_chp',
                                outputs={b_gas_chp: Flow(
                                    variable_costs=
@@ -452,26 +460,33 @@ class ENaQMetaModel:
                     b_elprod: Flow(
                         variable_costs=-chp['own_consumption_tariff_funded'])})
 
-            b_el_chp_unfund = Bus(label="b_el_chp_unfund",
-                                  outputs={b_elxprt: Flow(variable_costs=-energy_cost['electricity']['market']),
-                                           b_elprod: Flow()})
+            b_el_chp_unfund = Bus(
+                label="b_el_chp_unfund",
+                outputs={
+                    b_elxprt: Flow(
+                        variable_costs=-energy_cost['electricity']['market']),
+                    b_elprod: Flow()})
 
-            b_el_chp = Bus(label="b_el_chp",
-                           outputs={b_el_chp_fund: Flow(summed_max=chp['funding_hours_per_year'],
-                                                        nominal_value=chp['electric_output']),
-                                    b_el_chp_unfund: Flow()})
+            b_el_chp = Bus(
+                label="b_el_chp",
+                outputs={
+                    b_el_chp_fund: Flow(
+                        summed_max=chp['funding_hours_per_year'],
+                        nominal_value=chp['electric_output']),
+                    b_el_chp_unfund: Flow()})
 
-            t_chp = Transformer(label='t_chp',
-                                inputs={b_gas_chp: Flow(
-                                    nominal_value=chp['gas_input'])},
-                                outputs={
-                                    b_el_chp: Flow(nominal_value=chp['electric_output']),
-                                    heat_layers.b_th_in_highest:
-                                        Flow(nominal_value=chp['thermal_output'])},
-                                conversion_factors={
-                                    b_el_chp: chp['electric_efficiency'],
-                                    heat_layers.b_th_in_highest:
-                                        chp['thermal_efficiency']})
+            t_chp = Transformer(
+                label='t_chp',
+                inputs={b_gas_chp: Flow(
+                    nominal_value=chp['gas_input'])},
+                outputs={
+                    b_el_chp: Flow(nominal_value=chp['electric_output']),
+                    heat_layers.b_th_in_highest:
+                        Flow(nominal_value=chp['thermal_output'])},
+                conversion_factors={
+                    b_el_chp: chp['electric_efficiency'],
+                    heat_layers.b_th_in_highest:
+                        chp['thermal_efficiency']})
 
             self.chp_heat_flows.append((t_chp.label,
                                         heat_layers.b_th_in_highest.label))
@@ -481,27 +496,31 @@ class ENaQMetaModel:
 
         # PV
         if pv:
-            b_el_pv = Bus(label="b_el_pv",
-                          outputs={
-                              b_elxprt: Flow(variable_costs=-pv['feed_in_tariff']),
-                              b_elprod: Flow()})
+            b_el_pv = Bus(
+                label="b_el_pv",
+                outputs={
+                    b_elxprt: Flow(variable_costs=-pv['feed_in_tariff']),
+                    b_elprod: Flow()})
 
             t_pv = Source(label='t_pv',
-                          outputs={b_el_pv: Flow(nominal_value=1.0, max=pv['generation'])})
+                          outputs={
+                              b_el_pv: Flow(nominal_value=1.0,
+                                            max=pv['generation'])})
             self.pv_flows.append((t_pv.label, b_el_pv.label))
 
             energy_system.add(t_pv, b_el_pv)
 
         # power to heat
         if p2h:
-            t_p2h = Transformer(label='t_p2h',
-                                inputs={b_eldist: Flow()},
-                                outputs={
-                                    heat_layers.b_th_in_highest:
-                                        Flow(nominal_value=p2h['thermal_output'])},
-                                conversion_factors={
-                                    b_eldist: 1,
-                                    heat_layers.b_th_in_highest: 1})
+            t_p2h = Transformer(
+                label='t_p2h',
+                inputs={b_eldist: Flow()},
+                outputs={
+                    heat_layers.b_th_in_highest:
+                        Flow(nominal_value=p2h['thermal_output'])},
+                conversion_factors={
+                    b_eldist: 1,
+                    heat_layers.b_th_in_highest: 1})
             energy_system.add(t_p2h)
             self.p2h_flows.append((t_p2h.label,
                                    heat_layers.b_th_in_highest.label))
@@ -510,11 +529,14 @@ class ENaQMetaModel:
         if wt:
             b_el_wt = Bus(label="b_el_wt",
                           outputs={
-                              b_elxprt: Flow(variable_costs=-wt['feed_in_tariff']),
+                              b_elxprt: Flow(
+                                  variable_costs=-wt['feed_in_tariff']),
                               b_elprod: Flow()})
 
             t_wt = Source(label='t_wt',
-                          outputs={b_el_wt: Flow(nominal_value=1.0, max=wt['generation'])})
+                          outputs={
+                              b_el_wt: Flow(nominal_value=1.0,
+                                            max=wt['generation'])})
             self.pv_flows.append((t_wt.label, b_el_wt.label))
 
             energy_system.add(t_wt, b_el_wt)
@@ -822,9 +844,12 @@ class ENaQMetaModel:
 
         :return: Integrated CO2 emission in operation
         """
-        CO2_import_natural_gas = self.fossil_gas_import() * self.spec_co2['fossil_gas']
-        CO2_import_biomethane = self.biomethane_import() * self.spec_co2['biomethane']
-        CO2_import_pellet = self.pellet_import() * self.spec_co2['wood_pellet'] * HHV_WP
+        CO2_import_natural_gas = (self.fossil_gas_import()
+                                  * self.spec_co2['fossil_gas'])
+        CO2_import_biomethane = (self.biomethane_import()
+                                 * self.spec_co2['biomethane'])
+        CO2_import_pellet = (self.pellet_import()
+                             * self.spec_co2['wood_pellet'] * HHV_WP)
         CO2_import_el = (self.el_import() * self.spec_co2['el_in']).sum()
         CO2_export_el = (-self.el_export() * self.spec_co2['el_out']).sum()
         res = (CO2_import_natural_gas + CO2_import_biomethane
