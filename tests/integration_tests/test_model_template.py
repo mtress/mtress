@@ -181,5 +181,59 @@ def test_useless_solar():
     assert math.isclose(meta_model.heat_solar_thermal(), 0, abs_tol=1e-8)
 
 
+def test_missing_heat():
+    heat_demand = 0.3
+
+    params = {
+        "demand": {
+            "heating": 3 * [heat_demand / 3]}}
+    meta_model = run_model_template(custom_params=params)
+
+    assert math.isclose(meta_model.thermal_demand(), heat_demand)
+    assert math.isclose(meta_model.missing_heat().sum(),
+                        heat_demand,
+                        rel_tol=1e-5)
+
+
+def test_chp():
+    heat_demand = 0.3
+
+    params = {
+        "chp": {"gas_input": 2,
+                "thermal_output": 1,
+                "electric_output": 1},
+        "demand": {
+            "heating": 3 * [heat_demand / 3]}}
+    meta_model = run_model_template(custom_params=params)
+
+    assert math.isclose(meta_model.thermal_demand(), heat_demand)
+    assert math.isclose(meta_model.heat_chp(), heat_demand, rel_tol=1e-5)
+    assert math.isclose(meta_model.el_export().sum(),
+                        heat_demand,
+                        rel_tol=1e-5)
+
+
+def test_heat_pump():
+    heat_demand = 1
+    design_cop = 4.6 * 0.6
+
+    params = {
+        "heat_pump": {"electric_input": 1},
+        "geothermal_heat_source": {"thermal_output": 1},
+        "demand": {
+            "heating": 3 * [heat_demand / 3]},
+        "temperatures": {"heating": 35}}
+    meta_model = run_model_template(custom_params=params)
+
+    assert math.isclose(meta_model.thermal_demand(), heat_demand)
+    assert math.isclose(meta_model.heat_heat_pump(),
+                        heat_demand,
+                        rel_tol=1e-5)
+    design_cop_heat = meta_model.el_import().sum() * design_cop
+    assert math.isclose(design_cop_heat,
+                        heat_demand,
+                        rel_tol=2.5e-2)  # 2.5 % are good enough
+
+
 if __name__ == "__main__":
-    test_partly_solar()
+    test_heat_pump()

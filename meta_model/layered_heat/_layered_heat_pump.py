@@ -11,7 +11,6 @@ SPDX-FileCopyrightText: Lucas Schmeling
 SPDX-License-Identifier: MIT
 """
 
-import numpy as np
 from oemof import solph
 
 from meta_model.physics import (calc_cop,
@@ -25,7 +24,7 @@ class LayeredHeatPump:
                  electricity_source,
                  heat_sources,
                  thermal_power_limit=None,
-                 cop_0_35=4.7,
+                 cop_0_35=4.6,
                  label=""):
         """
         :param energy_system:

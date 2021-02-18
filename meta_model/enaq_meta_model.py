@@ -391,6 +391,8 @@ class ENaQMetaModel:
             label='missing_heat',
             outputs={heat_layers.b_th_in_highest: Flow(variable_costs=1000)})
         energy_system.add(missing_heat)
+        self.missing_heat_flow = (missing_heat.label,
+                                  heat_layers.b_th_in_highest.label)
 
         if boiler:
             # boiler
@@ -836,6 +838,15 @@ class ENaQMetaModel:
         :return: Import gas
         """
         return self.fossil_gas_import() + self.biomethane_import()
+
+    def missing_heat(self):
+        """
+        Heat missing to allow full supply
+
+        :return: heat that was missing
+        """
+        return self.energy_system.results['main'][self.missing_heat_flow][
+                'sequences']['flow']
 
     def co2_emission(self):
         """

@@ -19,7 +19,7 @@
     },
     "geothermal_heat_source": {
         "thermal_output": 0,
-        "temperature": 15
+        "temperature": 0
     },
     "ice_storage": {
         "volume": 0,
@@ -48,9 +48,9 @@
         "thermal_output": 0,
         "thermal_efficiency": 0.5,
         "gas_input": 0,
-        "feed_in_tariff_funded": [7.5, 7.5, 0],
-        "feed_in_tariff_unfunded": [0, 0, 0],
-        "own_consumption_tariff_funded": [3.5, 3.5, 3.5]
+        "feed_in_tariff_funded": 7.5,
+        "feed_in_tariff_unfunded": 0,
+        "own_consumption_tariff_funded": 3.5
     },
     "pv": {
         "nominal_power": 0,
@@ -90,7 +90,7 @@
         "electricity": {
             "LP": 15000,
             "AP": [17, 17, 17],
-            "market": [100, 100, 100]
+            "market": 100
         },
         "fossil_gas": 35,
         "biomethane": 95,
