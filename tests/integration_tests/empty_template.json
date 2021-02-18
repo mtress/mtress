@@ -8,8 +8,8 @@
         "intermediate": []
     },
     "meteorology": {
-        "temp_air": [0, 0, 0],
-        "temp_soil": [0, 0, 0]
+        "temp_air": 0,
+        "temp_soil": 0
     },
     "heat_pump": {
         "electric_input": 0
