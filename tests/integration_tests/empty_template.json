@@ -19,7 +19,7 @@
     },
     "geothermal_heat_source": {
         "thermal_output": 0,
-        "temperature": 15
+        "temperature": 273.15
     },
     "ice_storage": {
         "volume": 0,
