@@ -202,7 +202,7 @@ class ENaQMetaModel:
                 self.gt_input_flows.append((s_ghp.label, b_ghp.label))
                 energy_system.add(s_ghp, b_ghp)
 
-            ####################################################################
+            ###################################################################
             # Ice storage
             if ihs:
                 b_ihs = Bus(label='b_ihs')  # bus for interconnections
