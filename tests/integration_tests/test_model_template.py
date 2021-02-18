@@ -106,6 +106,62 @@ def test_booster_heat_drop():
     assert math.isclose(meta_model.el_demand(), dhw_demand/2, rel_tol=1e-5)
 
 
+def test_fully_solar():
+    """
+    Solar thermal is present provides enough heat.
+    """
+    heat_demand = 1
+    st_generation = 1
+
+    st_generation = {"ST_20": 3 * [st_generation / 3],
+                     "ST_40": 3 * [st_generation / 3]}
+    st_generation = pd.DataFrame(
+        st_generation,
+        index=pd.date_range('1/1/2000', periods=3, freq='H'))
+
+    params = {
+        "solar_thermal": {
+            "st_area": 1,
+            "generation": st_generation
+        },
+        "demand": {"heating": 3 * [heat_demand / 3]},
+        "temperatures": {"heat_drop_heating": 20}}
+    meta_model = run_model_template(custom_params=params)
+
+    assert math.isclose(meta_model.heat_solar_thermal(),
+                        heat_demand,
+                        rel_tol=1e-5)
+
+
+def test_fully_solar_with_storage():
+    """
+    Solar thermal is present and can provide enough heat,
+    when it is stored.
+    """
+    heat_demand = 1
+    st_generation = 3
+
+    st_generation = {"ST_20": [0, st_generation, 0],
+                     "ST_40": [0, st_generation, 0]}
+    st_generation = pd.DataFrame(
+        st_generation,
+        index=pd.date_range('1/1/2000', periods=3, freq='H'))
+
+    params = {
+        "solar_thermal": {
+            "st_area": 1,
+            "generation": st_generation
+        },
+        "heat_storage": {"volume": 2},
+        "demand": {"heating": 3 * [heat_demand / 3]},
+        "temperatures": {"heat_drop_heating": 20}}
+    meta_model = run_model_template(custom_params=params)
+
+    assert math.isclose(meta_model.heat_solar_thermal()/2,
+                        heat_demand,
+                        abs_tol=2e-4)  # There are losses, so add tolerance.
+
+
 def test_partly_solar():
     """
     Solar thermal is present would provide enough heat.
