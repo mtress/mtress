@@ -214,19 +214,25 @@ def test_chp():
 
 
 def test_heat_pump():
-    heat_demand = 0.3
+    heat_demand = 1
+    design_cop = 4.6 * 0.6
 
     params = {
         "heat_pump": {"electric_input": 1},
         "geothermal_heat_source": {"thermal_output": 1},
         "demand": {
-            "heating": 3 * [heat_demand / 3]}}
+            "heating": 3 * [heat_demand / 3]},
+        "temperatures": {"heating": 308.15}}
     meta_model = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand(), heat_demand)
     assert math.isclose(meta_model.heat_heat_pump(),
                         heat_demand,
                         rel_tol=1e-5)
+    design_cop_heat = meta_model.el_import().sum() * design_cop
+    assert math.isclose(design_cop_heat,
+                        heat_demand,
+                        rel_tol=2.5e-2)  # 2.5 % are good enough
 
 
 if __name__ == "__main__":
