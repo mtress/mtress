@@ -106,5 +106,41 @@ def test_booster_heat_drop():
     assert math.isclose(meta_model.el_demand(), dhw_demand/2, rel_tol=1e-5)
 
 
+def test_partly_solar():
+    heat_demand = 1
+    st_generation = 0.25
+
+    st_generation = {"ST_293.15": 3 * [1e-9],
+                     "ST_303.15": 3 * [st_generation / 3],
+                     "ST_313.15": 3 * [1e-9]}
+    st_generation = pd.DataFrame(
+        st_generation,
+        index=pd.date_range('1/1/2000', periods=3, freq='H'))
+
+    p2h_params = {
+        "gas_boiler": {"thermal_output": 1},
+        "solar_thermal": {
+            "st_area": 1,
+            "generation": st_generation
+        },
+        "demand": {
+            "heating": 3 * [heat_demand / 3]
+        },
+        "temperatures": {
+            "heat_drop_heating": 20,
+            "intermediate": [303.15]}}
+    meta_model = run_model_template(custom_params=p2h_params)
+
+    assert math.isclose(meta_model.thermal_demand(),
+                        heat_demand,
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_boiler(),
+                        heat_demand*3/4,
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_solar_thermal(),
+                        heat_demand/4,
+                        rel_tol=1e-5)
+
+
 if __name__ == "__main__":
-    test_booster()
+    test_partly_solar()
