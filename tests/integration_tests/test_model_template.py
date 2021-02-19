@@ -133,16 +133,16 @@ def test_fully_solar():
                         rel_tol=1e-5)
 
 
-def test_fully_solar_with_storage():
+def test_fully_solar_with_useless_storage():
     """
-    Solar thermal is present and can provide enough heat,
-    when it is stored.
+    Solar thermal is present and can provide enough heat.
+    The storage does not have to be used.
     """
     heat_demand = 1
     st_generation = 3
 
-    st_generation = {"ST_20": [0, st_generation, 0],
-                     "ST_40": [0, st_generation, 0]}
+    st_generation = {"ST_20": 3 * [st_generation / 3],
+                     "ST_40": 3 * [st_generation / 3]}
     st_generation = pd.DataFrame(
         st_generation,
         index=pd.date_range('1/1/2000', periods=3, freq='H'))
@@ -157,9 +157,9 @@ def test_fully_solar_with_storage():
         "temperatures": {"heat_drop_heating": 20}}
     meta_model = run_model_template(custom_params=params)
 
-    assert math.isclose(meta_model.heat_solar_thermal()/2,
+    assert math.isclose(meta_model.heat_solar_thermal(),
                         heat_demand,
-                        abs_tol=2e-4)  # There are losses, so add tolerance.
+                        rel_tol=1e-3)  # good enough
 
 
 def test_partly_solar():
@@ -187,6 +187,90 @@ def test_partly_solar():
         "demand": {
             "heating": 3 * [heat_demand / 3]
         },
+        "temperatures": {
+            "heat_drop_heating": 20,
+            "intermediate": [30]}}
+    meta_model = run_model_template(custom_params=params)
+
+    assert math.isclose(meta_model.thermal_demand(),
+                        heat_demand,
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_boiler(),
+                        heat_demand/2,
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_solar_thermal(),
+                        heat_demand/2,
+                        rel_tol=1e-5)
+
+
+def test_partly_solar_bad_timing():
+    """
+    Solar thermal is present would provide enough heat.
+    However, only 1/6th of it can be used because of the temperature level
+    right in the middle between forward and backward flow temperatures
+    and it is present only in one of three time steps.
+    """
+    heat_demand = 1
+    st_generation = 1
+
+    st_generation = {"ST_20": 3 * [1e-9],
+                     "ST_30": [1e-9, st_generation, 1e-9],
+                     "ST_40": 3 * [1e-9]}
+    st_generation = pd.DataFrame(
+        st_generation,
+        index=pd.date_range('1/1/2000', periods=3, freq='H'))
+
+    params = {
+        "gas_boiler": {"thermal_output": 1},
+        "solar_thermal": {
+            "st_area": 1,
+            "generation": st_generation
+        },
+        "demand": {
+            "heating": 3 * [heat_demand / 3]
+        },
+        "temperatures": {
+            "heat_drop_heating": 20,
+            "intermediate": [30]}}
+    meta_model = run_model_template(custom_params=params)
+
+    assert math.isclose(meta_model.thermal_demand(),
+                        heat_demand,
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_boiler(),
+                        heat_demand*5/6,
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_solar_thermal(),
+                        heat_demand/6,
+                        rel_tol=1e-5)
+
+
+def test_partly_solar_with_storage():
+    """
+    Solar thermal is present would provide enough heat.
+    However, only half of it can be used because of the temperature level
+    right in the middle between forward and backward flow temperatures.
+    The timing is compensated by a storage.
+    """
+    heat_demand = 1
+    st_generation = 1
+
+    st_generation = {"ST_20": 3 * [1e-9],
+                     "ST_30": [1e-9, st_generation, 1e-9],
+                     "ST_40": 3 * [1e-9]}
+    st_generation = pd.DataFrame(
+        st_generation,
+        index=pd.date_range('1/1/2000', periods=3, freq='H'))
+
+    params = {
+        "gas_boiler": {"thermal_output": 1},
+        "solar_thermal": {
+            "st_area": 1,
+            "generation": st_generation},
+        "demand": {
+            "heating": 3 * [heat_demand / 3]},
+        "heat_storage": {
+            "volume": 1e3},  # gigantic storage, so capacity plays no role
         "temperatures": {
             "heat_drop_heating": 20,
             "intermediate": [30]}}
@@ -292,4 +376,4 @@ def test_heat_pump():
 
 
 if __name__ == "__main__":
-    test_heat_pump()
+    test_partly_solar_bad_timing()
