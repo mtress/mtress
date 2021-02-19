@@ -79,7 +79,7 @@
     "heat_storage": {
         "volume": 0,
         "diameter": 2,
-        "insulation_thickness": 0.1
+        "insulation_thickness": 0
     },
     "demand": {
         "electricity": [0, 0, 0],

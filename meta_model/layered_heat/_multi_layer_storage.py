@@ -53,13 +53,18 @@ class MultiLayerStorage:
                                     H2O_DENSITY *
                                     H2O_HEAT_CAPACITY)
 
-            hs_loss_rate, hs_fixed_losses_relative, hs_fixed_losses_absolute = \
-                thermal.stratified_thermal_storage.calculate_losses(
-                    u_value=TC_INSULATION / self.HEAT_STORAGE_INSULATION,
-                    diameter=diameter,
-                    temp_h=temperature,
-                    temp_c=self.REFERENCE_TEMPERATURE,
-                    temp_env=ambient_temperature)
+            if self.HEAT_STORAGE_INSULATION <= 0:
+                hs_loss_rate = hs_fixed_losses_relative = hs_fixed_losses_absolute = 0
+            else:
+                (hs_loss_rate,
+                 hs_fixed_losses_relative,
+                 hs_fixed_losses_absolute) = (
+                    thermal.stratified_thermal_storage.calculate_losses(
+                        u_value=TC_INSULATION / self.HEAT_STORAGE_INSULATION,
+                        diameter=diameter,
+                        temp_h=temperature,
+                        temp_c=self.REFERENCE_TEMPERATURE,
+                        temp_env=ambient_temperature))
 
             s_heat = solph.GenericStorage(
                 label=storage_label,
