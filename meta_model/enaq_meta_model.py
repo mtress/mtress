@@ -371,13 +371,18 @@ class ENaQMetaModel:
                                         H2O_DENSITY *
                                         H2O_HEAT_CAPACITY)
 
-                hs_loss_rate, hs_fixed_losses_rel, hs_fixed_losses_abs = \
-                    sts.calculate_losses(
-                        u_value=TC_INSULATION / hs['insulation_thickness'],
-                        diameter=hs['diameter'],
-                        temp_h=temp,
-                        temp_c=temps['reference'],
-                        temp_env=meteo['temp_air'])
+                if hs['insulation_thickness'] > 0:
+                    hs_loss_rate, hs_fixed_losses_rel, hs_fixed_losses_abs = \
+                        sts.calculate_losses(
+                            u_value=TC_INSULATION / hs['insulation_thickness'],
+                            diameter=hs['diameter'],
+                            temp_h=temp,
+                            temp_c=temps['reference'],
+                            temp_env=meteo['temp_air'])
+                else:
+                    hs_loss_rate = \
+                        hs_fixed_losses_rel = \
+                        hs_fixed_losses_abs = 0
 
                 s_heat = GenericStorage(
                     label=storage_label,
