@@ -157,7 +157,7 @@ def test_fully_solar_with_storage():
         "temperatures": {"heat_drop_heating": 20}}
     meta_model = run_model_template(custom_params=params)
 
-    assert math.isclose(meta_model.heat_solar_thermal()/2,
+    assert math.isclose(meta_model.heat_solar_thermal(),
                         heat_demand,
                         abs_tol=2e-4)  # There are losses, so add tolerance.
 
@@ -292,4 +292,4 @@ def test_heat_pump():
 
 
 if __name__ == "__main__":
-    test_heat_pump()
+    test_fully_solar_with_storage()
