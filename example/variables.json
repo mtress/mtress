@@ -57,7 +57,7 @@
         "feed_in_tariff": 75
     },
     "solar_thermal": {
-        "st_area": 1
+        "st_area": 0
     },
     "power_to_heat": {
         "thermal_output": 0.05
