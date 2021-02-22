@@ -401,4 +401,4 @@ def test_heat_pump():
 
 
 if __name__ == "__main__":
-    test_electricity_demand()
+    test_electricity_demand_ap()
