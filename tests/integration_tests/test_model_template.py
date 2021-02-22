@@ -65,6 +65,22 @@ def test_empty_template():
                         0)
 
 
+def test_electricity_demand_ap():
+    electricity_demand = 3
+
+    params = {"demand": {"electricity": 3 * [electricity_demand / 3]}}
+    meta_model, params = run_model_template(custom_params=params)
+
+    assert math.isclose(meta_model.thermal_demand(), 0)
+    assert math.isclose(meta_model.el_demand(), electricity_demand)
+
+    electricity_ap = sum(ap * electricity_demand / 3
+                         for ap in params["energy_cost"]["electricity"]["AP"])
+
+    assert math.isclose(meta_model.energy_system.results['meta']['objective'],
+                        electricity_ap)
+
+
 def test_gas_boiler():
     heat_demand = 0.3
 
@@ -385,4 +401,4 @@ def test_heat_pump():
 
 
 if __name__ == "__main__":
-    test_booster()
+    test_electricity_demand()
