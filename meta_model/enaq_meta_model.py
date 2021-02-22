@@ -111,7 +111,7 @@ class ENaQMetaModel:
         # Time range of the data (in a)
         index = demand['electricity'].index
         index.freq = pd.infer_freq(index)
-        time_range = (index[-1] - index[0] + index.freq) / pd.Timedelta('365D')
+        self.time_range = (index[-1] - index[0] + index.freq) / pd.Timedelta('365D')
         ############################
         # Create energy system model
         ############################
@@ -430,7 +430,7 @@ class ENaQMetaModel:
                                              * self.spec_co2['price']),
                              investment=Investment(
                                  ep_costs=energy_cost['electricity']['LP']
-                                          * time_range))})
+                                          * self.time_range))})
         self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
 
         co2_costs = np.array(self.spec_co2['el_out']) * self.spec_co2['price']
@@ -983,6 +983,12 @@ class ENaQMetaModel:
         """
         return self.energy_system.results['main'][self.missing_heat_flow][
                 'sequences']['flow']
+
+    def optimiser_costs(self):
+        """
+        Extracts costs from the optimiser
+        """
+        return self.energy_system.results["meta"]
 
     def co2_emission(self):
         """
