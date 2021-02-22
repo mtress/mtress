@@ -117,8 +117,15 @@ class ENaQMetaModel:
 
         for cost in ["AP", "market"]:
             if isinstance(energy_cost["electricity"][cost], numbers.Number):
-                constnt_cost = energy_cost["electricity"][cost]
-                energy_cost["electricity"][cost] = len(index) * [constnt_cost]
+                energy_cost["electricity"][cost] = np.full(
+                    len(index), fill_value=energy_cost["electricity"][cost])
+
+        for quantity in ["el_in", "el_out"]:
+            if isinstance(self.spec_co2[quantity], numbers.Number):
+                self.spec_co2[quantity] = np.full(
+                    len(index), fill_value=self.spec_co2[quantity])
+            elif isinstance(self.spec_co2[quantity], list):
+                self.spec_co2[quantity] = np.array(self.spec_co2[quantity])
 
         ############################
         # Create energy system model
@@ -433,9 +440,10 @@ class ENaQMetaModel:
         # RLM customer for district and larger buildings
         m_el_in = Source(label='m_el_in',
                          outputs={b_elgrid: Flow(
-                             variable_costs=(energy_cost['electricity']['AP']
-                                             + self.spec_co2['el_in']
-                                             * self.spec_co2['price']),
+                             variable_costs=(
+                                     energy_cost['electricity']['AP']
+                                     + self.spec_co2['el_in']
+                                     * self.spec_co2['price']),
                              investment=Investment(
                                  ep_costs=energy_cost['electricity']['LP']
                                           * self.time_range))})

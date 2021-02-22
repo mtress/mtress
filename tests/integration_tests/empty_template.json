@@ -89,7 +89,7 @@
     "energy_cost": {
         "electricity": {
             "LP": 0,
-            "AP": [15, 15, 15],
+            "AP": [15, 20, 15],
             "market": 0
         },
         "fossil_gas": 35,
@@ -102,7 +102,7 @@
         "biomethane": 0.15,
         "wood_pellet": 0.025,
         "price": 0,
-        "el_in": [0, 0, 0],
-        "el_out": [0, 0, 0]
+        "el_in": 0,
+        "el_out": 0
     }
 }
