@@ -988,7 +988,7 @@ class ENaQMetaModel:
         """
         Extracts costs from the optimiser
         """
-        return self.energy_system.results["meta"]
+        return self.energy_system.results["meta"]['objective']
 
     def co2_emission(self):
         """
