@@ -61,7 +61,7 @@ def test_empty_template():
     assert meta_model.thermal_demand() == 0
     assert meta_model.el_demand() == 0
     assert meta_model.el_production() == 0
-    assert math.isclose(meta_model.energy_system.results['meta']['objective'],
+    assert math.isclose(meta_model.optimiser_costs(),
                         0)
 
 
@@ -77,7 +77,7 @@ def test_electricity_demand_ap():
     electricity_ap = sum(ap * electricity_demand / 3
                          for ap in params["energy_cost"]["electricity"]["AP"])
 
-    assert math.isclose(meta_model.energy_system.results['meta']['objective'],
+    assert math.isclose(meta_model.optimiser_costs(),
                         electricity_ap)
 
 
