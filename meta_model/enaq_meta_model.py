@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import numbers
+
 import numpy as np
 import pandas as pd
 
@@ -112,6 +114,12 @@ class ENaQMetaModel:
         index = demand['electricity'].index
         index.freq = pd.infer_freq(index)
         self.time_range = (index[-1] - index[0] + index.freq) / pd.Timedelta('365D')
+
+        for cost in ["AP", "market"]:
+            if isinstance(energy_cost["electricity"][cost], numbers.Number):
+                constnt_cost = energy_cost["electricity"][cost]
+                energy_cost["electricity"][cost] = len(index) * [constnt_cost]
+
         ############################
         # Create energy system model
         ############################
