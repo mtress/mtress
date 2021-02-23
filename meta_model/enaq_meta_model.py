@@ -20,6 +20,8 @@ def _array(data, length):
         data = np.full(length, fill_value=data)
     elif isinstance(data, list) and len(data) == length:
         data = np.array(data)
+    elif isinstance(data, pd.Series) and len(data) == length:
+        data = data.to_numpy()
     else:
         raise ValueError
 
@@ -80,6 +82,8 @@ class ENaQMetaModel:
         if pv and pv["nominal_power"] <= 0:
             del pv
             pv = None
+        else:
+            pv['generation'] = pv['spec_generation'] * pv['nominal_power']
         p2h = kwargs.get('power_to_heat')
         if p2h and p2h["thermal_output"] <= 0:
             del p2h
@@ -88,6 +92,8 @@ class ENaQMetaModel:
         if wt and wt["nominal_power"] <= 0:
             del wt
             wt = None
+        else:
+            wt['generation'] = wt['spec_generation'] * wt['nominal_power']
         battery = kwargs.get('battery')
         if battery and battery["capacity"] <= 0:
             del battery
@@ -97,9 +103,11 @@ class ENaQMetaModel:
             del hs
             hs = None
         st = kwargs.get('solar_thermal')
-        if st and (st["st_area"] <= 0 or st["generation"].sum().max() <= 0):
+        if st and st["area"] <= 0:
             del st
             st = None
+        else:
+            st['generation'] = st['spec_generation'] * st['area']
 
         self.spec_co2 = kwargs.get('co2')
 
@@ -191,10 +199,11 @@ class ENaQMetaModel:
 
         ###################################################################
         # Solar Thermal
-        b_st = Bus(label="b_st", )
-        s_st = Source(label="s_st", outputs={b_st: Flow(nominal_value=1)})
+        if st:
+            b_st = Bus(label="b_st", )
+            s_st = Source(label="s_st", outputs={b_st: Flow(nominal_value=1)})
 
-        energy_system.add(s_st, b_st)
+            energy_system.add(s_st, b_st)
 
         ####################################################################
         # heat pump
@@ -389,8 +398,8 @@ class ENaQMetaModel:
                     inputs={b_st: Flow(nominal_value=1)},
                     outputs={b_th_in_level: Flow(nominal_value=1)},
                     conversion_factors={
-                        b_st: (1 / st['generation']['ST_'
-                                                    + str(temp)]).to_list()})
+                        b_st: (1 / st['generation']
+                                     ['ST_' + str(temp)]).to_list()})
 
                 self.st_input_flows.append((st_level_label, b_th_in_label))
                 energy_system.add(t_st_level)
@@ -700,7 +709,7 @@ class ENaQMetaModel:
                 outputs={
                     b_el_wt: Flow(
                         nominal_value=1.0, max=wt['generation'])})
-            self.pv_flows.append((t_wt.label, b_el_wt.label))
+            self.wt_flows.append((t_wt.label, b_el_wt.label))
 
             energy_system.add(t_wt, b_el_wt)
 

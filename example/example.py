@@ -22,6 +22,9 @@ def extract_result_sequence(results, label, resample=None):
 
 
 def example(number_of_time_steps=365*24):
+    with open('variables.json') as f:
+        variables = json.load(f)
+
     meteo = pd.read_csv('meteo.csv',
                         comment='#', index_col=0,
                         sep=',',
@@ -66,16 +69,6 @@ def example(number_of_time_steps=365*24):
         'meteorology': {
             'temp_air': meteo['temp_air'],  # K
             'temp_soil': meteo['temp_soil']},  # K
-        'chp': {
-            'feed_in_tariff_funded': data['price'] + 7.5,  # €/MWh
-            'feed_in_tariff_unfunded': data['price'],  # €/MWh
-            'own_consumption_tariff_funded': data['price'] + 3.5},  # €/MWh
-        'pv': {
-            'generation': data['PV']},  # MW
-        'wind_turbine': {
-            'generation': data['WT']},  # MW
-        'solar_thermal': {
-            'generation': data.filter(regex='ST')},  # MW
         'energy_cost': {
             'electricity': {
                 'AP': data['price'] + 17,  # €/MWh
@@ -89,8 +82,20 @@ def example(number_of_time_steps=365*24):
             'el_out': -data['spec_co2 (t/MWh)']}  # t/MWh
     }
 
-    with open('variables.json') as f:
-        variables = json.load(f)
+    # Only add timeseries if technology is present in model
+    if 'chp' in variables.keys():
+        time_series['chp'] = {'feed_in_tariff_funded': data['price'] + 7.5,  # €/MWh
+                              'feed_in_tariff_unfunded': data['price'],  # €/MWh
+                              'own_consumption_tariff_funded': 3.5}  # €/MWh
+
+    if 'pv' in variables.keys():
+        time_series['pv'] = {'spec_generation': data['PV']}  # MW
+
+    if 'wind_turbine' in variables.keys():
+        time_series['wind_turbine'] = {'spec_generation': data['WT']}  # MW
+
+    if 'solar_thermal' in variables.keys():
+        time_series['solar_thermal'] = {'spec_generation': data.filter(regex='ST')}  # MW/m^2
 
     for key1 in time_series:
         if key1 not in variables:
@@ -123,30 +128,45 @@ def example(number_of_time_steps=365*24):
     energy_system.results['meta'] = processing.meta_results(
         meta_model.model)
 
-    heat_demand = meta_model.thermal_demand()
+    heat_demand = meta_model.thermal_demand().sum()
 
+    print('\n')
     print("Heat demand: {:.3f}".format(heat_demand))
     print("{:04.1f} % geothermal coverage: {:.3f}".format(
-        100 * meta_model.heat_geothermal() / heat_demand,
-        meta_model.heat_geothermal()))
+        100 * meta_model.heat_geothermal().sum() / heat_demand,
+        meta_model.heat_geothermal().sum()))
     print("{:04.1f} % heat pump coverage: {:.3f}".format(
-        100 * meta_model.heat_heat_pump() / heat_demand,
-        meta_model.heat_heat_pump()))
+        100 * meta_model.heat_heat_pump().sum() / heat_demand,
+        meta_model.heat_heat_pump().sum()))
     print("{:04.1f} % solar coverage: {:.3f}".format(
-        100 * meta_model.heat_solar_thermal() / heat_demand,
-        meta_model.heat_solar_thermal()))
+        100 * meta_model.heat_solar_thermal().sum() / heat_demand,
+        meta_model.heat_solar_thermal().sum()))
     print("{:04.1f} % CHP coverage: {:.3f}".format(
-        100 * meta_model.heat_chp() / heat_demand,
-        meta_model.heat_chp()))
+        100 * meta_model.heat_chp().sum() / heat_demand,
+        meta_model.heat_chp().sum()))
     print("{:04.1f} % pellet coverage: {:.3f}".format(
-        100 * meta_model.heat_pellet() / heat_demand,
-        meta_model.heat_pellet()))
+        100 * meta_model.heat_pellet().sum() / heat_demand,
+        meta_model.heat_pellet().sum()))
     print("{:04.1f} % boiler coverage: {:.3f}".format(
-        100 * meta_model.heat_boiler() / heat_demand,
-        meta_model.heat_boiler()))
+        100 * meta_model.heat_boiler().sum() / heat_demand,
+        meta_model.heat_boiler().sum()))
     print("{:04.1f} % power2heat coverage: {:.3f}".format(
-        100 * meta_model.heat_p2h() / heat_demand,
-        meta_model.heat_p2h()))
+        100 * meta_model.heat_p2h().sum() / heat_demand,
+        meta_model.heat_p2h().sum()))
+
+    el_demand = meta_model.el_demand().sum()
+
+    print('\n')
+    print("Electricity demand: {:.3f}".format(el_demand))
+    print("{:04.1f} % PV coverage: {:.3f}".format(
+        100 * meta_model.el_pv().sum() / el_demand,
+        meta_model.el_pv().sum()))
+    print("{:04.1f} % CHP coverage: {:.3f}".format(
+        100 * meta_model.el_chp().sum() / el_demand,
+        meta_model.el_chp().sum()))
+    print("{:04.1f} % WT coverage: {:.3f}".format(
+        100 * meta_model.el_wt().sum() / el_demand,
+        meta_model.el_wt().sum()))
 
 
 if __name__ == '__main__':
