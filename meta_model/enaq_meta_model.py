@@ -314,7 +314,9 @@ class ENaQMetaModel:
                         outputs={b_thp: Flow()})
                     energy_system.add(s_tgs, b_thp)
 
-                thp_cop = calc_cop(tgs['temperature'], temp)
+                thp_cop = calc_cop(tgs['temperature'],
+                                   temp,
+                                   cop_0_35=bhp["cop_0_35"])
                 t_thp = Transformer(label=thp_label,
                                     inputs={b_el_bhp: Flow(),
                                             b_thp: Flow()},
@@ -330,7 +332,9 @@ class ENaQMetaModel:
             # ice storage as source for heat pumps
             if bhp and ihs:
                 ihp_label = 't_ihp_' + temp_str
-                ihp_cop = calc_cop(celsius_to_kelvin(0), temp)
+                ihp_cop = calc_cop(celsius_to_kelvin(0),
+                                   temp,
+                                   cop_0_35=bhp["cop_0_35"])
                 t_ihp = Transformer(label=ihp_label,
                                     inputs={b_el_bhp: Flow(),
                                             b_ihs: Flow()},
@@ -345,7 +349,9 @@ class ENaQMetaModel:
             # (deep) geothermal source heat pump
             if bhp and ghp:
                 ghp_label = 't_ghp_' + temp_str
-                ghp_cop = calc_cop(ghp['temperature'], temp)
+                ghp_cop = calc_cop(ghp['temperature'],
+                                   temp,
+                                   cop_0_35=bhp["cop_0_35"])
                 t_ghp = Transformer(label=ghp_label,
                                     inputs={b_el_bhp: Flow(),
                                             b_ghp: Flow()},
@@ -360,7 +366,9 @@ class ENaQMetaModel:
             # (near surface) geothermal source heat pump
             if bhp and shp:
                 bhp_label = 't_shp_' + temp_str
-                shp_cop = calc_cop(shp['temperature'], temp)
+                shp_cop = calc_cop(shp['temperature'],
+                                   temp,
+                                   cop_0_35=bhp["cop_0_35"])
                 t_shp = Transformer(label=bhp_label,
                                     inputs={b_el_bhp: Flow(),
                                             b_shp: Flow()},

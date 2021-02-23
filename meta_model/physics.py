@@ -82,7 +82,8 @@ def lorenz_cop(temp_in, temp_out):
 def calc_cop(temp_input_high,
              temp_output_high,
              temp_input_low=None,
-             temp_output_low=None):
+             temp_output_low=None,
+             cop_0_35=4.6):
     """
     Calculating COP of heat pump acc. to Reinholdt et.al. 2016
     https://backend.orbit.dtu.dk/ws/files/149827036/Contribution_1380_final.pdf
@@ -91,6 +92,7 @@ def calc_cop(temp_input_high,
     :param temp_input_low: Lower Temperature of the source
     :param temp_output_high: Flow Temperature of the heating system
     :param temp_output_low: Return Temperature of the heating system
+    :param cop_0_35: COP for B0/W35
     :return: Realistic COP for the given temperatures
     """
     if not temp_input_low:
@@ -104,15 +106,11 @@ def calc_cop(temp_input_high,
         temp_output = mean_logarithmic_temperature(temp_output_high,
                                                    temp_output_low)
 
-    cop_norm = 4.6
-
     # Acc. to EN14511 (B0/W35)
     temp_input_high_norm = celsius_to_kelvin(0)
     temp_input_low_norm = celsius_to_kelvin(-3)
     temp_output_high_norm = celsius_to_kelvin(35)
     temp_output_low_norm = celsius_to_kelvin(30)
-
-    lorenz_efficiency = 0.6
 
     temp_input_norm = \
         mean_logarithmic_temperature(temp_input_high_norm,
@@ -121,13 +119,10 @@ def calc_cop(temp_input_high,
         mean_logarithmic_temperature(temp_output_high_norm,
                                      temp_output_low_norm)
 
-    cpf_norm = cop_norm / lorenz_cop(temp_input_norm,
+    cpf = cop_0_35 / lorenz_cop(temp_input_norm,
                                      temp_output_norm)
 
-    theoretical_cop = cpf_norm * lorenz_cop(temp_input,
-                                            temp_output)
-
-    cop = theoretical_cop * lorenz_efficiency
+    cop = cpf * lorenz_cop(temp_input, temp_output)
 
     return cop
 

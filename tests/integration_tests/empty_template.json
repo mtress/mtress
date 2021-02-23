@@ -12,7 +12,8 @@
         "temp_soil": 273.15
     },
     "heat_pump": {
-        "electric_input": 0
+        "electric_input": 0,
+        "cop_0_35": 4.6
     },
     "near_surface_heat_source": {
         "thermal_output": 0

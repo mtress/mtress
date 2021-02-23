@@ -481,14 +481,15 @@ def test_chp():
 
 def test_heat_pump():
     heat_demand = np.full(3, 0.1)
-    design_cop = 4.6 * 0.6
+    design_cop = 5
     electricity_demand = heat_demand/design_cop
 
     high_accuracy = 1e-5
     okay_accuracy = 2.5e-2  # sometimes, 2.5 % are good enough
 
     params = {
-        "heat_pump": {"electric_input": 1},
+        "heat_pump": {"electric_input": 1,
+                      "cop_0_35": design_cop},
         "geothermal_heat_source": {"thermal_output": 1},
         "demand": {
             "heating": heat_demand},
