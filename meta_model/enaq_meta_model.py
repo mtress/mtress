@@ -15,6 +15,17 @@ from .physics import (celsius_to_kelvin, kelvin_to_celsius, HHV_WP,
                       kilo_to_mega, calc_cop)
 
 
+def _array(data, length):
+    if isinstance(data, numbers.Number):
+        data = np.full(length, fill_value=data)
+    elif isinstance(data, list) and len(data) == length:
+        data = np.array(data)
+    else:
+        raise ValueError
+
+    return data
+
+
 class ENaQMetaModel:
     def __init__(self, **kwargs):
         """
@@ -116,16 +127,13 @@ class ENaQMetaModel:
         self.time_range = (index[-1] - index[0] + index.freq) / pd.Timedelta('365D')
 
         for cost in ["AP", "market"]:
-            if isinstance(energy_cost["electricity"][cost], numbers.Number):
-                energy_cost["electricity"][cost] = np.full(
-                    len(index), fill_value=energy_cost["electricity"][cost])
+            energy_cost["electricity"][cost] = _array(
+                data=energy_cost["electricity"][cost],
+                length=len(index))
 
         for quantity in ["el_in", "el_out"]:
-            if isinstance(self.spec_co2[quantity], numbers.Number):
-                self.spec_co2[quantity] = np.full(
-                    len(index), fill_value=self.spec_co2[quantity])
-            elif isinstance(self.spec_co2[quantity], list):
-                self.spec_co2[quantity] = np.array(self.spec_co2[quantity])
+            self.spec_co2[quantity] = _array(data=self.spec_co2[quantity],
+                                             length=len(index))
 
         ############################
         # Create energy system model
