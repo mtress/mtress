@@ -18,6 +18,12 @@ from meta_model.physics import (calc_cop,
 
 
 class LayeredHeatPump:
+    """
+    Clustered heat pump for modeling power flows
+    with variable temperature levels.
+    Connects any input to any output using solph.Transformer
+    with shared resourcess, see https://arxiv.org/abs/2012.12664
+    """
     def __init__(self,
                  energy_system,
                  heat_layers,

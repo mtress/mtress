@@ -17,6 +17,10 @@ from meta_model.physics import celsius_to_kelvin
 
 
 class HeatExchanger:
+    """
+    For modeling power demands that lower temperature,
+    see https://arxiv.org/abs/2012.12664
+    """
     def __init__(self,
                  heat_layers,
                  heat_demand,

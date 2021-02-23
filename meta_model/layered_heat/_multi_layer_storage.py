@@ -20,6 +20,11 @@ from meta_model.physics import (celsius_to_kelvin, kilo_to_mega, kJ_to_MWh,
 
 
 class MultiLayerStorage:
+    """
+    Matrjoschka storage:
+    One storage per temeprature levels with shared resources.
+    See https://arxiv.org/abs/2012.12664
+    """
     def __init__(self,
                  diameter,
                  volume,

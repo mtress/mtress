@@ -17,6 +17,10 @@ from meta_model.physics import celsius_to_kelvin
 
 
 class HeatLayers:
+    """
+    Connector class for modeling power flows with variable temperature levels,
+    see https://arxiv.org/abs/2012.12664
+    """
     def __init__(self,
                  energy_system,
                  temperature_levels,
