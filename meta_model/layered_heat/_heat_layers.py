@@ -34,14 +34,14 @@ class HeatLayers:
         # keep only unique values
         temperature_levels = list(set(temperature_levels))
         temperature_levels.sort()
-        self.TEMPERATURE_LEVELS = temperature_levels
-        self.REFERENCE_TEMPERATURE = reference_temperature
+        self._temperature_levels = temperature_levels
+        self._reference_temperature = reference_temperature
 
         if len(label) > 0:
             label = label + '_'
 
         temp_low = None
-        for temperature in self.TEMPERATURE_LEVELS:
+        for temperature in self._temperature_levels:
             # Naming of new temperature bus
             temperature_str = "{0:.0f}".format(temperature)
             b_th_label = label + 'b_th_' + temperature_str
@@ -76,9 +76,9 @@ class HeatLayers:
                                 + 'rise_' + temp_low_str
                                 + '_' + temp_high_str)
                 heater_ratio = ((celsius_to_kelvin(temp_low)
-                                 - self.REFERENCE_TEMPERATURE)
+                                 - self._reference_temperature)
                                 / (celsius_to_kelvin(temperature)
-                                   - self.REFERENCE_TEMPERATURE))
+                                   - self._reference_temperature))
                 heater = solph.Transformer(
                     label=heater_label,
                     inputs={b_th_in_level: solph.Flow(),
@@ -93,3 +93,11 @@ class HeatLayers:
 
             # prepare for next iteration of the loop
             temp_low = temperature
+
+    @property
+    def TEMPERATURE_LEVELS(self):
+        return self._temperature_levels
+
+    @property
+    def REFERENCE_TEMPERATURE(self):
+        return self._reference_temperature

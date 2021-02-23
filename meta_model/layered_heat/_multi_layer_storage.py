@@ -35,14 +35,14 @@ class MultiLayerStorage:
         self._h_storage_comp = list()
 
         self.energy_system = heat_layers.energy_system
-        self.TEMPERATURE_LEVELS = heat_layers.TEMPERATURE_LEVELS
-        self.REFERENCE_TEMPERATURE = heat_layers.REFERENCE_TEMPERATURE
+        self._temperature_levels = heat_layers.TEMPERATURE_LEVELS
+        self._reference_temperature = heat_layers.REFERENCE_TEMPERATURE
 
         self.heat_storage_volume = volume
 
-        self.HEAT_STORAGE_INSULATION = insulation_thickness
+        self._heat_storage_insulation = insulation_thickness
 
-        for temperature in self.TEMPERATURE_LEVELS:
+        for temperature in self._temperature_levels:
             temperature_str = "{0:.0f}".format(temperature)
             storage_label = 's_heat_' + temperature_str
             b_th_level = heat_layers.b_th[temperature]
@@ -53,14 +53,16 @@ class MultiLayerStorage:
                                     H2O_DENSITY *
                                     H2O_HEAT_CAPACITY)
 
-            if self.HEAT_STORAGE_INSULATION <= 0:
-                hs_loss_rate = hs_fixed_losses_relative = hs_fixed_losses_absolute = 0
+            if self._heat_storage_insulation <= 0:
+                hs_loss_rate = 0
+                hs_fixed_losses_relative = 0
+                hs_fixed_losses_absolute = 0
             else:
                 (hs_loss_rate,
                  hs_fixed_losses_relative,
                  hs_fixed_losses_absolute) = (
                     thermal.stratified_thermal_storage.calculate_losses(
-                        u_value=TC_INSULATION / self.HEAT_STORAGE_INSULATION,
+                        u_value=TC_INSULATION / self._heat_storage_insulation,
                         diameter=diameter,
                         temp_h=temperature,
                         temp_c=self.REFERENCE_TEMPERATURE,
@@ -86,10 +88,22 @@ class MultiLayerStorage:
         w_factor = [1 / kilo_to_mega(H2O_HEAT_CAPACITY
                                      * H2O_DENSITY
                                      * (celsius_to_kelvin(temp)
-                                        - self.REFERENCE_TEMPERATURE))
-                    for temp in self.TEMPERATURE_LEVELS]
+                                        - self._reference_temperature))
+                    for temp in self._temperature_levels]
 
         solph.constraints.shared_limit(
             model, model.GenericStorageBlock.storage_content,
             'storage_limit', self._h_storage_comp, w_factor,
             upper_limit=self.heat_storage_volume)
+
+    @property
+    def TEMPERATURE_LEVELS(self):
+        return self._temperature_levels
+
+    @property
+    def HEAT_STORAGE_INSULATION(self):
+        return self._heat_storage_insulation
+
+    @property
+    def REFERENCE_TEMPERATURE(self):
+        return self._reference_temperature
