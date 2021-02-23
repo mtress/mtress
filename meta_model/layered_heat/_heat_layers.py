@@ -99,9 +99,15 @@ class HeatLayers:
             temp_low = temperature
 
     @property
-    def TEMPERATURE_LEVELS(self):
+    def temperature_levels(self):
+        """
+        :return: list of temperature levels (in K)
+        """
         return self._temperature_levels
 
     @property
-    def REFERENCE_TEMPERATURE(self):
+    def reference_temperature(self):
+        """
+        :return: reference temperature (in K)
+        """
         return self._reference_temperature

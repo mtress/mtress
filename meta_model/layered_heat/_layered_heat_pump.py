@@ -75,7 +75,7 @@ class LayeredHeatPump:
             self.b_th_in[source] = heat_source
             energy_system.add(heat_source)
 
-            for target_temperature in heat_layers.TEMPERATURE_LEVELS:
+            for target_temperature in heat_layers.temperature_levels:
                 temperature_higher_str = "{0:.0f}".format(target_temperature)
                 hp_str = label+source+"_"+temperature_higher_str
 

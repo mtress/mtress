@@ -313,7 +313,7 @@ class ENaQMetaModel:
 
             energy_system.add(s_st, b_st)
 
-            for temp in heat_layers.TEMPERATURE_LEVELS:
+            for temp in heat_layers.temperature_levels:
                 # Naming of new temperature bus
                 temp_str = "{0:.0f}".format(temp)
 
@@ -398,7 +398,7 @@ class ENaQMetaModel:
             energy_system.add(b_th_dhw, d_dhw)
 
             # We assume a heat drop but no energy loss due to the heat exchanger.
-            heater_ratio = (max(heat_layers.TEMPERATURE_LEVELS)
+            heater_ratio = (max(heat_layers.temperature_levels)
                             - temps['heat_drop_exchanger_dhw']
                             - temps['reference']) / (temps['dhw']
                                                      - temps['reference'])

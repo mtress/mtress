@@ -34,14 +34,15 @@ class MultiLayerStorage:
         """
         :param diameter: numeric scalar (in m)
         :param volume: numeric scalar (in m³)
+        :param insulation_thickness: width of insulation (in m)
         :param ambient_temperature: numeric scalar or sequence (in °C)
         :param heat_layers: HeatLayers object
         """
         self._h_storage_comp = list()
 
         self.energy_system = heat_layers.energy_system
-        self._temperature_levels = heat_layers.TEMPERATURE_LEVELS
-        self._reference_temperature = heat_layers.REFERENCE_TEMPERATURE
+        self._temperature_levels = heat_layers.temperature_levels
+        self._reference_temperature = heat_layers.reference_temperature
 
         self.heat_storage_volume = volume
 
@@ -54,7 +55,7 @@ class MultiLayerStorage:
 
             hs_capacity = self.heat_storage_volume * \
                           kJ_to_MWh((celsius_to_kelvin(temperature)
-                                     - heat_layers.REFERENCE_TEMPERATURE) *
+                                     - heat_layers.reference_temperature) *
                                     H2O_DENSITY *
                                     H2O_HEAT_CAPACITY)
 
@@ -70,7 +71,7 @@ class MultiLayerStorage:
                         u_value=TC_INSULATION / self._heat_storage_insulation,
                         diameter=diameter,
                         temp_h=temperature,
-                        temp_c=self.REFERENCE_TEMPERATURE,
+                        temp_c=self.reference_temperature,
                         temp_env=ambient_temperature))
 
             s_heat = solph.GenericStorage(
@@ -102,13 +103,15 @@ class MultiLayerStorage:
             upper_limit=self.heat_storage_volume)
 
     @property
-    def TEMPERATURE_LEVELS(self):
+    def temperature_levels(self):
+        """
+        :return: list of temperature levels (in K)
+        """
         return self._temperature_levels
 
     @property
-    def HEAT_STORAGE_INSULATION(self):
-        return self._heat_storage_insulation
-
-    @property
-    def REFERENCE_TEMPERATURE(self):
+    def reference_temperature(self):
+        """
+        :return: reference temperature (in K)
+        """
         return self._reference_temperature

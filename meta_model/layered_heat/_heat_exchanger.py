@@ -37,9 +37,9 @@ class HeatExchanger:
         energy_system = heat_layers.energy_system
 
         heat_drop_ratio = ((celsius_to_kelvin(backward_flow_temperature)
-                            - heat_layers.REFERENCE_TEMPERATURE)
+                            - heat_layers.reference_temperature)
                            / (celsius_to_kelvin(forward_flow_temperature)
-                              - heat_layers.REFERENCE_TEMPERATURE))
+                              - heat_layers.reference_temperature))
         self.heat_drop_ratio = heat_drop_ratio
         heat_drop = solph.Transformer(
             label=label,
