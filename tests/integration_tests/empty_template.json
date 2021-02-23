@@ -88,7 +88,7 @@
     },
     "energy_cost": {
         "electricity": {
-            "LP": 0,
+            "LP": 1000,
             "AP": [15, 20, 15],
             "market": 0
         },

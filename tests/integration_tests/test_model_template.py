@@ -9,6 +9,7 @@ SPDX-License-Identifier: MIT
 import json
 import os
 import math
+import numpy as np
 import pandas as pd
 
 from oemof.solph import views, processing
@@ -55,6 +56,18 @@ def run_model_template(custom_params=None):
     return meta_model, params
 
 
+def electricity_costs(electricity_demand, params, time_range):
+    working_price = sum(electricity_demand
+               * np.array(params["energy_cost"]["electricity"]["AP"]))
+    demand_rate = (max(electricity_demand) * time_range
+            * params["energy_cost"]["electricity"]["LP"])
+    return working_price + demand_rate
+
+
+def gas_costs(gas_demand, params):
+    return sum(gas_demand * np.array(params["energy_cost"]["fossil_gas"]))
+
+
 def test_empty_template():
     meta_model, params = run_model_template()
 
@@ -66,85 +79,133 @@ def test_empty_template():
 
 
 def test_electricity_demand_ap():
-    electricity_demand = 3
+    electricity_demand = np.full(3, 0.1)
 
-    params = {"demand": {"electricity": 3 * [electricity_demand / 3]}}
+    params = {
+        "demand": {"electricity": electricity_demand},
+        "energy_cost": {"electricity": {"LP": 0}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand(), 0)
-    assert math.isclose(meta_model.el_demand(), electricity_demand)
-
-    electricity_ap = sum(ap * electricity_demand / 3
-                         for ap in params["energy_cost"]["electricity"]["AP"])
+    assert math.isclose(meta_model.el_demand(), electricity_demand.sum())
 
     assert math.isclose(meta_model.optimiser_costs(),
-                        electricity_ap)
+                        electricity_costs(electricity_demand,
+                                          params,
+                                          meta_model.time_range))
 
 
 def test_electricity_demand_lp():
-    electricity_demand = 3
+    electricity_demand = np.full(3, 0.1)
 
     params = {
-        "demand": {"electricity": 3 * [electricity_demand / 3]},
+        "demand": {"electricity": electricity_demand},
         "energy_cost": {"electricity": {
             "LP": 1000,
             "AP": 0}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand(), 0)
-    assert math.isclose(meta_model.el_demand(), electricity_demand)
+    assert math.isclose(meta_model.el_demand(), electricity_demand.sum())
 
     assert math.isclose(meta_model.optimiser_costs(),
-                        electricity_demand / 3 * meta_model.time_range
-                        * params["energy_cost"]["electricity"]["LP"])
+                        electricity_costs(electricity_demand,
+                                          params,
+                                          meta_model.time_range))
+
+
+def test_electricity_demand_all_costs():
+    electricity_demand = np.full(3, 0.1)
+
+    params = {
+        "demand": {"electricity": electricity_demand},
+        "energy_cost": {"electricity": {
+            "LP": 1000,
+            "AP": [15, 20, 15]}}}
+    meta_model, params = run_model_template(custom_params=params)
+
+    assert math.isclose(meta_model.thermal_demand(), 0)
+    assert math.isclose(meta_model.el_demand(), electricity_demand.sum())
+
+    assert math.isclose(meta_model.optimiser_costs(),
+                        electricity_costs(electricity_demand,
+                                          params,
+                                          meta_model.time_range))
 
 
 def test_gas_boiler():
-    heat_demand = 0.3
+    heat_demand = np.full(3, 0.1)
 
     params = {
         "gas_boiler": {"thermal_output": 1},
-        "demand": {
-            "heating": 3 * [heat_demand / 3]}}
+        "demand": {"heating": heat_demand}}
     meta_model, params = run_model_template(custom_params=params)
 
-    assert math.isclose(meta_model.thermal_demand(), heat_demand)
-    assert math.isclose(meta_model.heat_boiler(), heat_demand, rel_tol=1e-5)
+    assert math.isclose(meta_model.thermal_demand(), heat_demand.sum())
+    assert math.isclose(meta_model.heat_boiler(), heat_demand.sum(),
+                        rel_tol=1e-5)
     assert math.isclose(meta_model.heat_p2h(), 0, rel_tol=1e-5)
     assert math.isclose(meta_model.el_demand(), 0, rel_tol=1e-5)
 
-    assert math.isclose(meta_model.energy_system.results['meta']['objective'],
-                        heat_demand*params["energy_cost"]["fossil_gas"])
+    assert math.isclose(meta_model.optimiser_costs(),
+                        gas_costs(heat_demand, params))
 
 
 def test_booster():
-    dhw_demand = 0.3
+    dhw_demand = np.full(3, 0.1)
+    electricity_demand = 1 / 3 * dhw_demand
+    gas_demand = 2 / 3 * dhw_demand
 
     params = {
         "gas_boiler": {"thermal_output": 1},
         "demand": {
-            "dhw": 3 * [dhw_demand / 3]}}
+            "dhw": dhw_demand}}
     meta_model, params = run_model_template(custom_params=params)
 
-    assert math.isclose(meta_model.thermal_demand(), dhw_demand)
-    assert math.isclose(meta_model.heat_boiler(), dhw_demand*2/3, rel_tol=1e-5)
-    assert math.isclose(meta_model.heat_p2h(), dhw_demand/3, rel_tol=1e-5)
-    assert math.isclose(meta_model.el_demand(), dhw_demand/3, rel_tol=1e-5)
+    assert math.isclose(meta_model.thermal_demand(), dhw_demand.sum())
+    assert math.isclose(meta_model.heat_boiler(), gas_demand.sum(),
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_p2h(), electricity_demand.sum(),
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.el_demand(), electricity_demand.sum(),
+                        rel_tol=1e-5)
+
+    assert math.isclose(meta_model.optimiser_costs(),
+                        electricity_costs(electricity_demand,
+                                          params,
+                                          meta_model.time_range)
+                        + gas_costs(gas_demand, params),
+                        rel_tol=1e-5)
 
 
 def test_booster_heat_drop():
-    dhw_demand = 0.3
+    dhw_demand = np.full(3, 0.1)
+    electricity_demand = 0.5 * dhw_demand
+    gas_demand = 0.5 * dhw_demand
+
     params = {
         "gas_boiler": {"thermal_output": 1},
-        "demand": {
-            "dhw": 3 * [dhw_demand / 3]},
+        "demand": {"dhw": dhw_demand},
         "temperatures": {"heat_drop_exchanger_dhw": 10}}  # +50% for booster
     meta_model, params = run_model_template(custom_params=params)
 
-    assert math.isclose(meta_model.thermal_demand(), dhw_demand)
-    assert math.isclose(meta_model.heat_boiler(), dhw_demand/2, rel_tol=1e-5)
-    assert math.isclose(meta_model.heat_p2h(), dhw_demand/2, rel_tol=1e-5)
-    assert math.isclose(meta_model.el_demand(), dhw_demand/2, rel_tol=1e-5)
+    assert math.isclose(meta_model.thermal_demand(), dhw_demand.sum())
+    assert math.isclose(meta_model.heat_boiler(),
+                        gas_demand.sum(),
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.heat_p2h(),
+                        electricity_demand.sum(),
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.el_demand(),
+                        electricity_demand.sum(),
+                        rel_tol=1e-5)
+
+    assert math.isclose(meta_model.optimiser_costs(),
+                        electricity_costs(electricity_demand,
+                                          params,
+                                          meta_model.time_range)
+                        + gas_costs(gas_demand, params),
+                        rel_tol=1e-5)
 
 
 def test_fully_solar():
@@ -377,44 +438,41 @@ def test_missing_heat():
 
 
 def test_chp():
-    heat_demand = 0.3
+    heat_demand = np.full(3, 0.1)
 
     params = {
         "chp": {"gas_input": 2,
                 "thermal_output": 1,
                 "electric_output": 1},
-        "demand": {
-            "heating": 3 * [heat_demand / 3]}}
+        "demand": {"heating": heat_demand}}
     meta_model, params = run_model_template(custom_params=params)
 
-    assert math.isclose(meta_model.thermal_demand(), heat_demand)
-    assert math.isclose(meta_model.heat_chp(), heat_demand, rel_tol=1e-5)
+    assert math.isclose(meta_model.thermal_demand(), heat_demand.sum())
+    assert math.isclose(meta_model.heat_chp(), heat_demand.sum(), rel_tol=1e-5)
     assert math.isclose(meta_model.el_export().sum(),
-                        heat_demand,
+                        heat_demand.sum(),
                         rel_tol=1e-5)
-    assert math.isclose(meta_model.energy_system.results['meta']['objective'],
-                        18.75)
 
 
 def test_heat_pump():
-    heat_demand = 1
+    heat_demand = np.full(3, 0.1)
     design_cop = 4.6 * 0.6
 
     params = {
         "heat_pump": {"electric_input": 1},
         "geothermal_heat_source": {"thermal_output": 1},
         "demand": {
-            "heating": 3 * [heat_demand / 3]},
+            "heating": heat_demand},
         "temperatures": {"heating": 308.15}}
     meta_model, params = run_model_template(custom_params=params)
 
-    assert math.isclose(meta_model.thermal_demand(), heat_demand)
+    assert math.isclose(meta_model.thermal_demand(), heat_demand.sum())
     assert math.isclose(meta_model.heat_heat_pump(),
-                        heat_demand,
+                        heat_demand.sum(),
                         rel_tol=1e-5)
     design_cop_heat = meta_model.el_import().sum() * design_cop
     assert math.isclose(design_cop_heat,
-                        heat_demand,
+                        heat_demand.sum(),
                         rel_tol=2.5e-2)  # 2.5 % are good enough
 
 
