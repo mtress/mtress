@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import numbers
+
 import numpy as np
 import pandas as pd
 
@@ -9,6 +11,17 @@ from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
 from .layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
                            HeatExchanger)
 from .physics import (HHV_WP, TC_CONCRETE, H2O_HEAT_FUSION, H2O_DENSITY)
+
+
+def _array(data, length):
+    if isinstance(data, numbers.Number):
+        data = np.full(length, fill_value=data)
+    elif isinstance(data, list) and len(data) == length:
+        data = np.array(data)
+    else:
+        raise ValueError
+
+    return data
 
 
 class ENaQMetaModel:
@@ -100,8 +113,20 @@ class ENaQMetaModel:
 
         # Time range of the data (in a)
         index = demand['electricity'].index
+        self.number_of_time_steps = len(index)
         index.freq = pd.infer_freq(index)
-        self.time_range = (index[-1] - index[0] + index.freq) / pd.Timedelta('365D')
+        self.time_range = ((index[-1] - index[0] + index.freq)
+                           / pd.Timedelta('365D'))
+
+        for cost in ["AP", "market"]:
+            energy_cost["electricity"][cost] = _array(
+                data=energy_cost["electricity"][cost],
+                length=self.number_of_time_steps)
+
+        for quantity in ["el_in", "el_out"]:
+            self.spec_co2[quantity] = _array(data=self.spec_co2[quantity],
+                                             length=self.number_of_time_steps)
+
         ############################
         # Create energy system model
         ############################
@@ -111,9 +136,10 @@ class ENaQMetaModel:
         # which use units of power
         self.pv_flows = list()
         self.wt_flows = list()
-        self.chp_el_flows = list()
         self.chp_heat_flows = list()
-        self.demand_flows = list()
+        self.th_demand_flows = list()
+        self.chp_el_funded_flow = None
+        self.chp_el_unfunded_flow = None
         self.hp_flows = list()
         self.p2h_flows = list()
         self.boiler_flows = list()
@@ -195,6 +221,7 @@ class ENaQMetaModel:
                     electricity_source=b_el_bhp,
                     thermal_power_limit=bhp['thermal_output'],
                     heat_sources=heat_sources,
+                    cop_0_35=bhp["cop_0_35"],
                     label="heat_pump")
             else:
                 heat_pump = None
@@ -309,9 +336,10 @@ class ENaQMetaModel:
         # RLM customer for district and larger buildings
         m_el_in = Source(label='m_el_in',
                          outputs={b_elgrid: Flow(
-                             variable_costs=(energy_cost['electricity']['AP']
-                                             + self.spec_co2['el_in']
-                                             * self.spec_co2['price']),
+                             variable_costs=(
+                                     energy_cost['electricity']['AP']
+                                     + self.spec_co2['el_in']
+                                     * self.spec_co2['price']),
                              investment=Investment(
                                  ep_costs=energy_cost['electricity']['LP']
                                           * self.time_range))})
@@ -353,8 +381,8 @@ class ENaQMetaModel:
                     inputs={b_th_buildings: Flow(
                         fix=demand['heating'],
                         nominal_value=1)})
-        self.demand_flows.append((b_th_buildings.label,
-                                  d_sh.label))
+        self.th_demand_flows.append((b_th_buildings.label,
+                                     d_sh.label))
         energy_system.add(d_sh)
 
         b_th_dhw = Bus(label="b_th_dhw")
@@ -364,8 +392,8 @@ class ENaQMetaModel:
                          inputs={b_th_dhw: Flow(
                              fix=demand['dhw'],
                              nominal_value=1)})
-            self.demand_flows.append((b_th_dhw.label,
-                                      d_dhw.label))
+            self.th_demand_flows.append((b_th_dhw.label,
+                                         d_dhw.label))
 
             energy_system.add(b_th_dhw, d_dhw)
 
@@ -476,13 +504,14 @@ class ENaQMetaModel:
                         variable_costs=-energy_cost['electricity']['market']),
                     b_elprod: Flow()})
 
-            b_el_chp = Bus(
-                label="b_el_chp",
-                outputs={
-                    b_el_chp_fund: Flow(
-                        summed_max=chp['funding_hours_per_year'],
-                        nominal_value=chp['electric_output']),
-                    b_el_chp_unfund: Flow()})
+            b_el_chp = Bus(label="b_el_chp",
+                           outputs={
+                               b_el_chp_fund: Flow(
+                                   summed_max=chp['funding_hours_per_year'],
+                                   nominal_value=chp['electric_output']),
+                               b_el_chp_unfund: Flow()})
+            self.chp_el_funded_flow = (b_el_chp.label, b_el_chp_fund.label)
+            self.chp_el_unfunded_flow = (b_el_chp.label, b_el_chp_unfund.label)
 
             t_chp = Transformer(
                 label='t_chp',
@@ -499,7 +528,6 @@ class ENaQMetaModel:
 
             self.chp_heat_flows.append((t_chp.label,
                                         heat_layers.b_th_in_highest.label))
-            self.chp_el_flows.append((t_chp.label, b_el_chp.label))
             energy_system.add(m_gas_chp, b_gas_chp, b_el_chp, t_chp,
                               b_el_chp_fund, b_el_chp_unfund)
 
@@ -577,12 +605,12 @@ class ENaQMetaModel:
         """
         Calculates and returns thermal energy from chp
 
-        :return: integrated chp power
+        :return: time series of chp power
         """
-        e_chp_th = 0
+        e_chp_th = np.zeros(self.number_of_time_steps)
         for res in self.chp_heat_flows:
             e_chp_th += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
+                'sequences']['flow']
 
         return e_chp_th
 
@@ -590,12 +618,12 @@ class ENaQMetaModel:
         """
         Calculates and returns geothermal energy
 
-        :return: integrated geothermal power
+        :return: time series of geothermal power
         """
-        e_gt_th = 0
+        e_gt_th = np.zeros(self.number_of_time_steps)
         for res in self.gt_input_flows:
             e_gt_th += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
+                'sequences']['flow']
 
         return e_gt_th
 
@@ -603,7 +631,7 @@ class ENaQMetaModel:
         """
         Calculates and returns heat pump heat
 
-        :return: integrated het pump power
+        :return: time series of het pump power
         """
         if self.heat_pump:
             return self.heat_pump.heat_output(
@@ -615,12 +643,12 @@ class ENaQMetaModel:
         """
         Calculates and returns solar thermal energy
 
-        :return: integrated solar thermal power
+        :return: time series of solar thermal power
         """
-        e_st_th = 0
+        e_st_th = np.zeros(self.number_of_time_steps)
         for res in self.st_input_flows:
             e_st_th += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
+                'sequences']['flow']
 
         return e_st_th
 
@@ -628,9 +656,9 @@ class ENaQMetaModel:
         """
         Calculates and returns thermal energy from pallet boiler
 
-        :return: integrated pallet power
+        :return: time series of pallet power
         """
-        e_pellet_th = 0
+        e_pellet_th = np.zeros(self.number_of_time_steps)
         for res in self.pellet_heat_flows:
             e_pellet_th += self.energy_system.results['main'][res][
                 'sequences']['flow'].sum()
@@ -641,12 +669,12 @@ class ENaQMetaModel:
         """
         Calculates and returns thermal energy from pallet boiler
 
-        :return: integrated pallet power
+        :return: time series of boiler power
         """
-        e_boiler_th = 0
+        e_boiler_th = np.zeros(self.number_of_time_steps)
         for res in self.boiler_flows:
             e_boiler_th += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
+                'sequences']['flow']
 
         return e_boiler_th
 
@@ -654,12 +682,12 @@ class ENaQMetaModel:
         """
         Calculates and returns thermal energy from pallet boiler
 
-        :return: integrated pallet power
+        :return: time series of power to heat output
         """
-        e_p2h_th = 0
+        e_p2h_th = np.zeros(self.number_of_time_steps)
         for res in self.p2h_flows:
             e_p2h_th += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
+                'sequences']['flow']
 
         return e_p2h_th
 
@@ -667,25 +695,25 @@ class ENaQMetaModel:
         """
         Calculates and returns thermal demand
 
-        :return: integrated thermal demand
+        :return: time series of thermal demand
         """
-        demand = 0
-        for res in self.demand_flows:
-            demand += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
+        d_th = np.zeros(self.number_of_time_steps)
+        for res in self.th_demand_flows:
+            d_th += self.energy_system.results['main'][res][
+                'sequences']['flow']
 
-        return demand
+        return d_th
 
     def el_pv(self):
         """
         Calculates the energy yield from pv
 
-        :return: integrated pv electricity generation
+        :return: time series of pv electricity generation
         """
-        e_pv_el = 0
+        e_pv_el = np.zeros(self.number_of_time_steps)
         for res in self.pv_flows:
             e_pv_el += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
+                'sequences']['flow']
 
         return e_pv_el
 
@@ -693,33 +721,48 @@ class ENaQMetaModel:
         """
         Calculates the energy yield from wind
 
-        :return: integrated wind turbine electricity generation
+        :return: time series of wind turbine electricity generation
         """
-        e_wt_el = 0
+        e_wt_el = np.zeros(self.number_of_time_steps)
         for res in self.wt_flows:
             e_wt_el += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
+                'sequences']['flow']
 
         return e_wt_el
+
+    def el_chp_funded(self):
+        """
+        :return: time series of subsidised chp electricity generation
+        """
+        if self.chp_el_funded_flow:
+            return self.energy_system.results['main'][
+                self.chp_el_funded_flow]['sequences']['flow']
+        else:
+            return np.zeros(self.number_of_time_steps)
+
+    def el_chp_unfunded(self):
+        """
+        :return: time series of non-subsidised chp electricity generation
+        """
+        if self.chp_el_unfunded_flow:
+            return self.energy_system.results['main'][
+                self.chp_el_unfunded_flow]['sequences']['flow']
+        else:
+            return np.zeros(self.number_of_time_steps)
 
     def el_chp(self):
         """
         Calculates the electricity generation from chp
 
-        :return: integrated chp electricity generation
+        :return: time series of chp electricity generation
         """
-        e_chp_el = 0
-        for res in self.chp_el_flows:
-            e_chp_el += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
-
-        return e_chp_el
+        return self.el_chp_funded() + self.el_chp_unfunded()
 
     def el_production(self):
         """
         Electricity generated on site by distributed generation
 
-        :return: integrated distributed electricity generation
+        :return: time series of distributed electricity generation
         """
         return self.el_chp() + self.el_pv() + self.el_wt()
 
@@ -727,19 +770,19 @@ class ENaQMetaModel:
         """
         Energy demand calculated as balance of production, import and export
 
-        :return: integrated electricity demand
+        :return: time series of electricity demand
         """
         return (self.el_production()
-                + self.el_import().sum()
-                - self.el_export().sum())
+                + self.el_import()
+                - self.el_export())
 
     def el_import(self):
         """
         Electricity imported from the public grid
 
-        :return: Electricity import
+        :return: time series of electricity import
         """
-        el_in = 0
+        el_in = np.zeros(self.number_of_time_steps)
         for res in self.electricity_import_flows:
             el_in += self.energy_system.results['main'][res][
                 'sequences']['flow']
@@ -760,7 +803,7 @@ class ENaQMetaModel:
 
         :return: Electricity export
         """
-        el_out = 0
+        el_out = np.zeros(self.number_of_time_steps)
         for res in self.electricity_export_flows:
             el_out += self.energy_system.results['main'][res][
                 'sequences']['flow']
@@ -773,7 +816,7 @@ class ENaQMetaModel:
 
         :return: Wood pellet import
         """
-        wp_in = 0
+        wp_in = np.zeros(self.number_of_time_steps)
         for res in self.wood_pellets_flows:
             wp_in += self.energy_system.results['main'][res][
                 'sequences']['flow'].sum()
@@ -786,10 +829,10 @@ class ENaQMetaModel:
 
         :return: Gas import for chp
         """
-        chp_gas_in = 0
+        chp_gas_in = np.zeros(self.number_of_time_steps)
         for res in self.chp_gas_flows:
             chp_gas_in += self.energy_system.results['main'][res][
-                          'sequences']['flow'].sum()
+                          'sequences']['flow']
 
         return chp_gas_in
 
@@ -815,10 +858,10 @@ class ENaQMetaModel:
 
         :return: Import fossil gas
         """
-        fg_in = 0
+        fg_in = np.zeros(self.number_of_time_steps)
         for res in self.fossil_gas_flows:
             fg_in += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
+                'sequences']['flow']
         fg_in += self.chp_fossil_gas_import()
 
         return fg_in
@@ -829,10 +872,10 @@ class ENaQMetaModel:
 
         :return: Import biomethane
         """
-        bm_in = 0
+        bm_in = np.zeros(self.number_of_time_steps)
         for res in self.biomethane_flows:
             bm_in += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
+                'sequences']['flow']
         bm_in += self.chp_biomethane_import()
 
         return bm_in

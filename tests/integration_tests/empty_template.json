@@ -12,7 +12,8 @@
         "temp_soil": 0
     },
     "heat_pump": {
-        "electric_input": 0
+        "electric_input": 0,
+        "cop_0_35": 4.6
     },
     "near_surface_heat_source": {
         "thermal_output": 0
@@ -88,8 +89,8 @@
     },
     "energy_cost": {
         "electricity": {
-            "LP": 0,
-            "AP": [15, 15, 15],
+            "LP": 1000,
+            "AP": [15, 20, 15],
             "market": 0
         },
         "fossil_gas": 35,
@@ -102,7 +103,7 @@
         "biomethane": 0.15,
         "wood_pellet": 0.025,
         "price": 0,
-        "el_in": [0, 0, 0],
-        "el_out": [0, 0, 0]
+        "el_in": 0,
+        "el_out": 0
     }
 }
