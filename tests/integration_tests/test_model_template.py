@@ -457,6 +457,7 @@ def test_chp():
 def test_heat_pump():
     heat_demand = np.full(3, 0.1)
     design_cop = 4.6 * 0.6
+    electricity_demand = heat_demand/design_cop
 
     params = {
         "heat_pump": {"electric_input": 1},
@@ -474,7 +475,12 @@ def test_heat_pump():
     assert math.isclose(design_cop_heat,
                         heat_demand.sum(),
                         rel_tol=2.5e-2)  # 2.5 % are good enough
+    assert math.isclose(meta_model.optimiser_costs(),
+                        electricity_costs(electricity_demand,
+                                          params,
+                                          meta_model.time_range),
+                        rel_tol=2.5e-2)
 
 
 if __name__ == "__main__":
-    test_electricity_demand_lp()
+    test_heat_pump()
