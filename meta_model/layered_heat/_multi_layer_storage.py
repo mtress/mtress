@@ -48,6 +48,10 @@ class MultiLayerStorage:
 
         self._heat_storage_insulation = insulation_thickness
 
+        self._loss_rate = {}
+        self._fixed_losses = {"abs": {},
+                              "rel": {}}
+
         for temperature in self._temperature_levels:
             temperature_str = "{0:.0f}".format(temperature)
             storage_label = 's_heat_' + temperature_str
@@ -71,8 +75,12 @@ class MultiLayerStorage:
                         u_value=TC_INSULATION / self._heat_storage_insulation,
                         diameter=diameter,
                         temp_h=temperature,
-                        temp_c=self.reference_temperature,
+                        temp_c=self._reference_temperature,
                         temp_env=ambient_temperature))
+
+            self._loss_rate[temperature] = hs_loss_rate
+            self._fixed_losses["abs"][temperature] = hs_fixed_losses_absolute
+            self._fixed_losses["rel"][temperature] = hs_fixed_losses_relative
 
             s_heat = solph.GenericStorage(
                 label=storage_label,
@@ -103,15 +111,15 @@ class MultiLayerStorage:
             upper_limit=self.heat_storage_volume)
 
     @property
-    def temperature_levels(self):
+    def loss_rate(self):
         """
-        :return: list of temperature levels (in K)
+        :return: loss rate
         """
-        return self._temperature_levels
+        return self._loss_rate
 
     @property
-    def reference_temperature(self):
+    def fixed_losses(self):
         """
-        :return: reference temperature (in K)
+        :return: fixed losses
         """
-        return self._reference_temperature
+        return self._fixed_losses
