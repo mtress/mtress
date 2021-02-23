@@ -459,6 +459,9 @@ def test_heat_pump():
     design_cop = 4.6 * 0.6
     electricity_demand = heat_demand/design_cop
 
+    high_accuracy = 1e-5
+    okay_accuracy = 2.5e-2  # sometimes, 2.5 % are good enough
+
     params = {
         "heat_pump": {"electric_input": 1},
         "geothermal_heat_source": {"thermal_output": 1},
@@ -470,16 +473,16 @@ def test_heat_pump():
     assert math.isclose(meta_model.thermal_demand(), heat_demand.sum())
     assert math.isclose(meta_model.heat_heat_pump(),
                         heat_demand.sum(),
-                        rel_tol=1e-5)
+                        rel_tol=high_accuracy)
     design_cop_heat = meta_model.el_import().sum() * design_cop
     assert math.isclose(design_cop_heat,
                         heat_demand.sum(),
-                        rel_tol=2.5e-2)  # 2.5 % are good enough
+                        rel_tol=okay_accuracy)
     assert math.isclose(meta_model.optimiser_costs(),
                         electricity_costs(electricity_demand,
                                           params,
                                           meta_model.time_range),
-                        rel_tol=2.5e-2)
+                        rel_tol=okay_accuracy)
 
 
 if __name__ == "__main__":
