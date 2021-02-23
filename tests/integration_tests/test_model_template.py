@@ -58,14 +58,20 @@ def run_model_template(custom_params=None):
 
 def electricity_costs(electricity_demand, params, time_range):
     working_price = sum(electricity_demand
-               * np.array(params["energy_cost"]["electricity"]["AP"]))
+                        * np.array(params["energy_cost"]["electricity"]["AP"]))
     demand_rate = (max(electricity_demand) * time_range
-            * params["energy_cost"]["electricity"]["LP"])
+                   * params["energy_cost"]["electricity"]["LP"])
     return working_price + demand_rate
 
 
 def gas_costs(gas_demand, params):
     return sum(gas_demand * np.array(params["energy_cost"]["fossil_gas"]))
+
+
+def chp_subsidies(export, own_consumption, params):
+    # TODO: Consider funding hours per year
+    return (own_consumption * params["chp"]["own_consumption_tariff_funded"]
+            + export * params["chp"]["feed_in_tariff_funded"])
 
 
 def test_empty_template():
@@ -439,6 +445,8 @@ def test_missing_heat():
 
 def test_chp():
     heat_demand = np.full(3, 0.1)
+    gas_demand = 2*heat_demand
+    electricity_production = heat_demand
 
     params = {
         "chp": {"gas_input": 2,
@@ -451,6 +459,11 @@ def test_chp():
     assert math.isclose(meta_model.heat_chp(), heat_demand.sum(), rel_tol=1e-5)
     assert math.isclose(meta_model.el_export().sum(),
                         heat_demand.sum(),
+                        rel_tol=1e-5)
+    assert math.isclose(meta_model.optimiser_costs(),
+                        + gas_costs(gas_demand, params)
+                        - chp_subsidies(
+                            electricity_production.sum(), 0, params),
                         rel_tol=1e-5)
 
 
@@ -486,4 +499,4 @@ def test_heat_pump():
 
 
 if __name__ == "__main__":
-    test_heat_pump()
+    test_chp()
