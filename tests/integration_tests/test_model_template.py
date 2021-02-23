@@ -14,6 +14,7 @@ import pandas as pd
 
 from oemof.solph import views, processing
 
+from example.example import example
 from meta_model.enaq_meta_model import ENaQMetaModel
 
 
@@ -232,8 +233,8 @@ def test_fully_solar():
 
     params = {
         "solar_thermal": {
-            "st_area": 1,
-            "generation": st_generation
+            "area": 1,
+            "spec_generation": st_generation
         },
         "demand": {"heating": 3 * [heat_demand / 3]},
         "temperatures": {"heat_drop_heating": 20}}
@@ -260,8 +261,8 @@ def test_fully_solar_with_useless_storage():
 
     params = {
         "solar_thermal": {
-            "st_area": 1,
-            "generation": st_generation
+            "area": 1,
+            "spec_generation": st_generation
         },
         "heat_storage": {"volume": 2},
         "demand": {"heating": 3 * [heat_demand / 3]},
@@ -292,8 +293,8 @@ def test_partly_solar():
     params = {
         "gas_boiler": {"thermal_output": 1},
         "solar_thermal": {
-            "st_area": 1,
-            "generation": st_generation
+            "area": 1,
+            "spec_generation": st_generation
         },
         "demand": {
             "heating": 3 * [heat_demand / 3]
@@ -334,8 +335,8 @@ def test_partly_solar_bad_timing():
     params = {
         "gas_boiler": {"thermal_output": 1},
         "solar_thermal": {
-            "st_area": 1,
-            "generation": st_generation
+            "area": 1,
+            "spec_generation": st_generation
         },
         "demand": {
             "heating": 3 * [heat_demand / 3]
@@ -376,8 +377,8 @@ def test_partly_solar_with_storage():
     params = {
         "gas_boiler": {"thermal_output": 1},
         "solar_thermal": {
-            "st_area": 1,
-            "generation": st_generation},
+            "area": 1,
+            "spec_generation": st_generation},
         "demand": {
             "heating": 3 * [heat_demand / 3]},
         "heat_storage": {
@@ -416,8 +417,8 @@ def test_useless_solar():
     params = {
         "gas_boiler": {"thermal_output": 1},
         "solar_thermal": {
-            "st_area": 1,
-            "generation": st_generation
+            "area": 1,
+            "spec_generation": st_generation
         },
         "demand": {
             "heating": 3 * [heat_demand / 3]
@@ -511,5 +512,10 @@ def test_heat_pump():
                         rel_tol=okay_accuracy)
 
 
+def test_example():
+    os.chdir('../../example')
+    example(number_of_time_steps=24)
+
+
 if __name__ == "__main__":
-    test_chp()
+    test_example()
