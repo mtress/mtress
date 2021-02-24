@@ -19,6 +19,7 @@ from meta_model.enaq_meta_model import ENaQMetaModel
 HIGH_ACCURACY = 1e-5
 OKAY_ACCURACY = 2.5e-2  # sometimes, 2.5 % are good enough
 
+
 def run_model_template(custom_params=None):
     if custom_params is None:
         custom_params = {}
@@ -75,9 +76,11 @@ def gas_costs(gas_demand, params):
 
 def chp_revenue(export, own_consumption, params):
     # TODO: Consider funding hours per year
-    return (own_consumption * params["chp"]["own_consumption_subsidy"]
-            + (export * (params["energy_cost"]["electricity"]["market"]
-                         + params["chp"]["feed_in_subsidy"])).sum())
+    feed_in_revenue = (export * (params["energy_cost"]["electricity"]["market"]
+                       + params["chp"]["feed_in_subsidy"])).sum()
+    oc_costs = own_consumption * (params["energy_cost"]['eeg_levy']
+                                  - params["chp"]["own_consumption_subsidy"])
+    return feed_in_revenue - oc_costs
 
 
 def test_empty_template():
@@ -459,27 +462,38 @@ def test_missing_heat():
 
 
 def test_chp():
-    heat_demand = np.full(3, 0.1)
+    heat_demand = np.full(3, 2)
     gas_demand = 2*heat_demand
     electricity_production = heat_demand
+    electricity_demand = np.array([0, 1, 0.5])
+    electricity_export = electricity_production - electricity_demand
 
     params = {
-        "chp": {"gas_input": 2,
-                "thermal_output": 1,
-                "electric_output": 1},
-        "demand": {"heating": heat_demand}}
+        "chp": {"gas_input": 4,
+                "thermal_output": 2,
+                "electric_output": 2},
+        "demand": {"heating": heat_demand,
+                   "electricity": electricity_demand}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(), heat_demand.sum())
     assert math.isclose(meta_model.heat_chp().sum(),
                         heat_demand.sum(),
                         rel_tol=1e-5)
+    assert math.isclose(meta_model.el_import().sum(), 0, abs_tol=HIGH_ACCURACY)
     assert math.isclose(meta_model.el_export().sum(),
-                        heat_demand.sum(),
-                        rel_tol=1e-5)
+                        electricity_export.sum(),
+                        rel_tol=HIGH_ACCURACY)
+    chp_export_flow = sum(meta_model.energy_system.results['main'][
+                ("b_el_chp_fund", "b_elxprt")]['sequences']['flow'])
+    assert math.isclose(chp_export_flow,
+                        electricity_export.sum(),
+                        rel_tol=HIGH_ACCURACY)
     optimiser_costs = meta_model.optimiser_costs()
     manual_costs = (gas_costs(gas_demand, params)
-                    - chp_revenue(electricity_production, 0, params))
+                    - chp_revenue(electricity_export,
+                                  electricity_demand.sum(),
+                                  params))
     assert math.isclose(optimiser_costs,
                         manual_costs,
                         rel_tol=1e-5)
@@ -538,4 +552,4 @@ def test_pv_export():
 
 
 if __name__ == '__main__':
-    test_pv_export()
+    test_chp()
