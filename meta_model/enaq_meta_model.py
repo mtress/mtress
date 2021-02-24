@@ -22,6 +22,8 @@ def _array(data, length):
         data = np.array(data)
     elif isinstance(data, pd.Series) and len(data) == length:
         data = data.to_numpy()
+    elif isinstance(data, np.ndarray):
+        pass
     else:
         raise ValueError
 
