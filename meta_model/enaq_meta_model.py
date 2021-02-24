@@ -1065,10 +1065,10 @@ class ENaQMetaModel:
                              * self.spec_co2['wood_pellet']
                              * HHV_WP)
         CO2_import_el = (self.el_import() * self.spec_co2['el_in']).sum()
-        CO2_export_el = (-self.el_export() * self.spec_co2['el_out']).sum()
+        CO2_export_el = (self.el_export() * self.spec_co2['el_out']).sum()
         res = (CO2_import_natural_gas + CO2_import_biomethane
                + CO2_import_el + CO2_import_pellet
-               - CO2_export_el)
+               + CO2_export_el)
         return np.round(res, 1)
 
     def own_consumption(self):

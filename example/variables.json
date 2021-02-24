@@ -85,6 +85,8 @@
         "eeg_levy": 64.123
     },
     "co2": {
+        "el_in": 0.427,
+        "el_out": -0.427,
         "fossil_gas": 0.202,
         "biomethane": 0.148,
         "wood_pellet": 0.023,
