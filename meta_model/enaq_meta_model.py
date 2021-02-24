@@ -18,6 +18,8 @@ def _array(data, length):
         data = np.full(length, fill_value=data)
     elif isinstance(data, list) and len(data) == length:
         data = np.array(data)
+    elif isinstance(data, pd.Series) and len(data) == length:
+        data = data.to_numpy()
     else:
         raise ValueError
 
@@ -78,6 +80,8 @@ class ENaQMetaModel:
         if pv and pv["nominal_power"] <= 0:
             del pv
             pv = None
+        else:
+            pv['generation'] = pv['spec_generation'] * pv['nominal_power']
         p2h = kwargs.get('power_to_heat')
         if p2h and p2h["thermal_output"] <= 0:
             del p2h
@@ -86,6 +90,8 @@ class ENaQMetaModel:
         if wt and wt["nominal_power"] <= 0:
             del wt
             wt = None
+        else:
+            wt['generation'] = wt['spec_generation'] * wt['nominal_power']
         battery = kwargs.get('battery')
         if battery and battery["capacity"] <= 0:
             del battery
@@ -95,9 +101,11 @@ class ENaQMetaModel:
             del hs
             hs = None
         st = kwargs.get('solar_thermal')
-        if st and (st["st_area"] <= 0 or st["generation"].sum().max() <= 0):
+        if st and st["area"] <= 0:
             del st
             st = None
+        else:
+            st['generation'] = st['spec_generation'] * st['area']
 
         self.spec_co2 = kwargs.get('co2')
 
@@ -324,8 +332,8 @@ class ENaQMetaModel:
                     inputs={b_st: Flow(nominal_value=1)},
                     outputs={b_th_in_level: Flow(nominal_value=1)},
                     conversion_factors={
-                        b_st: (1 / st['generation'][
-                            'ST_' + str(temp)]).to_list()})
+                        b_st: (1 / st['generation']
+                                     ['ST_' + str(temp)]).to_list()})
 
                 self.st_input_flows.append((st_level_label,
                                             b_th_in_level.label))
@@ -564,17 +572,18 @@ class ENaQMetaModel:
 
         # wind turbine
         if wt:
-            b_el_wt = Bus(label="b_el_wt",
-                          outputs={
-                              b_elxprt: Flow(
-                                  variable_costs=-wt['feed_in_tariff']),
-                              b_elprod: Flow()})
+            b_el_wt = Bus(
+                label="b_el_wt",
+                outputs={
+                    b_elxprt: Flow(variable_costs=-wt['feed_in_tariff']),
+                    b_elprod: Flow()})
 
-            t_wt = Source(label='t_wt',
-                          outputs={
-                              b_el_wt: Flow(nominal_value=1.0,
-                                            max=wt['generation'])})
-            self.pv_flows.append((t_wt.label, b_el_wt.label))
+            t_wt = Source(
+                label='t_wt',
+                outputs={
+                    b_el_wt: Flow(
+                        nominal_value=1.0, max=wt['generation'])})
+            self.wt_flows.append((t_wt.label, b_el_wt.label))
 
             energy_system.add(t_wt, b_el_wt)
 
@@ -918,10 +927,10 @@ class ENaQMetaModel:
         CO2_import_pellet = (self.pellet_import()
                              * self.spec_co2['wood_pellet'] * HHV_WP)
         CO2_import_el = (self.el_import() * self.spec_co2['el_in']).sum()
-        CO2_export_el = (-self.el_export() * self.spec_co2['el_out']).sum()
+        CO2_export_el = (self.el_export() * self.spec_co2['el_out']).sum()
         res = (CO2_import_natural_gas + CO2_import_biomethane
                + CO2_import_el + CO2_import_pellet
-               - CO2_export_el)
+               + CO2_export_el)
         return np.round(res, 1)
 
     def own_consumption(self):
