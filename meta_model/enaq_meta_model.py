@@ -190,7 +190,6 @@ class ENaQMetaModel:
 
         energy_system.add(grid_connection)
 
-
         ###################################################################
         # Solar Thermal
         if st:
@@ -1051,21 +1050,21 @@ class ENaQMetaModel:
         Calculates the CO2 Emission acc. to
         https://doi.org/10.3390/en13112967
 
-        :return: Integrated CO2 emission in operation
+        :return: CO2 emission in operation as timeseries
         """
-        CO2_import_natural_gas = (self.fossil_gas_import()
-                                  * self.spec_co2['fossil_gas'])
-        CO2_import_biomethane = (self.biomethane_import()
-                                 * self.spec_co2['biomethane'])
-        CO2_import_pellet = (self.pellet_import()
-                             * self.spec_co2['wood_pellet']
-                             * HHV_WP)
-        CO2_import_el = (self.el_import() * self.spec_co2['el_in']).sum()
-        CO2_export_el = (self.el_export() * self.spec_co2['el_out']).sum()
-        res = (CO2_import_natural_gas + CO2_import_biomethane
-               + CO2_import_el + CO2_import_pellet
-               + CO2_export_el)
-        return np.round(res, 1)
+        co2_import_natural_gas = self.fossil_gas_import() \
+                                 * self.spec_co2['fossil_gas']
+        co2_import_biomethane = self.biomethane_import() \
+                                * self.spec_co2['biomethane']
+        co2_import_pellet = self.pellet_import() \
+                            * self.spec_co2['wood_pellet'] \
+                            * HHV_WP
+        co2_import_el = self.el_import() * self.spec_co2['el_in']
+        co2_export_el = self.el_export() * self.spec_co2['el_out']
+        co2_emission = (co2_import_natural_gas + co2_import_biomethane
+                        + co2_import_el + co2_import_pellet
+                        + co2_export_el)
+        return np.round(co2_emission, 1)
 
     def own_consumption(self):
         """
