@@ -640,9 +640,9 @@ class ENaQMetaModel:
         """
         if self.heat_pump:
             return self.heat_pump.heat_output(
-                self.energy_system.results['main']).sum()
+                self.energy_system.results['main'])
         else:
-            return 0
+            return np.zeros(self.number_of_time_steps)
 
     def heat_solar_thermal(self):
         """
