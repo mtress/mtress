@@ -16,6 +16,8 @@ from oemof.solph import views, processing
 
 from meta_model.enaq_meta_model import ENaQMetaModel
 
+HIGH_ACCURACY = 1e-5
+OKAY_ACCURACY = 2.5e-2  # sometimes, 2.5 % are good enough
 
 def run_model_template(custom_params=None):
     if custom_params is None:
@@ -58,9 +60,12 @@ def run_model_template(custom_params=None):
 
 def electricity_costs(electricity_demand, params, time_range):
     working_price = sum(electricity_demand
-                        * np.array(params["energy_cost"]["electricity"]["AP"]))
+                        * (np.array(params["energy_cost"][
+                                       "electricity"]["market"])
+                           + params["energy_cost"][
+                                       "electricity"]["surcharge"]))
     demand_rate = (max(electricity_demand) * time_range
-                   * params["energy_cost"]["electricity"]["LP"])
+                   * params["energy_cost"]["electricity"]["demand_rate"])
     return working_price + demand_rate
 
 
@@ -70,8 +75,9 @@ def gas_costs(gas_demand, params):
 
 def chp_revenue(export, own_consumption, params):
     # TODO: Consider funding hours per year
-    return (own_consumption * params["chp"]["own_consumption_tariff_funded"]
-            + export.sum() * params["chp"]["feed_in_tariff_funded"])
+    return (own_consumption * params["chp"]["own_consumption_subsidy"]
+            + (export * (params["energy_cost"]["electricity"]["market"]
+                         + params["chp"]["feed_in_subsidy"])).sum())
 
 
 def test_empty_template():
@@ -88,7 +94,7 @@ def test_electricity_demand_ap():
 
     params = {
         "demand": {"electricity": electricity_demand},
-        "energy_cost": {"electricity": {"LP": 0}}}
+        "energy_cost": {"electricity": {"demand_rate": 0}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
@@ -108,7 +114,7 @@ def test_electricity_demand_lp():
     params = {
         "demand": {"electricity": electricity_demand},
         "energy_cost": {"electricity": {
-            "LP": 1000,
+            "demand_rate": 1000,
             "AP": 0}}}
     meta_model, params = run_model_template(custom_params=params)
 
@@ -127,7 +133,7 @@ def test_electricity_demand_all_costs():
     params = {
         "demand": {"electricity": electricity_demand},
         "energy_cost": {"electricity": {
-            "LP": 1000,
+            "demand_rate": 1000,
             "AP": [15, 20, 15]}}}
     meta_model, params = run_model_template(custom_params=params)
 
@@ -484,9 +490,6 @@ def test_heat_pump():
     design_cop = 5
     electricity_demand = heat_demand/design_cop
 
-    high_accuracy = 1e-5
-    okay_accuracy = 2.5e-2  # sometimes, 2.5 % are good enough
-
     params = {
         "heat_pump": {"electric_input": 1,
                       "cop_0_35": design_cop},
@@ -499,17 +502,40 @@ def test_heat_pump():
     assert math.isclose(meta_model.thermal_demand().sum(), heat_demand.sum())
     assert math.isclose(meta_model.heat_heat_pump().sum(),
                         heat_demand.sum(),
-                        rel_tol=high_accuracy)
+                        rel_tol=HIGH_ACCURACY)
     design_cop_heat = meta_model.el_import().sum() * design_cop
     assert math.isclose(design_cop_heat,
                         heat_demand.sum(),
-                        rel_tol=okay_accuracy)
+                        rel_tol=OKAY_ACCURACY)
     assert math.isclose(meta_model.optimiser_costs(),
                         electricity_costs(electricity_demand,
                                           params,
                                           meta_model.time_range),
-                        rel_tol=okay_accuracy)
+                        rel_tol=OKAY_ACCURACY)
+
+
+def test_pv_export():
+    params = {"pv": {
+        "nominal_power": 2,
+        "feed_in_tariff": 75,
+        "spec_generation": [0, 2, 1]
+    }}
+    meta_model, params = run_model_template(custom_params=params)
+
+    for i in range(3):
+        assert math.isclose(meta_model.el_pv()[i],
+                            params["pv"]["nominal_power"]
+                            * params["pv"]["spec_generation"][i])
+        assert math.isclose(meta_model.el_export()[i],
+                            params["pv"]["nominal_power"]
+                            * params["pv"]["spec_generation"][i])
+
+    assert math.isclose(meta_model.optimiser_costs(),
+                        -params["pv"]["nominal_power"]
+                        * sum(params["pv"]["spec_generation"])
+                        * params["pv"]["feed_in_tariff"],
+                        abs_tol=HIGH_ACCURACY)
 
 
 if __name__ == '__main__':
-    test_heat_pump()
+    test_pv_export()

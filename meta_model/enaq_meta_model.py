@@ -20,6 +20,8 @@ def _array(data, length):
         data = np.array(data)
     elif isinstance(data, pd.Series) and len(data) == length:
         data = data.to_numpy()
+    elif isinstance(data, np.ndarray):
+        pass
     else:
         raise ValueError
 
@@ -120,9 +122,8 @@ class ENaQMetaModel:
         self.time_range = ((index[-1] - index[0] + index.freq)
                            / pd.Timedelta('365D'))
 
-        for cost in ["AP", "market"]:
-            energy_cost["electricity"][cost] = _array(
-                data=energy_cost["electricity"][cost],
+        energy_cost["electricity"]["market"] = _array(
+                data=energy_cost["electricity"]["market"],
                 length=self.number_of_time_steps)
 
         for quantity in ["el_in", "el_out"]:
@@ -339,12 +340,13 @@ class ENaQMetaModel:
         m_el_in = Source(label='m_el_in',
                          outputs={b_elgrid: Flow(
                              variable_costs=(
-                                     energy_cost['electricity']['AP']
+                                     energy_cost['electricity']['surcharge']
+                                     + energy_cost['electricity']['market']
                                      + self.spec_co2['el_in']
                                      * self.spec_co2['price']),
                              investment=Investment(
-                                 ep_costs=energy_cost['electricity']['LP']
-                                          * self.time_range))})
+                                 ep_costs=energy_cost['electricity'][
+                                     'demand_rate'] * self.time_range))})
         self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
 
         co2_costs = np.array(self.spec_co2['el_out']) * self.spec_co2['price']
@@ -495,9 +497,10 @@ class ENaQMetaModel:
                 label="b_el_chp_fund",
                 outputs={
                     b_elxprt: Flow(
-                        variable_costs=-chp['feed_in_tariff_funded']),
+                        variable_costs=-(energy_cost['electricity']['market']
+                                         + chp['feed_in_subsidy'])),
                     b_elprod: Flow(
-                        variable_costs=-chp['own_consumption_tariff_funded'])})
+                        variable_costs=-chp['own_consumption_subsidy'])})
 
             b_el_chp_unfund = Bus(
                 label="b_el_chp_unfund",
@@ -914,20 +917,21 @@ class ENaQMetaModel:
         Calculates the CO2 Emission acc. to
         https://doi.org/10.3390/en13112967
 
-        :return: Integrated CO2 emission in operation
+        :return: CO2 emission in operation as timeseries
         """
-        CO2_import_natural_gas = (self.fossil_gas_import()
-                                  * self.spec_co2['fossil_gas'])
-        CO2_import_biomethane = (self.biomethane_import()
-                                 * self.spec_co2['biomethane'])
-        CO2_import_pellet = (self.pellet_import()
-                             * self.spec_co2['wood_pellet'] * HHV_WP)
-        CO2_import_el = (self.el_import() * self.spec_co2['el_in']).sum()
-        CO2_export_el = (self.el_export() * self.spec_co2['el_out']).sum()
-        res = (CO2_import_natural_gas + CO2_import_biomethane
-               + CO2_import_el + CO2_import_pellet
-               + CO2_export_el)
-        return np.round(res, 1)
+        co2_import_natural_gas = self.fossil_gas_import() \
+                                 * self.spec_co2['fossil_gas']
+        co2_import_biomethane = self.biomethane_import() \
+                                * self.spec_co2['biomethane']
+        co2_import_pellet = self.pellet_import() \
+                            * self.spec_co2['wood_pellet'] \
+                            * HHV_WP
+        co2_import_el = self.el_import() * self.spec_co2['el_in']
+        co2_export_el = self.el_export() * self.spec_co2['el_out']
+        co2_emission = (co2_import_natural_gas + co2_import_biomethane
+                        + co2_import_el + co2_import_pellet
+                        + co2_export_el)
+        return np.round(co2_emission, 1)
 
     def own_consumption(self):
         """
