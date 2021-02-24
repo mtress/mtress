@@ -82,8 +82,6 @@ class ENaQMetaModel:
         if pv and pv["nominal_power"] <= 0:
             del pv
             pv = None
-        else:
-            pv['generation'] = pv['spec_generation'] * pv['nominal_power']
         p2h = kwargs.get('power_to_heat')
         if p2h and p2h["thermal_output"] <= 0:
             del p2h
@@ -92,8 +90,6 @@ class ENaQMetaModel:
         if wt and wt["nominal_power"] <= 0:
             del wt
             wt = None
-        else:
-            wt['generation'] = wt['spec_generation'] * wt['nominal_power']
         battery = kwargs.get('battery')
         if battery and battery["capacity"] <= 0:
             del battery
@@ -106,8 +102,6 @@ class ENaQMetaModel:
         if st and st["area"] <= 0:
             del st
             st = None
-        else:
-            st['generation'] = st['spec_generation'] * st['area']
 
         self.spec_co2 = kwargs.get('co2')
 
@@ -395,10 +389,10 @@ class ENaQMetaModel:
                 st_level_label = 't_st_' + temp_str
                 t_st_level = Transformer(
                     label=st_level_label,
-                    inputs={b_st: Flow(nominal_value=1)},
+                    inputs={b_st: Flow(nominal_value=st["area"])},
                     outputs={b_th_in_level: Flow(nominal_value=1)},
                     conversion_factors={
-                        b_st: (1 / st['generation']
+                        b_st: (1 / st['spec_generation']
                                      ['ST_' + str(temp)]).to_list()})
 
                 self.st_input_flows.append((st_level_label, b_th_in_label))
@@ -676,7 +670,8 @@ class ENaQMetaModel:
             t_pv = Source(
                 label='t_pv',
                 outputs={
-                    b_el_pv: Flow(nominal_value=1.0, max=pv['generation'])})
+                    b_el_pv: Flow(nominal_value=pv["nominal_power"],
+                                  max=pv['spec_generation'])})
             self.pv_flows.append((t_pv.label, b_el_pv.label))
 
             energy_system.add(t_pv, b_el_pv)
@@ -708,7 +703,8 @@ class ENaQMetaModel:
                 label='t_wt',
                 outputs={
                     b_el_wt: Flow(
-                        nominal_value=1.0, max=wt['generation'])})
+                        nominal_value=wt["nominal_power"],
+                        max=wt['spec_generation'])})
             self.wt_flows.append((t_wt.label, b_el_wt.label))
 
             energy_system.add(t_wt, b_el_wt)
