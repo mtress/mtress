@@ -56,16 +56,15 @@
     "pv": {
         "nominal_power": 0,
         "feed_in_tariff": 75,
-        "generation": [0, 0, 0]
+        "spec_generation": [0, 0, 0]
     },
     "wind_turbine": {
         "nominal_power": 0,
         "feed_in_tariff": 75,
-        "generation": [0, 0, 0]
+        "spec_generation": [0, 0, 0]
     },
     "solar_thermal": {
-        "area": 0,
-        "generation": [0, 0, 0]
+        "area": 0
     },
     "power_to_heat": {
         "thermal_output": 0
