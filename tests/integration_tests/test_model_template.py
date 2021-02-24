@@ -511,5 +511,5 @@ def test_heat_pump():
                         rel_tol=okay_accuracy)
 
 
-def test_example():
+if __name__ == '__main__':
     test_heat_pump()
