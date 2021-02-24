@@ -22,7 +22,12 @@ def extract_result_sequence(results, label, resample=None):
     return sequences
 
 
-def all_techs_model(number_of_time_steps=365 * 24):
+def all_techs_model(number_of_time_steps=365 * 24,
+                    silent=False):
+    """
+    :param number_of_time_steps: number of time steps to consider
+    :param silent: just solve and do not print results (for testing/ debug)
+    """
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     with open(os.path.join(dir_path, 'all_techs_example.json')) as f:
@@ -96,14 +101,16 @@ def all_techs_model(number_of_time_steps=365 * 24):
 
     meta_model = ENaQMetaModel(**variables)
 
-    print('Start solving')
+    if not silent:
+        print('Start solving')
     start = time.time()
     meta_model.model.solve(solver="cbc",
                            solve_kwargs={'tee': False},
                            solver_io='lp',
                            cmdline_options={'ratio': 0.01})
     end = time.time()
-    print("Time to solve: " + str(end - start) + " Seconds")
+    if not silent:
+        print("Time to solve: " + str(end - start) + " Seconds")
 
     energy_system = meta_model.energy_system
     energy_system.results['valid'] = True
@@ -116,50 +123,51 @@ def all_techs_model(number_of_time_steps=365 * 24):
 
     heat_demand = meta_model.thermal_demand().sum()
 
-    print('\n')
-    print('KPIs')
-    print("OPEX: {:.2f} €".format(meta_model.optimiser_costs()))
-    print("CO2 Emission: {:.0f} t".format(meta_model.co2_emission().sum()))
-    print("Own Consumption: {:.1f} %".format(meta_model.own_consumption() * 100))
-    print("Self Sufficiency: {:.1f} %".format(meta_model.self_sufficiency() * 100))
+    if not silent:
+        print('\n')
+        print('KPIs')
+        print("OPEX: {:.2f} €".format(meta_model.optimiser_costs()))
+        print("CO2 Emission: {:.0f} t".format(meta_model.co2_emission().sum()))
+        print("Own Consumption: {:.1f} %".format(meta_model.own_consumption() * 100))
+        print("Self Sufficiency: {:.1f} %".format(meta_model.self_sufficiency() * 100))
 
-    print('\n')
-    print("Heat demand: {:.3f}".format(heat_demand))
-    print("{:04.1f} % geothermal coverage: {:.3f}".format(
-        100 * meta_model.heat_geothermal().sum() / heat_demand,
-        meta_model.heat_geothermal().sum()))
-    print("{:04.1f} % heat pump coverage: {:.3f}".format(
-        100 * meta_model.heat_heat_pump().sum() / heat_demand,
-        meta_model.heat_heat_pump().sum()))
-    print("{:04.1f} % solar coverage: {:.3f}".format(
-        100 * meta_model.heat_solar_thermal().sum() / heat_demand,
-        meta_model.heat_solar_thermal().sum()))
-    print("{:04.1f} % CHP coverage: {:.3f}".format(
-        100 * meta_model.heat_chp().sum() / heat_demand,
-        meta_model.heat_chp().sum()))
-    print("{:04.1f} % pellet coverage: {:.3f}".format(
-        100 * meta_model.heat_pellet().sum() / heat_demand,
-        meta_model.heat_pellet().sum()))
-    print("{:04.1f} % boiler coverage: {:.3f}".format(
-        100 * meta_model.heat_boiler().sum() / heat_demand,
-        meta_model.heat_boiler().sum()))
-    print("{:04.1f} % power2heat coverage: {:.3f}".format(
-        100 * meta_model.heat_p2h().sum() / heat_demand,
-        meta_model.heat_p2h().sum()))
+        print('\n')
+        print("Heat demand: {:.3f}".format(heat_demand))
+        print("{:04.1f} % geothermal coverage: {:.3f}".format(
+            100 * meta_model.heat_geothermal().sum() / heat_demand,
+            meta_model.heat_geothermal().sum()))
+        print("{:04.1f} % heat pump coverage: {:.3f}".format(
+            100 * meta_model.heat_heat_pump().sum() / heat_demand,
+            meta_model.heat_heat_pump().sum()))
+        print("{:04.1f} % solar coverage: {:.3f}".format(
+            100 * meta_model.heat_solar_thermal().sum() / heat_demand,
+            meta_model.heat_solar_thermal().sum()))
+        print("{:04.1f} % CHP coverage: {:.3f}".format(
+            100 * meta_model.heat_chp().sum() / heat_demand,
+            meta_model.heat_chp().sum()))
+        print("{:04.1f} % pellet coverage: {:.3f}".format(
+            100 * meta_model.heat_pellet().sum() / heat_demand,
+            meta_model.heat_pellet().sum()))
+        print("{:04.1f} % boiler coverage: {:.3f}".format(
+            100 * meta_model.heat_boiler().sum() / heat_demand,
+            meta_model.heat_boiler().sum()))
+        print("{:04.1f} % power2heat coverage: {:.3f}".format(
+            100 * meta_model.heat_p2h().sum() / heat_demand,
+            meta_model.heat_p2h().sum()))
 
-    el_demand = meta_model.el_demand().sum()
+        el_demand = meta_model.el_demand().sum()
 
-    print('\n')
-    print("Electricity demand: {:.3f}".format(el_demand))
-    print("{:04.1f} % PV coverage: {:.3f}".format(
-        100 * meta_model.el_pv().sum() / el_demand,
-        meta_model.el_pv().sum()))
-    print("{:04.1f} % CHP coverage: {:.3f}".format(
-        100 * meta_model.el_chp().sum() / el_demand,
-        meta_model.el_chp().sum()))
-    print("{:04.1f} % WT coverage: {:.3f}".format(
-        100 * meta_model.el_wt().sum() / el_demand,
-        meta_model.el_wt().sum()))
+        print('\n')
+        print("Electricity demand: {:.3f}".format(el_demand))
+        print("{:04.1f} % PV coverage: {:.3f}".format(
+            100 * meta_model.el_pv().sum() / el_demand,
+            meta_model.el_pv().sum()))
+        print("{:04.1f} % CHP coverage: {:.3f}".format(
+            100 * meta_model.el_chp().sum() / el_demand,
+            meta_model.el_chp().sum()))
+        print("{:04.1f} % WT coverage: {:.3f}".format(
+            100 * meta_model.el_wt().sum() / el_demand,
+            meta_model.el_wt().sum()))
 
 
 if __name__ == '__main__':

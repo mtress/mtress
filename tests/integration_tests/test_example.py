@@ -13,7 +13,8 @@ from example import all_techs_model
 
 
 def test_example():
-    all_techs_model(number_of_time_steps=24)
+    all_techs_model(number_of_time_steps=24,
+                    silent=True)
 
 
 if __name__ == "__main__":
