@@ -48,20 +48,13 @@ def all_techs_model(number_of_time_steps=365 * 24):
                              sep=',',
                              parse_dates=True)
 
-    spec_co2 = pd.read_csv(os.path.join(dir_path, 'spec_co2_de.csv'),
-                           comment='#', index_col=0,
-                           sep=',',
-                           parse_dates=True)
-
     data = meteo.join(day_ahead)
     data = data.join(demand)
     data = data.join(generation)
-    data = data.join(spec_co2)
 
     del day_ahead
     del demand
     del generation
-    del spec_co2
 
     data = data.dropna()
     data = data.resample("1h").mean()
@@ -79,10 +72,7 @@ def all_techs_model(number_of_time_steps=365 * 24):
         'demand': {
             'electricity': data['electricity'],  # MW (time series)
             'heating': data['heating'],  # MW (time series)
-            'dhw': data['dhw']},  # MW (time series),
-        'co2': {
-            'el_in': data['spec_co2 (t/MWh)'],  # t/MWh
-            'el_out': -data['spec_co2 (t/MWh)']}  # t/MWh
+            'dhw': data['dhw']}  # MW (time series),
     }
 
     # Only add timeseries if technology is present in model
@@ -132,6 +122,13 @@ def all_techs_model(number_of_time_steps=365 * 24):
         meta_model.model)
 
     heat_demand = meta_model.thermal_demand().sum()
+
+    print('\n')
+    print('KPIs')
+    print("OPEX: {:.2f} €".format(meta_model.optimiser_costs()))
+    print("CO2 Emission: {:.0f} t".format(meta_model.co2_emission().sum()))
+    print("Own Consumption: {:.1f} %".format(meta_model.own_consumption() * 100))
+    print("Self Sufficiency: {:.1f} %".format(meta_model.self_sufficiency() * 100))
 
     print('\n')
     print("Heat demand: {:.3f}".format(heat_demand))
