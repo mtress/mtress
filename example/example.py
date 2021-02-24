@@ -25,7 +25,7 @@ def extract_result_sequence(results, label, resample=None):
 def all_techs_model(number_of_time_steps=365 * 24):
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    with open(os.path.join(dir_path, 'variables.json')) as f:
+    with open(os.path.join(dir_path, 'all_techs_example.json')) as f:
         variables = json.load(f)
 
     meteo = pd.read_csv(os.path.join(dir_path, 'meteo.csv'),
@@ -66,9 +66,7 @@ def all_techs_model(number_of_time_steps=365 * 24):
             'temp_air': meteo['temp_air'],  # K
             'temp_soil': meteo['temp_soil']},  # K
         'energy_cost': {
-            'electricity': {
-                'AP': data['price'] + 17,  # €/MWh
-                'market': data['price']}},  # €/MW
+            'electricity': {'market': data['price']}},  # €/MW
         'demand': {
             'electricity': data['electricity'],  # MW (time series)
             'heating': data['heating'],  # MW (time series)
@@ -76,11 +74,6 @@ def all_techs_model(number_of_time_steps=365 * 24):
     }
 
     # Only add timeseries if technology is present in model
-    if 'chp' in variables.keys():
-        time_series['chp'] = {'feed_in_tariff_funded': data['price'] + 7.5,  # €/MWh
-                              'feed_in_tariff_unfunded': data['price'],  # €/MWh
-                              'own_consumption_tariff_funded': 3.5}  # €/MWh
-
     if 'pv' in variables.keys():
         time_series['pv'] = {'spec_generation': data['PV']}  # MW
 

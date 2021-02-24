@@ -130,9 +130,8 @@ class ENaQMetaModel:
         self.time_range = ((index[-1] - index[0] + index.freq)
                            / pd.Timedelta('365D'))
 
-        for cost in ["AP", "market"]:
-            energy_cost["electricity"][cost] = _array(
-                data=energy_cost["electricity"][cost],
+        energy_cost["electricity"]["market"] = _array(
+                data=energy_cost["electricity"]["market"],
                 length=self.number_of_time_steps)
 
         for quantity in ["el_in", "el_out"]:
@@ -462,12 +461,13 @@ class ENaQMetaModel:
         m_el_in = Source(label='m_el_in',
                          outputs={b_elgrid: Flow(
                              variable_costs=(
-                                     energy_cost['electricity']['AP']
+                                     energy_cost['electricity']['surcharge']
+                                     + energy_cost['electricity']['market']
                                      + self.spec_co2['el_in']
                                      * self.spec_co2['price']),
                              investment=Investment(
-                                 ep_costs=energy_cost['electricity']['LP']
-                                          * self.time_range))})
+                                 ep_costs=energy_cost['electricity'][
+                                     'demand_rate'] * self.time_range))})
         self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
 
         co2_costs = np.array(self.spec_co2['el_out']) * self.spec_co2['price']
@@ -620,9 +620,10 @@ class ENaQMetaModel:
                 label="b_el_chp_fund",
                 outputs={
                     b_elxprt: Flow(
-                        variable_costs=-chp['feed_in_tariff_funded']),
+                        variable_costs=-(energy_cost['electricity']['market']
+                                         + chp['feed_in_subsidy'])),
                     b_elprod: Flow(
-                        variable_costs=-chp['own_consumption_tariff_funded'])})
+                        variable_costs=-chp['own_consumption_subsidy'])})
 
             b_el_chp_unfund = Bus(
                 label="b_el_chp_unfund",
