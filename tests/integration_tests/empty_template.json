@@ -64,7 +64,7 @@
         "generation": [0, 0, 0]
     },
     "solar_thermal": {
-        "st_area": 0,
+        "area": 0,
         "generation": [0, 0, 0]
     },
     "power_to_heat": {

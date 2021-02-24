@@ -14,7 +14,6 @@ import pandas as pd
 
 from oemof.solph import views, processing
 
-from example.example import example
 from meta_model.enaq_meta_model import ENaQMetaModel
 
 
@@ -513,9 +512,4 @@ def test_heat_pump():
 
 
 def test_example():
-    os.chdir('../../example')
-    example(number_of_time_steps=24)
-
-
-if __name__ == "__main__":
-    test_example()
+    test_heat_pump()

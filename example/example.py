@@ -2,6 +2,7 @@
 import time
 import pandas as pd
 import json
+import os
 
 from oemof.solph import views, processing
 
@@ -21,31 +22,33 @@ def extract_result_sequence(results, label, resample=None):
     return sequences
 
 
-def example(number_of_time_steps=365*24):
-    with open('variables.json') as f:
+def all_techs_model(number_of_time_steps=365 * 24):
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+
+    with open(os.path.join(dir_path, 'variables.json')) as f:
         variables = json.load(f)
 
-    meteo = pd.read_csv('meteo.csv',
+    meteo = pd.read_csv(os.path.join(dir_path, 'meteo.csv'),
                         comment='#', index_col=0,
                         sep=',',
                         parse_dates=True)
 
-    day_ahead = pd.read_csv('day-ahead.csv',
+    day_ahead = pd.read_csv(os.path.join(dir_path, 'day-ahead.csv'),
                             comment='#', index_col=0,
                             sep=',',
                             parse_dates=True)
 
-    demand = pd.read_csv('demand.csv',
+    demand = pd.read_csv(os.path.join(dir_path, 'demand.csv'),
                          comment='#', index_col=0,
                          sep=',',
                          parse_dates=True)
 
-    generation = pd.read_csv('generation.csv',
+    generation = pd.read_csv(os.path.join(dir_path, 'generation.csv'),
                              comment='#', index_col=0,
                              sep=',',
                              parse_dates=True)
 
-    spec_co2 = pd.read_csv('spec_co2_de.csv',
+    spec_co2 = pd.read_csv(os.path.join(dir_path, 'spec_co2_de.csv'),
                            comment='#', index_col=0,
                            sep=',',
                            parse_dates=True)
@@ -170,4 +173,4 @@ def example(number_of_time_steps=365*24):
 
 
 if __name__ == '__main__':
-    example(number_of_time_steps=7*24)
+    all_techs_model(number_of_time_steps=7 * 24)
