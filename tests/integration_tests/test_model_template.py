@@ -60,9 +60,12 @@ def run_model_template(custom_params=None):
 
 def electricity_costs(electricity_demand, params, time_range):
     working_price = sum(electricity_demand
-                        * np.array(params["energy_cost"]["electricity"]["AP"]))
+                        * (np.array(params["energy_cost"][
+                                       "electricity"]["market"])
+                           + params["energy_cost"][
+                                       "electricity"]["surcharge"]))
     demand_rate = (max(electricity_demand) * time_range
-                   * params["energy_cost"]["electricity"]["LP"])
+                   * params["energy_cost"]["electricity"]["demand_rate"])
     return working_price + demand_rate
 
 
@@ -72,8 +75,9 @@ def gas_costs(gas_demand, params):
 
 def chp_revenue(export, own_consumption, params):
     # TODO: Consider funding hours per year
-    return (own_consumption * params["chp"]["own_consumption_tariff_funded"]
-            + export.sum() * params["chp"]["feed_in_tariff_funded"])
+    return (own_consumption * params["chp"]["own_consumption_subsidy"]
+            + (export * (params["energy_cost"]["electricity"]["market"]
+                         + params["chp"]["feed_in_subsidy"])).sum())
 
 
 def test_empty_template():
@@ -90,7 +94,7 @@ def test_electricity_demand_ap():
 
     params = {
         "demand": {"electricity": electricity_demand},
-        "energy_cost": {"electricity": {"LP": 0}}}
+        "energy_cost": {"electricity": {"demand_rate": 0}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
@@ -110,7 +114,7 @@ def test_electricity_demand_lp():
     params = {
         "demand": {"electricity": electricity_demand},
         "energy_cost": {"electricity": {
-            "LP": 1000,
+            "demand_rate": 1000,
             "AP": 0}}}
     meta_model, params = run_model_template(custom_params=params)
 
@@ -129,7 +133,7 @@ def test_electricity_demand_all_costs():
     params = {
         "demand": {"electricity": electricity_demand},
         "energy_cost": {"electricity": {
-            "LP": 1000,
+            "demand_rate": 1000,
             "AP": [15, 20, 15]}}}
     meta_model, params = run_model_template(custom_params=params)
 

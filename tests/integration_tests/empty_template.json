@@ -49,9 +49,8 @@
         "thermal_output": 0,
         "thermal_efficiency": 0.5,
         "gas_input": 0,
-        "feed_in_tariff_funded": 7.5,
-        "feed_in_tariff_unfunded": 0,
-        "own_consumption_tariff_funded": 3.5
+        "feed_in_subsidy": 7.5,
+        "own_consumption_subsidy": 3.5
     },
     "pv": {
         "nominal_power": 0,
@@ -88,8 +87,8 @@
     },
     "energy_cost": {
         "electricity": {
-            "LP": 1000,
-            "AP": [15, 20, 15],
+            "demand_rate": 1000,
+            "surcharge": 17,
             "market": 0
         },
         "fossil_gas": 35,
