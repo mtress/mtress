@@ -493,7 +493,7 @@ def test_heat_pump():
         "geothermal_heat_source": {"thermal_output": 1},
         "demand": {
             "heating": heat_demand},
-            "temperatures": {"heating": 35}}
+        "temperatures": {"heating": 35}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(), heat_demand.sum())
