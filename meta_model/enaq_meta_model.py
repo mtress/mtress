@@ -196,7 +196,6 @@ class ENaQMetaModel:
 
         energy_system.add(grid_connection)
 
-
         ###################################################################
         # Solar Thermal
         if st:
@@ -1057,15 +1056,15 @@ class ENaQMetaModel:
 
         :return: Integrated CO2 emission in operation
         """
-        CO2_import_natural_gas = (self.fossil_gas_import()
-                                  * self.spec_co2['fossil_gas'])
-        CO2_import_biomethane = (self.biomethane_import()
-                                 * self.spec_co2['biomethane'])
-        CO2_import_pellet = (self.pellet_import()
-                             * self.spec_co2['wood_pellet']
-                             * HHV_WP)
-        CO2_import_el = (self.el_import() * self.spec_co2['el_in']).sum()
-        CO2_export_el = (self.el_export() * self.spec_co2['el_out']).sum()
+        CO2_import_natural_gas = self.fossil_gas_import() * \
+                                 self.spec_co2['fossil_gas']
+        CO2_import_biomethane = self.biomethane_import() * \
+                                self.spec_co2['biomethane']
+        CO2_import_pellet = self.pellet_import() * \
+                            self.spec_co2['wood_pellet'] * \
+                            HHV_WP
+        CO2_import_el = self.el_import() * self.spec_co2['el_in']
+        CO2_export_el = self.el_export() * self.spec_co2['el_out']
         res = (CO2_import_natural_gas + CO2_import_biomethane
                + CO2_import_el + CO2_import_pellet
                + CO2_export_el)
