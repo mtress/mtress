@@ -15,7 +15,7 @@ import numpy as np
 from oemof import solph
 from oemof import thermal
 
-from meta_model.physics import (celsius_to_kelvin, kilo_to_mega, kJ_to_MWh,
+from meta_model.physics import (kilo_to_mega, kJ_to_MWh,
                                 H2O_DENSITY, H2O_HEAT_CAPACITY,
                                 TC_INSULATION)
 
@@ -62,7 +62,7 @@ class MultiLayerStorage:
             b_th_level = heat_layers.b_th[temperature]
 
             hs_capacity = self.heat_storage_volume * \
-                          kJ_to_MWh((celsius_to_kelvin(temperature)
+                          kJ_to_MWh((temperature
                                      - heat_layers.reference_temperature) *
                                     H2O_DENSITY *
                                     H2O_HEAT_CAPACITY)
