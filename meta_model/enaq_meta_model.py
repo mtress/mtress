@@ -159,6 +159,8 @@ class ENaQMetaModel:
         self.pellet_heat_flows = list()
         self.gt_input_flows = list()
         self.st_input_flows = list()
+        self.heat_storage_in_flows = list()
+        self.heat_storage_out_flows = list()
         self.fossil_gas_flows = list()
         self.biomethane_flows = list()
         self.chp_gas_flows = list()
@@ -426,6 +428,10 @@ class ENaQMetaModel:
                     fixed_losses_absolute=hs_fixed_losses_abs,
                     fixed_losses_relative=hs_fixed_losses_rel
                 )
+                self.heat_storage_in_flows.append((b_th_level.label,
+                                                   s_heat.label))
+                self.heat_storage_out_flows.append((s_heat.label,
+                                                    b_th_level.label))
 
                 h_storage_comp.append(s_heat)
 
@@ -835,6 +841,22 @@ class ENaQMetaModel:
                 'sequences']['flow']
 
         return e_p2h_th
+
+    def heat_storage_in(self):
+        heat = np.zeros(self.number_of_time_steps)
+        for res in self.heat_storage_in_flows:
+            heat += self.energy_system.results['main'][res][
+                'sequences']['flow']
+
+        return heat
+
+    def heat_storage_out(self):
+        heat = np.zeros(self.number_of_time_steps)
+        for res in self.heat_storage_out_flows:
+            heat += self.energy_system.results['main'][res][
+                'sequences']['flow']
+
+        return heat
 
     def thermal_demand(self):
         """
