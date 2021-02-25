@@ -6,7 +6,7 @@ import pandas as pd
 
 from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          Model, Investment, constraints, custom,
-                         GenericStorage)
+                         GenericStorage, NonConvex)
 from oemof.thermal import stratified_thermal_storage as sts
 
 from .physics import (celsius_to_kelvin, kelvin_to_celsius, HHV_WP,
@@ -171,25 +171,21 @@ class ENaQMetaModel:
         b_elprod = Bus(label="b_elprod",  # local production network
                        outputs={b_eldist: Flow(
                            variable_costs=energy_cost['eeg_levy'])})
-        b_elgrid = Bus(label="b_elgrid")
         b_elxprt = Bus(label="b_elxprt")  # electricity export network
         b_gas = Bus(label="b_gas")
 
-        energy_system.add(b_eldist, b_elprod, b_elxprt, b_gas, b_elgrid)
+        energy_system.add(b_eldist, b_elprod, b_elxprt, b_gas)
 
         ###################################################################
         # unidirectional grid connection
-        grid_connection = custom.Link(
-            label="grid_connection",
-            inputs={b_elgrid: Flow(),
-                    b_elxprt: Flow()},
-            outputs={b_eldist: Flow(),
-                     b_elgrid: Flow()},
-            conversion_factors={(b_elxprt, b_elgrid): 1,
-                                (b_elgrid, b_eldist): 1}
-        )
-
-        energy_system.add(grid_connection)
+        b_elgrid = Bus(label="b_elgrid",
+                       outputs={b_eldist: Flow(nonconvex=NonConvex(),
+                                               nominal_value=1e5,
+                                               grid_connection=True)},
+                       inputs={b_elxprt: Flow(nonconvex=NonConvex(),
+                                              nominal_value=1e5,
+                                              grid_connection=True)})
+        energy_system.add(b_elgrid)
 
         ###################################################################
         # Solar Thermal
@@ -727,6 +723,12 @@ class ENaQMetaModel:
             energy_system.add(s_battery)
 
         model = Model(energy_system)
+
+        constraints.limit_active_flow_count_by_keyword(
+            model,
+            "grid_connection",
+            lower_limit=0,
+            upper_limit=1)
 
         if hs:
             # Heat Storage Constraints
