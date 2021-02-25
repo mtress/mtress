@@ -49,23 +49,21 @@
         "thermal_output": 0,
         "thermal_efficiency": 0.5,
         "gas_input": 0,
-        "feed_in_tariff_funded": 7.5,
-        "feed_in_tariff_unfunded": 0,
-        "own_consumption_tariff_funded": 3.5
+        "feed_in_subsidy": 7.5,
+        "own_consumption_subsidy": 3.5
     },
     "pv": {
         "nominal_power": 0,
         "feed_in_tariff": 75,
-        "generation": [0, 0, 0]
+        "spec_generation": [0, 0, 0]
     },
     "wind_turbine": {
         "nominal_power": 0,
         "feed_in_tariff": 75,
-        "generation": [0, 0, 0]
+        "spec_generation": [0, 0, 0]
     },
     "solar_thermal": {
-        "area": 0,
-        "generation": [0, 0, 0]
+        "area": 0
     },
     "power_to_heat": {
         "thermal_output": 0
@@ -89,9 +87,9 @@
     },
     "energy_cost": {
         "electricity": {
-            "LP": 1000,
-            "AP": [15, 20, 15],
-            "market": 0
+            "demand_rate": 1000,
+            "surcharge": 17,
+            "market": [150, 200, 100]
         },
         "fossil_gas": 35,
         "biomethane": 95,
