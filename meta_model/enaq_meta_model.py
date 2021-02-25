@@ -184,14 +184,14 @@ class ENaQMetaModel:
                                  reference_temperature=temps['reference'])
 
         if hs:
-            thermal_storage = MultiLayerStorage(
+            self._thermal_storage = MultiLayerStorage(
                 diameter=hs['diameter'],
                 volume=hs['volume'],
                 insulation_thickness=hs['insulation_thickness'],
                 ambient_temperature=meteo['temp_air'],
                 heat_layers=heat_layers)
         else:
-            thermal_storage = None
+            self._thermal_storage = None
 
         ####################################################################
         # Heat pump
@@ -599,8 +599,8 @@ class ENaQMetaModel:
 
         model = Model(energy_system)
 
-        if thermal_storage:
-            thermal_storage.add_shared_limit(model=model)
+        if self._thermal_storage:
+            self._thermal_storage.add_shared_limit(model=model)
 
         constraints.limit_active_flow_count_by_keyword(
             model,
@@ -700,6 +700,18 @@ class ENaQMetaModel:
                 'sequences']['flow']
 
         return e_p2h_th
+
+    def heat_storage_in(self):
+        if self._thermal_storage:
+            return self._thermal_storage.combined_inflow
+        else:
+            return np.zeros(self.number_of_time_steps)
+
+    def heat_storage_out(self):
+        if self._thermal_storage:
+            return self._thermal_storage.combined_outflow
+        else:
+            return np.zeros(self.number_of_time_steps)
 
     def thermal_demand(self):
         """

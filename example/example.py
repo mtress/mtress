@@ -132,7 +132,17 @@ def all_techs_model(number_of_time_steps=365 * 24,
         print("Self Sufficiency: {:.1f} %".format(meta_model.self_sufficiency() * 100))
 
         print('\n')
-        print("Heat demand: {:.3f}".format(heat_demand))
+        print("Heat demand: {:6.3f}".format(heat_demand))
+        print("Storage out: {:6.3f}".format(
+            meta_model.heat_storage_out().sum()))
+        print("         in: {:6.3f}".format(
+            meta_model.heat_storage_in().sum()))
+        losses = (meta_model.heat_storage_in().sum()
+                  - meta_model.heat_storage_out().sum())
+        print("{:04.1f} % loss: {:6.3f}".format(100 * losses / heat_demand,
+                                                losses))
+
+        print('\n')
         print("{:04.1f} % geothermal coverage: {:.3f}".format(
             100 * meta_model.heat_geothermal().sum() / heat_demand,
             meta_model.heat_geothermal().sum()))

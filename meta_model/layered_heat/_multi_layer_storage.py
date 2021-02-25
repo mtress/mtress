@@ -10,6 +10,7 @@ SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
+import numpy as np
 
 from oemof import solph
 from oemof import thermal
@@ -51,6 +52,9 @@ class MultiLayerStorage:
         self._loss_rate = {}
         self._fixed_losses = {"abs": {},
                               "rel": {}}
+
+        self._in_flows = list()
+        self._out_flows = list()
 
         for temperature in self._temperature_levels:
             temperature_str = "{0:.0f}".format(temperature)
@@ -97,6 +101,8 @@ class MultiLayerStorage:
                 fixed_losses_absolute=hs_fixed_losses_absolute,
                 fixed_losses_relative=hs_fixed_losses_relative
             )
+            self._in_flows.append((b_th_level.label, s_heat.label))
+            self._out_flows.append((s_heat.label, b_th_level.label))
 
             self._h_storage_comp.append(s_heat)
             self.energy_system.add(s_heat)
@@ -115,6 +121,24 @@ class MultiLayerStorage:
             model, model.GenericStorageBlock.storage_content,
             'storage_limit', self._h_storage_comp, w_factor,
             upper_limit=self.heat_storage_volume)
+
+    @property
+    def combined_inflow(self):
+        heat = 0
+        for res in self._in_flows:
+            heat += self.energy_system.results['main'][res][
+                'sequences']['flow']
+
+        return heat
+
+    @property
+    def combined_outflow(self):
+        heat = 0
+        for res in self._out_flows:
+            heat += self.energy_system.results['main'][res][
+                'sequences']['flow']
+
+        return heat
 
     @property
     def loss_rate(self):
