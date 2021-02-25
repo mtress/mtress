@@ -7,7 +7,6 @@ import pandas as pd
 from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          Model, Investment, constraints, custom,
                          GenericStorage, NonConvex)
-from oemof.thermal import stratified_thermal_storage as sts
 
 from .layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
                            HeatExchanger)
