@@ -133,6 +133,8 @@ def all_techs_model(number_of_time_steps=365 * 24,
 
         print('\n')
         print("Heat demand: {:6.3f}".format(heat_demand))
+        print("    missing: {:6.3f}".format(
+            meta_model.missing_heat().sum()))
         print("Storage out: {:6.3f}".format(
             meta_model.heat_storage_out().sum()))
         print("         in: {:6.3f}".format(
@@ -142,7 +144,7 @@ def all_techs_model(number_of_time_steps=365 * 24,
         print("{:04.1f} % loss: {:6.3f}".format(100 * losses / heat_demand,
                                                 losses))
 
-        print('\n')
+        print("")
         print("{:04.1f} % geothermal coverage: {:.3f}".format(
             100 * meta_model.heat_geothermal().sum() / heat_demand,
             meta_model.heat_geothermal().sum()))
