@@ -89,7 +89,7 @@
         "electricity": {
             "demand_rate": 1000,
             "surcharge": 17,
-            "market": 0
+            "market": [150, 200, 100]
         },
         "fossil_gas": 35,
         "biomethane": 95,
