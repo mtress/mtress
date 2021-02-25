@@ -113,8 +113,8 @@ class MultiLayerStorage:
         """
         w_factor = [1 / kilo_to_mega(H2O_HEAT_CAPACITY
                                      * H2O_DENSITY
-                                     * (celsius_to_kelvin(temp)
-                                        - self._reference_temperature))
+                                     * (celsius_to_kelvin(
+                                         temp - self._reference_temperature)))
                     for temp in self._temperature_levels]
 
         solph.constraints.shared_limit(
