@@ -608,7 +608,6 @@ class ENaQMetaModel:
             lower_limit=0,
             upper_limit=1)
 
-
         self.energy_system = energy_system
         self.model = model
 
