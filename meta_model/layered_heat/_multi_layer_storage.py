@@ -78,6 +78,12 @@ class MultiLayerStorage:
                         temp_c=self._reference_temperature,
                         temp_env=ambient_temperature))
 
+            # losses to the upper side of the storage will just leave the
+            # storage for the uppermost level.
+            # So, we neglect them for the others.
+            if temperature != max(self._temperature_levels):
+                hs_fixed_losses_relative = hs_fixed_losses_absolute = 0
+
             self._loss_rate[temperature] = hs_loss_rate
             self._fixed_losses["abs"][temperature] = hs_fixed_losses_absolute
             self._fixed_losses["rel"][temperature] = hs_fixed_losses_relative
