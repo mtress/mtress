@@ -22,7 +22,7 @@
         "temperature": 15
     },
     "ice_storage": {
-        "volume": 100,
+        "volume": 5,
         "height": 3,
         "wall_thickness": 0.1,
         "ceil_thickness": 0.2
