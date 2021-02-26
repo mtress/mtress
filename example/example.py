@@ -181,6 +181,8 @@ def all_techs_model(number_of_time_steps=365 * 24,
             100 * meta_model.el_wt().sum() / el_demand,
             meta_model.el_wt().sum()))
 
+    return meta_model
+
 
 if __name__ == '__main__':
     all_techs_model(number_of_time_steps=7 * 24)
