@@ -294,7 +294,6 @@ class ENaQMetaModel:
                 self.virtual_costs_flows.append((b_ihs.label,
                                                  s_ihs_excess.label))
 
-
                 energy_system.add(b_ihs, s_ihs, s_ihs_excess)
 
             if tgs:
