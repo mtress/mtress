@@ -1,21 +1,57 @@
 stages:
   - test
-before_script:
-  - apt-get update -qy
-  - apt-get install -y python3-dev python3-pip
-  - apt-get install -y coinor-cbc
-  - pip3 install --upgrade pip
-  - pip3 install git+https://github.com/oemof/oemof-thermal.git
-  - pip3 install -r requirements.txt
-  - pip3 install pytest
+  - build
+  - package
+
+.test_before_script:
+  before_script:
+    - apt-get update -qy
+    - apt-get install -y coinor-cbc
+    - apt-get install git
+    - pip install --upgrade pip
+    - pip install git+https://github.com/oemof/oemof-thermal.git
+    - pip install -r requirements.txt
+    - pip install pytest
+
 test_scripts:
   stage: test
+  image: python:3.7
+  extends: .test_before_script
   script:
-  - python3 -m pytest tests
+  - python -m pytest tests
+
 pylint:
   stage: test
   image: python:3.7
   script:
     - pip install pylint --quiet
+    - pip install git+https://github.com/oemof/oemof-thermal.git
+    - pip install -r requirements.txt
     - pylint meta_model
   allow_failure: true
+
+build_pypi:
+  stage: build
+  image: python:3.7
+  script:
+    - pip install twine
+    - python setup.py sdist bdist_wheel
+  only:
+    - master
+  artifacts:    
+    expire_in: 30 days
+    paths:
+      - dist/
+  
+package_pypi:
+  stage: package
+  image: python:3.7
+  only:
+    - master
+  script:
+    - echo "Project ID:"
+    - echo ${CI_PROJECT_ID}
+    - pip install twine
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+  when: manual
+
