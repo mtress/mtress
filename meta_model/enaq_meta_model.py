@@ -285,7 +285,7 @@ class ENaQMetaModel:
                 # So we add excess heat to allow not using it.
                 # We charge money for this to make it unattractive to use
                 s_ihs_excess = Sink(label="ihs_excess",
-                                    inputs={b_ihs: Flow()})
+                                    inputs={b_ihs: Flow(variable_costs=100)})
 
                 energy_system.add(b_ihs, s_ihs, s_ihs_excess)
 
