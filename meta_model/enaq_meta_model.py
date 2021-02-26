@@ -273,7 +273,6 @@ class ENaQMetaModel:
                 self.virtual_costs_flows.append((b_ihs.label,
                                                  s_ihs_excess.label))
 
-
                 energy_system.add(b_ihs, s_ihs, s_ihs_excess)
 
         ####################################################################
@@ -419,8 +418,8 @@ class ENaQMetaModel:
                         sts.calculate_losses(
                             u_value=TC_INSULATION / hs['insulation_thickness'],
                             diameter=hs['diameter'],
-                            temp_h=temp,
-                            temp_c=temps['reference'],
+                            temp_h=kelvin_to_celsius(temp),
+                            temp_c=kelvin_to_celsius(temps['reference']),
                             temp_env=meteo['temp_air'])
                 else:
                     hs_loss_rate = \
