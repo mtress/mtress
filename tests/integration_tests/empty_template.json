@@ -1,15 +1,15 @@
 {
     "temperatures": {
-        "reference": 273.15,
-        "dhw": 333.15,
+        "reference": 0,
+        "dhw": 60,
         "heat_drop_exchanger_dhw": 0,
-        "heating": 313.15,
+        "heating": 40,
         "heat_drop_heating": 10,
         "intermediate": []
     },
     "meteorology": {
-        "temp_air": 273.15,
-        "temp_soil": 273.15
+        "temp_air": 0,
+        "temp_soil": 0
     },
     "heat_pump": {
         "electric_input": 0,
@@ -20,7 +20,7 @@
     },
     "geothermal_heat_source": {
         "thermal_output": 0,
-        "temperature": 273.15
+        "temperature": 0
     },
     "ice_storage": {
         "volume": 0,
@@ -30,7 +30,7 @@
     },
     "thermal_ground_storage": {
         "volume": 0,
-        "temperature": 283.15,
+        "temperature": 10,
         "heat_capacity": 0.025
     },
     "gas_boiler": {

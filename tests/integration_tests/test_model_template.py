@@ -233,8 +233,8 @@ def test_fully_solar():
     heat_demand = 1
     st_generation = 1
 
-    st_generation = {"ST_293.15": 3 * [st_generation / 3],
-                     "ST_313.15": 3 * [st_generation / 3]}
+    st_generation = {"ST_20": 3 * [st_generation / 3],
+                     "ST_40": 3 * [st_generation / 3]}
     st_generation = pd.DataFrame(
         st_generation,
         index=pd.date_range('1/1/2000', periods=3, freq='H'))
@@ -261,8 +261,8 @@ def test_fully_solar_with_useless_storage():
     heat_demand = 1
     st_generation = 3
 
-    st_generation = {"ST_293.15": 3 * [st_generation / 3],
-                     "ST_313.15": 3 * [st_generation / 3]}
+    st_generation = {"ST_20": 3 * [st_generation / 3],
+                     "ST_40": 3 * [st_generation / 3]}
     st_generation = pd.DataFrame(
         st_generation,
         index=pd.date_range('1/1/2000', periods=3, freq='H'))
@@ -291,9 +291,9 @@ def test_partly_solar():
     heat_demand = 1
     st_generation = 1
 
-    st_generation = {"ST_293.15": 3 * [1e-9],
-                     "ST_303.15": 3 * [st_generation / 3],
-                     "ST_313.15": 3 * [1e-9]}
+    st_generation = {"ST_20": 3 * [1e-9],
+                     "ST_30": 3 * [st_generation / 3],
+                     "ST_40": 3 * [1e-9]}
     st_generation = pd.DataFrame(
         st_generation,
         index=pd.date_range('1/1/2000', periods=3, freq='H'))
@@ -309,7 +309,7 @@ def test_partly_solar():
         },
         "temperatures": {
             "heat_drop_heating": 20,
-            "intermediate": [303.15]}}
+            "intermediate": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(),
@@ -333,9 +333,9 @@ def test_partly_solar_bad_timing():
     heat_demand = 1
     st_generation = 1
 
-    st_generation = {"ST_293.15": 3 * [1e-9],
-                     "ST_303.15": [1e-9, st_generation, 1e-9],
-                     "ST_313.15": 3 * [1e-9]}
+    st_generation = {"ST_20": 3 * [1e-9],
+                     "ST_30": [1e-9, st_generation, 1e-9],
+                     "ST_40": 3 * [1e-9]}
     st_generation = pd.DataFrame(
         st_generation,
         index=pd.date_range('1/1/2000', periods=3, freq='H'))
@@ -351,7 +351,7 @@ def test_partly_solar_bad_timing():
         },
         "temperatures": {
             "heat_drop_heating": 20,
-            "intermediate": [303.15]}}
+            "intermediate": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(),
@@ -375,9 +375,9 @@ def test_partly_solar_with_storage():
     heat_demand = 1
     st_generation = 1
 
-    st_generation = {"ST_293.15": 3 * [1e-9],
-                     "ST_303.15": [1e-9, st_generation, 1e-9],
-                     "ST_313.15": 3 * [1e-9]}
+    st_generation = {"ST_20": 3 * [1e-9],
+                     "ST_30": [1e-9, st_generation, 1e-9],
+                     "ST_40": 3 * [1e-9]}
     st_generation = pd.DataFrame(
         st_generation,
         index=pd.date_range('1/1/2000', periods=3, freq='H'))
@@ -393,7 +393,7 @@ def test_partly_solar_with_storage():
             "volume": 1e3},  # gigantic storage, so capacity plays no role
         "temperatures": {
             "heat_drop_heating": 20,
-            "intermediate": [303.15]}}
+            "intermediate": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(),
@@ -415,9 +415,9 @@ def test_useless_solar():
     heat_demand = 1
     st_generation = 1
 
-    st_generation = {"ST_293.15": 3 * [st_generation / 3],
-                     "ST_303.15": 3 * [1e-9],
-                     "ST_313.15": 3 * [1e-9]}
+    st_generation = {"ST_20": 3 * [st_generation / 3],
+                     "ST_30": 3 * [1e-9],
+                     "ST_40": 3 * [1e-9]}
     st_generation = pd.DataFrame(
         st_generation,
         index=pd.date_range('1/1/2000', periods=3, freq='H'))
@@ -433,7 +433,7 @@ def test_useless_solar():
         },
         "temperatures": {
             "heat_drop_heating": 20,
-            "intermediate": [303.15]}}
+            "intermediate": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(),
@@ -510,7 +510,7 @@ def test_heat_pump():
         "geothermal_heat_source": {"thermal_output": 1},
         "demand": {
             "heating": heat_demand},
-        "temperatures": {"heating": 308.15}}
+        "temperatures": {"heating": 35}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(), heat_demand.sum())
