@@ -12,6 +12,8 @@ from .layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
                            HeatExchanger)
 from .physics import (HHV_WP, TC_CONCRETE, H2O_HEAT_FUSION, H2O_DENSITY)
 
+HIGH_VIRTUAL_COSTS = 1000
+
 
 def _array(data, length):
     if isinstance(data, numbers.Number):
@@ -154,6 +156,7 @@ class ENaQMetaModel:
         self.chp_gas_flows = list()
         self.electricity_import_flows = list()
         self.electricity_export_flows = list()
+        self.virtual_costs_flows = list()
         self.wood_pellets_flows = list()
 
         # Create main buses
@@ -285,7 +288,12 @@ class ENaQMetaModel:
                 # So we add excess heat to allow not using it.
                 # We charge money for this to make it unattractive to use
                 s_ihs_excess = Sink(label="ihs_excess",
-                                    inputs={b_ihs: Flow(variable_costs=100)})
+                                    inputs={b_ihs: Flow(
+                                        variable_costs=HIGH_VIRTUAL_COSTS)})
+
+                self.virtual_costs_flows.append((b_ihs.label,
+                                                 s_ihs_excess.label))
+
 
                 energy_system.add(b_ihs, s_ihs, s_ihs_excess)
 
@@ -920,11 +928,17 @@ class ENaQMetaModel:
         return self.energy_system.results['main'][self.missing_heat_flow][
                 'sequences']['flow']
 
-    def optimiser_costs(self):
+    def operational_costs(self):
         """
         Extracts costs from the optimiser
         """
-        return self.energy_system.results["meta"]['objective']
+        costs = self.energy_system.results["meta"]['objective']
+
+        for flow in self.virtual_costs_flows:
+            costs -= HIGH_VIRTUAL_COSTS * self.energy_system.results['main'][flow][
+                'sequences']['flow'].sum()
+
+        return costs
 
     def co2_emission(self):
         """

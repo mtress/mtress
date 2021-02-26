@@ -89,7 +89,7 @@ def test_empty_template():
     assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
     assert math.isclose(meta_model.el_demand().sum(), 0, abs_tol=1e-5)
     assert math.isclose(meta_model.el_production().sum(), 0, abs_tol=1e-5)
-    assert math.isclose(meta_model.optimiser_costs(), 0, abs_tol=1e-5)
+    assert math.isclose(meta_model.operational_costs(), 0, abs_tol=1e-5)
 
 
 def test_electricity_demand_ap():
@@ -105,7 +105,7 @@ def test_electricity_demand_ap():
                         electricity_demand.sum(),
                         abs_tol=1e-5)
 
-    assert math.isclose(meta_model.optimiser_costs(),
+    assert math.isclose(meta_model.operational_costs(),
                         electricity_costs(electricity_demand,
                                           params,
                                           meta_model.time_range))
@@ -124,7 +124,7 @@ def test_electricity_demand_lp():
     assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
     assert math.isclose(meta_model.el_demand().sum(), electricity_demand.sum())
 
-    assert math.isclose(meta_model.optimiser_costs(),
+    assert math.isclose(meta_model.operational_costs(),
                         electricity_costs(electricity_demand,
                                           params,
                                           meta_model.time_range))
@@ -143,7 +143,7 @@ def test_electricity_demand_all_costs():
     assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
     assert math.isclose(meta_model.el_demand().sum(), electricity_demand.sum())
 
-    assert math.isclose(meta_model.optimiser_costs(),
+    assert math.isclose(meta_model.operational_costs(),
                         electricity_costs(electricity_demand,
                                           params,
                                           meta_model.time_range))
@@ -164,7 +164,7 @@ def test_gas_boiler():
     assert math.isclose(meta_model.heat_p2h().sum(), 0, rel_tol=1e-5)
     assert math.isclose(meta_model.el_demand().sum(), 0, rel_tol=1e-5)
 
-    assert math.isclose(meta_model.optimiser_costs(),
+    assert math.isclose(meta_model.operational_costs(),
                         gas_costs(heat_demand, params))
 
 
@@ -188,7 +188,7 @@ def test_booster():
     assert math.isclose(meta_model.el_demand().sum(), electricity_demand.sum(),
                         rel_tol=1e-5)
 
-    assert math.isclose(meta_model.optimiser_costs(),
+    assert math.isclose(meta_model.operational_costs(),
                         electricity_costs(electricity_demand,
                                           params,
                                           meta_model.time_range)
@@ -218,7 +218,7 @@ def test_booster_heat_drop():
                         electricity_demand.sum(),
                         rel_tol=1e-5)
 
-    assert math.isclose(meta_model.optimiser_costs(),
+    assert math.isclose(meta_model.operational_costs(),
                         electricity_costs(electricity_demand,
                                           params,
                                           meta_model.time_range)
@@ -489,7 +489,7 @@ def test_chp():
     assert math.isclose(chp_export_flow,
                         electricity_export.sum(),
                         rel_tol=HIGH_ACCURACY)
-    optimiser_costs = meta_model.optimiser_costs()
+    optimiser_costs = meta_model.operational_costs()
     manual_costs = (gas_costs(gas_demand, params)
                     - chp_revenue(electricity_export,
                                   electricity_demand.sum(),
@@ -521,7 +521,7 @@ def test_heat_pump():
     assert math.isclose(design_cop_heat,
                         heat_demand.sum(),
                         rel_tol=OKAY_ACCURACY)
-    assert math.isclose(meta_model.optimiser_costs(),
+    assert math.isclose(meta_model.operational_costs(),
                         electricity_costs(electricity_demand,
                                           params,
                                           meta_model.time_range),
@@ -544,7 +544,7 @@ def test_pv_export():
                             params["pv"]["nominal_power"]
                             * params["pv"]["spec_generation"][i])
 
-    assert math.isclose(meta_model.optimiser_costs(),
+    assert math.isclose(meta_model.operational_costs(),
                         -params["pv"]["nominal_power"]
                         * sum(params["pv"]["spec_generation"])
                         * params["pv"]["feed_in_tariff"],
