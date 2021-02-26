@@ -126,7 +126,7 @@ def all_techs_model(number_of_time_steps=365 * 24,
     if not silent:
         print('\n')
         print('KPIs')
-        print("OPEX: {:.2f} €".format(meta_model.optimiser_costs()))
+        print("OPEX: {:.2f} €".format(meta_model.operational_costs()))
         print("CO2 Emission: {:.0f} t".format(meta_model.co2_emission().sum()))
         print("Own Consumption: {:.1f} %".format(meta_model.own_consumption() * 100))
         print("Self Sufficiency: {:.1f} %".format(meta_model.self_sufficiency() * 100))
