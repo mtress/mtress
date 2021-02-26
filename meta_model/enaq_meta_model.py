@@ -242,38 +242,16 @@ class ENaQMetaModel:
                 ihs_radius = np.sqrt(ihs_surface_top) / np.pi
                 ihs_surface_side = 2 * np.pi * ihs_radius * ihs['height']
 
-                ihs_gains_air = (meteo['temp_air']  # °C = delta in K
-                                 * TC_CONCRETE  # W / (m * K)
-                                 * ihs_surface_top  # m²
-                                 / ihs['ceil_thickness'])  # m
-                ihs_gains_ground = (meteo['temp_soil']
-                                    * TC_CONCRETE
-                                    * (ihs_surface_side + ihs_surface_top)
-                                    / ihs['wall_thickness'])
-
                 s_ihs = GenericStorage(
                     label='s_ihs',
                     inputs={b_ihs: Flow()},
                     outputs={b_ihs: Flow()},
-                    fixed_losses_relative=-1e-6 * (ihs_gains_air
-                                                   + ihs_gains_ground),
                     nominal_storage_capacity=(H2O_HEAT_FUSION
                                               * H2O_DENSITY
                                               * ihs['volume'])
                 )
 
-                # For most ambient temperatures,
-                # the ice storage will melt (gain energy).
-                # So we add excess heat to allow not using it.
-                # We charge money for this to make it unattractive to use
-                s_ihs_excess = Sink(label="ihs_excess",
-                                    inputs={b_ihs: Flow(
-                                        variable_costs=HIGH_VIRTUAL_COSTS)})
-
-                self.virtual_costs_flows.append((b_ihs.label,
-                                                 s_ihs_excess.label))
-
-                energy_system.add(b_ihs, s_ihs, s_ihs_excess)
+                energy_system.add(b_ihs, s_ihs)
 
         ####################################################################
         # Create object collections for temperature dependent technologies
