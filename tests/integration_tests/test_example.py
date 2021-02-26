@@ -25,7 +25,7 @@ if __name__ == "__main__":
     timestamp = timestamp.isoformat()
 
     meta_model = test_example(number_of_time_steps=3)
-    meta_model.model.write("all_techs_example" + timestamp + ".lp",
+    meta_model.model.write("all_techs_example_" + timestamp + ".lp",
                            io_options={'symbolic_solver_labels': True})
 
     meta_model = test_example(silent=False)
