@@ -13,7 +13,7 @@ SPDX-License-Identifier: MIT
 
 from oemof import solph
 
-from meta_model.physics import (calc_cop,
+from mtress.physics import (calc_cop,
                                 celsius_to_kelvin)
 
 

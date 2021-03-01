@@ -6,7 +6,7 @@ import os
 
 from oemof.solph import views, processing
 
-from meta_model.enaq_meta_model import ENaQMetaModel
+from mtress.enaq_meta_model import ENaQMetaModel
 
 
 def extract_result_sequence(results, label, resample=None):

@@ -14,7 +14,7 @@ import pandas as pd
 
 from oemof.solph import views, processing
 
-from meta_model.enaq_meta_model import ENaQMetaModel
+from mtress.enaq_meta_model import ENaQMetaModel
 
 HIGH_ACCURACY = 1e-5
 OKAY_ACCURACY = 2.5e-2  # sometimes, 2.5 % are good enough

@@ -13,7 +13,7 @@ SPDX-License-Identifier: MIT
 
 from oemof import solph
 
-from meta_model.physics import celsius_to_kelvin
+from mtress.physics import celsius_to_kelvin
 
 
 class HeatExchanger:
