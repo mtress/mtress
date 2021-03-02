@@ -14,7 +14,7 @@ import pandas as pd
 
 from oemof.solph import views, processing
 
-from mtress.enaq_meta_model import ENaQMetaModel
+from mtress.meta_model import MetaModel
 
 HIGH_ACCURACY = 1e-5
 OKAY_ACCURACY = 2.5e-2  # sometimes, 2.5 % are good enough
@@ -44,7 +44,7 @@ def run_model_template(custom_params=None):
     params["demand"] = pd.DataFrame(
         params["demand"],
         index=pd.date_range('1/1/2000', periods=3, freq='H'))
-    meta_model = ENaQMetaModel(**params)
+    meta_model = MetaModel(**params)
 
     meta_model.model.solve(solver="cbc",
                            solve_kwargs={'tee': False},
