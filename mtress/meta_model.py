@@ -30,7 +30,7 @@ def _array(data, length):
     return data
 
 
-class ENaQMetaModel:
+class MetaModel:
     def __init__(self, **kwargs):
         """
         :param kwargs: parameters for the energy system, see example.py

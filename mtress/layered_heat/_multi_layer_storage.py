@@ -15,9 +15,9 @@ import numpy as np
 from oemof import solph
 from oemof import thermal
 
-from meta_model.physics import (kilo_to_mega, kJ_to_MWh,
-                                H2O_DENSITY, H2O_HEAT_CAPACITY,
-                                TC_INSULATION)
+from mtress.physics import (kilo_to_mega, kJ_to_MWh,
+                            H2O_DENSITY, H2O_HEAT_CAPACITY,
+                            TC_INSULATION)
 
 
 class MultiLayerStorage:

@@ -7,4 +7,4 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
-import meta_model.physics
+import mtress.physics

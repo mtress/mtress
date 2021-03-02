@@ -6,7 +6,7 @@ import os
 
 from oemof.solph import views, processing
 
-from meta_model.enaq_meta_model import ENaQMetaModel
+from mtress.meta_model import MetaModel
 
 
 def extract_result_sequence(results, label, resample=None):
@@ -99,7 +99,7 @@ def all_techs_model(number_of_time_steps=365 * 24,
                 else:
                     variables[key1][key2] = time_series[key1][key2]
 
-    meta_model = ENaQMetaModel(**variables)
+    meta_model = MetaModel(**variables)
 
     if not silent:
         print('Start solving')
