@@ -31,7 +31,8 @@ class MultiLayerStorage:
                  volume,
                  insulation_thickness,
                  ambient_temperature,
-                 heat_layers):
+                 heat_layers,
+                 label=""):
         """
         :param diameter: numeric scalar (in m)
         :param volume: numeric scalar (in m³)
@@ -56,9 +57,14 @@ class MultiLayerStorage:
         self._in_flows = list()
         self._out_flows = list()
 
+        if len(label) > 0:
+            label = label + '_'
+        else:
+            label = "s_heat_"
+
         for temperature in self._temperature_levels:
             temperature_str = "{0:.0f}".format(temperature)
-            storage_label = 's_heat_' + temperature_str
+            storage_label = label + temperature_str
             b_th_level = heat_layers.b_th[temperature]
 
             hs_capacity = self.heat_storage_volume * \
