@@ -58,13 +58,13 @@ class MultiLayerStorage:
         self._out_flows = list()
 
         if len(label) > 0:
-            label = label + '_'
+            self.label = label + '_'
         else:
-            label = "s_heat_"
+            self.label = "s_heat_"
 
         for temperature in self._temperature_levels:
             temperature_str = "{0:.0f}".format(temperature)
-            storage_label = label + temperature_str
+            storage_label = self.label + temperature_str
             b_th_level = heat_layers.b_th[temperature]
 
             hs_capacity = self.heat_storage_volume * \
@@ -124,7 +124,7 @@ class MultiLayerStorage:
 
         solph.constraints.shared_limit(
             model, model.GenericStorageBlock.storage_content,
-            'storage_limit', self._h_storage_comp, w_factor,
+            self.label+'storage_limit', self._h_storage_comp, w_factor,
             upper_limit=self.heat_storage_volume)
 
     @property
