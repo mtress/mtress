@@ -167,26 +167,28 @@ class MetaModel:
                            variable_costs=energy_cost['eeg_levy'])})
         b_elxprt = Bus(label="b_elxprt")  # electricity export network
         b_gas = Bus(label="b_gas")
+        b_elgrid = Bus(label="b_elgrid")
 
-        energy_system.add(b_eldist, b_elprod, b_elxprt, b_gas)
+        energy_system.add(b_eldist, b_elprod, b_elxprt, b_gas, b_elgrid)
 
         # unidirectional grid connection
-        b_elgrid = Bus(label="b_elgrid",
-                       outputs={b_eldist: Flow(nonconvex=NonConvex(),
-                                               nominal_value=1e5,
-                                               grid_connection=True)},
-                       inputs={b_elxprt: Flow(nonconvex=NonConvex(),
-                                              nominal_value=1e5,
-                                              grid_connection=True)})
-        energy_system.add(b_elgrid)
+        b_grid_connection = Bus(label="b_grid_connection",
+                                outputs={b_eldist: Flow(nonconvex=NonConvex(),
+                                                        nominal_value=1e5,
+                                                        grid_connection=True)},
+                                inputs={b_elxprt: Flow(nonconvex=NonConvex(),
+                                                       nominal_value=1e5,
+                                                       grid_connection=True),
+                                        b_elgrid: Flow()})
+        energy_system.add(b_grid_connection)
 
         # Local distribution network
         if public_grid:
             b_el_homes = Bus(label="b_el_homes",
-                            inputs={b_elgrid: Flow()})
+                             inputs={b_elgrid: Flow()})
         else:
             b_el_homes = Bus(label="b_el_homes",
-                            inputs={b_eldist: Flow()})
+                             inputs={b_eldist: Flow()})
 
         energy_system.add(b_el_homes)
 
@@ -342,9 +344,10 @@ class MetaModel:
 
         co2_costs = np.array(self.spec_co2['el_out']) * self.spec_co2['price']
         m_el_out = Sink(label='m_el_out',
-                        inputs={b_elgrid: Flow(
+                        inputs={b_grid_connection: Flow(
                             variable_costs=co2_costs)})
-        self.electricity_export_flows.append((b_elgrid.label, m_el_out.label))
+        self.electricity_export_flows.append((b_grid_connection.label,
+                                              m_el_out.label))
 
         gas_price = energy_cost['fossil_gas'] \
                     + self.spec_co2['fossil_gas'] * self.spec_co2['price']
