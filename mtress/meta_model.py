@@ -104,6 +104,7 @@ class MetaModel:
         if st and st["area"] <= 0:
             del st
             st = None
+        public_grid = kwargs.get('public_grid', False)
 
         self.spec_co2 = kwargs.get('co2')
 
@@ -169,7 +170,6 @@ class MetaModel:
 
         energy_system.add(b_eldist, b_elprod, b_elxprt, b_gas)
 
-        ###################################################################
         # unidirectional grid connection
         b_elgrid = Bus(label="b_elgrid",
                        outputs={b_eldist: Flow(nonconvex=NonConvex(),
@@ -179,6 +179,16 @@ class MetaModel:
                                               nominal_value=1e5,
                                               grid_connection=True)})
         energy_system.add(b_elgrid)
+
+        # Local distribution network
+        if public_grid:
+            b_el_homes = Bus(label="b_el_homes",
+                            inputs={b_elgrid: Flow()})
+        else:
+            b_el_homes = Bus(label="b_el_homes",
+                            inputs={b_eldist: Flow()})
+
+        energy_system.add(b_el_homes)
 
         ###################################################################
         # Thermal components
@@ -345,8 +355,8 @@ class MetaModel:
 
         # create local electricity demand
         d_el = Sink(label='d_el',
-                    inputs={b_eldist: Flow(fix=demand['electricity'],
-                                           nominal_value=1)})
+                    inputs={b_el_homes: Flow(fix=demand['electricity'],
+                                             nominal_value=1)})
 
         energy_system.add(d_el)
 
@@ -390,11 +400,11 @@ class MetaModel:
 
             if 0 < heater_ratio < 1:
                 dhw_booster = Transformer(label="dhw_booster",
-                                          inputs={b_eldist: Flow(),
+                                          inputs={b_el_homes: Flow(),
                                                   b_th_buildings: Flow()},
                                           outputs={b_th_dhw: Flow()},
                                           conversion_factors={
-                                              b_eldist: 1 - heater_ratio,
+                                              b_el_homes: 1 - heater_ratio,
                                               b_th_buildings: heater_ratio,
                                               b_th_dhw: 1})
             else:
@@ -403,7 +413,7 @@ class MetaModel:
                                   outputs={b_th_dhw: Flow()})
 
             energy_system.add(dhw_booster)
-            self.p2h_flows.append((b_eldist.label,
+            self.p2h_flows.append((b_el_homes.label,
                                    dhw_booster.label))
 
         # create expensive source for missing heat to ensure model is solvable
