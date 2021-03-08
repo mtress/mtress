@@ -171,21 +171,40 @@ class MetaModel:
 
         energy_system.add(b_eldist, b_elprod, b_elxprt, b_gas, b_elgrid)
 
-        # unidirectional grid connection
-        b_grid_connection = Bus(label="b_grid_connection",
-                                outputs={b_eldist: Flow(nonconvex=NonConvex(),
-                                                        nominal_value=1e5,
-                                                        grid_connection=True)},
-                                inputs={b_elxprt: Flow(nonconvex=NonConvex(),
-                                                       nominal_value=1e5,
-                                                       grid_connection=True),
-                                        b_elgrid: Flow()})
+
+        # (unidirectional) grid connection
+
+        # RLM customer for district and larger buildings
+        m_el_in = Source(label='m_el_in',
+                         outputs={b_elgrid: Flow()})
+
+        self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
+        b_grid_connection = Bus(
+            label="b_grid_connection",
+            outputs={b_eldist: Flow(nonconvex=NonConvex(),
+                                    nominal_value=1e5,
+                                    grid_connection=True)},
+            inputs={b_elxprt: Flow(nonconvex=NonConvex(),
+                                   nominal_value=1e5,
+                                   grid_connection=True),
+                    b_elgrid: Flow(
+                        variable_costs=(
+                                energy_cost['electricity']['surcharge']
+                                + energy_cost['electricity']['market']
+                                + self.spec_co2['el_in']
+                                * self.spec_co2['price']),
+                        investment=Investment(
+                                 ep_costs=energy_cost['electricity'][
+                                     'demand_rate'] * self.time_range))})
         energy_system.add(b_grid_connection)
 
         # Local distribution network
         if public_grid:
             b_el_homes = Bus(label="b_el_homes",
-                             inputs={b_elgrid: Flow()})
+                             inputs={b_elgrid: Flow(
+                                 variable_costs=(
+                                     energy_cost['electricity']['slp_price'])
+                             )})
         else:
             b_el_homes = Bus(label="b_el_homes",
                              inputs={b_eldist: Flow()})
@@ -328,20 +347,7 @@ class MetaModel:
                 energy_system.add(t_st_level)
 
         ###############################################################
-        # create external markets
-        # RLM customer for district and larger buildings
-        m_el_in = Source(label='m_el_in',
-                         outputs={b_elgrid: Flow(
-                             variable_costs=(
-                                     energy_cost['electricity']['surcharge']
-                                     + energy_cost['electricity']['market']
-                                     + self.spec_co2['el_in']
-                                     * self.spec_co2['price']),
-                             investment=Investment(
-                                 ep_costs=energy_cost['electricity'][
-                                     'demand_rate'] * self.time_range))})
-        self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
-
+        # create external market to sell electricity to
         co2_costs = np.array(self.spec_co2['el_out']) * self.spec_co2['price']
         m_el_out = Sink(label='m_el_out',
                         inputs={b_grid_connection: Flow(

@@ -92,63 +92,6 @@ def test_empty_template():
     assert math.isclose(meta_model.operational_costs(), 0, abs_tol=1e-5)
 
 
-def test_electricity_demand_ap():
-    electricity_demand = np.full(3, 0.1)
-
-    params = {
-        "demand": {"electricity": electricity_demand},
-        "energy_cost": {"electricity": {"demand_rate": 0}}}
-    meta_model, params = run_model_template(custom_params=params)
-
-    assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
-    assert math.isclose(meta_model.el_demand().sum(),
-                        electricity_demand.sum(),
-                        abs_tol=1e-5)
-
-    assert math.isclose(meta_model.operational_costs(),
-                        electricity_costs(electricity_demand,
-                                          params,
-                                          meta_model.time_range))
-
-
-def test_electricity_demand_lp():
-    electricity_demand = np.full(3, 0.1)
-
-    params = {
-        "demand": {"electricity": electricity_demand},
-        "energy_cost": {"electricity": {
-            "demand_rate": 1000,
-            "AP": 0}}}
-    meta_model, params = run_model_template(custom_params=params)
-
-    assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
-    assert math.isclose(meta_model.el_demand().sum(), electricity_demand.sum())
-
-    assert math.isclose(meta_model.operational_costs(),
-                        electricity_costs(electricity_demand,
-                                          params,
-                                          meta_model.time_range))
-
-
-def test_electricity_demand_all_costs():
-    electricity_demand = np.full(3, 0.1)
-
-    params = {
-        "demand": {"electricity": electricity_demand},
-        "energy_cost": {"electricity": {
-            "demand_rate": 1000,
-            "AP": [15, 20, 15]}}}
-    meta_model, params = run_model_template(custom_params=params)
-
-    assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
-    assert math.isclose(meta_model.el_demand().sum(), electricity_demand.sum())
-
-    assert math.isclose(meta_model.operational_costs(),
-                        electricity_costs(electricity_demand,
-                                          params,
-                                          meta_model.time_range))
-
-
 def test_gas_boiler():
     heat_demand = np.full(3, 0.1)
 
