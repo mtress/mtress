@@ -179,15 +179,9 @@ class MetaModel:
                          outputs={b_elgrid: Flow()})
 
         self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
-        b_grid_connection = Bus(
-            label="b_grid_connection",
-            outputs={b_eldist: Flow(nonconvex=NonConvex(),
-                                    nominal_value=1e5,
-                                    grid_connection=True)},
-            inputs={b_elxprt: Flow(nonconvex=NonConvex(),
-                                   nominal_value=1e5,
-                                   grid_connection=True),
-                    b_elgrid: Flow(
+        b_grid_connection_in = Bus(
+            label="b_grid_connection_in",
+            inputs={b_elgrid: Flow(
                         variable_costs=(
                                 energy_cost['electricity']['surcharge']
                                 + energy_cost['electricity']['market']
@@ -195,8 +189,16 @@ class MetaModel:
                                 * self.spec_co2['price']),
                         investment=Investment(
                                  ep_costs=energy_cost['electricity'][
-                                     'demand_rate'] * self.time_range))})
-        energy_system.add(b_grid_connection)
+                                     'demand_rate'] * self.time_range))},
+            outputs={b_eldist: Flow(nonconvex=NonConvex(),
+                                    nominal_value=1e5,
+                                    grid_connection=True)})
+        b_grid_connection_out = Bus(
+            label="b_grid_connection_out",
+            inputs={b_elxprt: Flow(nonconvex=NonConvex(),
+                                   nominal_value=1e5,
+                                   grid_connection=True)})
+        energy_system.add(b_grid_connection_in, b_grid_connection_out)
 
         # Local distribution network
         if public_grid:
@@ -350,9 +352,9 @@ class MetaModel:
         # create external market to sell electricity to
         co2_costs = np.array(self.spec_co2['el_out']) * self.spec_co2['price']
         m_el_out = Sink(label='m_el_out',
-                        inputs={b_grid_connection: Flow(
+                        inputs={b_grid_connection_out: Flow(
                             variable_costs=co2_costs)})
-        self.electricity_export_flows.append((b_grid_connection.label,
+        self.electricity_export_flows.append((b_grid_connection_out.label,
                                               m_el_out.label))
 
         gas_price = energy_cost['fossil_gas'] \
