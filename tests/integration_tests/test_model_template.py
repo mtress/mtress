@@ -585,7 +585,7 @@ def test_pv_export():
     el_export_timeseries = meta_model.aggregate_flows(meta_model.el_export_flows)
 
     for i in range(3):
-        assert math.isclose(pv_timeseries,
+        assert math.isclose(pv_timeseries[i],
                             params["pv"]["nominal_power"]
                             * params["pv"]["spec_generation"][i])
         assert math.isclose(el_export_timeseries[i],
