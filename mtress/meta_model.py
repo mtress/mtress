@@ -143,6 +143,7 @@ class MetaModel:
         self.wt_flows = list()
         self.chp_heat_flows = list()
         self.th_demand_flows = list()
+        self.chp_el_flows = list()
         self.chp_el_funded_flow = None
         self.chp_el_unfunded_flow = None
         self.hp_flows = list()
@@ -154,10 +155,12 @@ class MetaModel:
         self.fossil_gas_flows = list()
         self.biomethane_flows = list()
         self.chp_gas_flows = list()
-        self.electricity_import_flows = list()
-        self.electricity_export_flows = list()
+        self.el_demand_flows = list()
+        self.el_import_flows = list()
+        self.el_export_flows = list()
         self.virtual_costs_flows = list()
         self.wood_pellets_flows = list()
+        self.missing_heat_flow = list()
 
         # Create main buses
         b_eldist = Bus(label="b_eldist")  # Local distribution network
@@ -177,7 +180,7 @@ class MetaModel:
         m_el_in = Source(label='m_el_in',
                          outputs={b_elgrid: Flow()})
 
-        self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
+        self.el_import_flows.append((m_el_in.label, b_elgrid.label))
         b_grid_connection_in = Bus(
             label="b_grid_connection_in",
             inputs={b_elgrid: Flow(
@@ -244,6 +247,10 @@ class MetaModel:
                     heat_sources=heat_sources,
                     cop_0_35=bhp["cop_0_35"],
                     label="heat_pump")
+
+                self.hp_flows.extend(heat_pump.heat_out_flows)
+                self.el_demand_flows.append((b_eldist.label,
+                                             b_el_bhp.label))
             else:
                 heat_pump = None
             self.heat_pump = heat_pump
@@ -340,7 +347,7 @@ class MetaModel:
         m_el_out = Sink(label='m_el_out',
                         inputs={b_grid_connection_out: Flow(
                             variable_costs=co2_costs)})
-        self.electricity_export_flows.append((b_grid_connection_out.label,
+        self.el_export_flows.append((b_grid_connection_out.label,
                                               m_el_out.label))
 
         gas_price = energy_cost['fossil_gas'] \
@@ -356,17 +363,25 @@ class MetaModel:
             inputs={b_eldist: Flow(fix=demand['electricity'],
                                    nominal_value=1)})
 
-        if 'electricity_adjacent' in demand:
-            # electricity demands not covered of the local electricity network
-            b_el_adjacent = Bus(
-                label="b_el_adjacent",
-                inputs={b_elgrid: Flow(
-                    variable_costs=energy_cost['electricity']['slp_price'])})
+        self.el_demand_flows.append((b_eldist.label,
+                                     d_el_local.label))
 
+        # electricity not covered of the local electricity network,
+        # always created as there might be a booster but no explicit demand
+        b_el_adjacent = Bus(
+            label="b_el_adjacent",
+            inputs={b_elgrid: Flow(
+                variable_costs=energy_cost['electricity']['slp_price'])})
+
+        # electricity demands not covered of the local electricity network
+        if 'electricity_adjacent' in demand:
             d_el_adjacent = Sink(
                 label='d_el_adjacent',
                 inputs={b_el_adjacent: Flow(fix=demand['electricity_adjacent'],
                                             nominal_value=1)})
+
+            self.el_demand_flows.append((b_el_adjacent.label,
+                                         d_el_adjacent.label))
 
             energy_system.add(d_el_local, b_el_adjacent, d_el_adjacent)
 
@@ -417,14 +432,16 @@ class MetaModel:
                                               b_eldist: 1 - heater_ratio,
                                               b_th_buildings: heater_ratio,
                                               b_th_dhw_local: 1})
+                self.p2h_flows.append((b_eldist.label,
+                                       dhw_booster.label))
+                self.el_demand_flows.append((b_eldist.label,
+                                             dhw_booster.label))
             else:
                 dhw_booster = Bus(label="dhw_booster",
                                   inputs={b_th_buildings: Flow()},
                                   outputs={b_th_dhw_local: Flow()})
 
             energy_system.add(dhw_booster)
-            self.p2h_flows.append((b_eldist.label,
-                                   dhw_booster.label))
 
         if 'dhw_adjacent' in demand and sum(demand['dhw_adjacent'] > 0):
             b_th_dhw_adjacent = Bus(label="b_th_dhw_local")
@@ -446,29 +463,30 @@ class MetaModel:
 
             if 0 < heater_ratio < 1:
                 dhw_booster = Transformer(label="dhw_booster",
-                                          inputs={b_eldist: Flow(),
+                                          inputs={b_el_adjacent: Flow(),
                                                   b_th_buildings: Flow()},
                                           outputs={b_th_dhw_adjacent: Flow()},
                                           conversion_factors={
-                                              b_eldist: 1 - heater_ratio,
+                                              b_el_adjacent: 1 - heater_ratio,
                                               b_th_buildings: heater_ratio,
                                               b_th_dhw_adjacent: 1})
+
+                self.el_demand_flows.append((b_eldist.label,
+                                             dhw_booster.label))
             else:
                 dhw_booster = Bus(label="dhw_booster",
                                   inputs={b_th_buildings: Flow()},
                                   outputs={b_th_dhw_adjacent: Flow()})
 
             energy_system.add(dhw_booster)
-            self.p2h_flows.append((b_eldist.label,
-                                   dhw_booster.label))
 
         # create expensive source for missing heat to ensure model is solvable
         missing_heat = Source(
             label='missing_heat',
             outputs={heat_layers.b_th_in_highest: Flow(variable_costs=1000)})
         energy_system.add(missing_heat)
-        self.missing_heat_flow = (missing_heat.label,
-                                  heat_layers.b_th_in_highest.label)
+        self.missing_heat_flow.append((missing_heat.label,
+                                       heat_layers.b_th_in_highest.label))
 
         if boiler:
             # boiler
@@ -568,6 +586,7 @@ class MetaModel:
                     heat_layers.b_th_in_highest:
                         chp['thermal_efficiency']})
 
+            self.chp_el_flows.append((t_chp.label, b_el_chp.label))
             self.chp_heat_flows.append((t_chp.label,
                                         heat_layers.b_th_in_highest.label))
             energy_system.add(m_gas_chp, b_gas_chp, b_el_chp, t_chp,
@@ -602,8 +621,9 @@ class MetaModel:
                     b_eldist: 1,
                     heat_layers.b_th_in_highest: 1})
             energy_system.add(t_p2h)
-            self.p2h_flows.append((t_p2h.label,
-                                   heat_layers.b_th_in_highest.label))
+
+            self.el_demand_flows.append((b_eldist.label, t_p2h.label))
+            self.p2h_flows.append((t_p2h.label, heat_layers.b_th_in_highest.label))
 
         # wind turbine
         if wt:
@@ -649,317 +669,26 @@ class MetaModel:
             lower_limit=0,
             upper_limit=1)
 
+        self.el_generation_flows = self.wt_flows + self.pv_flows + self.chp_el_flows
+
         self.energy_system = energy_system
         self.model = model
 
-    def heat_chp(self):
+    def aggregate_flows(self, flows_to_aggregate):
         """
-        Calculates and returns thermal energy from chp
+        In the initialisation several lists are created which contain energy flows
+        of certain kinds (e.g. self.pv_flows or self.th_demand_flows). To aggregate
+        those timeseries to a joint timseries you can use this function.
 
-        :return: time series of chp power
+        :param flows_to_aggregate: List of string tuples describing the flows to aggregate
+        :return: Aggregates timeseries
         """
-        e_chp_th = np.zeros(self.number_of_time_steps)
-        for res in self.chp_heat_flows:
-            e_chp_th += self.energy_system.results['main'][res][
+        res = np.zeros(self.number_of_time_steps)
+        for flow in flows_to_aggregate:
+            res += self.energy_system.results['main'][flow][
                 'sequences']['flow']
 
-        return e_chp_th
-
-    def heat_geothermal(self):
-        """
-        Calculates and returns geothermal energy
-
-        :return: time series of geothermal power
-        """
-        e_gt_th = np.zeros(self.number_of_time_steps)
-        for res in self.gt_input_flows:
-            e_gt_th += self.energy_system.results['main'][res][
-                'sequences']['flow']
-
-        return e_gt_th
-
-    def heat_heat_pump(self):
-        """
-        Calculates and returns heat pump heat
-
-        :return: time series of het pump power
-        """
-        if self.heat_pump:
-            return self.heat_pump.heat_output(
-                self.energy_system.results['main'])
-        else:
-            return np.zeros(self.number_of_time_steps)
-
-    def heat_solar_thermal(self):
-        """
-        Calculates and returns solar thermal energy
-
-        :return: time series of solar thermal power
-        """
-        e_st_th = np.zeros(self.number_of_time_steps)
-        for res in self.st_input_flows:
-            e_st_th += self.energy_system.results['main'][res][
-                'sequences']['flow']
-
-        return e_st_th
-
-    def heat_pellet(self):
-        """
-        Calculates and returns thermal energy from pallet boiler
-
-        :return: time series of pallet power
-        """
-        e_pellet_th = np.zeros(self.number_of_time_steps)
-        for res in self.pellet_heat_flows:
-            e_pellet_th += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
-
-        return e_pellet_th
-
-    def heat_boiler(self):
-        """
-        Calculates and returns thermal energy from pallet boiler
-
-        :return: time series of boiler power
-        """
-        e_boiler_th = np.zeros(self.number_of_time_steps)
-        for res in self.boiler_flows:
-            e_boiler_th += self.energy_system.results['main'][res][
-                'sequences']['flow']
-
-        return e_boiler_th
-
-    def heat_p2h(self):
-        """
-        Calculates and returns thermal energy from pallet boiler
-
-        :return: time series of power to heat output
-        """
-        e_p2h_th = np.zeros(self.number_of_time_steps)
-        for res in self.p2h_flows:
-            e_p2h_th += self.energy_system.results['main'][res][
-                'sequences']['flow']
-
-        return e_p2h_th
-
-    def heat_storage_in(self):
-        if self._thermal_storage:
-            return self._thermal_storage.combined_inflow
-        else:
-            return np.zeros(self.number_of_time_steps)
-
-    def heat_storage_out(self):
-        if self._thermal_storage:
-            return self._thermal_storage.combined_outflow
-        else:
-            return np.zeros(self.number_of_time_steps)
-
-    def thermal_demand(self):
-        """
-        Calculates and returns thermal demand
-
-        :return: time series of thermal demand
-        """
-        d_th = np.zeros(self.number_of_time_steps)
-        for res in self.th_demand_flows:
-            d_th += self.energy_system.results['main'][res][
-                'sequences']['flow']
-
-        return d_th
-
-    def el_pv(self):
-        """
-        Calculates the energy yield from pv
-
-        :return: time series of pv electricity generation
-        """
-        e_pv_el = np.zeros(self.number_of_time_steps)
-        for res in self.pv_flows:
-            e_pv_el += self.energy_system.results['main'][res][
-                'sequences']['flow']
-
-        return e_pv_el
-
-    def el_wt(self):
-        """
-        Calculates the energy yield from wind
-
-        :return: time series of wind turbine electricity generation
-        """
-        e_wt_el = np.zeros(self.number_of_time_steps)
-        for res in self.wt_flows:
-            e_wt_el += self.energy_system.results['main'][res][
-                'sequences']['flow']
-
-        return e_wt_el
-
-    def el_chp_funded(self):
-        """
-        :return: time series of subsidised chp electricity generation
-        """
-        if self.chp_el_funded_flow:
-            return self.energy_system.results['main'][
-                self.chp_el_funded_flow]['sequences']['flow']
-        else:
-            return np.zeros(self.number_of_time_steps)
-
-    def el_chp_unfunded(self):
-        """
-        :return: time series of non-subsidised chp electricity generation
-        """
-        if self.chp_el_unfunded_flow:
-            return self.energy_system.results['main'][
-                self.chp_el_unfunded_flow]['sequences']['flow']
-        else:
-            return np.zeros(self.number_of_time_steps)
-
-    def el_chp(self):
-        """
-        Calculates the electricity generation from chp
-
-        :return: time series of chp electricity generation
-        """
-        return self.el_chp_funded() + self.el_chp_unfunded()
-
-    def el_production(self):
-        """
-        Electricity generated on site by distributed generation
-
-        :return: time series of distributed electricity generation
-        """
-        return self.el_chp() + self.el_pv() + self.el_wt()
-
-    def el_demand(self):
-        """
-        Energy demand calculated as balance of production, import and export
-
-        :return: time series of electricity demand
-        """
-        return (self.el_production()
-                + self.el_import()
-                - self.el_export())
-
-    def el_import(self):
-        """
-        Electricity imported from the public grid
-
-        :return: time series of electricity import
-        """
-        el_in = np.zeros(self.number_of_time_steps)
-        for res in self.electricity_import_flows:
-            el_in += self.energy_system.results['main'][res][
-                'sequences']['flow']
-
-        return el_in
-
-    def el_import_peak(self):
-        """
-        Maximum electricity import
-
-        :return: Peak electricity import
-        """
-        return self.el_import().max()
-
-    def el_export(self):
-        """
-        Electricity exported to the public grid
-
-        :return: Electricity export
-        """
-        el_out = np.zeros(self.number_of_time_steps)
-        for res in self.electricity_export_flows:
-            el_out += self.energy_system.results['main'][res][
-                'sequences']['flow']
-
-        return el_out
-
-    def pellet_import(self):
-        """
-        Imported wood pellets from some supplier
-
-        :return: Wood pellet import
-        """
-        wp_in = np.zeros(self.number_of_time_steps)
-        for res in self.wood_pellets_flows:
-            wp_in += self.energy_system.results['main'][res][
-                'sequences']['flow'].sum()
-
-        return wp_in
-
-    def chp_gas_import(self):
-        """
-        Imported gas for use in the chp which can be fossil or biomethane or mixtures
-
-        :return: Gas import for chp
-        """
-        chp_gas_in = np.zeros(self.number_of_time_steps)
-        for res in self.chp_gas_flows:
-            chp_gas_in += self.energy_system.results['main'][res][
-                          'sequences']['flow']
-
-        return chp_gas_in
-
-    def chp_fossil_gas_import(self):
-        """
-        Share of fossil gas for chp import
-
-        :return: Fossil Gas import for chp
-        """
-        return self.chp_gas_import() * (1 - self.biomethane_fraction)
-
-    def chp_biomethane_import(self):
-        """
-        Share of biomethane for chp import
-
-        :return: Biomethane import for chp
-        """
-        return self.chp_gas_import() * self.biomethane_fraction
-
-    def fossil_gas_import(self):
-        """
-        Overall import of natural gas from the public grid
-
-        :return: Import fossil gas
-        """
-        fg_in = np.zeros(self.number_of_time_steps)
-        for res in self.fossil_gas_flows:
-            fg_in += self.energy_system.results['main'][res][
-                'sequences']['flow']
-        fg_in += self.chp_fossil_gas_import()
-
-        return fg_in
-
-    def biomethane_import(self):
-        """
-        Overall import of biomethane from the public grid
-
-        :return: Import biomethane
-        """
-        bm_in = np.zeros(self.number_of_time_steps)
-        for res in self.biomethane_flows:
-            bm_in += self.energy_system.results['main'][res][
-                'sequences']['flow']
-        bm_in += self.chp_biomethane_import()
-
-        return bm_in
-
-    def gas_import(self):
-        """
-        Overall import of gas from the public grid
-        which is the sum of fossil gas and biomethane
-
-        :return: Import gas
-        """
-        return self.fossil_gas_import() + self.biomethane_import()
-
-    def missing_heat(self):
-        """
-        Heat missing to allow full supply
-
-        :return: heat that was missing
-        """
-        return self.energy_system.results['main'][self.missing_heat_flow][
-                'sequences']['flow']
+        return res
 
     def operational_costs(self):
         """
@@ -980,18 +709,24 @@ class MetaModel:
 
         :return: CO2 emission in operation as timeseries
         """
-        co2_import_natural_gas = self.fossil_gas_import() \
-                                 * self.spec_co2['fossil_gas']
-        co2_import_biomethane = self.biomethane_import() \
-                                * self.spec_co2['biomethane']
-        co2_import_pellet = self.pellet_import() \
-                            * self.spec_co2['wood_pellet'] \
-                            * HHV_WP
-        co2_import_el = self.el_import() * self.spec_co2['el_in']
-        co2_export_el = self.el_export() * self.spec_co2['el_out']
-        co2_emission = (co2_import_natural_gas + co2_import_biomethane
-                        + co2_import_el + co2_import_pellet
-                        + co2_export_el)
+        fossil_gas_import = self.aggregate_flows(self.fossil_gas_flows)
+        biomethane_import = self.aggregate_flows(self.biomethane_flows)
+        pellet_import = self.aggregate_flows(self.wood_pellets_flows)
+        el_import = self.aggregate_flows(self.el_import_flows)
+        el_export = self.aggregate_flows(self.el_export_flows)
+
+        co2_import_fossil_gas = fossil_gas_import * self.spec_co2['fossil_gas']
+        co2_import_biomethane = biomethane_import * self.spec_co2['biomethane']
+        co2_import_pellet = pellet_import * HHV_WP * self.spec_co2['wood_pellet']
+        co2_import_el = el_import * self.spec_co2['el_in']
+        co2_export_el = el_export * self.spec_co2['el_out']
+
+        co2_emission = (co2_import_fossil_gas.sum() +
+                        co2_import_biomethane.sum() +
+                        co2_import_el.sum() +
+                        co2_import_pellet.sum() +
+                        co2_export_el.sum())
+
         return np.round(co2_emission, 1)
 
     def own_consumption(self):
@@ -1000,9 +735,11 @@ class MetaModel:
 
         :return: Own consumption
         """
-        if self.el_production().sum() > 0:
-            oc = 1 - (self.el_export().sum()
-                      / self.el_production().sum())
+        el_production = self.aggregate_flows(self.el_generation_flows).sum()
+        el_export = self.aggregate_flows(self.el_export_flows).sum()
+
+        if el_production > 0:
+            oc = 1 - (el_export / el_production)
         else:
             oc = 1
         return np.round(oc, 3)
@@ -1013,6 +750,8 @@ class MetaModel:
 
         :return: Self sufficiency
         """
-        res = 1 - (self.el_import().sum()
-                   / self.el_demand().sum())
+        el_import = self.aggregate_flows(self.el_import_flows).sum()
+        el_demand = self.aggregate_flows(self.el_demand_flows).sum()
+
+        res = 1 - (el_import / el_demand)
         return np.round(res, 3)

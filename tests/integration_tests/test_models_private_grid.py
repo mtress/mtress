@@ -25,10 +25,14 @@ def test_electricity_demand_ap():
         "energy_cost": {"electricity": {"demand_rate": 0}}}
     meta_model, params = run_model_template(custom_params=params)
 
-    assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
-    assert math.isclose(meta_model.el_demand().sum(),
-                        electricity_demand.sum(),
-                        abs_tol=1e-5)
+    assert math.isclose(
+        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
+        0,
+        abs_tol=1e-5)
+    assert math.isclose(
+        meta_model.aggregate_flows(meta_model.el_demand_flows).sum(),
+        electricity_demand.sum(),
+        abs_tol=1e-5)
 
     assert math.isclose(meta_model.operational_costs(),
                         electricity_costs(electricity_demand,
@@ -46,8 +50,13 @@ def test_electricity_demand_lp():
             "AP": 0}}}
     meta_model, params = run_model_template(custom_params=params)
 
-    assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
-    assert math.isclose(meta_model.el_demand().sum(), electricity_demand.sum())
+    assert math.isclose(
+        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
+        0,
+        abs_tol=1e-5)
+    assert math.isclose(
+        meta_model.aggregate_flows(meta_model.el_demand_flows).sum(),
+        electricity_demand.sum())
 
     assert math.isclose(meta_model.operational_costs(),
                         electricity_costs(electricity_demand,
@@ -65,8 +74,13 @@ def test_electricity_demand_all_costs():
             "AP": [15, 20, 15]}}}
     meta_model, params = run_model_template(custom_params=params)
 
-    assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
-    assert math.isclose(meta_model.el_demand().sum(), electricity_demand.sum())
+    assert math.isclose(
+        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
+        0,
+        abs_tol=1e-5)
+    assert math.isclose(
+        meta_model.aggregate_flows(meta_model.el_demand_flows).sum(),
+        electricity_demand.sum())
 
     assert math.isclose(meta_model.operational_costs(),
                         electricity_costs(electricity_demand,
@@ -90,14 +104,21 @@ def test_chp():
         "public_grid": False}
     meta_model, params = run_model_template(custom_params=params)
 
-    assert math.isclose(meta_model.thermal_demand().sum(), heat_demand.sum())
-    assert math.isclose(meta_model.heat_chp().sum(),
-                        heat_demand.sum(),
-                        rel_tol=1e-5)
-    assert math.isclose(meta_model.el_import().sum(), 0, abs_tol=HIGH_ACCURACY)
-    assert math.isclose(meta_model.el_export().sum(),
-                        electricity_export.sum(),
-                        rel_tol=HIGH_ACCURACY)
+    assert math.isclose(
+        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
+        heat_demand.sum())
+    assert math.isclose(
+        meta_model.aggregate_flows(meta_model.chp_heat_flows).sum(),
+        heat_demand.sum(),
+        rel_tol=1e-5)
+    assert math.isclose(
+        meta_model.aggregate_flows(meta_model.el_import_flows).sum(),
+        0,
+        abs_tol=HIGH_ACCURACY)
+    assert math.isclose(
+        meta_model.aggregate_flows(meta_model.el_export_flows).sum(),
+        electricity_export.sum(),
+        rel_tol=HIGH_ACCURACY)
     chp_export_flow = sum(meta_model.energy_system.results['main'][
                 ("b_el_chp_fund", "b_elxprt")]['sequences']['flow'])
     assert math.isclose(chp_export_flow,
