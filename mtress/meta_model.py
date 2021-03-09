@@ -104,7 +104,6 @@ class MetaModel:
         if st and st["area"] <= 0:
             del st
             st = None
-        public_grid = kwargs.get('public_grid', False)
 
         self.spec_co2 = kwargs.get('co2')
 
@@ -119,7 +118,7 @@ class MetaModel:
         temperature_levels.sort()
 
         # Time range of the data (in a)
-        index = demand['electricity'].index
+        index = demand['heating'].index
         self.number_of_time_steps = len(index)
         index.freq = pd.infer_freq(index)
         self.time_range = ((index[-1] - index[0] + index.freq)
@@ -199,19 +198,6 @@ class MetaModel:
                                    nominal_value=1e5,
                                    grid_connection=True)})
         energy_system.add(b_grid_connection_in, b_grid_connection_out)
-
-        # Local distribution network
-        if public_grid:
-            b_el_homes = Bus(label="b_el_homes",
-                             inputs={b_elgrid: Flow(
-                                 variable_costs=(
-                                     energy_cost['electricity']['slp_price'])
-                             )})
-        else:
-            b_el_homes = Bus(label="b_el_homes",
-                             inputs={b_eldist: Flow()})
-
-        energy_system.add(b_el_homes)
 
         ###################################################################
         # Thermal components
@@ -364,12 +350,25 @@ class MetaModel:
 
         energy_system.add(m_el_in, m_el_out, m_gas)
 
-        # create local electricity demand
-        d_el = Sink(label='d_el',
-                    inputs={b_el_homes: Flow(fix=demand['electricity'],
-                                             nominal_value=1)})
+        # electricity demands covered of the local electricity network
+        d_el_local = Sink(
+            label='d_el_local',
+            inputs={b_eldist: Flow(fix=demand['electricity'],
+                                   nominal_value=1)})
 
-        energy_system.add(d_el)
+        if 'electricity_adjacent' in demand:
+            # electricity demands not covered of the local electricity network
+            b_el_adjacent = Bus(
+                label="b_el_adjacent",
+                inputs={b_elgrid: Flow(
+                    variable_costs=energy_cost['electricity']['slp_price'])})
+
+            d_el_adjacent = Sink(
+                label='d_el_adjacent',
+                inputs={b_el_adjacent: Flow(fix=demand['electricity_adjacent'],
+                                            nominal_value=1)})
+
+            energy_system.add(d_el_local, b_el_adjacent, d_el_adjacent)
 
         # create building heat
         b_th_buildings = Bus(label="b_th_buildings")
@@ -391,17 +390,17 @@ class MetaModel:
                                      d_sh.label))
         energy_system.add(d_sh)
 
-        b_th_dhw = Bus(label="b_th_dhw")
-
         if sum(demand['dhw'] > 0):
+            b_th_dhw_local = Bus(label="b_th_dhw_local")
+
             d_dhw = Sink(label='d_dhw',
-                         inputs={b_th_dhw: Flow(
+                         inputs={b_th_dhw_local: Flow(
                              fix=demand['dhw'],
                              nominal_value=1)})
-            self.th_demand_flows.append((b_th_dhw.label,
+            self.th_demand_flows.append((b_th_dhw_local.label,
                                          d_dhw.label))
 
-            energy_system.add(b_th_dhw, d_dhw)
+            energy_system.add(b_th_dhw_local, d_dhw)
 
             # We assume a heat drop but no energy loss due to the heat exchanger.
             heater_ratio = (max(heat_layers.temperature_levels)
@@ -411,20 +410,56 @@ class MetaModel:
 
             if 0 < heater_ratio < 1:
                 dhw_booster = Transformer(label="dhw_booster",
-                                          inputs={b_el_homes: Flow(),
+                                          inputs={b_eldist: Flow(),
                                                   b_th_buildings: Flow()},
-                                          outputs={b_th_dhw: Flow()},
+                                          outputs={b_th_dhw_local: Flow()},
                                           conversion_factors={
-                                              b_el_homes: 1 - heater_ratio,
+                                              b_eldist: 1 - heater_ratio,
                                               b_th_buildings: heater_ratio,
-                                              b_th_dhw: 1})
+                                              b_th_dhw_local: 1})
             else:
                 dhw_booster = Bus(label="dhw_booster",
                                   inputs={b_th_buildings: Flow()},
-                                  outputs={b_th_dhw: Flow()})
+                                  outputs={b_th_dhw_local: Flow()})
 
             energy_system.add(dhw_booster)
-            self.p2h_flows.append((b_el_homes.label,
+            self.p2h_flows.append((b_eldist.label,
+                                   dhw_booster.label))
+
+        if 'dhw_adjacent' in demand and sum(demand['dhw_adjacent'] > 0):
+            b_th_dhw_adjacent = Bus(label="b_th_dhw_local")
+
+            d_dhw_adjacent = Sink(label='d_dhw',
+                                  inputs={b_th_dhw_adjacent: Flow(
+                                      fix=demand['dhw_adjacent'],
+                                      nominal_value=1)})
+            self.th_demand_flows.append((b_th_dhw_adjacent.label,
+                                         d_dhw_adjacent.label))
+
+            energy_system.add(b_th_dhw_adjacent, d_dhw_adjacent)
+
+            # We assume a heat drop but no energy loss due to the heat exchanger.
+            heater_ratio = (max(heat_layers.temperature_levels)
+                            - temps['heat_drop_exchanger_dhw']
+                            - temps['reference']) / (temps['dhw']
+                                                     - temps['reference'])
+
+            if 0 < heater_ratio < 1:
+                dhw_booster = Transformer(label="dhw_booster",
+                                          inputs={b_eldist: Flow(),
+                                                  b_th_buildings: Flow()},
+                                          outputs={b_th_dhw_adjacent: Flow()},
+                                          conversion_factors={
+                                              b_eldist: 1 - heater_ratio,
+                                              b_th_buildings: heater_ratio,
+                                              b_th_dhw_adjacent: 1})
+            else:
+                dhw_booster = Bus(label="dhw_booster",
+                                  inputs={b_th_buildings: Flow()},
+                                  outputs={b_th_dhw_adjacent: Flow()})
+
+            energy_system.add(dhw_booster)
+            self.p2h_flows.append((b_eldist.label,
                                    dhw_booster.label))
 
         # create expensive source for missing heat to ensure model is solvable

@@ -21,9 +21,8 @@ def test_electricity_demand_ap():
     electricity_demand = np.full(3, 0.1)
 
     params = {
-        "demand": {"electricity": electricity_demand},
-        "energy_cost": {"electricity": {"demand_rate": 0}},
-        "public_grid": True}
+        "demand": {"electricity_adjacent": electricity_demand},
+        "energy_cost": {"electricity": {"demand_rate": 0}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
@@ -40,11 +39,10 @@ def test_electricity_demand_lp():
     electricity_demand = np.full(3, 0.1)
 
     params = {
-        "demand": {"electricity": electricity_demand},
+        "demand": {"electricity_adjacent": electricity_demand},
         "energy_cost": {"electricity": {
             "demand_rate": 1000,
-            "AP": 0}},
-        "public_grid": True}
+            "AP": 0}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
@@ -59,11 +57,10 @@ def test_electricity_demand_all_costs():
     electricity_demand = np.full(3, 0.1)
 
     params = {
-        "demand": {"electricity": electricity_demand},
+        "demand": {"electricity_adjacent": electricity_demand},
         "energy_cost": {"electricity": {
             "demand_rate": 1000,
-            "AP": [15, 20, 15]}},
-        "public_grid": True}
+            "AP": [15, 20, 15]}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(), 0, abs_tol=1e-5)
@@ -86,8 +83,7 @@ def test_chp():
                 "thermal_output": 2,
                 "electric_output": 2},
         "demand": {"heating": heat_demand,
-                   "electricity": electricity_demand},
-        "public_grid": True}
+                   "electricity_adjacent": electricity_demand}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(meta_model.thermal_demand().sum(), heat_demand.sum())
