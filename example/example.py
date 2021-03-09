@@ -149,7 +149,7 @@ def all_techs_model(number_of_time_steps=365 * 24,
         gt_generation = meta_model.aggregate_flows(meta_model.gt_input_flows).sum()
         print("{:04.1f} % geothermal coverage: {:.3f}".format(
             100 * gt_generation / heat_demand, gt_generation))
-        bhp_generation =  meta_model.aggregate_flows(meta_model.hp_flows).sum()
+        bhp_generation = meta_model.aggregate_flows(meta_model.hp_flows).sum()
         print("{:04.1f} % heat pump coverage: {:.3f}".format(
             100 * bhp_generation / heat_demand, bhp_generation))
         st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()

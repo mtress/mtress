@@ -229,6 +229,7 @@ class ENaQMetaModel:
                     cop_0_35=bhp["cop_0_35"],
                     label="heat_pump")
 
+                self.hp_flows.extend(heat_pump.heat_out_flows)
                 self.el_demand_flows.append((b_eldist.label,
                                              b_el_bhp.label))
             else:
