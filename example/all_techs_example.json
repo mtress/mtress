@@ -80,6 +80,7 @@
     "energy_cost": {
         "electricity": {
             "demand_rate": 15000,
+            "slp_price": 300,
             "surcharge": 17
         },
         "fossil_gas": 35,
