@@ -7,4 +7,5 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
-import meta_model.physics
+from . import layered_heat
+from . import physics

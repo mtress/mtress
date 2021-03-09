@@ -30,7 +30,7 @@ def _array(data, length):
     return data
 
 
-class ENaQMetaModel:
+class MetaModel:
     def __init__(self, **kwargs):
         """
         :param kwargs: parameters for the energy system, see example.py
@@ -118,7 +118,7 @@ class ENaQMetaModel:
         temperature_levels.sort()
 
         # Time range of the data (in a)
-        index = demand['electricity'].index
+        index = demand['heating'].index
         self.number_of_time_steps = len(index)
         index.freq = pd.infer_freq(index)
         self.time_range = ((index[-1] - index[0] + index.freq)
@@ -169,19 +169,38 @@ class ENaQMetaModel:
                            variable_costs=energy_cost['eeg_levy'])})
         b_elxprt = Bus(label="b_elxprt")  # electricity export network
         b_gas = Bus(label="b_gas")
+        b_elgrid = Bus(label="b_elgrid")
 
-        energy_system.add(b_eldist, b_elprod, b_elxprt, b_gas)
+        energy_system.add(b_eldist, b_elprod, b_elxprt, b_gas, b_elgrid)
 
-        ###################################################################
-        # unidirectional grid connection
-        b_elgrid = Bus(label="b_elgrid",
-                       outputs={b_eldist: Flow(nonconvex=NonConvex(),
-                                               nominal_value=1e5,
-                                               grid_connection=True)},
-                       inputs={b_elxprt: Flow(nonconvex=NonConvex(),
-                                              nominal_value=1e5,
-                                              grid_connection=True)})
-        energy_system.add(b_elgrid)
+
+        # (unidirectional) grid connection
+
+        # RLM customer for district and larger buildings
+        m_el_in = Source(label='m_el_in',
+                         outputs={b_elgrid: Flow()})
+
+        self.el_import_flows.append((m_el_in.label, b_elgrid.label))
+        b_grid_connection_in = Bus(
+            label="b_grid_connection_in",
+            inputs={b_elgrid: Flow(
+                        variable_costs=(
+                                energy_cost['electricity']['surcharge']
+                                + energy_cost['electricity']['market']
+                                + self.spec_co2['el_in']
+                                * self.spec_co2['price']),
+                        investment=Investment(
+                                 ep_costs=energy_cost['electricity'][
+                                     'demand_rate'] * self.time_range))},
+            outputs={b_eldist: Flow(nonconvex=NonConvex(),
+                                    nominal_value=1e5,
+                                    grid_connection=True)})
+        b_grid_connection_out = Bus(
+            label="b_grid_connection_out",
+            inputs={b_elxprt: Flow(nonconvex=NonConvex(),
+                                   nominal_value=1e5,
+                                   grid_connection=True)})
+        energy_system.add(b_grid_connection_in, b_grid_connection_out)
 
         ###################################################################
         # Thermal components
@@ -323,25 +342,13 @@ class ENaQMetaModel:
                 energy_system.add(t_st_level)
 
         ###############################################################
-        # create external markets
-        # RLM customer for district and larger buildings
-        m_el_in = Source(label='m_el_in',
-                         outputs={b_elgrid: Flow(
-                             variable_costs=(
-                                     energy_cost['electricity']['surcharge']
-                                     + energy_cost['electricity']['market']
-                                     + self.spec_co2['el_in']
-                                     * self.spec_co2['price']),
-                             investment=Investment(
-                                 ep_costs=energy_cost['electricity'][
-                                     'demand_rate'] * self.time_range))})
-        self.el_import_flows.append((m_el_in.label, b_elgrid.label))
-
+        # create external market to sell electricity to
         co2_costs = np.array(self.spec_co2['el_out']) * self.spec_co2['price']
         m_el_out = Sink(label='m_el_out',
-                        inputs={b_elgrid: Flow(
+                        inputs={b_grid_connection_out: Flow(
                             variable_costs=co2_costs)})
-        self.el_export_flows.append((b_elgrid.label, m_el_out.label))
+        self.el_export_flows.append((b_grid_connection_out.label,
+                                              m_el_out.label))
 
         gas_price = energy_cost['fossil_gas'] \
                     + self.spec_co2['fossil_gas'] * self.spec_co2['price']
@@ -350,14 +357,33 @@ class ENaQMetaModel:
 
         energy_system.add(m_el_in, m_el_out, m_gas)
 
-        # create local electricity demand
-        d_el = Sink(label='d_el',
-                    inputs={b_eldist: Flow(fix=demand['electricity'],
-                                           nominal_value=1)})
-        self.el_demand_flows.append((b_eldist.label,
-                                     d_el.label))
+        # electricity demands covered of the local electricity network
+        d_el_local = Sink(
+            label='d_el_local',
+            inputs={b_eldist: Flow(fix=demand['electricity'],
+                                   nominal_value=1)})
 
-        energy_system.add(d_el)
+        self.el_demand_flows.append((b_eldist.label,
+                                     d_el_local.label))
+
+        # electricity not covered of the local electricity network,
+        # always created as there might be a booster but no explicit demand
+        b_el_adjacent = Bus(
+            label="b_el_adjacent",
+            inputs={b_elgrid: Flow(
+                variable_costs=energy_cost['electricity']['slp_price'])})
+
+        # electricity demands not covered of the local electricity network
+        if 'electricity_adjacent' in demand:
+            d_el_adjacent = Sink(
+                label='d_el_adjacent',
+                inputs={b_el_adjacent: Flow(fix=demand['electricity_adjacent'],
+                                            nominal_value=1)})
+
+            self.el_demand_flows.append((b_el_adjacent.label,
+                                         d_el_adjacent.label))
+
+            energy_system.add(d_el_local, b_el_adjacent, d_el_adjacent)
 
         # create building heat
         b_th_buildings = Bus(label="b_th_buildings")
@@ -379,17 +405,17 @@ class ENaQMetaModel:
                                      d_sh.label))
         energy_system.add(d_sh)
 
-        b_th_dhw = Bus(label="b_th_dhw")
-
         if sum(demand['dhw'] > 0):
+            b_th_dhw_local = Bus(label="b_th_dhw_local")
+
             d_dhw = Sink(label='d_dhw',
-                         inputs={b_th_dhw: Flow(
+                         inputs={b_th_dhw_local: Flow(
                              fix=demand['dhw'],
                              nominal_value=1)})
-            self.th_demand_flows.append((b_th_dhw.label,
+            self.th_demand_flows.append((b_th_dhw_local.label,
                                          d_dhw.label))
 
-            energy_system.add(b_th_dhw, d_dhw)
+            energy_system.add(b_th_dhw_local, d_dhw)
 
             # We assume a heat drop but no energy loss due to the heat exchanger.
             heater_ratio = (max(heat_layers.temperature_levels)
@@ -401,20 +427,56 @@ class ENaQMetaModel:
                 dhw_booster = Transformer(label="dhw_booster",
                                           inputs={b_eldist: Flow(),
                                                   b_th_buildings: Flow()},
-                                          outputs={b_th_dhw: Flow()},
+                                          outputs={b_th_dhw_local: Flow()},
                                           conversion_factors={
                                               b_eldist: 1 - heater_ratio,
                                               b_th_buildings: heater_ratio,
-                                              b_th_dhw: 1})
-
-                self.el_demand_flows.append((b_eldist.label,
-                                             dhw_booster.label))
+                                              b_th_dhw_local: 1})
                 self.p2h_flows.append((b_eldist.label,
                                        dhw_booster.label))
+                self.el_demand_flows.append((b_eldist.label,
+                                             dhw_booster.label))
             else:
                 dhw_booster = Bus(label="dhw_booster",
                                   inputs={b_th_buildings: Flow()},
-                                  outputs={b_th_dhw: Flow()})
+                                  outputs={b_th_dhw_local: Flow()})
+
+            energy_system.add(dhw_booster)
+
+        if 'dhw_adjacent' in demand and sum(demand['dhw_adjacent'] > 0):
+            b_th_dhw_adjacent = Bus(label="b_th_dhw_local")
+
+            d_dhw_adjacent = Sink(label='d_dhw',
+                                  inputs={b_th_dhw_adjacent: Flow(
+                                      fix=demand['dhw_adjacent'],
+                                      nominal_value=1)})
+            self.th_demand_flows.append((b_th_dhw_adjacent.label,
+                                         d_dhw_adjacent.label))
+
+            energy_system.add(b_th_dhw_adjacent, d_dhw_adjacent)
+
+            # We assume a heat drop but no energy loss due to the heat exchanger.
+            heater_ratio = (max(heat_layers.temperature_levels)
+                            - temps['heat_drop_exchanger_dhw']
+                            - temps['reference']) / (temps['dhw']
+                                                     - temps['reference'])
+
+            if 0 < heater_ratio < 1:
+                dhw_booster = Transformer(label="dhw_booster",
+                                          inputs={b_el_adjacent: Flow(),
+                                                  b_th_buildings: Flow()},
+                                          outputs={b_th_dhw_adjacent: Flow()},
+                                          conversion_factors={
+                                              b_el_adjacent: 1 - heater_ratio,
+                                              b_th_buildings: heater_ratio,
+                                              b_th_dhw_adjacent: 1})
+
+                self.el_demand_flows.append((b_eldist.label,
+                                             dhw_booster.label))
+            else:
+                dhw_booster = Bus(label="dhw_booster",
+                                  inputs={b_th_buildings: Flow()},
+                                  outputs={b_th_dhw_adjacent: Flow()})
 
             energy_system.add(dhw_booster)
 

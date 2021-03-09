@@ -15,9 +15,9 @@ import numpy as np
 from oemof import solph
 from oemof import thermal
 
-from meta_model.physics import (kilo_to_mega, kJ_to_MWh,
-                                H2O_DENSITY, H2O_HEAT_CAPACITY,
-                                TC_INSULATION)
+from mtress.physics import (kilo_to_mega, kJ_to_MWh,
+                            H2O_DENSITY, H2O_HEAT_CAPACITY,
+                            TC_INSULATION)
 
 
 class MultiLayerStorage:
@@ -31,7 +31,8 @@ class MultiLayerStorage:
                  volume,
                  insulation_thickness,
                  ambient_temperature,
-                 heat_layers):
+                 heat_layers,
+                 label=""):
         """
         :param diameter: numeric scalar (in m)
         :param volume: numeric scalar (in m³)
@@ -56,9 +57,14 @@ class MultiLayerStorage:
         self._in_flows = list()
         self._out_flows = list()
 
+        if len(label) > 0:
+            self.label = label + '_'
+        else:
+            self.label = "s_heat_"
+
         for temperature in self._temperature_levels:
             temperature_str = "{0:.0f}".format(temperature)
-            storage_label = 's_heat_' + temperature_str
+            storage_label = self.label + temperature_str
             b_th_level = heat_layers.b_th[temperature]
 
             hs_capacity = self.heat_storage_volume * \
@@ -118,7 +124,7 @@ class MultiLayerStorage:
 
         solph.constraints.shared_limit(
             model, model.GenericStorageBlock.storage_content,
-            'storage_limit', self._h_storage_comp, w_factor,
+            self.label+'storage_limit', self._h_storage_comp, w_factor,
             upper_limit=self.heat_storage_volume)
 
     @property

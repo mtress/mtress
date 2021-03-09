@@ -6,10 +6,10 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name="meta_model",
+    name="mtress",
     version="0.0.0",
     author="some guys",
-    packages=["meta_model"],
+    packages=["mtress"],
     long_description=read("README.md"),
     long_description_content_type="text/x-rst",
     zip_safe=False,
