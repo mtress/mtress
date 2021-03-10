@@ -106,6 +106,8 @@ class MetaModel:
             st = None
         self.spec_co2 = kwargs.get('co2')
         self.allow_missing_heat = kwargs.get('allow_missing_heat', True)
+        self.exclusive_grid_connection = kwargs.get(
+            'exclusive_grid_connection', True)
 
         # Create relevant temperature list
         temperature_levels = temps['intermediate']
@@ -665,11 +667,12 @@ class MetaModel:
         if self._thermal_storage:
             self._thermal_storage.add_shared_limit(model=model)
 
-        constraints.limit_active_flow_count_by_keyword(
-            model,
-            "grid_connection",
-            lower_limit=0,
-            upper_limit=1)
+        if self.exclusive_grid_connection:
+            constraints.limit_active_flow_count_by_keyword(
+                model,
+                "grid_connection",
+                lower_limit=0,
+                upper_limit=1)
 
         self.el_generation_flows = self.wt_flows + self.pv_flows + self.chp_el_flows
 
