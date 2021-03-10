@@ -105,6 +105,7 @@ class MetaModel:
             del st
             st = None
         self.spec_co2 = kwargs.get('co2')
+        self.allow_missing_heat = kwargs.get('allow_missing_heat', True)
 
         # Create relevant temperature list
         temperature_levels = temps['intermediate']
@@ -480,13 +481,14 @@ class MetaModel:
             energy_system.add(dhw_booster)
 
         # create expensive source for missing heat to ensure model is solvable
-        missing_heat = Source(
-            label='missing_heat',
-            outputs={heat_layers.b_th_in_highest: Flow(
-                variable_costs=HIGH_VIRTUAL_COSTS)})
-        energy_system.add(missing_heat)
-        self.missing_heat_flow.append((missing_heat.label,
-                                       heat_layers.b_th_in_highest.label))
+        if self.allow_missing_heat:
+            missing_heat = Source(
+                label='missing_heat',
+                outputs={heat_layers.b_th_in_highest: Flow(
+                    variable_costs=HIGH_VIRTUAL_COSTS)})
+            energy_system.add(missing_heat)
+            self.missing_heat_flow.append((missing_heat.label,
+                                           heat_layers.b_th_in_highest.label))
 
         if boiler:
             # boiler
