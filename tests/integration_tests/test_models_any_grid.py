@@ -36,8 +36,8 @@ def run_model_template(custom_params=None):
             for key2 in custom_params[key1]:
                 if type(custom_params[key1][key2]) == dict:
                     for key3 in custom_params[key1][key2]:
-                        params[key1][key2][key3] = (
-                            custom_params[key1][key2][key3])
+                        params[key1][key2][key3] = \
+                            custom_params[key1][key2][key3]
                 else:
                     params[key1][key2] = custom_params[key1][key2]
 
@@ -71,7 +71,7 @@ def electricity_costs(electricity_demand, params, time_range):
 
 
 def gas_costs(gas_demand, params):
-    return sum(gas_demand * np.array(params["energy_cost"]["fossil_gas"]))
+    return sum(gas_demand * np.array(params["energy_cost"]["gas"]["fossil_gas"]))
 
 
 def chp_revenue(export, own_consumption, params):
@@ -86,9 +86,9 @@ def chp_revenue(export, own_consumption, params):
 def test_empty_template():
     meta_model, params = run_model_template()
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    el_demand = meta_model.aggregate_flows(meta_model.el_demand_flows).sum()
-    el_generation = meta_model.aggregate_flows(meta_model.el_generation_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
+    el_generation = meta_model.aggregate_flows(meta_model.production_el_flows).sum()
 
     assert math.isclose(thermal_demand, 0, abs_tol=HIGH_ACCURACY)
     assert math.isclose(el_demand, 0, abs_tol=HIGH_ACCURACY)
@@ -104,11 +104,11 @@ def test_gas_boiler():
         "demand": {"heating": heat_demand}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    el_demand = meta_model.aggregate_flows(meta_model.el_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
 
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
-    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
+    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_th_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand.sum())
     assert math.isclose(boiler_generation, heat_demand.sum(),
@@ -131,11 +131,11 @@ def test_booster():
             "dhw": dhw_demand}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    el_demand = meta_model.aggregate_flows(meta_model.el_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
 
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
-    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
+    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_th_flows).sum()
 
     assert math.isclose(thermal_demand, dhw_demand.sum())
     assert math.isclose(boiler_generation.sum(), gas_demand.sum(),
@@ -164,11 +164,11 @@ def test_booster_heat_drop():
         "temperatures": {"heat_drop_exchanger_dhw": 10}}  # +50% for booster
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    el_demand = meta_model.aggregate_flows(meta_model.el_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
 
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
-    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
+    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_th_flows).sum()
 
     assert math.isclose(thermal_demand, dhw_demand.sum())
     assert math.isclose(boiler_generation, gas_demand.sum(),
@@ -274,8 +274,8 @@ def test_partly_solar():
             "intermediate": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
     st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
 
 
@@ -318,8 +318,8 @@ def test_partly_solar_bad_timing():
             "intermediate": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
     st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand,
@@ -361,8 +361,8 @@ def test_partly_solar_with_storage():
             "intermediate": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
     st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand,
@@ -402,8 +402,8 @@ def test_useless_solar():
             "intermediate": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
     st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand,
@@ -422,7 +422,7 @@ def test_missing_heat():
             "heating": 3 * [heat_demand / 3]}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
     missing_heat = meta_model.aggregate_flows(meta_model.missing_heat_flow).sum()
 
     assert math.isclose(thermal_demand, heat_demand)
@@ -444,10 +444,10 @@ def test_heat_pump():
         "temperatures": {"heating": 35}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    bhp_generation = meta_model.aggregate_flows(meta_model.hp_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    bhp_generation = meta_model.aggregate_flows(meta_model.bhp_th_flow).sum()
 
-    el_import = meta_model.aggregate_flows(meta_model.el_import_flows).sum()
+    el_import = meta_model.aggregate_flows(meta_model.electricity_import_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand.sum())
     assert math.isclose(bhp_generation, heat_demand.sum(),
@@ -471,8 +471,8 @@ def test_pv_export():
     }}
     meta_model, params = run_model_template(custom_params=params)
 
-    pv_timeseries = meta_model.aggregate_flows(meta_model.pv_flows)
-    el_export_timeseries = meta_model.aggregate_flows(meta_model.el_export_flows)
+    pv_timeseries = meta_model.aggregate_flows(meta_model.pv_el_flows)
+    el_export_timeseries = meta_model.aggregate_flows(meta_model.electricity_export_flows)
 
     for i in range(3):
         assert math.isclose(pv_timeseries[i],
@@ -489,5 +489,122 @@ def test_pv_export():
                         abs_tol=HIGH_ACCURACY)
 
 
+def test_chp_biomethane():
+    heat_demand = np.full(3, 0.1)
+
+    params = {
+        "chp": {"gas_input": 2,
+                "electric_output": 1,
+                "thermal_output": 1,
+                'electric_efficiency': 0.5,
+                'thermal_efficiency': 0.5,
+                'funding_hours_per_year': 3,
+                'biomethane_fraction': 1},
+        "demand": {"heating": heat_demand},
+        "energy_cost": {'gas': {'biomethane': 10,
+                                'fossil_gas': 0}}}
+
+    meta_model, params = run_model_template(custom_params=params)
+
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
+    el_export = meta_model.aggregate_flows(meta_model.electricity_export_flows).sum()
+
+    chp_el_generation = meta_model.aggregate_flows(meta_model.chp_el_flows).sum()
+    chp_th_generation = meta_model.aggregate_flows(meta_model.chp_th_flows).sum()
+    chp_gas_usage = meta_model.aggregate_flows(meta_model.chp_gas_flows).sum()
+
+    biomethane_import = meta_model.aggregate_flows(meta_model.biomethane_import_flows).sum()
+    fossil_gas_import = meta_model.aggregate_flows(meta_model.fossil_gas_import_flows).sum()
+
+    assert math.isclose(thermal_demand, heat_demand.sum())
+    assert math.isclose(el_demand, 0, rel_tol=HIGH_ACCURACY)
+
+    assert math.isclose(chp_th_generation, heat_demand.sum())
+    assert math.isclose(chp_el_generation, el_export,
+                        rel_tol=HIGH_ACCURACY)
+
+    assert math.isclose(biomethane_import, chp_gas_usage)
+    assert math.isclose(fossil_gas_import, 0)
+
+
+def test_chp_fossil_gas():
+    heat_demand = np.full(3, 0.1)
+
+    params = {
+        "chp": {"gas_input": 2,
+                "electric_output": 1,
+                "thermal_output": 1,
+                'electric_efficiency': 0.5,
+                'thermal_efficiency': 0.5,
+                'funding_hours_per_year': 3,
+                'biomethane_fraction': 0},
+        "demand": {"heating": heat_demand},
+        "energy_cost": {'gas': {'biomethane': 0,
+                                'fossil_gas': 10}}}
+
+    meta_model, params = run_model_template(custom_params=params)
+
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
+    el_export = meta_model.aggregate_flows(meta_model.electricity_export_flows).sum()
+
+    chp_el_generation = meta_model.aggregate_flows(meta_model.chp_el_flows).sum()
+    chp_th_generation = meta_model.aggregate_flows(meta_model.chp_th_flows).sum()
+    chp_gas_usage = meta_model.aggregate_flows(meta_model.chp_gas_flows).sum()
+
+    biomethane_import = meta_model.aggregate_flows(meta_model.biomethane_import_flows).sum()
+    fossil_gas_import = meta_model.aggregate_flows(meta_model.fossil_gas_import_flows).sum()
+
+    assert math.isclose(thermal_demand, heat_demand.sum())
+    assert math.isclose(el_demand, 0, rel_tol=HIGH_ACCURACY)
+
+    assert math.isclose(chp_th_generation, heat_demand.sum())
+    assert math.isclose(chp_el_generation, el_export,
+                        rel_tol=HIGH_ACCURACY)
+
+    assert math.isclose(biomethane_import, 0)
+    assert math.isclose(fossil_gas_import, chp_gas_usage)
+
+
+def test_chp_mixed_gas():
+    heat_demand = np.full(3, 0.1)
+
+    params = {
+        "chp": {"gas_input": 2,
+                "electric_output": 1,
+                "thermal_output": 1,
+                'electric_efficiency': 0.5,
+                'thermal_efficiency': 0.5,
+                'funding_hours_per_year': 3,
+                'biomethane_fraction': 0.5},
+        "demand": {"heating": heat_demand},
+        "energy_cost": {'gas': {'biomethane': 0,
+                                'fossil_gas': 10}}}
+
+    meta_model, params = run_model_template(custom_params=params)
+
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
+    el_export = meta_model.aggregate_flows(meta_model.electricity_export_flows).sum()
+
+    chp_el_generation = meta_model.aggregate_flows(meta_model.chp_el_flows).sum()
+    chp_th_generation = meta_model.aggregate_flows(meta_model.chp_th_flows).sum()
+    chp_gas_usage = meta_model.aggregate_flows(meta_model.chp_gas_flows).sum()
+
+    biomethane_import = meta_model.aggregate_flows(meta_model.biomethane_import_flows).sum()
+    fossil_gas_import = meta_model.aggregate_flows(meta_model.fossil_gas_import_flows).sum()
+
+    assert math.isclose(thermal_demand, heat_demand.sum())
+    assert math.isclose(el_demand, 0, rel_tol=HIGH_ACCURACY)
+
+    assert math.isclose(chp_th_generation, heat_demand.sum())
+    assert math.isclose(chp_el_generation, el_export,
+                        rel_tol=HIGH_ACCURACY)
+
+    assert math.isclose(biomethane_import, chp_gas_usage / 2)
+    assert math.isclose(fossil_gas_import, chp_gas_usage / 2)
+
+
 if __name__ == '__main__':
-    test_heat_pump()
+    test_chp_mixed_gas()
