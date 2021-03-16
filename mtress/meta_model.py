@@ -163,12 +163,13 @@ class MetaModel:
         self.p2h_el_flows = list()
         self.boiler_th_flows = list()
         self.pellet_th_flows = list()
+        self.solar_thermal_th_flows = list()
         self.geothermal_input_flows = list()
-        self.st_input_flows = list()
 
         self.virtual_costs_flows = list()
         self.missing_heat_flow = list()
 
+        ###############################################################
         # Create main buses
         b_eldist = Bus(label="b_eldist")  # Local distribution network
         b_elprod = Bus(label="b_elprod",  # local production network
@@ -202,6 +203,7 @@ class MetaModel:
                                     nominal_value=1e5,
                                     grid_connection=True)})
 
+        # create external market to sell electricity to
         b_grid_connection_out = Bus(
             label="b_grid_connection_out",
             inputs={b_elxprt: Flow(nonconvex=NonConvex(),
@@ -210,15 +212,13 @@ class MetaModel:
 
         energy_system.add(m_el_in, b_grid_connection_in, b_grid_connection_out)
 
-        ###############################################################
-        # create external market to sell electricity to
         co2_costs = np.array(self.spec_co2['el_out']) * self.spec_co2['price']
         m_el_out = Sink(label='m_el_out',
-                        inputs={b_grid_connection_out: Flow(
-                            variable_costs=co2_costs)})
+                        inputs={b_grid_connection_out: Flow(variable_costs=co2_costs)})
         self.electricity_export_flows.append((b_grid_connection_out.label,
                                               m_el_out.label))
 
+        # Create gas buses if needed
         if boiler or (chp and self.biomethane_fraction < 1):
             b_fossil_gas = Bus(label="b_fossil_gas")
 
@@ -227,7 +227,35 @@ class MetaModel:
             m_fossil_gas = Source(label='m_fossil_gas',
                                   outputs={b_fossil_gas: Flow(variable_costs=gas_price)})
 
+            self.fossil_gas_import_flows.append((m_fossil_gas.label, b_fossil_gas.label))
+
             energy_system.add(b_fossil_gas, m_fossil_gas)
+
+        if chp and self.biomethane_fraction > 0:
+            b_biomethane = Bus(label='b_biomethane')
+
+            biomethane_price = (energy_cost['gas']['biomethane']
+                                + self.spec_co2['biomethane']
+                                * self.spec_co2['price'])
+            m_biomethane = Source(label='m_biomethane',
+                                  outputs={b_biomethane: Flow(variable_costs=biomethane_price)})
+            energy_system.add(m_biomethane, b_biomethane)
+
+            self.biomethane_import_flows.append((m_biomethane.label, b_biomethane.label))
+
+        # Create wood pellet buses if needed
+        if pellet_boiler:
+            b_pellet = Bus(label="b_pellet")
+            m_pellet = Source(
+                label='m_pellet',
+                outputs={b_pellet: Flow(
+                    variable_costs=energy_cost['wood_pellet']
+                                   + self.spec_co2['wood_pellet']
+                                   * self.spec_co2['price']
+                                   * HHV_WP)})
+            self.pellet_import_flows.append((m_pellet.label, b_pellet.label))
+
+            energy_system.add(b_pellet, m_pellet)
 
         ###################################################################
         # Thermal components
@@ -311,17 +339,13 @@ class MetaModel:
                             inputs={heat_layers.b_th_lowest: Flow()},
                             outputs={heat_pump.b_th_in["ice"]: Flow()})
 
-                # Calculate dimensions for loss/gain estimation
-                ihs_surface_top = ihs['volume'] / ihs['height']
-
                 s_ihs = GenericStorage(
                     label='s_ihs',
                     inputs={b_ihs: Flow()},
                     outputs={b_ihs: Flow()},
                     nominal_storage_capacity=(H2O_HEAT_FUSION
                                               * H2O_DENSITY
-                                              * ihs['volume'])
-                )
+                                              * ihs['volume']))
 
                 energy_system.add(b_ihs, s_ihs)
 
@@ -362,8 +386,8 @@ class MetaModel:
                         b_st: (1 / st['spec_generation']
                         ['ST_' + str(temp)]).to_list()})
 
-                self.st_input_flows.append((st_level_label,
-                                            b_th_in_level.label))
+                self.solar_thermal_th_flows.append((st_level_label,
+                                                    b_th_in_level.label))
                 energy_system.add(t_st_level)
 
         # electricity demands covered of the local electricity network
@@ -513,22 +537,12 @@ class MetaModel:
                     heat_layers.b_th_in_highest:
                         boiler['efficiency']})
 
-            self.fossil_gas_import_flows.append((m_fossil_gas.label, b_fossil_gas.label))
             self.boiler_th_flows.append((t_boiler.label,
                                          heat_layers.b_th_in_highest.label))
             energy_system.add(t_boiler)
 
         if pellet_boiler:
             # wood pellet boiler
-            b_pellet = Bus(label="b_pellet")
-            m_pellet = Source(
-                label='m_pellet',
-                outputs={b_pellet: Flow(
-                    variable_costs=energy_cost['wood_pellet']
-                                   + self.spec_co2['wood_pellet']
-                                   * self.spec_co2['price']
-                                   * HHV_WP)})
-
             t_pellet = Transformer(
                 label='t_pellet',
                 inputs={b_pellet: Flow()},
@@ -542,34 +556,20 @@ class MetaModel:
 
             self.pellet_th_flows.append((t_pellet.label,
                                          heat_layers.b_th_in_highest.label))
-            self.pellet_import_flows.append((m_pellet.label, b_pellet.label))
-            energy_system.add(b_pellet, m_pellet, t_pellet)
+            energy_system.add(t_pellet)
 
         if chp:
             # CHP
             b_gas_chp = Bus(label='b_gas_chp')
 
-            if self.biomethane_fraction > 0:
-                biomethane_price = (energy_cost['gas']['biomethane']
-                                    + self.spec_co2['biomethane']
-                                    * self.spec_co2['price'])
-                b_biomethane = Bus(label='b_biomethane')
-                m_biomethane = Source(label='m_biomethane',
-                                      outputs={b_biomethane: Flow(variable_costs=biomethane_price)})
-                energy_system.add(m_biomethane, b_biomethane)
-
             if self.biomethane_fraction == 1:
                 t_gas_chp = Transformer(label="t_gas_chp",
                                         inputs={b_biomethane: Flow()},
                                         outputs={b_gas_chp: Flow()})
-                self.biomethane_import_flows.append((b_biomethane.label,
-                                                     t_gas_chp.label))
             elif self.biomethane_fraction == 0:
                 t_gas_chp = Transformer(label="t_gas_chp",
                                         inputs={b_fossil_gas: Flow()},
                                         outputs={b_gas_chp: Flow()})
-                self.fossil_gas_import_flows.append((b_fossil_gas.label,
-                                                     t_gas_chp.label))
             else:
                 t_gas_chp = Transformer(label="t_gas_chp",
                                         inputs={b_fossil_gas: Flow(),
@@ -577,10 +577,6 @@ class MetaModel:
                                         outputs={b_gas_chp: Flow()},
                                         conversion_factors={b_fossil_gas: 1 - self.biomethane_fraction,
                                                             b_biomethane: self.biomethane_fraction})
-                self.fossil_gas_import_flows.append((b_fossil_gas.label,
-                                                     t_gas_chp.label))
-                self.biomethane_import_flows.append((b_biomethane.label,
-                                                     t_gas_chp.label))
             energy_system.add(t_gas_chp, b_gas_chp)
 
             b_el_chp_fund = Bus(
