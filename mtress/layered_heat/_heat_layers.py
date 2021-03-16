@@ -20,7 +20,21 @@ class HeatLayers:
     """
     Connector class for modeling power flows with variable temperature levels,
     see https://arxiv.org/abs/2012.12664
+
+       Layer Inputs    Heat Layers       Demands
+
+ Rod-->(Qin(T2))      (Q(T2))
+          │   ↘      ↗      ↘
+          │   [HE1,2]        [HE2,1]--->(D(T2))
+          ↓           ↖      ↙
+      (Qin(T1))      (Q(T1))
+          │    ↘       ↗
+          │    [HE0,1]
+          ↓           ↖
+      (Qin(T0))------->(Q(T0))
+
     """
+
     def __init__(self,
                  energy_system,
                  temperature_levels,
@@ -31,6 +45,7 @@ class HeatLayers:
         :param temperature_levels: list [temperature]
         :param reference_temperature: reference temperature for energy (°C)
         """
+
         # Create object collections for temperature dependent technologies
         self.energy_system = energy_system
         self.b_th = dict()
