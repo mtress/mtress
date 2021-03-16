@@ -74,6 +74,10 @@ def gas_costs(gas_demand, params):
     return sum(gas_demand * np.array(params["energy_cost"]["gas"]["fossil_gas"]))
 
 
+def gas_costs_chp(gas_demand, params):
+    return gas_costs(gas_demand, params) - sum(gas_demand * np.array(params["energy_cost"]["gas"]["energy_tax"]))
+
+
 def chp_revenue(export, own_consumption, params):
     # TODO: Consider funding hours per year
     feed_in_revenue = (export * (params["energy_cost"]["electricity"]["market"]
@@ -135,12 +139,12 @@ def test_booster():
     el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
 
     boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
-    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_th_flows).sum()
+    p2h_el_demand = meta_model.aggregate_flows(meta_model.p2h_el_flows).sum()
 
     assert math.isclose(thermal_demand, dhw_demand.sum())
     assert math.isclose(boiler_generation.sum(), gas_demand.sum(),
                         rel_tol=HIGH_ACCURACY)
-    assert math.isclose(p2h_generation, electricity_demand.sum(),
+    assert math.isclose(p2h_el_demand, electricity_demand.sum(),
                         rel_tol=HIGH_ACCURACY)
     assert math.isclose(el_demand, electricity_demand.sum(),
                         rel_tol=HIGH_ACCURACY)
@@ -168,12 +172,12 @@ def test_booster_heat_drop():
     el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
 
     boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
-    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_th_flows).sum()
+    p2h_el_demand = meta_model.aggregate_flows(meta_model.p2h_th_flows).sum()
 
     assert math.isclose(thermal_demand, dhw_demand.sum())
     assert math.isclose(boiler_generation, gas_demand.sum(),
                         rel_tol=HIGH_ACCURACY)
-    assert math.isclose(p2h_generation, electricity_demand.sum(),
+    assert math.isclose(p2h_el_demand, electricity_demand.sum(),
                         rel_tol=HIGH_ACCURACY)
     assert math.isclose(el_demand, electricity_demand.sum(),
                         rel_tol=HIGH_ACCURACY)
@@ -466,7 +470,7 @@ def test_heat_pump():
 def test_pv_export():
     params = {"pv": {
         "nominal_power": 2,
-        "feed_in_tariff": 75,
+        "feed_in_subsidy": 75,
         "spec_generation": [0, 2, 1]
     }}
     meta_model, params = run_model_template(custom_params=params)
@@ -607,4 +611,4 @@ def test_chp_mixed_gas():
 
 
 if __name__ == '__main__':
-    test_chp_mixed_gas()
+    test_pv_export()
