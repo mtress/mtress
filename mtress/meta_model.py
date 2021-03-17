@@ -118,6 +118,7 @@ class MetaModel:
         # Ensure unique temperatures
         temperature_levels = list(set(temperature_levels))
         temperature_levels.sort()
+        self.temperature_levels = temperature_levels
 
         # Time range of the data (in a)
         index = demand['heating'].index
@@ -160,6 +161,9 @@ class MetaModel:
         self.el_demand_flows = list()
         self.el_import_flows = list()
         self.el_export_flows = list()
+        self.th_storage_inflows = dict()
+        self.th_storage_outflows = dict()
+        self.th_storage_content = dict()
         self.virtual_costs_flows = list()
         self.wood_pellets_flows = list()
         self.missing_heat_flow = list()
@@ -217,6 +221,9 @@ class MetaModel:
                 insulation_thickness=hs['insulation_thickness'],
                 ambient_temperature=meteo['temp_air'],
                 heat_layers=heat_layers)
+            self.th_storage_inflows = self._thermal_storage.in_flows
+            self.th_storage_outflows = self._thermal_storage.out_flows
+            self.th_storage_content = self._thermal_storage.content
         else:
             self._thermal_storage = None
 
