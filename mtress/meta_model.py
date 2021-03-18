@@ -110,7 +110,7 @@ class MetaModel:
             'exclusive_grid_connection', True)
 
         # Create relevant temperature list
-        temperature_levels = temps['intermediate']
+        temperature_levels = temps['additional']
         temperature_levels.append(temps['heating'])
         temperature_levels.append(temps['heating']
                                   - temps['heat_drop_heating'])
