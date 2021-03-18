@@ -3,8 +3,8 @@
         "reference": 0,
         "dhw": 60,
         "heat_drop_exchanger_dhw": 5,
-        "heating": 40,
-        "heat_drop_heating": 10,
+        "forward_flow": 40,
+        "backward_flow": 30,
         "additional": [
             80
         ]

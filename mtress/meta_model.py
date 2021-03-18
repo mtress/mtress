@@ -111,9 +111,8 @@ class MetaModel:
 
         # Create relevant temperature list
         temperature_levels = temps['additional']
-        temperature_levels.append(temps['heating'])
-        temperature_levels.append(temps['heating']
-                                  - temps['heat_drop_heating'])
+        temperature_levels.append(temps['forward_flow'])
+        temperature_levels.append(temps['backward_flow'])
 
         # Ensure unique temperatures
         temperature_levels = list(set(temperature_levels))
@@ -402,9 +401,8 @@ class MetaModel:
             heat_layers=heat_layers,
             heat_demand=b_th_buildings,
             label="heat_exchanger",
-            forward_flow_temperature=temps['heating'],
-            backward_flow_temperature=(temps['heating']
-                                       - temps['heat_drop_heating']))
+            forward_flow_temperature=temps['forward_flow'],
+            backward_flow_temperature=(temps['backward_flow']))
 
         d_sh = Sink(label='d_sh',
                     inputs={b_th_buildings: Flow(
