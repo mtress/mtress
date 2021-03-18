@@ -100,6 +100,7 @@ def all_techs_model(number_of_time_steps=365 * 24,
                     variables[key1][key2] = time_series[key1][key2]
 
     variables["exclusive_grid_connection"] = True
+    variables["allow_missing_heat"] = False
     meta_model = MetaModel(**variables)
 
     if not silent:

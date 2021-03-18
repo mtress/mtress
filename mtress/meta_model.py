@@ -105,7 +105,7 @@ class MetaModel:
             del st
             st = None
         self.spec_co2 = kwargs.get('co2')
-        self.allow_missing_heat = kwargs.get('allow_missing_heat', True)
+        self.allow_missing_heat = kwargs.get('allow_missing_heat', False)
         self.exclusive_grid_connection = kwargs.get(
             'exclusive_grid_connection', True)
 
