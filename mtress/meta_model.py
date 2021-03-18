@@ -110,7 +110,7 @@ class MetaModel:
             'exclusive_grid_connection', True)
 
         # Create relevant temperature list
-        temperature_levels = temps['additional']
+        temperature_levels = temps.get('additional', list())
         temperature_levels.append(temps['forward_flow'])
         temperature_levels.append(temps['backward_flow'])
 

@@ -205,7 +205,7 @@ def test_fully_solar():
             "spec_generation": st_generation
         },
         "demand": {"heating": 3 * [heat_demand / 3]},
-        "temperatures": {"heat_drop_heating": 20}}
+        "temperatures": {"backward_flow": 20}}
     meta_model, params = run_model_template(custom_params=params)
 
     st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
@@ -235,7 +235,7 @@ def test_fully_solar_with_useless_storage():
         },
         "heat_storage": {"volume": 2},
         "demand": {"heating": 3 * [heat_demand / 3]},
-        "temperatures": {"heat_drop_heating": 20}}
+        "temperatures": {"backward_flow": 20}}
     meta_model, params = run_model_template(custom_params=params)
 
     st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
@@ -270,8 +270,8 @@ def test_partly_solar():
             "heating": 3 * [heat_demand / 3]
         },
         "temperatures": {
-            "heat_drop_heating": 20,
-            "intermediate": [30]}}
+            "backward_flow": 20,
+            "additional": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
@@ -314,8 +314,8 @@ def test_partly_solar_bad_timing():
             "heating": 3 * [heat_demand / 3]
         },
         "temperatures": {
-            "heat_drop_heating": 20,
-            "intermediate": [30]}}
+            "backward_flow": 20,
+            "additional": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
@@ -357,8 +357,8 @@ def test_partly_solar_with_storage():
         "heat_storage": {
             "volume": 1e3},  # gigantic storage, so capacity plays no role
         "temperatures": {
-            "heat_drop_heating": 20,
-            "intermediate": [30]}}
+            "backward_flow": 20,
+            "additional": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
@@ -398,8 +398,8 @@ def test_useless_solar():
             "heating": 3 * [heat_demand / 3]
         },
         "temperatures": {
-            "heat_drop_heating": 20,
-            "intermediate": [30]}}
+            "backward_flow": 20,
+            "additional": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
@@ -441,7 +441,7 @@ def test_heat_pump():
         "geothermal_heat_source": {"thermal_output": 1},
         "demand": {
             "heating": heat_demand},
-        "temperatures": {"heating": 35}}
+        "temperatures": {"forward_flow": 35}}
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
