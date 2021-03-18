@@ -418,8 +418,9 @@ def test_missing_heat():
     heat_demand = 0.3
 
     params = {
-        "demand": {
-            "heating": 3 * [heat_demand / 3]}}
+        "demand": {"heating": 3 * [heat_demand / 3]},
+        "allow_missing_heat": True
+    }
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
