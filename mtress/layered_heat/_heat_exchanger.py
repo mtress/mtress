@@ -37,8 +37,10 @@ class HeatExchanger:
         energy_system = heat_layers.energy_system
 
         if heat_layers.reference_temperature < backward_flow_temperature:
-            heat_drop_ratio = (celsius_to_kelvin(backward_flow_temperature)
-                               / celsius_to_kelvin(forward_flow_temperature))
+            heat_drop_ratio = ((backward_flow_temperature
+                                - heat_layers.reference_temperature)
+                               / (forward_flow_temperature
+                                  - heat_layers.reference_temperature))
             self.heat_drop_ratio = heat_drop_ratio
 
             heat_drop = solph.Transformer(
