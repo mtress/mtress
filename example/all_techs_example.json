@@ -1,13 +1,12 @@
 {
     "temperatures": {
-        "reference": 0,
+        "reference": 30,
         "dhw": 60,
         "heat_drop_exchanger_dhw": 5,
-        "heating": 40,
-        "heat_drop_heating": 10,
-        "intermediate": [
-            20,
-            30
+        "forward_flow": 40,
+        "backward_flow": 30,
+        "additional": [
+            80
         ]
     },
     "heat_pump": {

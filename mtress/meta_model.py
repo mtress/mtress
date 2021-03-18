@@ -5,12 +5,12 @@ import numpy as np
 import pandas as pd
 
 from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
-                         Model, Investment, constraints, custom,
+                         Model, Investment, constraints,
                          GenericStorage, NonConvex)
 
 from .layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
                            HeatExchanger)
-from .physics import (HHV_WP, TC_CONCRETE, H2O_HEAT_FUSION, H2O_DENSITY)
+from .physics import (HHV_WP, H2O_HEAT_FUSION, H2O_DENSITY)
 
 HIGH_VIRTUAL_COSTS = 1000
 
@@ -105,15 +105,14 @@ class MetaModel:
             del st
             st = None
         self.spec_co2 = kwargs.get('co2')
-        self.allow_missing_heat = kwargs.get('allow_missing_heat', True)
+        self.allow_missing_heat = kwargs.get('allow_missing_heat', False)
         self.exclusive_grid_connection = kwargs.get(
             'exclusive_grid_connection', True)
 
         # Create relevant temperature list
-        temperature_levels = temps['intermediate']
-        temperature_levels.append(temps['heating'])
-        temperature_levels.append(temps['heating']
-                                  - temps['heat_drop_heating'])
+        temperature_levels = temps.get('additional', list())
+        temperature_levels.append(temps['forward_flow'])
+        temperature_levels.append(temps['backward_flow'])
 
         # Ensure unique temperatures
         temperature_levels = list(set(temperature_levels))
@@ -435,9 +434,8 @@ class MetaModel:
             heat_layers=heat_layers,
             heat_demand=b_th_buildings,
             label="heat_exchanger",
-            forward_flow_temperature=temps['heating'],
-            backward_flow_temperature=(temps['heating']
-                                       - temps['heat_drop_heating']))
+            forward_flow_temperature=temps['forward_flow'],
+            backward_flow_temperature=(temps['backward_flow']))
 
         d_sh = Sink(label='d_sh',
                     inputs={b_th_buildings: Flow(
