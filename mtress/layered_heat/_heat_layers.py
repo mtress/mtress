@@ -43,6 +43,10 @@ class HeatLayers:
         self._temperature_levels = temperature_levels
         self._reference_temperature = reference_temperature
 
+        error_msg = "Reference temperature needs to be the lowest one."
+
+        assert reference_temperature < temperature_levels[0], error_msg
+
         if len(label) > 0:
             label = label + '_'
 
