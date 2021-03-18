@@ -36,6 +36,8 @@ class HeatLayers:
         self.b_th = dict()
         self.b_th_in = dict()
         # keep only unique values
+        if reference_temperature in temperature_levels:
+            temperature_levels.remove(reference_temperature)
         temperature_levels = list(set(temperature_levels))
         temperature_levels.sort()
         self._temperature_levels = temperature_levels

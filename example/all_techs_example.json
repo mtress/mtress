@@ -1,6 +1,6 @@
 {
     "temperatures": {
-        "reference": 0,
+        "reference": 30,
         "dhw": 60,
         "heat_drop_exchanger_dhw": 5,
         "forward_flow": 40,
