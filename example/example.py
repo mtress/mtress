@@ -99,6 +99,8 @@ def all_techs_model(number_of_time_steps=365 * 24,
                 else:
                     variables[key1][key2] = time_series[key1][key2]
 
+    variables["exclusive_grid_connection"] = True
+    variables["allow_missing_heat"] = False
     meta_model = MetaModel(**variables)
 
     if not silent:
@@ -121,7 +123,6 @@ def all_techs_model(number_of_time_steps=365 * 24,
     energy_system.results['meta'] = processing.meta_results(
         meta_model.model)
 
-    heat_demand = meta_model.thermal_demand().sum()
 
     if not silent:
         print('\n')
@@ -131,55 +132,58 @@ def all_techs_model(number_of_time_steps=365 * 24,
         print("Own Consumption: {:.1f} %".format(meta_model.own_consumption() * 100))
         print("Self Sufficiency: {:.1f} %".format(meta_model.self_sufficiency() * 100))
 
+        heat_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
+
         print('\n')
         print("Heat demand: {:6.3f}".format(heat_demand))
         print("    missing: {:6.3f}".format(
-            meta_model.missing_heat().sum()))
-        print("Storage out: {:6.3f}".format(
-            meta_model.heat_storage_out().sum()))
-        print("         in: {:6.3f}".format(
-            meta_model.heat_storage_in().sum()))
-        losses = (meta_model.heat_storage_in().sum()
-                  - meta_model.heat_storage_out().sum())
+            meta_model.aggregate_flows(meta_model.missing_heat_flow).sum()))
+
+        hs_in = meta_model._thermal_storage.combined_inflow.sum()
+        hs_out = meta_model._thermal_storage.combined_outflow.sum()
+        print("Storage out: {:6.3f}".format(hs_out))
+        print("         in: {:6.3f}".format(hs_in))
+        losses = hs_in - hs_out
         print("{:04.1f} % loss: {:6.3f}".format(100 * losses / heat_demand,
                                                 losses))
 
         print("")
+        gt_generation = meta_model.aggregate_flows(meta_model.gt_input_flows).sum()
         print("{:04.1f} % geothermal coverage: {:.3f}".format(
-            100 * meta_model.heat_geothermal().sum() / heat_demand,
-            meta_model.heat_geothermal().sum()))
+            100 * gt_generation / heat_demand, gt_generation))
+        bhp_generation = meta_model.aggregate_flows(meta_model.hp_flows).sum()
         print("{:04.1f} % heat pump coverage: {:.3f}".format(
-            100 * meta_model.heat_heat_pump().sum() / heat_demand,
-            meta_model.heat_heat_pump().sum()))
+            100 * bhp_generation / heat_demand, bhp_generation))
+        st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
         print("{:04.1f} % solar coverage: {:.3f}".format(
-            100 * meta_model.heat_solar_thermal().sum() / heat_demand,
-            meta_model.heat_solar_thermal().sum()))
+            100 * st_generation / heat_demand, st_generation))
+        chp_th_generation = meta_model.aggregate_flows(meta_model.chp_heat_flows).sum()
         print("{:04.1f} % CHP coverage: {:.3f}".format(
-            100 * meta_model.heat_chp().sum() / heat_demand,
-            meta_model.heat_chp().sum()))
+            100 * chp_th_generation / heat_demand, chp_th_generation))
+        pellet_generation = meta_model.aggregate_flows(meta_model.pellet_heat_flows).sum()
         print("{:04.1f} % pellet coverage: {:.3f}".format(
-            100 * meta_model.heat_pellet().sum() / heat_demand,
-            meta_model.heat_pellet().sum()))
+            100 * pellet_generation / heat_demand, pellet_generation))
+        boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
         print("{:04.1f} % boiler coverage: {:.3f}".format(
-            100 * meta_model.heat_boiler().sum() / heat_demand,
-            meta_model.heat_boiler().sum()))
+            100 * boiler_generation / heat_demand, boiler_generation))
+        p2h_generation = meta_model.aggregate_flows(meta_model.p2h_flows).sum()
         print("{:04.1f} % power2heat coverage: {:.3f}".format(
-            100 * meta_model.heat_p2h().sum() / heat_demand,
-            meta_model.heat_p2h().sum()))
+            100 * p2h_generation / heat_demand, p2h_generation))
 
-        el_demand = meta_model.el_demand().sum()
+        el_demand = meta_model.aggregate_flows(meta_model.el_demand_flows).sum()
 
         print('\n')
         print("Electricity demand: {:.3f}".format(el_demand))
+
+        pv_generation = meta_model.aggregate_flows(meta_model.pv_flows).sum()
         print("{:04.1f} % PV coverage: {:.3f}".format(
-            100 * meta_model.el_pv().sum() / el_demand,
-            meta_model.el_pv().sum()))
+            100 *pv_generation / el_demand, pv_generation))
+        chp_el_generation = meta_model.aggregate_flows(meta_model.chp_el_flows).sum()
         print("{:04.1f} % CHP coverage: {:.3f}".format(
-            100 * meta_model.el_chp().sum() / el_demand,
-            meta_model.el_chp().sum()))
+            100 * chp_el_generation / el_demand, chp_el_generation))
+        wt_generation = meta_model.aggregate_flows(meta_model.wt_flows).sum()
         print("{:04.1f} % WT coverage: {:.3f}".format(
-            100 * meta_model.el_wt().sum() / el_demand,
-            meta_model.el_wt().sum()))
+            100 * wt_generation / el_demand, wt_generation))
 
     return meta_model
 

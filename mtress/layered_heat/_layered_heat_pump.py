@@ -22,25 +22,8 @@ class LayeredHeatPump:
     Clustered heat pump for modeling power flows
     with variable temperature levels.
     Connects any input to any output using solph.Transformer
-    with shared resources, see https://arxiv.org/abs/2012.12664
-
-Basics of the MTRESS model
-
-    Resources      Technologies
-
-        (E)--------->[Rod]
-                                          Flows:
-                ─────────────────          E --> Rod, E --> HP2, E --> HP1, E --> HP0
-               │                │          A --> HP2, A --> HP1, A --> HP0
-               │     [HP2]      │          1HP --> HP2, 1HP --> HP1, 1HP -->HP0
-        (A)    │                │
-               │      [HP1]     │
-               │                │
-               │(1HP) [HP0]     │
-                ─────────────────
-
+    with shared resourcess, see https://arxiv.org/abs/2012.12664
     """
-
     def __init__(self,
                  energy_system,
                  heat_layers,
@@ -115,6 +98,9 @@ Basics of the MTRESS model
                         heat_source: (cop-1) / cop,
                         electricity_bus: 1/cop,
                         heat_layers.b_th_in[target_temperature]: 1})
+
+                self.heat_out_flows.append((heat_pump_level.label,
+                                            heat_layers.b_th_in[target_temperature].label))
 
                 energy_system.add(heat_pump_level)
 

@@ -54,8 +54,9 @@ class MultiLayerStorage:
         self._fixed_losses = {"abs": {},
                               "rel": {}}
 
-        self._in_flows = list()
-        self._out_flows = list()
+        self.in_flows = dict()
+        self.out_flows = dict()
+        self.content = dict()
 
         if len(label) > 0:
             self.label = label + '_'
@@ -107,8 +108,9 @@ class MultiLayerStorage:
                 fixed_losses_absolute=hs_fixed_losses_absolute,
                 fixed_losses_relative=hs_fixed_losses_relative
             )
-            self._in_flows.append((b_th_level.label, s_heat.label))
-            self._out_flows.append((s_heat.label, b_th_level.label))
+            self.in_flows[temperature] = (b_th_level.label, s_heat.label)
+            self.out_flows[temperature] = (s_heat.label, b_th_level.label)
+            self.content[temperature] = (s_heat.label, 'None')
 
             self._h_storage_comp.append(s_heat)
             self.energy_system.add(s_heat)
@@ -130,7 +132,7 @@ class MultiLayerStorage:
     @property
     def combined_inflow(self):
         heat = 0
-        for res in self._in_flows:
+        for res in self.in_flows.values():
             heat += self.energy_system.results['main'][res][
                 'sequences']['flow']
 
@@ -139,7 +141,7 @@ class MultiLayerStorage:
     @property
     def combined_outflow(self):
         heat = 0
-        for res in self._out_flows:
+        for res in self.out_flows.values():
             heat += self.energy_system.results['main'][res][
                 'sequences']['flow']
 
