@@ -9,12 +9,11 @@ SPDX-License-Identifier: MIT
 import math
 import numpy as np
 
-from test_models_any_grid import (chp_revenue,
-                                  gas_costs,
-                                  electricity_costs,
-                                  run_model_template,
-                                  HIGH_ACCURACY,
-                                  OKAY_ACCURACY)
+from test_core import (chp_revenue,
+                       gas_costs,
+                       electricity_costs,
+                       run_model_template,
+                       HIGH_ACCURACY)
 
 
 def test_electricity_demand_ap():
