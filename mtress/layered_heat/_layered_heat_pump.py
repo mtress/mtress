@@ -80,8 +80,8 @@ class LayeredHeatPump:
                 hp_str = label+source+"_"+temperature_higher_str
 
                 cop = calc_cop(
-                    temp_input_high=celsius_to_kelvin(temperature_lower),
-                    temp_output_high=celsius_to_kelvin(target_temperature),
+                    temp_input=celsius_to_kelvin(temperature_lower),
+                    temp_output=celsius_to_kelvin(target_temperature),
                     cop_0_35=cop_0_35)
 
                 self.cop[(source, target_temperature)] = cop
