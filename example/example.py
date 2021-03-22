@@ -185,6 +185,15 @@ def all_techs_model(number_of_time_steps=365 * 24,
         print("{:04.1f} % WT coverage: {:.3f}".format(
             100 * wt_generation / el_demand, wt_generation))
 
+        print("\n")
+        total_electricity_generation = pv_generation + wt_generation + chp_el_generation
+        if total_electricity_generation > el_demand:
+            renewable_share_el = 100 * (pv_generation + wt_generation) / total_electricity_generation
+        else:
+            renewable_share_el = 100 * (pv_generation + wt_generation) / el_demand
+        print("{:04.1f} % Renewable share of electricity: {:.3f}".format(
+            renewable_share_el, pv_generation + wt_generation))
+
     return meta_model
 
 
