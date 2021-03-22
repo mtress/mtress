@@ -5,8 +5,7 @@ import numpy as np
 import pandas as pd
 
 from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
-                         Model, Investment, constraints,
-                         GenericStorage, NonConvex)
+                         Model, Investment, constraints, GenericStorage, NonConvex)
 
 from .layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
                            HeatExchanger)
@@ -268,6 +267,7 @@ class MetaModel:
                                  temperature_levels=temperature_levels,
                                  reference_temperature=temps['reference'])
 
+        # Heat Storage
         if hs:
             self._thermal_storage = MultiLayerStorage(
                 diameter=hs['diameter'],
@@ -532,8 +532,8 @@ class MetaModel:
             self.missing_heat_flow.append((missing_heat.label,
                                            heat_layers.b_th_in_highest.label))
 
+        # boiler
         if boiler:
-            # boiler
             t_boiler = Transformer(
                 label='t_boiler',
                 inputs={b_fossil_gas: Flow()},
@@ -548,8 +548,8 @@ class MetaModel:
                                          heat_layers.b_th_in_highest.label))
             energy_system.add(t_boiler)
 
+        # wood pellet boiler
         if pellet_boiler:
-            # wood pellet boiler
             t_pellet = Transformer(
                 label='t_pellet',
                 inputs={b_pellet: Flow()},
@@ -565,8 +565,8 @@ class MetaModel:
                                          heat_layers.b_th_in_highest.label))
             energy_system.add(t_pellet)
 
+        # CHP
         if chp:
-            # CHP
             b_gas_chp = Bus(label='b_gas_chp')
 
             if self.biomethane_fraction == 1:
@@ -650,7 +650,7 @@ class MetaModel:
 
             energy_system.add(t_pv, b_el_pv)
 
-        # power to heat
+        # Power to Heat
         if p2h:
             t_p2h = Transformer(
                 label='t_p2h',
@@ -666,7 +666,7 @@ class MetaModel:
             self.p2h_el_flows.append((b_eldist.label, t_p2h.label))
             self.p2h_th_flows.append((t_p2h.label, heat_layers.b_th_in_highest.label))
 
-        # wind turbine
+        # Wind Turbine
         if wt:
             b_el_wt = Bus(
                 label="b_el_wt",
@@ -684,8 +684,8 @@ class MetaModel:
 
             energy_system.add(t_wt, b_el_wt)
 
+        # Battery
         if battery:
-            # Battery
             s_battery = GenericStorage(
                 label='s_battery',
                 inputs={
@@ -725,7 +725,7 @@ class MetaModel:
         those timeseries to a joint timeseries you can use this function.
 
         :param flows_to_aggregate: List of string tuples describing the flows to aggregate
-        :return: Aggregates timeseries
+        :return: Aggregated timeseries
         """
         res = np.zeros(self.number_of_time_steps)
         for flow in flows_to_aggregate:
@@ -783,10 +783,14 @@ class MetaModel:
         el_export = self.aggregate_flows(self.electricity_export_flows).sum()
 
         if el_production > 0:
-            oc = 1 - (el_export / el_production)
+            own_consumption = 1 - (el_export / el_production)
         else:
-            oc = 1
-        return np.round(oc, 3)
+            own_consumption = 1
+
+        # Check if own consumption is not nan
+        assert own_consumption == own_consumption
+
+        return np.round(own_consumption, 3)
 
     def self_sufficiency(self):
         """
@@ -797,5 +801,9 @@ class MetaModel:
         el_import = self.aggregate_flows(self.electricity_import_flows).sum()
         el_demand = self.aggregate_flows(self.demand_el_flows).sum()
 
-        res = 1 - (el_import / el_demand)
-        return np.round(res, 3)
+        self_sufficiency = 1 - (el_import / el_demand)
+
+        # Check if self sufficiency is not nan
+        assert self_sufficiency == self_sufficiency
+
+        return np.round(self_sufficiency, 3)
