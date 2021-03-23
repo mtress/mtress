@@ -16,13 +16,13 @@ from test_core import (run_model_template,
 def test_pv_export():
     params = {"pv": {
         "nominal_power": 2,
-        "feed_in_tariff": 75,
+        "feed_in_subsidy": 75,
         "spec_generation": [0, 2, 1]
     }}
     meta_model, params = run_model_template(custom_params=params)
 
-    pv_timeseries = meta_model.aggregate_flows(meta_model.pv_flows)
-    el_export_timeseries = meta_model.aggregate_flows(meta_model.el_export_flows)
+    pv_timeseries = meta_model.aggregate_flows(meta_model.pv_el_flows)
+    el_export_timeseries = meta_model.aggregate_flows(meta_model.electricity_export_flows)
 
     for i in range(3):
         assert math.isclose(pv_timeseries[i],

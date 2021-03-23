@@ -10,7 +10,7 @@ import math
 import numpy as np
 
 from test_core import (chp_revenue,
-                       gas_costs,
+                       gas_costs_chp,
                        electricity_costs,
                        run_model_template,
                        HIGH_ACCURACY)
@@ -25,11 +25,11 @@ def test_electricity_demand_ap():
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
         0,
         abs_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.el_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_el_flows).sum(),
         electricity_demand.sum(),
         abs_tol=1e-5)
 
@@ -50,11 +50,11 @@ def test_electricity_demand_lp():
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
         0,
         abs_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.el_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_el_flows).sum(),
         electricity_demand.sum())
 
     assert math.isclose(meta_model.operational_costs(),
@@ -74,11 +74,11 @@ def test_electricity_demand_all_costs():
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
         0,
         abs_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.el_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_el_flows).sum(),
         electricity_demand.sum())
 
     assert math.isclose(meta_model.operational_costs(),
@@ -104,18 +104,18 @@ def test_chp():
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
         heat_demand.sum())
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.chp_heat_flows).sum(),
+        meta_model.aggregate_flows(meta_model.chp_th_flows).sum(),
         heat_demand.sum(),
         rel_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.el_import_flows).sum(),
+        meta_model.aggregate_flows(meta_model.electricity_import_flows).sum(),
         0,
         abs_tol=HIGH_ACCURACY)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.el_export_flows).sum(),
+        meta_model.aggregate_flows(meta_model.electricity_export_flows).sum(),
         electricity_export.sum(),
         rel_tol=HIGH_ACCURACY)
     chp_export_flow = sum(meta_model.energy_system.results['main'][
@@ -124,7 +124,7 @@ def test_chp():
                         electricity_export.sum(),
                         rel_tol=HIGH_ACCURACY)
     optimiser_costs = meta_model.operational_costs()
-    manual_costs = (gas_costs(gas_demand, params)
+    manual_costs = (gas_costs_chp(gas_demand, params)
                     - chp_revenue(electricity_export,
                                   electricity_demand.sum(),
                                   params))

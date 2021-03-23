@@ -44,19 +44,19 @@
         "funding_hours_per_year": 3500,
         "electric_output": 0.1,
         "electric_efficiency": 0.4,
-        "feed_in_subsidy": 7.5,
-        "own_consumption_subsidy": 3.5,
+        "feed_in_subsidy": 75,
+        "own_consumption_subsidy": 35,
         "thermal_output": 0.15,
         "thermal_efficiency": 0.5,
         "gas_input": 0.27
     },
     "pv": {
         "nominal_power": 1,
-        "feed_in_tariff": 75
+        "feed_in_subsidy": 75
     },
     "wind_turbine": {
         "nominal_power": 1,
-        "feed_in_tariff": 75
+        "feed_in_subsidy": 75
     },
     "solar_thermal": {
         "area": 0
@@ -80,12 +80,13 @@
         "electricity": {
             "demand_rate": 15000,
             "slp_price": 300,
-            "surcharge": 17
+            "surcharge": 17,
+            "eeg_levy": 64.123
         },
-        "fossil_gas": 35,
-        "biomethane": 95,
-        "wood_pellet": 300,
-        "eeg_levy": 64.123
+        "gas": {"fossil_gas": 35,
+                "biomethane": 95,
+                "energy_tax": 5.5},
+        "wood_pellet": 300
     },
     "co2": {
         "el_in": 0.427,

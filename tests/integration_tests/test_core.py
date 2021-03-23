@@ -71,14 +71,19 @@ def electricity_costs(electricity_demand, params, time_range):
 
 
 def gas_costs(gas_demand, params):
-    return sum(gas_demand * np.array(params["energy_cost"]["fossil_gas"]))
+    return sum(gas_demand * np.array(params["energy_cost"]['gas']["fossil_gas"]))
+
+
+def gas_costs_chp(gas_demand, params):
+    return gas_costs(gas_demand, params) - \
+           sum(gas_demand * np.array(params["energy_cost"]['gas']["energy_tax"]))
 
 
 def chp_revenue(export, own_consumption, params):
     # TODO: Consider funding hours per year
     feed_in_revenue = (export * (params["energy_cost"]["electricity"]["market"]
                        + params["chp"]["feed_in_subsidy"])).sum()
-    oc_costs = own_consumption * (params["energy_cost"]['eeg_levy']
+    oc_costs = own_consumption * (params["energy_cost"]['electricity']['eeg_levy']
                                   - params["chp"]["own_consumption_subsidy"])
     return feed_in_revenue - oc_costs
 
@@ -86,9 +91,9 @@ def chp_revenue(export, own_consumption, params):
 def test_empty_template():
     meta_model, params = run_model_template()
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    el_demand = meta_model.aggregate_flows(meta_model.el_demand_flows).sum()
-    el_generation = meta_model.aggregate_flows(meta_model.el_generation_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
+    el_generation = meta_model.aggregate_flows(meta_model.production_el_flows).sum()
 
     assert math.isclose(thermal_demand, 0, abs_tol=HIGH_ACCURACY)
     assert math.isclose(el_demand, 0, abs_tol=HIGH_ACCURACY)
@@ -105,7 +110,7 @@ def test_missing_heat():
     }
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
     missing_heat = meta_model.aggregate_flows(meta_model.missing_heat_flow).sum()
 
     assert math.isclose(thermal_demand, heat_demand)

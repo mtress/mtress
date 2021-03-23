@@ -32,10 +32,10 @@ def test_heat_pump_r0_b0():
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(
-        meta_model.th_demand_flows).sum()
-    bhp_generation = meta_model.aggregate_flows(meta_model.hp_flows).sum()
+        meta_model.demand_th_flows).sum()
+    bhp_generation = meta_model.aggregate_flows(meta_model.bhp_th_flows).sum()
 
-    el_import = meta_model.aggregate_flows(meta_model.el_import_flows).sum()
+    el_import = meta_model.aggregate_flows(meta_model.electricity_import_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand.sum())
     assert math.isclose(bhp_generation, heat_demand.sum(),
@@ -68,10 +68,10 @@ def test_heat_pump_r0_b30():
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(
-        meta_model.th_demand_flows).sum()
-    bhp_generation = meta_model.aggregate_flows(meta_model.hp_flows).sum()
+        meta_model.demand_th_flows).sum()
+    bhp_generation = meta_model.aggregate_flows(meta_model.bhp_th_flows).sum()
 
-    el_import = meta_model.aggregate_flows(meta_model.el_import_flows).sum()
+    el_import = meta_model.aggregate_flows(meta_model.electricity_import_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand.sum())
     assert math.isclose(bhp_generation, heat_demand.sum(),
@@ -104,10 +104,10 @@ def test_heat_pump_r30_b30():
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(
-        meta_model.th_demand_flows).sum()
-    bhp_generation = meta_model.aggregate_flows(meta_model.hp_flows).sum()
+        meta_model.demand_th_flows).sum()
+    bhp_generation = meta_model.aggregate_flows(meta_model.bhp_th_flows).sum()
 
-    el_import = meta_model.aggregate_flows(meta_model.el_import_flows).sum()
+    el_import = meta_model.aggregate_flows(meta_model.electricity_import_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand.sum())
     assert math.isclose(bhp_generation, heat_demand.sum(),
