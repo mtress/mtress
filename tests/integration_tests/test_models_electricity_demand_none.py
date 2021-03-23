@@ -16,7 +16,7 @@ from test_core import (run_model_template,
 def test_pv_export():
     params = {"pv": {
         "nominal_power": 2,
-        "feed_in_tariff": 75,
+        "feed_in_subsidy": 75,
         "spec_generation": [0, 2, 1]
     }}
     meta_model, params = run_model_template(custom_params=params)

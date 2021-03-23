@@ -107,7 +107,7 @@ def test_chp():
         meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
         heat_demand.sum())
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.chp_heat_flows).sum(),
+        meta_model.aggregate_flows(meta_model.chp_th_flows).sum(),
         heat_demand.sum(),
         rel_tol=1e-5)
     assert math.isclose(

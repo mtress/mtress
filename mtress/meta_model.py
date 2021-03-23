@@ -156,8 +156,8 @@ class MetaModel:
         self.chp_el_flows = list()
         self.chp_el_funded_flow = None
         self.chp_el_unfunded_flow = None
-        self.bhp_th_flow = list()
-        self.bhp_el_flow = list()
+        self.bhp_th_flows = list()
+        self.bhp_el_flows = list()
         self.p2h_th_flows = list()
         self.p2h_el_flows = list()
         self.boiler_th_flows = list()
@@ -311,9 +311,9 @@ class MetaModel:
                     cop_0_35=bhp["cop_0_35"],
                     label="heat_pump")
 
-                self.bhp_th_flow.extend(heat_pump.heat_out_flows)
-                self.bhp_el_flow.append((b_eldist.label,
-                                         b_el_bhp.label))
+                self.bhp_th_flows.extend(heat_pump.heat_out_flows)
+                self.bhp_el_flows.append((b_eldist.label,
+                                          b_el_bhp.label))
             else:
                 heat_pump = None
             self.heat_pump = heat_pump
@@ -713,7 +713,7 @@ class MetaModel:
 
         self.production_el_flows = self.wt_el_flows + self.pv_el_flows + self.chp_el_flows
         self.gas_flows = self.fossil_gas_import_flows + self.biomethane_import_flows
-        self.demand_el_flows = self.demand_el_flows + self.p2h_el_flows + self.bhp_el_flow
+        self.demand_el_flows = self.demand_el_flows + self.p2h_el_flows + self.bhp_el_flows
 
         self.energy_system = energy_system
         self.model = model

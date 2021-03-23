@@ -71,7 +71,7 @@ def electricity_costs(electricity_demand, params, time_range):
 
 
 def gas_costs(gas_demand, params):
-    return sum(gas_demand * np.array(params["energy_cost"]["fossil_gas"]))
+    return sum(gas_demand * np.array(params["energy_cost"]['gas']["fossil_gas"]))
 
 
 def chp_revenue(export, own_consumption, params):
