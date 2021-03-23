@@ -33,7 +33,7 @@ def test_heat_pump_r0_b0():
 
     thermal_demand = meta_model.aggregate_flows(
         meta_model.demand_th_flows).sum()
-    bhp_generation = meta_model.aggregate_flows(meta_model.hp_flows).sum()
+    bhp_generation = meta_model.aggregate_flows(meta_model.bhp_th_flows).sum()
 
     el_import = meta_model.aggregate_flows(meta_model.el_import_flows).sum()
 
@@ -69,7 +69,7 @@ def test_heat_pump_r0_b30():
 
     thermal_demand = meta_model.aggregate_flows(
         meta_model.demand_th_flows).sum()
-    bhp_generation = meta_model.aggregate_flows(meta_model.hp_flows).sum()
+    bhp_generation = meta_model.aggregate_flows(meta_model.bhp_th_flows).sum()
 
     el_import = meta_model.aggregate_flows(meta_model.el_import_flows).sum()
 
@@ -105,7 +105,7 @@ def test_heat_pump_r30_b30():
 
     thermal_demand = meta_model.aggregate_flows(
         meta_model.demand_th_flows).sum()
-    bhp_generation = meta_model.aggregate_flows(meta_model.hp_flows).sum()
+    bhp_generation = meta_model.aggregate_flows(meta_model.bhp_th_flows).sum()
 
     el_import = meta_model.aggregate_flows(meta_model.el_import_flows).sum()
 

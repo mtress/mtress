@@ -23,11 +23,11 @@ def test_gas_boiler():
         "demand": {"heating": heat_demand}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    el_demand = meta_model.aggregate_flows(meta_model.el_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
 
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
-    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
+    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_th_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand.sum())
     assert math.isclose(boiler_generation, heat_demand.sum(),
@@ -50,11 +50,11 @@ def test_booster():
             "dhw": dhw_demand}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    el_demand = meta_model.aggregate_flows(meta_model.el_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
 
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
-    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
+    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_th_flows).sum()
 
     assert math.isclose(thermal_demand, dhw_demand.sum())
     assert math.isclose(boiler_generation.sum(), gas_demand.sum(),
@@ -83,11 +83,11 @@ def test_booster_heat_drop():
         "temperatures": {"heat_drop_exchanger_dhw": 10}}  # +50% for booster
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    el_demand = meta_model.aggregate_flows(meta_model.el_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
 
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
-    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
+    p2h_generation = meta_model.aggregate_flows(meta_model.p2h_th_flows).sum()
 
     assert math.isclose(thermal_demand, dhw_demand.sum())
     assert math.isclose(boiler_generation, gas_demand.sum(),

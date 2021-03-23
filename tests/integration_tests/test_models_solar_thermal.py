@@ -35,7 +35,8 @@ def test_fully_solar():
         "temperatures": {"backward_flow": 20}}
     meta_model, params = run_model_template(custom_params=params)
 
-    st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
+    st_generation = meta_model.aggregate_flows(
+        meta_model.solar_thermal_th_flows).sum()
 
     assert math.isclose(st_generation, heat_demand,
                         rel_tol=HIGH_ACCURACY)
@@ -65,7 +66,8 @@ def test_fully_solar_with_useless_storage():
         "temperatures": {"backward_flow": 20}}
     meta_model, params = run_model_template(custom_params=params)
 
-    st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
+    st_generation = meta_model.aggregate_flows(
+        meta_model.solar_thermal_th_flows).sum()
 
     assert math.isclose(st_generation, heat_demand,
                         rel_tol=1e-3)  # good enough
@@ -102,8 +104,8 @@ def test_partly_solar():
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
-    st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
+    st_generation = meta_model.aggregate_flows(meta_model.solar_thermal_th_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand,
                         rel_tol=HIGH_ACCURACY)
@@ -145,8 +147,8 @@ def test_partly_solar_bad_timing():
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
-    st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
+    st_generation = meta_model.aggregate_flows(meta_model.solar_thermal_th_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand,
                         rel_tol=HIGH_ACCURACY)
@@ -188,8 +190,8 @@ def test_partly_solar_with_storage():
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
-    st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
+    st_generation = meta_model.aggregate_flows(meta_model.solar_thermal_th_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand,
                         rel_tol=HIGH_ACCURACY)
@@ -229,8 +231,8 @@ def test_useless_solar():
     meta_model, params = run_model_template(custom_params=params)
 
     thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
-    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
-    st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
+    boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
+    st_generation = meta_model.aggregate_flows(meta_model.solar_thermal_th_flows).sum()
 
     assert math.isclose(thermal_demand, heat_demand,
                         rel_tol=HIGH_ACCURACY)
