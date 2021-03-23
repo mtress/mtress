@@ -22,7 +22,7 @@ def test_pv_export():
     meta_model, params = run_model_template(custom_params=params)
 
     pv_timeseries = meta_model.aggregate_flows(meta_model.pv_el_flows)
-    el_export_timeseries = meta_model.aggregate_flows(meta_model.el_export_flows)
+    el_export_timeseries = meta_model.aggregate_flows(meta_model.electricity_export_flows)
 
     for i in range(3):
         assert math.isclose(pv_timeseries[i],

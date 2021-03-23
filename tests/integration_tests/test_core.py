@@ -78,7 +78,7 @@ def chp_revenue(export, own_consumption, params):
     # TODO: Consider funding hours per year
     feed_in_revenue = (export * (params["energy_cost"]["electricity"]["market"]
                        + params["chp"]["feed_in_subsidy"])).sum()
-    oc_costs = own_consumption * (params["energy_cost"]['eeg_levy']
+    oc_costs = own_consumption * (params["energy_cost"]['electricity']['eeg_levy']
                                   - params["chp"]["own_consumption_subsidy"])
     return feed_in_revenue - oc_costs
 

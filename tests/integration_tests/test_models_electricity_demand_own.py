@@ -111,7 +111,7 @@ def test_chp():
         heat_demand.sum(),
         rel_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.el_import_flows).sum(),
+        meta_model.aggregate_flows(meta_model.electricity_import_flows).sum(),
         0,
         abs_tol=HIGH_ACCURACY)
     assert math.isclose(

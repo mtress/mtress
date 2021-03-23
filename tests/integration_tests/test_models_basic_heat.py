@@ -54,12 +54,15 @@ def test_booster():
     el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
 
     boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
+    p2h_consumption = meta_model.aggregate_flows(meta_model.p2h_el_flows).sum()
     p2h_generation = meta_model.aggregate_flows(meta_model.p2h_th_flows).sum()
 
     assert math.isclose(thermal_demand, dhw_demand.sum())
+    assert math.isclose(p2h_generation.sum(), thermal_demand.sum(),
+                        rel_tol=HIGH_ACCURACY)
     assert math.isclose(boiler_generation.sum(), gas_demand.sum(),
                         rel_tol=HIGH_ACCURACY)
-    assert math.isclose(p2h_generation, electricity_demand.sum(),
+    assert math.isclose(p2h_consumption, electricity_demand.sum(),
                         rel_tol=HIGH_ACCURACY)
     assert math.isclose(el_demand, electricity_demand.sum(),
                         rel_tol=HIGH_ACCURACY)
@@ -87,12 +90,15 @@ def test_booster_heat_drop():
     el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
 
     boiler_generation = meta_model.aggregate_flows(meta_model.boiler_th_flows).sum()
+    p2h_consumption = meta_model.aggregate_flows(meta_model.p2h_el_flows).sum()
     p2h_generation = meta_model.aggregate_flows(meta_model.p2h_th_flows).sum()
 
     assert math.isclose(thermal_demand, dhw_demand.sum())
     assert math.isclose(boiler_generation, gas_demand.sum(),
                         rel_tol=HIGH_ACCURACY)
-    assert math.isclose(p2h_generation, electricity_demand.sum(),
+    assert math.isclose(p2h_generation, dhw_demand.sum(),
+                        rel_tol=HIGH_ACCURACY)
+    assert math.isclose(p2h_consumption, electricity_demand.sum(),
                         rel_tol=HIGH_ACCURACY)
     assert math.isclose(el_demand, electricity_demand.sum(),
                         rel_tol=HIGH_ACCURACY)
