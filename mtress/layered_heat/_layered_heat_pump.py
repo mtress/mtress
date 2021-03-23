@@ -80,8 +80,8 @@ class LayeredHeatPump:
                 hp_str = label+source+"_"+temperature_higher_str
 
                 cop = calc_cop(
-                    temp_input_high=celsius_to_kelvin(temperature_lower),
-                    temp_output_high=celsius_to_kelvin(target_temperature),
+                    temp_input=celsius_to_kelvin(temperature_lower),
+                    temp_output=celsius_to_kelvin(target_temperature),
                     cop_0_35=cop_0_35)
 
                 self.cop[(source, target_temperature)] = cop
@@ -98,6 +98,9 @@ class LayeredHeatPump:
                         heat_source: (cop-1) / cop,
                         electricity_bus: 1/cop,
                         heat_layers.b_th_in[target_temperature]: 1})
+
+                self.heat_out_flows.append((heat_pump_level.label,
+                                            heat_layers.b_th_in[target_temperature].label))
 
                 energy_system.add(heat_pump_level)
 
