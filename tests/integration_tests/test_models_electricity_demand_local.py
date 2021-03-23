@@ -12,7 +12,8 @@ import numpy as np
 from test_core import (chp_revenue,
                        gas_costs,
                        run_model_template,
-                       HIGH_ACCURACY)
+                       HIGH_ACCURACY,
+                       gas_costs_chp)
 
 
 def test_electricity_demand_ap():
@@ -119,7 +120,7 @@ def test_chp():
                         electricity_production.sum(),
                         rel_tol=HIGH_ACCURACY)
     optimiser_costs = meta_model.operational_costs()
-    manual_costs = (gas_costs(gas_demand, params)
+    manual_costs = (gas_costs_chp(gas_demand, params)
                     + electricity_demand.sum() * params[
                         "energy_cost"]["electricity"]["slp_price"]
                     - chp_revenue(electricity_export, 0, params))

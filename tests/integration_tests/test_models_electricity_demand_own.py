@@ -115,7 +115,7 @@ def test_chp():
         0,
         abs_tol=HIGH_ACCURACY)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.el_export_flows).sum(),
+        meta_model.aggregate_flows(meta_model.electricity_export_flows).sum(),
         electricity_export.sum(),
         rel_tol=HIGH_ACCURACY)
     chp_export_flow = sum(meta_model.energy_system.results['main'][

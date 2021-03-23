@@ -74,6 +74,11 @@ def gas_costs(gas_demand, params):
     return sum(gas_demand * np.array(params["energy_cost"]['gas']["fossil_gas"]))
 
 
+def gas_costs_chp(gas_demand, params):
+    return gas_costs(gas_demand, params) - \
+           sum(gas_demand * np.array(params["energy_cost"]['gas']["energy_tax"]))
+
+
 def chp_revenue(export, own_consumption, params):
     # TODO: Consider funding hours per year
     feed_in_revenue = (export * (params["energy_cost"]["electricity"]["market"]
