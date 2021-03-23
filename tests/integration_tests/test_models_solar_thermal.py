@@ -101,7 +101,7 @@ def test_partly_solar():
             "additional": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
     boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
     st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
 
@@ -144,7 +144,7 @@ def test_partly_solar_bad_timing():
             "additional": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
     boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
     st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
 
@@ -187,7 +187,7 @@ def test_partly_solar_with_storage():
             "additional": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
     boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
     st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
 
@@ -228,7 +228,7 @@ def test_useless_solar():
             "additional": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
     boiler_generation = meta_model.aggregate_flows(meta_model.boiler_flows).sum()
     st_generation = meta_model.aggregate_flows(meta_model.st_input_flows).sum()
 
@@ -249,7 +249,7 @@ def test_missing_heat():
     }
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
     missing_heat = meta_model.aggregate_flows(meta_model.missing_heat_flow).sum()
 
     assert math.isclose(thermal_demand, heat_demand)

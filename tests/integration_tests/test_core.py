@@ -86,9 +86,9 @@ def chp_revenue(export, own_consumption, params):
 def test_empty_template():
     meta_model, params = run_model_template()
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
-    el_demand = meta_model.aggregate_flows(meta_model.el_demand_flows).sum()
-    el_generation = meta_model.aggregate_flows(meta_model.el_generation_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
+    el_demand = meta_model.aggregate_flows(meta_model.demand_el_flows).sum()
+    el_generation = meta_model.aggregate_flows(meta_model.production_el_flows).sum()
 
     assert math.isclose(thermal_demand, 0, abs_tol=HIGH_ACCURACY)
     assert math.isclose(el_demand, 0, abs_tol=HIGH_ACCURACY)
@@ -105,7 +105,7 @@ def test_missing_heat():
     }
     meta_model, params = run_model_template(custom_params=params)
 
-    thermal_demand = meta_model.aggregate_flows(meta_model.th_demand_flows).sum()
+    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
     missing_heat = meta_model.aggregate_flows(meta_model.missing_heat_flow).sum()
 
     assert math.isclose(thermal_demand, heat_demand)

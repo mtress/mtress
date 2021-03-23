@@ -25,11 +25,11 @@ def test_electricity_demand_ap():
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
         0,
         abs_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.el_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_el_flows).sum(),
         electricity_demand.sum(),
         abs_tol=1e-5)
 
@@ -50,11 +50,11 @@ def test_electricity_demand_lp():
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
         0,
         abs_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.el_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_el_flows).sum(),
         electricity_demand.sum())
 
     assert math.isclose(meta_model.operational_costs(),
@@ -74,11 +74,11 @@ def test_electricity_demand_all_costs():
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
         0,
         abs_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.el_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_el_flows).sum(),
         electricity_demand.sum())
 
     assert math.isclose(meta_model.operational_costs(),
@@ -104,7 +104,7 @@ def test_chp():
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
+        meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
         heat_demand.sum())
     assert math.isclose(
         meta_model.aggregate_flows(meta_model.chp_heat_flows).sum(),
