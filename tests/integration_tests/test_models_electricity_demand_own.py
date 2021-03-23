@@ -9,80 +9,82 @@ SPDX-License-Identifier: MIT
 import math
 import numpy as np
 
-from test_models_any_grid import (chp_revenue,
-                                  gas_costs_chp,
-                                  electricity_costs,
-                                  run_model_template,
-                                  HIGH_ACCURACY,
-                                  OKAY_ACCURACY)
+from test_core import (chp_revenue,
+                       gas_costs,
+                       electricity_costs,
+                       run_model_template,
+                       HIGH_ACCURACY)
 
 
 def test_electricity_demand_ap():
     electricity_demand = np.full(3, 0.1)
 
     params = {
-        "demand": {"electricity_adjacent": electricity_demand},
+        "demand": {"electricity": electricity_demand},
         "energy_cost": {"electricity": {"demand_rate": 0}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
+        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
         0,
         abs_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.demand_el_flows).sum(),
+        meta_model.aggregate_flows(meta_model.el_demand_flows).sum(),
         electricity_demand.sum(),
         abs_tol=1e-5)
 
     assert math.isclose(meta_model.operational_costs(),
-                        electricity_demand.sum() * params[
-                            "energy_cost"]["electricity"]["slp_price"])
+                        electricity_costs(electricity_demand,
+                                          params,
+                                          meta_model.time_range))
 
 
 def test_electricity_demand_lp():
     electricity_demand = np.full(3, 0.1)
 
     params = {
-        "demand": {"electricity_adjacent": electricity_demand},
+        "demand": {"electricity": electricity_demand},
         "energy_cost": {"electricity": {
             "demand_rate": 1000,
             "AP": 0}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
+        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
         0,
         abs_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.demand_el_flows).sum(),
+        meta_model.aggregate_flows(meta_model.el_demand_flows).sum(),
         electricity_demand.sum())
 
     assert math.isclose(meta_model.operational_costs(),
-                        electricity_demand.sum() * params[
-                            "energy_cost"]["electricity"]["slp_price"])
+                        electricity_costs(electricity_demand,
+                                          params,
+                                          meta_model.time_range))
 
 
 def test_electricity_demand_all_costs():
     electricity_demand = np.full(3, 0.1)
 
     params = {
-        "demand": {"electricity_adjacent": electricity_demand},
+        "demand": {"electricity": electricity_demand},
         "energy_cost": {"electricity": {
             "demand_rate": 1000,
             "AP": [15, 20, 15]}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
+        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
         0,
         abs_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.demand_el_flows).sum(),
+        meta_model.aggregate_flows(meta_model.el_demand_flows).sum(),
         electricity_demand.sum())
 
     assert math.isclose(meta_model.operational_costs(),
-                        electricity_demand.sum() * params[
-                            "energy_cost"]["electricity"]["slp_price"])
+                        electricity_costs(electricity_demand,
+                                          params,
+                                          meta_model.time_range))
 
 
 def test_chp():
@@ -90,41 +92,42 @@ def test_chp():
     gas_demand = 2*heat_demand
     electricity_production = heat_demand
     electricity_demand = np.array([0, 1, 0.5])
-    electricity_export = electricity_production
+    electricity_export = electricity_production - electricity_demand
 
     params = {
         "chp": {"gas_input": 4,
                 "thermal_output": 2,
                 "electric_output": 2},
         "demand": {"heating": heat_demand,
-                   "electricity_adjacent": electricity_demand}}
+                   "electricity": electricity_demand},
+        "public_grid": False}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.demand_th_flows).sum(),
+        meta_model.aggregate_flows(meta_model.th_demand_flows).sum(),
         heat_demand.sum())
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.chp_th_flows).sum(),
+        meta_model.aggregate_flows(meta_model.chp_heat_flows).sum(),
         heat_demand.sum(),
         rel_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.electricity_import_flows).sum(),
-        electricity_demand.sum(),
+        meta_model.aggregate_flows(meta_model.el_import_flows).sum(),
+        0,
         abs_tol=HIGH_ACCURACY)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.electricity_export_flows).sum(),
+        meta_model.aggregate_flows(meta_model.el_export_flows).sum(),
         electricity_export.sum(),
         rel_tol=HIGH_ACCURACY)
     chp_export_flow = sum(meta_model.energy_system.results['main'][
                 ("b_el_chp_fund", "b_elxprt")]['sequences']['flow'])
     assert math.isclose(chp_export_flow,
-                        electricity_production.sum(),
+                        electricity_export.sum(),
                         rel_tol=HIGH_ACCURACY)
     optimiser_costs = meta_model.operational_costs()
-    manual_costs = (gas_costs_chp(gas_demand, params)
-                    + electricity_demand.sum() * params[
-                        "energy_cost"]["electricity"]["slp_price"]
-                    - chp_revenue(electricity_export, 0, params))
+    manual_costs = (gas_costs(gas_demand, params)
+                    - chp_revenue(electricity_export,
+                                  electricity_demand.sum(),
+                                  params))
     assert math.isclose(optimiser_costs,
                         manual_costs,
                         rel_tol=1e-5)
