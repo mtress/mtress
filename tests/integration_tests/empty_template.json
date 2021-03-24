@@ -86,11 +86,11 @@
     },
     "energy_cost": {
         "electricity": {
-            "demand_rate": 1000,
-            "surcharge": 17,
-            "slp_price": 300,
+            "demand_rate": 0,
+            "surcharge": 0,
+            "slp_price": 0,
             "market": [150, 200, 100],
-            "eeg_levy": 65
+            "eeg_levy": 0
         },
         "gas": {
             "fossil_gas": 35,
