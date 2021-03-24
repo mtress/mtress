@@ -92,6 +92,7 @@ def test_demand_supply_exclusive():
         electricity_import.sum(),
         abs_tol=HIGH_ACCURACY)
 
+    op_costs = meta_model.operational_costs()
     assert math.isclose(meta_model.operational_costs(),
                         electricity_costs(electricity_import,
                                           params,
@@ -102,6 +103,11 @@ def test_demand_supply_exclusive():
 def test_demand_supply_non_exclusive():
     electricity_demand = np.full(3, 0.1)
     electricity_generation = np.array([0.1, 0.5, 0])
+    electricity_balance = electricity_generation - electricity_demand
+    electricity_import = -electricity_balance
+    electricity_import[electricity_import < 0] = 0
+    electricity_export = electricity_balance
+    electricity_export[electricity_export < 0] = 0
 
     feed_in_subsidy = 1
     el_market_price = feed_in_subsidy/2
@@ -128,8 +134,13 @@ def test_demand_supply_non_exclusive():
         electricity_demand.sum(),
         abs_tol=HIGH_ACCURACY)
 
-    assert math.isclose(meta_model.operational_costs(),
-                        electricity_costs(electricity_demand,
+    op_costs = meta_model.operational_costs()  # -0.35
+    el_costs = electricity_costs(electricity_import,
                                           params,
                                           meta_model.time_range)
-                        - electricity_generation.sum() * feed_in_subsidy)
+    el_revenue = electricity_export.sum() * feed_in_subsidy
+    assert math.isclose(op_costs, el_costs - el_revenue)
+
+
+if __name__ == '__main__':
+    test_demand_supply_non_exclusive()
