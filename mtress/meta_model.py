@@ -192,14 +192,15 @@ class MetaModel:
 
         self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
 
+        self.grid_connection_in_costs = (
+                energy_cost['electricity']['surcharge']
+                + energy_cost['electricity']['market']
+                + self.spec_co2['el_in']
+                * self.spec_co2['price'])
         b_grid_connection_in = Bus(
             label="b_grid_connection_in",
             inputs={b_elgrid: Flow(
-                variable_costs=(
-                        energy_cost['electricity']['surcharge']
-                        + energy_cost['electricity']['market']
-                        + self.spec_co2['el_in']
-                        * self.spec_co2['price']),
+                variable_costs=self.grid_connection_in_costs,
                 investment=Investment(
                     ep_costs=energy_cost['electricity'][
                                  'demand_rate'] * self.time_range))},
@@ -223,8 +224,8 @@ class MetaModel:
                                               m_el_out.label))
 
         # Create gas buses if needed
+        b_fossil_gas = Bus(label="b_fossil_gas")
         if boiler or (chp and self.biomethane_fraction < 1):
-            b_fossil_gas = Bus(label="b_fossil_gas")
 
             gas_price = energy_cost['gas']['fossil_gas'] \
                         + self.spec_co2['fossil_gas'] * self.spec_co2['price']
@@ -391,8 +392,8 @@ class MetaModel:
                     inputs={b_st: Flow(nominal_value=st["area"])},
                     outputs={b_th_in_level: Flow(nominal_value=1)},
                     conversion_factors={
-                        b_st: (1 / st['spec_generation']
-                        ['ST_' + str(temp)]).to_list()})
+                        b_st: (1 / st['spec_generation'][
+                            'ST_' + str(temp)]).to_list()})
 
                 self.solar_thermal_th_flows.append((st_level_label,
                                                     b_th_in_level.label))
@@ -743,6 +744,11 @@ class MetaModel:
         for flow in self.virtual_costs_flows:
             costs -= HIGH_VIRTUAL_COSTS * self.energy_system.results['main'][flow][
                 'sequences']['flow'].sum()
+
+        if not self.exclusive_grid_connection:
+            electricity_import = self.energy_system.results['main'][(
+                'b_elgrid', 'grid_connection_in')]['sequences']['flow']
+            import_costs = electricity_import * self.grid_connection_in_costs
 
         return costs
 
