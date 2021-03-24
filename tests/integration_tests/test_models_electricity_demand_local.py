@@ -21,7 +21,7 @@ def test_electricity_demand_ap():
 
     params = {
         "demand": {"electricity_adjacent": electricity_demand},
-        "energy_cost": {"electricity": {"demand_rate": 0}}}
+        "energy_cost": {"electricity": {"demand_rate": 0.5}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
