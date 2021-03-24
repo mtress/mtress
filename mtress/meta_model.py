@@ -149,6 +149,7 @@ class MetaModel:
         self.electricity_import_flows = list()
         self.electricity_export_flows = list()
 
+        self.grid_el_flows = list()
         self.pv_el_flows = list()
         self.wt_el_flows = list()
         self.chp_gas_flows = list()
@@ -189,8 +190,7 @@ class MetaModel:
         # RLM customer for district and larger buildings
         m_el_in = Source(label='m_el_in',
                          outputs={b_elgrid: Flow()})
-
-        self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
+        self.grid_el_flows.append((m_el_in.label, b_elgrid.label))
 
         self.grid_connection_in_costs = (
                 energy_cost['electricity']['surcharge']
@@ -207,6 +207,9 @@ class MetaModel:
             outputs={b_eldist: Flow(nonconvex=NonConvex(),
                                     nominal_value=1e5,
                                     grid_connection=True)})
+
+        self.electricity_import_flows.append((b_elgrid.label,
+                                              b_grid_connection_in.label))
 
         # create external market to sell electricity to
         b_grid_connection_out = Bus(
@@ -747,7 +750,7 @@ class MetaModel:
 
         if not self.exclusive_grid_connection:
             electricity_import = self.energy_system.results['main'][(
-                'b_elgrid', 'grid_connection_in')]['sequences']['flow']
+                'b_elgrid', 'b_grid_connection_in')]['sequences']['flow']
             import_costs = electricity_import * self.grid_connection_in_costs
 
         return costs
@@ -762,8 +765,8 @@ class MetaModel:
         fossil_gas_import = self.aggregate_flows(self.fossil_gas_import_flows)
         biomethane_import = self.aggregate_flows(self.biomethane_import_flows)
         pellet_import = self.aggregate_flows(self.pellet_import_flows)
-        el_import = self.aggregate_flows(self.electricity_import_flows)
         el_export = self.aggregate_flows(self.electricity_export_flows)
+        el_import = self.aggregate_flows(self.grid_el_flows)
 
         co2_import_fossil_gas = fossil_gas_import * self.spec_co2['fossil_gas']
         co2_import_biomethane = biomethane_import * self.spec_co2['biomethane']
@@ -804,7 +807,7 @@ class MetaModel:
 
         :return: Self sufficiency
         """
-        el_import = self.aggregate_flows(self.electricity_import_flows).sum()
+        el_import = self.aggregate_flows(self.grid_el_flows).sum()
         el_demand = self.aggregate_flows(self.demand_el_flows).sum()
 
         self_sufficiency = 1 - (el_import / el_demand)
