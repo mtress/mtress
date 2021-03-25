@@ -86,15 +86,18 @@
     },
     "energy_cost": {
         "electricity": {
-            "demand_rate": 1000,
-            "surcharge": 17,
-            "slp_price": 300,
-            "market": [150, 200, 100]
+            "demand_rate": 0,
+            "surcharge": 0,
+            "slp_price": 0,
+            "market": [150, 200, 100],
+            "eeg_levy": 0
         },
-        "fossil_gas": 35,
-        "biomethane": 95,
-        "wood_pellet": 300,
-        "eeg_levy": 65
+        "gas": {
+            "fossil_gas": 35,
+            "biomethane": 95,
+            "energy_tax": 5
+        },
+        "wood_pellet": 300
     },
     "co2": {
         "fossil_gas": 0.2,
