@@ -149,13 +149,18 @@ class MetaModel:
         self.electricity_import_flows = list()
         self.electricity_export_flows = list()
 
+        self.grid_el_flows = list()
         self.pv_el_flows = list()
+        self.pv_export_flows = list()
         self.wt_el_flows = list()
+        self.wt_export_flows = list()
         self.chp_gas_flows = list()
         self.chp_th_flows = list()
         self.chp_el_flows = list()
-        self.chp_el_funded_flow = None
-        self.chp_el_unfunded_flow = None
+        self.chp_el_funded_flows = list()
+        self.chp_export_funded_flows = list()
+        self.chp_el_unfunded_flows = list()
+        self.chp_export_unfunded_flows = list()
         self.bhp_th_flows = list()
         self.bhp_el_flows = list()
         self.p2h_th_flows = list()
@@ -189,23 +194,26 @@ class MetaModel:
         # RLM customer for district and larger buildings
         m_el_in = Source(label='m_el_in',
                          outputs={b_elgrid: Flow()})
+        self.grid_el_flows.append((m_el_in.label, b_elgrid.label))
 
-        self.electricity_import_flows.append((m_el_in.label, b_elgrid.label))
-
+        self.grid_connection_in_costs = (
+                energy_cost['electricity']['surcharge']
+                + energy_cost['electricity']['market']
+                + self.spec_co2['el_in']
+                * self.spec_co2['price'])
         b_grid_connection_in = Bus(
             label="b_grid_connection_in",
             inputs={b_elgrid: Flow(
-                variable_costs=(
-                        energy_cost['electricity']['surcharge']
-                        + energy_cost['electricity']['market']
-                        + self.spec_co2['el_in']
-                        * self.spec_co2['price']),
+                variable_costs=self.grid_connection_in_costs,
                 investment=Investment(
                     ep_costs=energy_cost['electricity'][
                                  'demand_rate'] * self.time_range))},
             outputs={b_eldist: Flow(nonconvex=NonConvex(),
                                     nominal_value=1e5,
                                     grid_connection=True)})
+
+        self.electricity_import_flows.append((b_elgrid.label,
+                                              b_grid_connection_in.label))
 
         # create external market to sell electricity to
         b_grid_connection_out = Bus(
@@ -223,8 +231,8 @@ class MetaModel:
                                               m_el_out.label))
 
         # Create gas buses if needed
+        b_fossil_gas = Bus(label="b_fossil_gas")
         if boiler or (chp and self.biomethane_fraction < 1):
-            b_fossil_gas = Bus(label="b_fossil_gas")
 
             gas_price = energy_cost['gas']['fossil_gas'] \
                         + self.spec_co2['fossil_gas'] * self.spec_co2['price']
@@ -391,8 +399,8 @@ class MetaModel:
                     inputs={b_st: Flow(nominal_value=st["area"])},
                     outputs={b_th_in_level: Flow(nominal_value=1)},
                     conversion_factors={
-                        b_st: (1 / st['spec_generation']
-                        ['ST_' + str(temp)]).to_list()})
+                        b_st: (1 / st['spec_generation'][
+                            'ST_' + str(temp)]).to_list()})
 
                 self.solar_thermal_th_flows.append((st_level_label,
                                                     b_th_in_level.label))
@@ -566,7 +574,14 @@ class MetaModel:
             energy_system.add(t_pellet)
 
         # CHP
-        if chp:
+        if not chp:
+            self.chp_revenue_funded = 0
+            self.chp_revenue_unfunded = 0
+        else:
+            self.chp_revenue_funded = (energy_cost['electricity']['market']
+                                       + chp['feed_in_subsidy'])
+            self.chp_revenue_unfunded = energy_cost['electricity']['market']
+
             b_gas_chp = Bus(label='b_gas_chp')
 
             if self.biomethane_fraction == 1:
@@ -590,17 +605,21 @@ class MetaModel:
                 label="b_el_chp_fund",
                 outputs={
                     b_elxprt: Flow(
-                        variable_costs=-(energy_cost['electricity']['market']
-                                         + chp['feed_in_subsidy'])),
+                        variable_costs=-(self.chp_revenue_funded)),
                     b_elprod: Flow(
                         variable_costs=-chp['own_consumption_subsidy'])})
+
+            self.chp_export_funded_flows.append((b_el_chp_fund.label,
+                                                 b_elxprt.label))
 
             b_el_chp_unfund = Bus(
                 label="b_el_chp_unfund",
                 outputs={
                     b_elxprt: Flow(
-                        variable_costs=-energy_cost['electricity']['market']),
+                        variable_costs=-self.chp_revenue_unfunded),
                     b_elprod: Flow()})
+            self.chp_export_unfunded_flows.append((b_el_chp_unfund.label,
+                                                   b_elxprt.label))
 
             b_el_chp = Bus(label="b_el_chp",
                            outputs={
@@ -608,8 +627,10 @@ class MetaModel:
                                    summed_max=chp['funding_hours_per_year'],
                                    nominal_value=chp['electric_output']),
                                b_el_chp_unfund: Flow()})
-            self.chp_el_funded_flow = (b_el_chp.label, b_el_chp_fund.label)
-            self.chp_el_unfunded_flow = (b_el_chp.label, b_el_chp_unfund.label)
+            self.chp_el_funded_flows.append((b_el_chp.label,
+                                             b_el_chp_fund.label))
+            self.chp_el_unfunded_flows.append((b_el_chp.label,
+                                               b_el_chp_unfund.label))
             energy_system.add(b_el_chp_fund, b_el_chp_unfund, b_el_chp)
 
             t_chp = Transformer(
@@ -634,12 +655,17 @@ class MetaModel:
             energy_system.add(t_chp)
 
         # PV
-        if pv:
+        if not pv:
+            self.pv_revenue = 0
+        else:
+            self.pv_revenue = pv['feed_in_subsidy']
             b_el_pv = Bus(
                 label="b_el_pv",
                 outputs={
-                    b_elxprt: Flow(variable_costs=-pv['feed_in_subsidy']),
+                    b_elxprt: Flow(variable_costs=-self.pv_revenue),
                     b_elprod: Flow()})
+
+            self.pv_export_flows.append((b_el_pv.label, b_elxprt.label))
 
             t_pv = Source(
                 label='t_pv',
@@ -667,12 +693,17 @@ class MetaModel:
             self.p2h_th_flows.append((t_p2h.label, heat_layers.b_th_in_highest.label))
 
         # Wind Turbine
-        if wt:
+        if not wt:
+            self.wt_revenue = 0
+        else:
+            self.wt_revenue = wt['feed_in_subsidy']
             b_el_wt = Bus(
                 label="b_el_wt",
                 outputs={
-                    b_elxprt: Flow(variable_costs=-wt['feed_in_subsidy']),
+                    b_elxprt: Flow(variable_costs=-self.wt_revenue),
                     b_elprod: Flow()})
+
+            self.pv_export_flows.append((b_el_wt.label, b_elxprt.label))
 
             t_wt = Source(
                 label='t_wt',
@@ -734,15 +765,66 @@ class MetaModel:
 
         return res
 
-    def operational_costs(self):
+    def operational_costs(self, feed_in_order=None):
         """
         Extracts costs from the optimiser
+
+        :param feed_in_order: list of dicts
+                    [{"revenue": revenue for feed-in,
+                      "flows": lists of respective flows}]
         """
         costs = self.energy_system.results["meta"]['objective']
 
         for flow in self.virtual_costs_flows:
-            costs -= HIGH_VIRTUAL_COSTS * self.energy_system.results['main'][flow][
-                'sequences']['flow'].sum()
+            costs -= HIGH_VIRTUAL_COSTS * self.energy_system.results[
+                'main'][flow]['sequences']['flow'].sum()
+
+        if feed_in_order is not None:
+            # calculate wrong numbers (selling not only excess electricity)
+            electricity_import = self.aggregate_flows(
+                self.electricity_import_flows)
+            wrong_import_costs = (electricity_import
+                                  * self.grid_connection_in_costs)
+
+            wrong_export_revenue = (
+                    self.aggregate_flows(self.pv_export_flows)
+                    * self.pv_revenue
+                    + self.aggregate_flows(self.wt_export_flows)
+                    * self.wt_revenue
+                    + self.aggregate_flows(self.chp_export_funded_flows)
+                    * self.chp_revenue_funded
+                    + self.aggregate_flows(self.chp_export_unfunded_flows)
+                    * self.chp_revenue_unfunded)
+
+            # subtract wrong costs
+            costs = (costs
+                     - wrong_import_costs.sum()
+                     + wrong_export_revenue.sum())
+
+            # calculate exclusive export or import
+            electricity_export = self.aggregate_flows(
+                self.electricity_export_flows)
+            electricity_balance = electricity_export - electricity_import
+            electricity_export = electricity_balance.copy()
+            electricity_export[electricity_balance < 0] = 0
+            electricity_import = -electricity_balance
+            electricity_import[electricity_balance >= 0] = 0
+
+            import_costs = electricity_import * self.grid_connection_in_costs
+
+            electricity_export = electricity_export.to_numpy()
+
+            export_revenue = 0.0
+            for feed_in in feed_in_order:
+                feed_in_flows = feed_in["flows"]
+                export_flow = self.aggregate_flows(feed_in_flows)
+                export_flow = export_flow.to_numpy()
+                export_revenue += sum(feed_in["revenue"] * np.minimum(
+                    electricity_export, export_flow))
+                electricity_export -= export_flow
+
+            # add correct costs
+            costs = costs + import_costs.sum() - export_revenue
 
         return costs
 
@@ -756,8 +838,8 @@ class MetaModel:
         fossil_gas_import = self.aggregate_flows(self.fossil_gas_import_flows)
         biomethane_import = self.aggregate_flows(self.biomethane_import_flows)
         pellet_import = self.aggregate_flows(self.pellet_import_flows)
-        el_import = self.aggregate_flows(self.electricity_import_flows)
         el_export = self.aggregate_flows(self.electricity_export_flows)
+        el_import = self.aggregate_flows(self.grid_el_flows)
 
         co2_import_fossil_gas = fossil_gas_import * self.spec_co2['fossil_gas']
         co2_import_biomethane = biomethane_import * self.spec_co2['biomethane']
@@ -798,7 +880,7 @@ class MetaModel:
 
         :return: Self sufficiency
         """
-        el_import = self.aggregate_flows(self.electricity_import_flows).sum()
+        el_import = self.aggregate_flows(self.grid_el_flows).sum()
         el_demand = self.aggregate_flows(self.demand_el_flows).sum()
 
         self_sufficiency = 1 - (el_import / el_demand)

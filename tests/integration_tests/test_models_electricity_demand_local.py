@@ -21,7 +21,8 @@ def test_electricity_demand_ap():
 
     params = {
         "demand": {"electricity_adjacent": electricity_demand},
-        "energy_cost": {"electricity": {"demand_rate": 0.5}}}
+        "energy_cost": {"electricity": {"demand_rate": 0,
+                                        "slp_price": 0.2}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
@@ -44,8 +45,7 @@ def test_electricity_demand_lp():
     params = {
         "demand": {"electricity_adjacent": electricity_demand},
         "energy_cost": {"electricity": {
-            "demand_rate": 1000,
-            "AP": 0}}}
+            "demand_rate": 1000}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
@@ -67,8 +67,7 @@ def test_electricity_demand_all_costs():
     params = {
         "demand": {"electricity_adjacent": electricity_demand},
         "energy_cost": {"electricity": {
-            "demand_rate": 1000,
-            "AP": [15, 20, 15]}}}
+            "demand_rate": 1000}}}
     meta_model, params = run_model_template(custom_params=params)
 
     assert math.isclose(
@@ -107,7 +106,7 @@ def test_chp():
         heat_demand.sum(),
         rel_tol=1e-5)
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.electricity_import_flows).sum(),
+        meta_model.aggregate_flows(meta_model.grid_el_flows).sum(),
         electricity_demand.sum(),
         abs_tol=HIGH_ACCURACY)
     assert math.isclose(
