@@ -134,10 +134,12 @@ def test_demand_supply_non_exclusive():
         electricity_demand.sum(),
         abs_tol=HIGH_ACCURACY)
 
-    op_costs = meta_model.operational_costs()  # -0.35
+    op_costs = meta_model.operational_costs(
+        feed_in_order=[{"revenue": meta_model.pv_revenue,
+                        "flows": meta_model.pv_export_flows}])
     el_costs = electricity_costs(electricity_import,
-                                          params,
-                                          meta_model.time_range)
+                                 params,
+                                 meta_model.time_range)
     el_revenue = electricity_export.sum() * feed_in_subsidy
     assert math.isclose(op_costs, el_costs - el_revenue)
 

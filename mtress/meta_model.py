@@ -765,17 +765,21 @@ class MetaModel:
 
         return res
 
-    def operational_costs(self):
+    def operational_costs(self, feed_in_order=None):
         """
         Extracts costs from the optimiser
+
+        :param feed_in_order: list of dicts
+                    [{"revenue": revenue for feed-in,
+                      "flows": lists of respective flows}]
         """
         costs = self.energy_system.results["meta"]['objective']
 
         for flow in self.virtual_costs_flows:
-            costs -= HIGH_VIRTUAL_COSTS * self.energy_system.results['main'][flow][
-                'sequences']['flow'].sum()
+            costs -= HIGH_VIRTUAL_COSTS * self.energy_system.results[
+                'main'][flow]['sequences']['flow'].sum()
 
-        if not self.exclusive_grid_connection:
+        if feed_in_order is not None:
             # calculate wrong numbers (selling not only excess electricity)
             electricity_import = self.aggregate_flows(
                 self.electricity_import_flows)
@@ -806,13 +810,21 @@ class MetaModel:
             electricity_import = -electricity_balance
             electricity_import[electricity_balance >= 0] = 0
 
-            # TODO: Introduce order for feed in
-            export_revenue = electricity_export * self.pv_revenue
-
             import_costs = electricity_import * self.grid_connection_in_costs
 
+            electricity_export = electricity_export.to_numpy()
+
+            export_revenue = 0.0
+            for feed_in in feed_in_order:
+                feed_in_flows = feed_in["flows"]
+                export_flow = self.aggregate_flows(feed_in_flows)
+                export_flow = export_flow.to_numpy()
+                export_revenue += sum(feed_in["revenue"] * np.minimum(
+                    electricity_export, export_flow))
+                electricity_export -= export_flow
+
             # add correct costs
-            costs = costs + import_costs.sum() - export_revenue.sum()
+            costs = costs + import_costs.sum() - export_revenue
 
         return costs
 
