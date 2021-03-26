@@ -18,6 +18,7 @@ def all_techs_model(number_of_time_steps=365 * 24,
     :param silent: just solve and do not print results (for testing/ debug)
     """
     start_global = time.time()
+    solver_time = 0
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     with open(os.path.join(dir_path, 'all_techs_example.json')) as f:
@@ -100,7 +101,7 @@ def all_techs_model(number_of_time_steps=365 * 24,
                     else:
                         variables[key1][key2] = time_series[key1][key2]
 
-        variables["exclusive_grid_connection"] = True
+        variables["exclusive_grid_connection"] = False
         variables["allow_missing_heat"] = False
         meta_model = MetaModel(**variables)
 
@@ -112,6 +113,7 @@ def all_techs_model(number_of_time_steps=365 * 24,
                                solver_io='lp',
                                cmdline_options={'ratio': 0.01})
         end = time.time()
+        solver_time += end - start
         if not silent:
             print("Time to solve: " + str(end - start) + " Seconds")
 
@@ -124,7 +126,14 @@ def all_techs_model(number_of_time_steps=365 * 24,
         energy_system.results['meta'] = processing.meta_results(
             meta_model.model)
 
-        operational_costs += meta_model.operational_costs()
+        operational_costs += meta_model.operational_costs(
+            feed_in_order=[{"revenue": meta_model.chp_revenue_funded,
+                            "flows": meta_model.chp_export_funded_flows},
+                           {"revenue": meta_model.pv_revenue,
+                            "flows": meta_model.pv_export_flows},
+                           {"revenue": meta_model.wt_revenue,
+                            "flows": meta_model.wt_export_flows}]
+        )
         co2_emission += meta_model.co2_emission().sum()
         own_consumption += meta_model.own_consumption()/slices
         self_sufficiency += meta_model.self_sufficiency()/slices
@@ -133,6 +142,7 @@ def all_techs_model(number_of_time_steps=365 * 24,
     if not silent:
         print("Slices:", slices)
         print("Total runtime: {:.2f} s".format(end_global - start_global))
+        print("Solver runtime: {:.2f} s".format(solver_time))
         print('KPIs')
         print("OPEX: {:.2f} €".format(operational_costs))
         print("CO2 Emission: {:.1f} t".format(co2_emission.sum()))
@@ -141,4 +151,4 @@ def all_techs_model(number_of_time_steps=365 * 24,
 
 
 if __name__ == '__main__':
-    all_techs_model(number_of_time_steps=365 * 24, slices=73)
+    all_techs_model(number_of_time_steps=70 * 24, slices=1)
