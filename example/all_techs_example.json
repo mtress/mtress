@@ -28,7 +28,7 @@
     },
     "thermal_ground_storage": {
         "volume": 100,
-        "temperature": 10,
+        "temperature": 20,
         "heat_capacity": 0.025
     },
     "gas_boiler": {
