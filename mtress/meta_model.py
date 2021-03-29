@@ -818,7 +818,8 @@ class MetaModel:
             for feed_in in feed_in_order:
                 feed_in_flows = feed_in["flows"]
                 export_flow = self.aggregate_flows(feed_in_flows)
-                export_flow = export_flow.to_numpy()
+                if isinstance(export_flow, pd.Series):
+                    export_flow = export_flow.to_numpy()
                 export_revenue += sum(feed_in["revenue"] * np.minimum(
                     electricity_export, export_flow))
                 electricity_export -= export_flow
