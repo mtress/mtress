@@ -102,7 +102,26 @@ def test_demand_supply_exclusive():
 
 def test_demand_supply_non_exclusive():
     electricity_demand = np.full(3, 0.1)
-    electricity_generation = np.array([0.1, 0.5, 0])
+    pv_generation = np.array([0.1, 0.5, 0])
+    wind_generation = np.array([0.05, 0.2, 0.05])
+    pv_export = np.zeros(len(electricity_demand))
+    wind_export = np.zeros(len(electricity_demand))
+
+    # determination of pv and wind export
+    for i in range(0, len(electricity_demand)):
+        if electricity_demand[i] <= wind_generation[i]:
+            pv_export[i] = pv_generation[i]
+        else:
+            if wind_generation[i] + pv_generation[i] >= electricity_demand[i]:
+                pv_export[i] = wind_generation[i] + pv_generation[i] - electricity_demand[i]
+            else:
+                pv_export[i] = 0
+
+    for i in range(0, len(electricity_demand)):
+        if wind_generation[i] > electricity_demand[i]:
+            wind_export[i] = wind_generation[i] - electricity_demand[i]
+
+    electricity_generation = pv_generation + wind_generation
     electricity_balance = electricity_generation - electricity_demand
     electricity_import = -electricity_balance
     electricity_import[electricity_import < 0] = 0
@@ -112,13 +131,21 @@ def test_demand_supply_non_exclusive():
     feed_in_subsidy = 1
     el_market_price = feed_in_subsidy/2
 
+    feed_in_subsidy_wind = 0.8
+
+
     params = {
         "demand": {"electricity": electricity_demand},
         "energy_cost": {"electricity": {"market": el_market_price}},
         "pv": {
             "nominal_power": 1,
             "feed_in_subsidy": feed_in_subsidy,
-            "spec_generation": electricity_generation
+            "spec_generation": pv_generation
+        },
+        "wt": {
+            "nominal_power": 1,
+            "feed_in_subsidy": feed_in_subsidy_wind,
+            "spec_generation": wind_generation
         },
         "exclusive_grid_connection": False
     }
@@ -136,11 +163,14 @@ def test_demand_supply_non_exclusive():
 
     op_costs = meta_model.operational_costs(
         feed_in_order=[{"revenue": meta_model.pv_revenue,
-                        "flows": meta_model.pv_export_flows}])
+                        "flows": meta_model.pv_export_flows},
+                      {"revenue": meta_model.wt_revenue,
+                        "flows": meta_model.wt_export_flows}
+                       ])
     el_costs = electricity_costs(electricity_import,
                                  params,
                                  meta_model.time_range)
-    el_revenue = electricity_export.sum() * feed_in_subsidy
+    el_revenue = pv_export.sum() * feed_in_subsidy + wind_export.sum()*feed_in_subsidy_wind
     assert math.isclose(op_costs, el_costs - el_revenue)
 
 
