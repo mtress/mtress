@@ -5,7 +5,9 @@ import numpy as np
 import pandas as pd
 
 from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
-                         Model, Investment, constraints, GenericStorage, NonConvex)
+                         Model, Investment, constraints, GenericStorage,
+                         NonConvex)
+from oemof import thermal
 
 from .layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
                            HeatExchanger)
@@ -300,7 +302,7 @@ class MetaModel:
             if ghp:
                 heat_sources["sonde"] = ghp['temperature']
             if tgs:
-                heat_sources["pit_storage"] = tgs["temperature"]
+                heat_sources["pit_storage"] = tgs['temperature']
 
             if len(heat_sources) > 0:
                 b_el_bhp = Bus(
@@ -366,18 +368,20 @@ class MetaModel:
                 energy_system.add(b_ihs, s_ihs)
 
             if tgs:
-                b_thp = Bus(label='b_ehp',
+                b_tgs = Bus(label='b_tgs',
                             inputs={heat_layers.b_th_lowest: Flow()},
                             outputs={heat_pump.b_th_in["pit_storage"]: Flow()})
-
                 s_tgs = GenericStorage(
                     label='s_tgs',
                     nominal_storage_capacity=tgs['heat_capacity'],
-                    inputs={b_thp: Flow()},
-                    outputs={b_thp: Flow()})
-                energy_system.add(s_tgs, b_thp)
+                    inputs={b_tgs: Flow()},
+                    outputs={b_tgs: Flow()})
+                energy_system.add(s_tgs, b_tgs)
+            else:
+                b_tgs = None
         else:
             self.heat_pump = None
+            b_tgs = None
 
         ###############################################################
         # Solar thermal
@@ -387,6 +391,22 @@ class MetaModel:
                           outputs={b_st: Flow(nominal_value=1)})
 
             energy_system.add(s_st, b_st)
+
+            if b_tgs:
+                temp = tgs["temperature"]
+                temp_str = "{0:.0f}".format(temp)
+                st_level_label = 't_st_' + temp_str
+                t_st_level = Transformer(
+                    label=st_level_label,
+                    inputs={b_st: Flow(nominal_value=st["area"])},
+                    outputs={b_tgs: Flow(nominal_value=1)},
+                    conversion_factors={
+                        b_st: (1 / st['spec_generation'][
+                            'ST_' + str(temp)]).to_list()})
+
+                self.solar_thermal_th_flows.append((st_level_label,
+                                                    b_tgs.label))
+                energy_system.add(t_st_level)
 
             for temp in heat_layers.temperature_levels:
                 # Naming of new temperature bus
@@ -818,7 +838,8 @@ class MetaModel:
             for feed_in in feed_in_order:
                 feed_in_flows = feed_in["flows"]
                 export_flow = self.aggregate_flows(feed_in_flows)
-                export_flow = export_flow.to_numpy()
+                if isinstance(export_flow, pd.Series):
+                    export_flow = export_flow.to_numpy()
                 export_revenue += sum(feed_in["revenue"] * np.minimum(
                     electricity_export, export_flow))
                 electricity_export -= export_flow
