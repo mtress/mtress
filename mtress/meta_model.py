@@ -136,7 +136,7 @@ class MetaModel:
         ############################
         # Create energy system model
         ############################
-        energy_system = EnergySystem(timeindex=demand['electricity'].index)
+        energy_system = EnergySystem(timeindex=demand['heating'].index)
 
         # list of flows to identify different sources and sinks later
         # which use units of power
