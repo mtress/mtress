@@ -703,7 +703,7 @@ class MetaModel:
                     b_elxprt: Flow(variable_costs=-self.wt_revenue),
                     b_elprod: Flow()})
 
-            self.pv_export_flows.append((b_el_wt.label, b_elxprt.label))
+            self.wt_export_flows.append((b_el_wt.label, b_elxprt.label))
 
             t_wt = Source(
                 label='t_wt',
@@ -742,7 +742,9 @@ class MetaModel:
                 lower_limit=0,
                 upper_limit=1)
 
-        self.production_el_flows = self.wt_el_flows + self.pv_el_flows + self.chp_el_flows
+        self.production_el_flows = (self.wt_el_flows
+                                    + self.pv_el_flows
+                                    + self.chp_el_flows)
         self.gas_flows = self.fossil_gas_import_flows + self.biomethane_import_flows
         self.demand_el_flows = self.demand_el_flows + self.p2h_el_flows + self.bhp_el_flows
 
@@ -756,12 +758,12 @@ class MetaModel:
         those timeseries to a joint timeseries you can use this function.
 
         :param flows_to_aggregate: List of string tuples describing the flows to aggregate
-        :return: Aggregated timeseries
+        :return: numpy array with aggregated time series
         """
         res = np.zeros(self.number_of_time_steps)
         for flow in flows_to_aggregate:
             res += self.energy_system.results['main'][flow][
-                'sequences']['flow']
+                'sequences']['flow'].to_numpy()
 
         return res
 
@@ -781,20 +783,22 @@ class MetaModel:
 
         if feed_in_order is not None:
             # calculate wrong numbers (selling not only excess electricity)
-            electricity_import = self.aggregate_flows(
+            wrong_electricity_import = self.aggregate_flows(
                 self.electricity_import_flows)
-            wrong_import_costs = (electricity_import
-                                  * self.grid_connection_in_costs)
-
-            wrong_export_revenue = (
-                    self.aggregate_flows(self.pv_export_flows)
-                    * self.pv_revenue
-                    + self.aggregate_flows(self.wt_export_flows)
-                    * self.wt_revenue
-                    + self.aggregate_flows(self.chp_export_funded_flows)
-                    * self.chp_revenue_funded
-                    + self.aggregate_flows(self.chp_export_unfunded_flows)
-                    * self.chp_revenue_unfunded)
+            wrong_import_costs = np.multiply(wrong_electricity_import,
+                                             self.grid_connection_in_costs)
+            wrong_wt_revenue = self.wt_revenue * self.aggregate_flows(
+                self.wt_export_flows)
+            wrong_pv_revenue = self.pv_revenue * self.aggregate_flows(
+                self.pv_export_flows)
+            wrong_chp_revenue = (
+                    self.chp_revenue_funded
+                    * self.aggregate_flows(self.chp_export_funded_flows)
+                    + self.chp_revenue_unfunded
+                    * self.aggregate_flows(self.chp_export_unfunded_flows))
+            wrong_export_revenue = (wrong_wt_revenue
+                                    + wrong_pv_revenue
+                                    + wrong_chp_revenue)
 
             # subtract wrong costs
             costs = (costs
@@ -802,9 +806,10 @@ class MetaModel:
                      + wrong_export_revenue.sum())
 
             # calculate exclusive export or import
-            electricity_export = self.aggregate_flows(
+            wrong_electricity_export = self.aggregate_flows(
                 self.electricity_export_flows)
-            electricity_balance = electricity_export - electricity_import
+            electricity_balance = (wrong_electricity_export
+                                   - wrong_electricity_import)
             electricity_export = electricity_balance.copy()
             electricity_export[electricity_balance < 0] = 0
             electricity_import = -electricity_balance
@@ -812,17 +817,14 @@ class MetaModel:
 
             import_costs = electricity_import * self.grid_connection_in_costs
 
-            electricity_export = electricity_export.to_numpy()
-
             export_revenue = 0.0
             for feed_in in feed_in_order:
                 feed_in_flows = feed_in["flows"]
                 export_flow = self.aggregate_flows(feed_in_flows)
-                if isinstance(export_flow, pd.Series):
-                    export_flow = export_flow.to_numpy()
                 export_revenue += sum(feed_in["revenue"] * np.minimum(
                     electricity_export, export_flow))
                 electricity_export -= export_flow
+                electricity_export[electricity_export < 0] = 0
 
             # add correct costs
             costs = costs + import_costs.sum() - export_revenue
