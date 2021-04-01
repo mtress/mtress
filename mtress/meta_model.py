@@ -5,7 +5,9 @@ import numpy as np
 import pandas as pd
 
 from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
-                         Model, Investment, constraints, GenericStorage, NonConvex)
+                         Model, Investment, constraints, GenericStorage,
+                         NonConvex)
+from oemof import thermal
 
 from .layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
                            HeatExchanger)
@@ -38,11 +40,17 @@ class MetaModel:
                  as well as a dict containing all used technology classes
         """
 
-        # Unpack kwargs
-        meteo = kwargs.get('meteorology')
-        temps = kwargs.get('temperatures')
-        energy_cost = kwargs.get('energy_cost')
-        demand = kwargs.get('demand')
+        def _unpack_kwargs():
+            self.meteo = kwargs.get('meteorology')
+            self.temps = kwargs.get('temperatures')
+            self.energy_cost = kwargs.get('energy_cost')
+            self.demand = kwargs.get('demand')
+            self.spec_co2 = kwargs.get('co2')
+            self.allow_missing_heat = kwargs.get('allow_missing_heat', False)
+            self.exclusive_grid_connection = kwargs.get(
+                'exclusive_grid_connection', True)
+
+        _unpack_kwargs()
 
         bhp = kwargs.get('heat_pump')
         if bhp and bhp["electric_input"] <= 0:
@@ -64,10 +72,10 @@ class MetaModel:
         if tgs and tgs["volume"] <= 0:
             del tgs
             tgs = None
-        boiler = kwargs.get('gas_boiler')
-        if boiler and boiler["thermal_output"] <= 0:
-            del boiler
-            boiler = None
+        gas_boiler = kwargs.get('gas_boiler')
+        if gas_boiler and gas_boiler["thermal_output"] <= 0:
+            del gas_boiler
+            gas_boiler = None
         pellet_boiler = kwargs.get('pellet_boiler')
         if pellet_boiler and pellet_boiler["thermal_output"] <= 0:
             del pellet_boiler
@@ -87,10 +95,10 @@ class MetaModel:
         if p2h and p2h["thermal_output"] <= 0:
             del p2h
             p2h = None
-        wt = kwargs.get('wind_turbine')
-        if wt and wt["nominal_power"] <= 0:
-            del wt
-            wt = None
+        wind_turbine = kwargs.get('wind_turbine')
+        if wind_turbine and wind_turbine["nominal_power"] <= 0:
+            del wind_turbine
+            wind_turbine = None
         battery = kwargs.get('battery')
         if battery and battery["capacity"] <= 0:
             del battery
@@ -103,15 +111,11 @@ class MetaModel:
         if st and st["area"] <= 0:
             del st
             st = None
-        self.spec_co2 = kwargs.get('co2')
-        self.allow_missing_heat = kwargs.get('allow_missing_heat', False)
-        self.exclusive_grid_connection = kwargs.get(
-            'exclusive_grid_connection', True)
 
         # Create relevant temperature list
-        temperature_levels = temps.get('additional', list())
-        temperature_levels.append(temps['forward_flow'])
-        temperature_levels.append(temps['backward_flow'])
+        temperature_levels = self.temps.get('additional', list())
+        temperature_levels.append(self.temps['forward_flow'])
+        temperature_levels.append(self.temps['backward_flow'])
 
         # Ensure unique temperatures
         temperature_levels = list(set(temperature_levels))
@@ -119,14 +123,14 @@ class MetaModel:
         self.temperature_levels = temperature_levels
 
         # Time range of the data (in a)
-        index = demand['heating'].index
+        index = self.demand['heating'].index
         self.number_of_time_steps = len(index)
         index.freq = pd.infer_freq(index)
         self.time_range = ((index[-1] - index[0] + index.freq)
                            / pd.Timedelta('365D'))
 
-        energy_cost["electricity"]["market"] = _array(
-            data=energy_cost["electricity"]["market"],
+        self.energy_cost["electricity"]["market"] = _array(
+            data=self.energy_cost["electricity"]["market"],
             length=self.number_of_time_steps)
 
         for quantity in ["el_in", "el_out"]:
@@ -136,7 +140,7 @@ class MetaModel:
         ############################
         # Create energy system model
         ############################
-        energy_system = EnergySystem(timeindex=demand['electricity'].index)
+        energy_system = EnergySystem(timeindex=self.demand['heating'].index)
 
         # list of flows to identify different sources and sinks later
         # which use units of power
@@ -183,7 +187,8 @@ class MetaModel:
         b_eldist = Bus(label="b_eldist")  # Local distribution network
         b_elprod = Bus(label="b_elprod",  # local production network
                        outputs={b_eldist: Flow(
-                           variable_costs=energy_cost['electricity']['eeg_levy'])})
+                           variable_costs=self.energy_cost[
+                               'electricity']['eeg_levy'])})
         b_elxprt = Bus(label="b_elxprt")  # electricity export network
         b_elgrid = Bus(label="b_elgrid")
 
@@ -197,8 +202,8 @@ class MetaModel:
         self.grid_el_flows.append((m_el_in.label, b_elgrid.label))
 
         self.grid_connection_in_costs = (
-                energy_cost['electricity']['surcharge']
-                + energy_cost['electricity']['market']
+                self.energy_cost['electricity']['surcharge']
+                + self.energy_cost['electricity']['market']
                 + self.spec_co2['el_in']
                 * self.spec_co2['price'])
         b_grid_connection_in = Bus(
@@ -206,7 +211,7 @@ class MetaModel:
             inputs={b_elgrid: Flow(
                 variable_costs=self.grid_connection_in_costs,
                 investment=Investment(
-                    ep_costs=energy_cost['electricity'][
+                    ep_costs=self.energy_cost['electricity'][
                                  'demand_rate'] * self.time_range))},
             outputs={b_eldist: Flow(nonconvex=NonConvex(),
                                     nominal_value=1e5,
@@ -232,9 +237,9 @@ class MetaModel:
 
         # Create gas buses if needed
         b_fossil_gas = Bus(label="b_fossil_gas")
-        if boiler or (chp and self.biomethane_fraction < 1):
+        if gas_boiler or (chp and self.biomethane_fraction < 1):
 
-            gas_price = energy_cost['gas']['fossil_gas'] \
+            gas_price = self.energy_cost['gas']['fossil_gas'] \
                         + self.spec_co2['fossil_gas'] * self.spec_co2['price']
             m_fossil_gas = Source(label='m_fossil_gas',
                                   outputs={b_fossil_gas: Flow(variable_costs=gas_price)})
@@ -246,7 +251,7 @@ class MetaModel:
         if chp and self.biomethane_fraction > 0:
             b_biomethane = Bus(label='b_biomethane')
 
-            biomethane_price = (energy_cost['gas']['biomethane']
+            biomethane_price = (self.energy_cost['gas']['biomethane']
                                 + self.spec_co2['biomethane']
                                 * self.spec_co2['price'])
             m_biomethane = Source(label='m_biomethane',
@@ -261,7 +266,7 @@ class MetaModel:
             m_pellet = Source(
                 label='m_pellet',
                 outputs={b_pellet: Flow(
-                    variable_costs=energy_cost['wood_pellet']
+                    variable_costs=self.energy_cost['wood_pellet']
                                    + self.spec_co2['wood_pellet']
                                    * self.spec_co2['price']
                                    * HHV_WP)})
@@ -273,7 +278,7 @@ class MetaModel:
         # Thermal components
         heat_layers = HeatLayers(energy_system=energy_system,
                                  temperature_levels=temperature_levels,
-                                 reference_temperature=temps['reference'])
+                                 reference_temperature=self.temps['reference'])
 
         # Heat Storage
         if hs:
@@ -281,7 +286,7 @@ class MetaModel:
                 diameter=hs['diameter'],
                 volume=hs['volume'],
                 insulation_thickness=hs['insulation_thickness'],
-                ambient_temperature=meteo['temp_air'],
+                ambient_temperature=self.meteo['temp_air'],
                 heat_layers=heat_layers)
             self.th_storage_inflows = self._thermal_storage.in_flows
             self.th_storage_outflows = self._thermal_storage.out_flows
@@ -296,11 +301,11 @@ class MetaModel:
             if ihs:
                 heat_sources["ice"] = 0
             if shp:
-                heat_sources["soil"] = meteo['temp_soil']
+                heat_sources["soil"] = self.meteo['temp_soil']
             if ghp:
                 heat_sources["sonde"] = ghp['temperature']
             if tgs:
-                heat_sources["pit_storage"] = tgs["temperature"]
+                heat_sources["pit_storage"] = tgs['temperature']
 
             if len(heat_sources) > 0:
                 b_el_bhp = Bus(
@@ -366,18 +371,20 @@ class MetaModel:
                 energy_system.add(b_ihs, s_ihs)
 
             if tgs:
-                b_thp = Bus(label='b_ehp',
+                b_tgs = Bus(label='b_tgs',
                             inputs={heat_layers.b_th_lowest: Flow()},
                             outputs={heat_pump.b_th_in["pit_storage"]: Flow()})
-
                 s_tgs = GenericStorage(
                     label='s_tgs',
                     nominal_storage_capacity=tgs['heat_capacity'],
-                    inputs={b_thp: Flow()},
-                    outputs={b_thp: Flow()})
-                energy_system.add(s_tgs, b_thp)
+                    inputs={b_tgs: Flow()},
+                    outputs={b_tgs: Flow()})
+                energy_system.add(s_tgs, b_tgs)
+            else:
+                b_tgs = None
         else:
             self.heat_pump = None
+            b_tgs = None
 
         ###############################################################
         # Solar thermal
@@ -387,6 +394,22 @@ class MetaModel:
                           outputs={b_st: Flow(nominal_value=1)})
 
             energy_system.add(s_st, b_st)
+
+            if b_tgs:
+                temp = tgs["temperature"]
+                temp_str = "{0:.0f}".format(temp)
+                st_level_label = 't_st_' + temp_str
+                t_st_level = Transformer(
+                    label=st_level_label,
+                    inputs={b_st: Flow(nominal_value=st["area"])},
+                    outputs={b_tgs: Flow(nominal_value=1)},
+                    conversion_factors={
+                        b_st: (1 / st['spec_generation'][
+                            'ST_' + str(temp)]).to_list()})
+
+                self.solar_thermal_th_flows.append((st_level_label,
+                                                    b_tgs.label))
+                energy_system.add(t_st_level)
 
             for temp in heat_layers.temperature_levels:
                 # Naming of new temperature bus
@@ -409,7 +432,7 @@ class MetaModel:
         # electricity demands covered of the local electricity network
         d_el_local = Sink(
             label='d_el_local',
-            inputs={b_eldist: Flow(fix=demand['electricity'],
+            inputs={b_eldist: Flow(fix=self.demand['electricity'],
                                    nominal_value=1)})
 
         self.demand_el_flows.append((b_eldist.label,
@@ -420,14 +443,15 @@ class MetaModel:
         b_el_adjacent = Bus(
             label="b_el_adjacent",
             inputs={b_elgrid: Flow(
-                variable_costs=energy_cost['electricity']['slp_price'])})
+                variable_costs=self.energy_cost['electricity']['slp_price'])})
 
         # electricity demands not covered of the local electricity network
-        if 'electricity_adjacent' in demand:
+        if 'electricity_adjacent' in self.demand:
             d_el_adjacent = Sink(
                 label='d_el_adjacent',
-                inputs={b_el_adjacent: Flow(fix=demand['electricity_adjacent'],
-                                            nominal_value=1)})
+                inputs={b_el_adjacent: Flow(
+                    fix=self.demand['electricity_adjacent'],
+                    nominal_value=1)})
 
             self.demand_el_flows.append((b_el_adjacent.label,
                                          d_el_adjacent.label))
@@ -442,23 +466,23 @@ class MetaModel:
             heat_layers=heat_layers,
             heat_demand=b_th_buildings,
             label="heat_exchanger",
-            forward_flow_temperature=temps['forward_flow'],
-            backward_flow_temperature=(temps['backward_flow']))
+            forward_flow_temperature=self.temps['forward_flow'],
+            backward_flow_temperature=(self.temps['backward_flow']))
 
         d_sh = Sink(label='d_sh',
                     inputs={b_th_buildings: Flow(
-                        fix=demand['heating'],
+                        fix=self.demand['heating'],
                         nominal_value=1)})
         self.demand_th_flows.append((b_th_buildings.label,
                                      d_sh.label))
         energy_system.add(d_sh)
 
-        if sum(demand['dhw'] > 0):
+        if sum(self.demand['dhw'] > 0):
             b_th_dhw_local = Bus(label="b_th_dhw_local")
 
             d_dhw = Sink(label='d_dhw',
                          inputs={b_th_dhw_local: Flow(
-                             fix=demand['dhw'],
+                             fix=self.demand['dhw'],
                              nominal_value=1)})
             self.demand_th_flows.append((b_th_dhw_local.label,
                                          d_dhw.label))
@@ -466,10 +490,10 @@ class MetaModel:
             energy_system.add(b_th_dhw_local, d_dhw)
 
             # We assume a heat drop but no energy loss due to the heat exchanger.
-            heater_ratio = (max(heat_layers.temperature_levels)
-                            - temps['heat_drop_exchanger_dhw']
-                            - temps['reference']) / (temps['dhw']
-                                                     - temps['reference'])
+            heater_ratio = ((max(heat_layers.temperature_levels)
+                             - self.temps['heat_drop_exchanger_dhw']
+                             - self.temps['reference'])
+                            / (self.temps['dhw'] - self.temps['reference']))
 
             if 0 < heater_ratio < 1:
                 dhw_booster = Transformer(label="dhw_booster",
@@ -491,12 +515,13 @@ class MetaModel:
 
             energy_system.add(dhw_booster)
 
-        if 'dhw_adjacent' in demand and sum(demand['dhw_adjacent'] > 0):
+        if 'dhw_adjacent' in self.demand and sum(
+                self.demand['dhw_adjacent'] > 0):
             b_th_dhw_adjacent = Bus(label="b_th_dhw_local")
 
             d_dhw_adjacent = Sink(label='d_dhw',
                                   inputs={b_th_dhw_adjacent: Flow(
-                                      fix=demand['dhw_adjacent'],
+                                      fix=self.demand['dhw_adjacent'],
                                       nominal_value=1)})
             self.demand_th_flows.append((b_th_dhw_adjacent.label,
                                          d_dhw_adjacent.label))
@@ -504,10 +529,10 @@ class MetaModel:
             energy_system.add(b_th_dhw_adjacent, d_dhw_adjacent)
 
             # We assume a heat drop but no energy loss due to the heat exchanger.
-            heater_ratio = (max(heat_layers.temperature_levels)
-                            - temps['heat_drop_exchanger_dhw']
-                            - temps['reference']) / (temps['dhw']
-                                                     - temps['reference'])
+            heater_ratio = ((max(heat_layers.temperature_levels)
+                             - self.temps['heat_drop_exchanger_dhw']
+                             - self.temps['reference'])
+                            / (self.temps['dhw'] - self.temps['reference']))
 
             if 0 < heater_ratio < 1:
                 dhw_booster = Transformer(label="dhw_booster",
@@ -540,23 +565,23 @@ class MetaModel:
             self.missing_heat_flow.append((missing_heat.label,
                                            heat_layers.b_th_in_highest.label))
 
-        # boiler
-        if boiler:
+        # gas_boiler
+        if gas_boiler:
             t_boiler = Transformer(
                 label='t_boiler',
                 inputs={b_fossil_gas: Flow()},
                 outputs={
                     heat_layers.b_th_in_highest:
-                        Flow(nominal_value=boiler['thermal_output'])},
+                        Flow(nominal_value=gas_boiler['thermal_output'])},
                 conversion_factors={
                     heat_layers.b_th_in_highest:
-                        boiler['efficiency']})
+                        gas_boiler['efficiency']})
 
             self.boiler_th_flows.append((t_boiler.label,
                                          heat_layers.b_th_in_highest.label))
             energy_system.add(t_boiler)
 
-        # wood pellet boiler
+        # wood pellet gas_boiler
         if pellet_boiler:
             t_pellet = Transformer(
                 label='t_pellet',
@@ -578,9 +603,11 @@ class MetaModel:
             self.chp_revenue_funded = 0
             self.chp_revenue_unfunded = 0
         else:
-            self.chp_revenue_funded = (energy_cost['electricity']['market']
-                                       + chp['feed_in_subsidy'])
-            self.chp_revenue_unfunded = energy_cost['electricity']['market']
+            self.chp_revenue_funded = (
+                    self.energy_cost['electricity']['market']
+                    + chp['feed_in_subsidy'])
+            self.chp_revenue_unfunded = self.energy_cost[
+                'electricity']['market']
 
             b_gas_chp = Bus(label='b_gas_chp')
 
@@ -593,12 +620,14 @@ class MetaModel:
                                         inputs={b_fossil_gas: Flow()},
                                         outputs={b_gas_chp: Flow()})
             else:
-                t_gas_chp = Transformer(label="t_gas_chp",
-                                        inputs={b_fossil_gas: Flow(),
-                                                b_biomethane: Flow()},
-                                        outputs={b_gas_chp: Flow()},
-                                        conversion_factors={b_fossil_gas: 1 - self.biomethane_fraction,
-                                                            b_biomethane: self.biomethane_fraction})
+                t_gas_chp = Transformer(
+                    label="t_gas_chp",
+                    inputs={b_fossil_gas: Flow(),
+                            b_biomethane: Flow()},
+                    outputs={b_gas_chp: Flow()},
+                    conversion_factors={
+                        b_fossil_gas: 1 - self.biomethane_fraction,
+                        b_biomethane: self.biomethane_fraction})
             energy_system.add(t_gas_chp, b_gas_chp)
 
             b_el_chp_fund = Bus(
@@ -637,7 +666,7 @@ class MetaModel:
                 label='t_chp',
                 inputs={b_gas_chp: Flow(
                     nominal_value=chp['gas_input'],
-                    variable_costs=-energy_cost['gas']['energy_tax'])},
+                    variable_costs=-self.energy_cost['gas']['energy_tax'])},
                 outputs={
                     b_el_chp: Flow(nominal_value=chp['electric_output']),
                     heat_layers.b_th_in_highest:
@@ -690,13 +719,14 @@ class MetaModel:
             energy_system.add(t_p2h)
 
             self.p2h_el_flows.append((b_eldist.label, t_p2h.label))
-            self.p2h_th_flows.append((t_p2h.label, heat_layers.b_th_in_highest.label))
+            self.p2h_th_flows.append((t_p2h.label,
+                                      heat_layers.b_th_in_highest.label))
 
         # Wind Turbine
-        if not wt:
+        if not wind_turbine:
             self.wt_revenue = 0
         else:
-            self.wt_revenue = wt['feed_in_subsidy']
+            self.wt_revenue = wind_turbine['feed_in_subsidy']
             b_el_wt = Bus(
                 label="b_el_wt",
                 outputs={
@@ -709,8 +739,8 @@ class MetaModel:
                 label='t_wt',
                 outputs={
                     b_el_wt: Flow(
-                        nominal_value=wt["nominal_power"],
-                        max=wt['spec_generation'])})
+                        nominal_value=wind_turbine["nominal_power"],
+                        max=wind_turbine['spec_generation'])})
             self.wt_el_flows.append((t_wt.label, b_el_wt.label))
 
             energy_system.add(t_wt, b_el_wt)

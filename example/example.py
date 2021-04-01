@@ -123,7 +123,6 @@ def all_techs_model(number_of_time_steps=365 * 24,
     energy_system.results['meta'] = processing.meta_results(
         meta_model.model)
 
-
     if not silent:
         print('\n')
         print('KPIs')
