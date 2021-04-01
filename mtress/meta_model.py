@@ -3,6 +3,7 @@ import numbers
 
 import numpy as np
 import pandas as pd
+import pprint
 
 from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          Model, Investment, constraints, GenericStorage,
@@ -40,7 +41,8 @@ class MetaModel:
                  as well as a dict containing all used technology classes
         """
 
-        def _unpack_kwargs():
+        def _unpack_general_kwargs():
+            """Unpack non-technology kwargs"""
             self.meteo = kwargs.pop('meteorology')
             self.temps = kwargs.pop('temperatures')
             self.energy_cost = kwargs.pop('energy_cost')
@@ -50,43 +52,7 @@ class MetaModel:
             self.exclusive_grid_connection = kwargs.pop(
                 'exclusive_grid_connection', True)
 
-        _unpack_kwargs()
-
-        gas_boiler = kwargs.get('gas_boiler')
-        if gas_boiler and gas_boiler["thermal_output"] <= 0:
-            del gas_boiler
-            gas_boiler = None
-        pellet_boiler = kwargs.get('pellet_boiler')
-        if pellet_boiler and pellet_boiler["thermal_output"] <= 0:
-            del pellet_boiler
-            pellet_boiler = None
-        chp = kwargs.get('chp')
-        self.biomethane_fraction = 0
-        if chp and chp["electric_output"] <= 0:
-            del chp
-            chp = None
-        if chp and chp["electric_output"] > 0:
-            self.biomethane_fraction = chp['biomethane_fraction']
-        pv = kwargs.get('pv')
-        if pv and pv["nominal_power"] <= 0:
-            del pv
-            pv = None
-        p2h = kwargs.get('power_to_heat')
-        if p2h and p2h["thermal_output"] <= 0:
-            del p2h
-            p2h = None
-        wind_turbine = kwargs.get('wind_turbine')
-        if wind_turbine and wind_turbine["nominal_power"] <= 0:
-            del wind_turbine
-            wind_turbine = None
-        battery = kwargs.get('battery')
-        if battery and battery["capacity"] <= 0:
-            del battery
-            battery = None
-        hs = kwargs.get('heat_storage')
-        if hs and hs["volume"] <= 0:
-            del hs
-            hs = None
+        _unpack_general_kwargs()
 
         # Create relevant temperature list
         temperature_levels = self.temps.get('additional', list())
@@ -213,31 +179,37 @@ class MetaModel:
 
         # Create gas buses if needed
         b_fossil_gas = Bus(label="b_fossil_gas")
-        if gas_boiler or (chp and self.biomethane_fraction < 1):
+        if ('gas_boiler' in kwargs
+                or ('chp' in kwargs
+                    and kwargs['chp']['biomethane_fraction'] < 1)):
 
             gas_price = self.energy_cost['gas']['fossil_gas'] \
                         + self.spec_co2['fossil_gas'] * self.spec_co2['price']
-            m_fossil_gas = Source(label='m_fossil_gas',
-                                  outputs={b_fossil_gas: Flow(variable_costs=gas_price)})
+            m_fossil_gas = Source(
+                label='m_fossil_gas',
+                outputs={b_fossil_gas: Flow(variable_costs=gas_price)})
 
-            self.fossil_gas_import_flows.append((m_fossil_gas.label, b_fossil_gas.label))
+            self.fossil_gas_import_flows.append((m_fossil_gas.label,
+                                                 b_fossil_gas.label))
 
             energy_system.add(b_fossil_gas, m_fossil_gas)
 
-        if chp and self.biomethane_fraction > 0:
+        if 'chp' in kwargs and kwargs['chp']['biomethane_fraction'] > 0:
             b_biomethane = Bus(label='b_biomethane')
 
             biomethane_price = (self.energy_cost['gas']['biomethane']
                                 + self.spec_co2['biomethane']
                                 * self.spec_co2['price'])
-            m_biomethane = Source(label='m_biomethane',
-                                  outputs={b_biomethane: Flow(variable_costs=biomethane_price)})
+            m_biomethane = Source(
+                label='m_biomethane',
+                outputs={b_biomethane: Flow(variable_costs=biomethane_price)})
             energy_system.add(m_biomethane, b_biomethane)
 
-            self.biomethane_import_flows.append((m_biomethane.label, b_biomethane.label))
+            self.biomethane_import_flows.append((m_biomethane.label,
+                                                 b_biomethane.label))
 
         # Create wood pellet buses if needed
-        if pellet_boiler:
+        if 'pellet_boiler' in kwargs:
             b_pellet = Bus(label="b_pellet")
             m_pellet = Source(
                 label='m_pellet',
@@ -257,7 +229,8 @@ class MetaModel:
                                  reference_temperature=self.temps['reference'])
 
         # Heat Storage
-        if hs:
+        if 'heat_storage' in kwargs:
+            hs = kwargs.pop('heat_storage')
             self._thermal_storage = MultiLayerStorage(
                 diameter=hs['diameter'],
                 volume=hs['volume'],
@@ -324,7 +297,9 @@ class MetaModel:
                 energy_system.add(s_shp, b_shp)
 
             # deep geothermal
-            if 'geothermal_heat_source' in kwargs:
+            if ('geothermal_heat_source' in kwargs
+                    and kwargs[
+                        'geothermal_heat_source']['thermal_output'] > 0):
                 ghp = kwargs.pop('geothermal_heat_source')
                 b_ghp = Bus(label="b_ghp",
                             outputs={heat_pump.b_th_in["sonde"]: Flow()})
@@ -553,7 +528,9 @@ class MetaModel:
                                            heat_layers.b_th_in_highest.label))
 
         # gas_boiler
-        if gas_boiler:
+        if ('gas_boiler' in kwargs
+                and kwargs['gas_boiler']["thermal_output"] > 0):
+            gas_boiler = kwargs.pop('gas_boiler')
             t_boiler = Transformer(
                 label='t_boiler',
                 inputs={b_fossil_gas: Flow()},
@@ -569,7 +546,9 @@ class MetaModel:
             energy_system.add(t_boiler)
 
         # wood pellet gas_boiler
-        if pellet_boiler:
+        if ('pellet_boiler' in kwargs
+                and kwargs['pellet_boiler']['thermal_output'] > 0):
+            pellet_boiler = kwargs.pop('pellet_boiler')
             t_pellet = Transformer(
                 label='t_pellet',
                 inputs={b_pellet: Flow()},
@@ -586,10 +565,8 @@ class MetaModel:
             energy_system.add(t_pellet)
 
         # CHP
-        if not chp:
-            self.chp_revenue_funded = 0
-            self.chp_revenue_unfunded = 0
-        else:
+        if 'chp' in kwargs and kwargs['chp']['electric_output'] > 0:
+            chp = kwargs.pop('chp')
             self.chp_revenue_funded = (
                     self.energy_cost['electricity']['market']
                     + chp['feed_in_subsidy'])
@@ -598,11 +575,11 @@ class MetaModel:
 
             b_gas_chp = Bus(label='b_gas_chp')
 
-            if self.biomethane_fraction == 1:
+            if chp['biomethane_fraction'] == 1:
                 t_gas_chp = Transformer(label="t_gas_chp",
                                         inputs={b_biomethane: Flow()},
                                         outputs={b_gas_chp: Flow()})
-            elif self.biomethane_fraction == 0:
+            elif chp['biomethane_fraction'] == 0:
                 t_gas_chp = Transformer(label="t_gas_chp",
                                         inputs={b_fossil_gas: Flow()},
                                         outputs={b_gas_chp: Flow()})
@@ -613,8 +590,8 @@ class MetaModel:
                             b_biomethane: Flow()},
                     outputs={b_gas_chp: Flow()},
                     conversion_factors={
-                        b_fossil_gas: 1 - self.biomethane_fraction,
-                        b_biomethane: self.biomethane_fraction})
+                        b_fossil_gas: 1 - chp['biomethane_fraction'],
+                        b_biomethane: chp['biomethane_fraction']})
             energy_system.add(t_gas_chp, b_gas_chp)
 
             b_el_chp_fund = Bus(
@@ -669,11 +646,13 @@ class MetaModel:
             self.chp_gas_flows.append((b_gas_chp.label, t_chp.label))
 
             energy_system.add(t_chp)
+        else:
+            self.chp_revenue_funded = 0
+            self.chp_revenue_unfunded = 0
 
         # PV
-        if not pv:
-            self.pv_revenue = 0
-        else:
+        if 'pv' in kwargs and kwargs['pv']['nominal_power'] > 0:
+            pv = kwargs.pop('pv')
             self.pv_revenue = pv['feed_in_subsidy']
             b_el_pv = Bus(
                 label="b_el_pv",
@@ -691,9 +670,13 @@ class MetaModel:
             self.pv_el_flows.append((t_pv.label, b_el_pv.label))
 
             energy_system.add(t_pv, b_el_pv)
+        else:
+            self.pv_revenue = 0
 
         # Power to Heat
-        if p2h:
+        if ('power_to_heat' in kwargs
+                and kwargs['power_to_heat']['thermal_output'] > 0):
+            p2h = kwargs.pop('power_to_heat')
             t_p2h = Transformer(
                 label='t_p2h',
                 inputs={b_eldist: Flow()},
@@ -710,9 +693,10 @@ class MetaModel:
                                       heat_layers.b_th_in_highest.label))
 
         # Wind Turbine
-        if not wind_turbine:
+        if 'wind_turbine' not in kwargs:
             self.wt_revenue = 0
-        else:
+        elif kwargs['wind_turbine']['nominal_power'] > 0:
+            wind_turbine = kwargs.pop('wind_turbine')
             self.wt_revenue = wind_turbine['feed_in_subsidy']
             b_el_wt = Bus(
                 label="b_el_wt",
@@ -733,7 +717,8 @@ class MetaModel:
             energy_system.add(t_wt, b_el_wt)
 
         # Battery
-        if battery:
+        if 'battery' in kwargs and kwargs['battery']['capacity'] > 0:
+            battery = kwargs.pop('battery')
             s_battery = GenericStorage(
                 label='s_battery',
                 inputs={
@@ -767,6 +752,11 @@ class MetaModel:
 
         self.energy_system = energy_system
         self.model = model
+        if len(kwargs) > 0:
+            print(10*"#")
+            print("Unhandled arguments while initialising MTRESS:")
+            pprint.pprint(kwargs)
+            print(10 * "#")
 
     def aggregate_flows(self, flows_to_aggregate):
         """
