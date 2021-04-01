@@ -41,37 +41,17 @@ class MetaModel:
         """
 
         def _unpack_kwargs():
-            self.meteo = kwargs.get('meteorology')
-            self.temps = kwargs.get('temperatures')
-            self.energy_cost = kwargs.get('energy_cost')
-            self.demand = kwargs.get('demand')
-            self.spec_co2 = kwargs.get('co2')
-            self.allow_missing_heat = kwargs.get('allow_missing_heat', False)
-            self.exclusive_grid_connection = kwargs.get(
+            self.meteo = kwargs.pop('meteorology')
+            self.temps = kwargs.pop('temperatures')
+            self.energy_cost = kwargs.pop('energy_cost')
+            self.demand = kwargs.pop('demand')
+            self.spec_co2 = kwargs.pop('co2')
+            self.allow_missing_heat = kwargs.pop('allow_missing_heat', False)
+            self.exclusive_grid_connection = kwargs.pop(
                 'exclusive_grid_connection', True)
 
         _unpack_kwargs()
 
-        bhp = kwargs.get('heat_pump')
-        if bhp and bhp["electric_input"] <= 0:
-            del bhp
-            bhp = None
-        shp = kwargs.get('near_surface_heat_source')
-        if shp and shp["thermal_output"] <= 0:
-            del shp
-            shp = None
-        ghp = kwargs.get('geothermal_heat_source')
-        if ghp and ghp["thermal_output"] <= 0:
-            del ghp
-            ghp = None
-        ihs = kwargs.get('ice_storage')
-        if ihs and ihs["volume"] <= 0:
-            del ihs
-            ihs = None
-        tgs = kwargs.get('thermal_ground_storage')
-        if tgs and tgs["volume"] <= 0:
-            del tgs
-            tgs = None
         gas_boiler = kwargs.get('gas_boiler')
         if gas_boiler and gas_boiler["thermal_output"] <= 0:
             del gas_boiler
@@ -107,10 +87,6 @@ class MetaModel:
         if hs and hs["volume"] <= 0:
             del hs
             hs = None
-        st = kwargs.get('solar_thermal')
-        if st and st["area"] <= 0:
-            del st
-            st = None
 
         # Create relevant temperature list
         temperature_levels = self.temps.get('additional', list())
@@ -296,16 +272,20 @@ class MetaModel:
 
         ####################################################################
         # Heat pump
-        if bhp:
+        if "heat_pump" in kwargs:
+            bhp = kwargs.pop("heat_pump")
+            assert bhp['electric_input'] >= 0
             heat_sources = dict()
-            if ihs:
+            if 'ice_storage' in kwargs:
                 heat_sources["ice"] = 0
-            if shp:
+            if 'near_surface_heat_source' in kwargs:
                 heat_sources["soil"] = self.meteo['temp_soil']
-            if ghp:
-                heat_sources["sonde"] = ghp['temperature']
-            if tgs:
-                heat_sources["pit_storage"] = tgs['temperature']
+            if 'geothermal_heat_source' in kwargs:
+                heat_sources["sonde"] = kwargs[
+                    'geothermal_heat_source']['temperature']
+            if 'thermal_ground_storage' in kwargs:
+                heat_sources["pit_storage"] = kwargs[
+                    'thermal_ground_storage']['temperature']
 
             if len(heat_sources) > 0:
                 b_el_bhp = Bus(
@@ -332,7 +312,8 @@ class MetaModel:
             self.heat_pump = heat_pump
             # heat pump sources
             # near surface source
-            if shp:
+            if 'near_surface_heat_source' in kwargs:
+                shp = kwargs.pop('near_surface_heat_source')
                 b_shp = Bus(label="b_bhp",
                             outputs={heat_pump.b_th_in["soil"]: Flow()})
                 s_shp = Source(
@@ -343,7 +324,8 @@ class MetaModel:
                 energy_system.add(s_shp, b_shp)
 
             # deep geothermal
-            if ghp:
+            if 'geothermal_heat_source' in kwargs:
+                ghp = kwargs.pop('geothermal_heat_source')
                 b_ghp = Bus(label="b_ghp",
                             outputs={heat_pump.b_th_in["sonde"]: Flow()})
                 s_ghp = Source(
@@ -355,7 +337,8 @@ class MetaModel:
 
             ###################################################################
             # Ice storage
-            if ihs:
+            if 'ice_storage' in kwargs:
+                ihs = kwargs.pop('ice_storage')
                 b_ihs = Bus(label='b_ihs',
                             inputs={heat_layers.b_th_lowest: Flow()},
                             outputs={heat_pump.b_th_in["ice"]: Flow()})
@@ -370,7 +353,9 @@ class MetaModel:
 
                 energy_system.add(b_ihs, s_ihs)
 
-            if tgs:
+            if ('thermal_ground_storage' in kwargs
+                    and kwargs['thermal_ground_storage']['volume'] > 0):
+                tgs = kwargs.pop('thermal_ground_storage')
                 b_tgs = Bus(label='b_tgs',
                             inputs={heat_layers.b_th_lowest: Flow()},
                             outputs={heat_pump.b_th_in["pit_storage"]: Flow()})
@@ -388,7 +373,9 @@ class MetaModel:
 
         ###############################################################
         # Solar thermal
-        if st:
+
+        if 'solar_thermal' in kwargs and kwargs['solar_thermal']['area'] > 0:
+            st = kwargs.pop('solar_thermal')
             b_st = Bus(label="b_st")
             s_st = Source(label="s_st",
                           outputs={b_st: Flow(nominal_value=1)})
