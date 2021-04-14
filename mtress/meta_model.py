@@ -693,9 +693,8 @@ class MetaModel:
                                       heat_layers.b_th_in_highest.label))
 
         # Wind Turbine
-        if 'wind_turbine' not in kwargs:
-            self.wt_revenue = 0
-        elif kwargs['wind_turbine']['nominal_power'] > 0:
+        if 'wind_turbine' in kwargs \
+                and kwargs['wind_turbine']['nominal_power'] > 0:
             wind_turbine = kwargs.pop('wind_turbine')
             self.wt_revenue = wind_turbine['feed_in_subsidy']
             b_el_wt = Bus(
@@ -715,6 +714,8 @@ class MetaModel:
             self.wt_el_flows.append((t_wt.label, b_el_wt.label))
 
             energy_system.add(t_wt, b_el_wt)
+        else:
+            self.wt_revenue = 0
 
         # Battery
         if 'battery' in kwargs and kwargs['battery']['capacity'] > 0:
@@ -738,11 +739,19 @@ class MetaModel:
             self._thermal_storage.add_shared_limit(model=model)
 
         if self.exclusive_grid_connection:
-            constraints.limit_active_flow_count_by_keyword(
-                model,
-                "grid_connection",
-                lower_limit=0,
-                upper_limit=1)
+            # Check if simultaneous  feed in and feed out might occur due to expediencies
+            expendency_pv = max(self.pv_revenue - self.grid_connection_in_costs)
+            expendency_wt = max(self.wt_revenue - self.grid_connection_in_costs)
+            expendency_chp = max(self.chp_revenue_funded - self.grid_connection_in_costs)
+            max_expendency = max([expendency_chp, expendency_pv, expendency_wt])
+
+            # Only activate exclusive grid connection if such situations might occur
+            if max_expendency >= 0:
+                constraints.limit_active_flow_count_by_keyword(
+                    model,
+                    "grid_connection",
+                    lower_limit=0,
+                    upper_limit=1)
 
         self.production_el_flows = (self.wt_el_flows
                                     + self.pv_el_flows
