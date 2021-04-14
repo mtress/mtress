@@ -693,9 +693,8 @@ class MetaModel:
                                       heat_layers.b_th_in_highest.label))
 
         # Wind Turbine
-        if 'wind_turbine' not in kwargs:
-            self.wt_revenue = 0
-        elif kwargs['wind_turbine']['nominal_power'] > 0:
+        if 'wind_turbine' in kwargs \
+                and kwargs['wind_turbine']['nominal_power'] > 0:
             wind_turbine = kwargs.pop('wind_turbine')
             self.wt_revenue = wind_turbine['feed_in_subsidy']
             b_el_wt = Bus(
@@ -715,6 +714,8 @@ class MetaModel:
             self.wt_el_flows.append((t_wt.label, b_el_wt.label))
 
             energy_system.add(t_wt, b_el_wt)
+        else:
+            self.wt_revenue = 0
 
         # Battery
         if 'battery' in kwargs and kwargs['battery']['capacity'] > 0:
