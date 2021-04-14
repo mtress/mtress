@@ -80,7 +80,7 @@
         "electricity": {
             "demand_rate": 15000,
             "slp_price": 300,
-            "surcharge": 17,
+            "surcharge": 130,
             "eeg_levy": 64.123
         },
         "gas": {"fossil_gas": 35,
