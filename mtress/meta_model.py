@@ -311,7 +311,7 @@ class MetaModel:
 
             ###################################################################
             # Ice storage
-            if 'ice_storage' in kwargs:
+            if 'ice_storage' in kwargs and  kwargs['ice_storage']['volume'] > 0:
                 ihs = kwargs.pop('ice_storage')
                 b_ihs = Bus(label='b_ihs',
                             inputs={heat_layers.b_th_lowest: Flow()},
