@@ -326,6 +326,8 @@ class MetaModel:
                                               * ihs['volume']))
 
                 energy_system.add(b_ihs, s_ihs)
+            else:
+                ihs = None
 
             if ('thermal_ground_storage' in kwargs
                     and kwargs['thermal_ground_storage']['volume'] > 0):
@@ -340,10 +342,11 @@ class MetaModel:
                     outputs={b_tgs: Flow()})
                 energy_system.add(s_tgs, b_tgs)
             else:
-                b_tgs = None
+                tgs = None
         else:
             self.heat_pump = None
-            b_tgs = None
+            tgs = None
+            ihs = None
 
         ###############################################################
         # Solar thermal
@@ -356,9 +359,7 @@ class MetaModel:
 
             energy_system.add(s_st, b_st)
 
-            if ('thermal_ground_storage' in kwargs
-                    and kwargs['thermal_ground_storage']['temperature']
-                    not in heat_layers.temperature_levels):
+            if tgs and tgs["temperature"] not in heat_layers.temperature_levels:
                 temp = tgs["temperature"]
                 temp_str = "{0:.0f}".format(temp)
                 st_level_label = 't_st_' + temp_str
@@ -374,8 +375,7 @@ class MetaModel:
                                                     b_tgs.label))
                 energy_system.add(t_st_level)
 
-            if ('ice_storage' in kwargs
-                    and 0 not in heat_layers.temperature_levels):
+            if ihs and 0 not in heat_layers.temperature_levels:
                 temp = 0
                 temp_str = "{0:.0f}".format(temp)
                 st_level_label = 't_st_' + temp_str
