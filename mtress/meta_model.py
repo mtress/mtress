@@ -8,7 +8,6 @@ import pprint
 from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          Model, Investment, constraints, GenericStorage,
                          NonConvex)
-from oemof import thermal
 
 from .layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
                            HeatExchanger)
@@ -312,7 +311,7 @@ class MetaModel:
 
             ###################################################################
             # Ice storage
-            if 'ice_storage' in kwargs:
+            if 'ice_storage' in kwargs and  kwargs['ice_storage']['volume'] > 0:
                 ihs = kwargs.pop('ice_storage')
                 b_ihs = Bus(label='b_ihs',
                             inputs={heat_layers.b_th_lowest: Flow()},
@@ -327,6 +326,8 @@ class MetaModel:
                                               * ihs['volume']))
 
                 energy_system.add(b_ihs, s_ihs)
+            else:
+                ihs = None
 
             if ('thermal_ground_storage' in kwargs
                     and kwargs['thermal_ground_storage']['volume'] > 0):
@@ -341,10 +342,11 @@ class MetaModel:
                     outputs={b_tgs: Flow()})
                 energy_system.add(s_tgs, b_tgs)
             else:
-                b_tgs = None
+                tgs = None
         else:
             self.heat_pump = None
-            b_tgs = None
+            tgs = None
+            ihs = None
 
         ###############################################################
         # Solar thermal
@@ -357,7 +359,7 @@ class MetaModel:
 
             energy_system.add(s_st, b_st)
 
-            if b_tgs:
+            if tgs and tgs["temperature"] not in heat_layers.temperature_levels:
                 temp = tgs["temperature"]
                 temp_str = "{0:.0f}".format(temp)
                 st_level_label = 't_st_' + temp_str
@@ -371,6 +373,22 @@ class MetaModel:
 
                 self.solar_thermal_th_flows.append((st_level_label,
                                                     b_tgs.label))
+                energy_system.add(t_st_level)
+
+            if ihs and 0 not in heat_layers.temperature_levels:
+                temp = 0
+                temp_str = "{0:.0f}".format(temp)
+                st_level_label = 't_st_' + temp_str
+                t_st_level = Transformer(
+                    label=st_level_label,
+                    inputs={b_st: Flow(nominal_value=st["area"])},
+                    outputs={b_ihs: Flow(nominal_value=1)},
+                    conversion_factors={
+                        b_st: (1 / st['spec_generation'][
+                            'ST_' + str(temp)]).to_list()})
+
+                self.solar_thermal_th_flows.append((st_level_label,
+                                                    b_ihs.label))
                 energy_system.add(t_st_level)
 
             for temp in heat_layers.temperature_levels:
