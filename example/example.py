@@ -36,7 +36,7 @@ def all_techs_model(number_of_time_steps=365 * 24,
     meteo = pd.read_csv(os.path.join(dir_path, 'meteo.csv'),
                         comment='#', index_col=0,
                         sep=',',
-                        parse_dates=True)
+                        parse_dates=True, dayfirst=True)
 
     day_ahead = pd.read_csv(os.path.join(dir_path, 'day-ahead.csv'),
                             comment='#', index_col=0,
