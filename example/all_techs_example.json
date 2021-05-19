@@ -9,6 +9,10 @@
             80
         ]
     },
+    "air_source_heat_pump": {
+        "electric_input": 0.1,
+        "cop_0_35": 3
+    },
     "heat_pump": {
         "electric_input": 0.1,
         "cop_0_35": 4.6
