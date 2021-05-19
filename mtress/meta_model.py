@@ -106,6 +106,8 @@ class MetaModel:
         self.chp_export_funded_flows = list()
         self.chp_el_unfunded_flows = list()
         self.chp_export_unfunded_flows = list()
+        self.ahp_th_flows = list()
+        self.ahp_el_flows = list()
         self.bhp_th_flows = list()
         self.bhp_el_flows = list()
         self.p2h_th_flows = list()
@@ -243,6 +245,38 @@ class MetaModel:
             self._thermal_storage = None
 
         ####################################################################
+
+        if "air_source_heat_pump" in kwargs:
+            ahp = kwargs.pop("air_source_heat_pump")
+            assert ahp['electric_input'] >= 0
+
+            b_el_ahp = Bus(
+                label='b_el_ahp',
+                inputs={b_eldist: Flow(nominal_value=ahp['electric_input'])})
+            energy_system.add(b_el_ahp)
+            if 'thermal_output' not in ahp:
+                ahp['thermal_output'] = None
+            air_heat_pump = LayeredHeatPump(
+                energy_system=energy_system,
+                heat_layers=heat_layers,
+                electricity_source=b_el_ahp,
+                thermal_power_limit=ahp['thermal_output'],
+                heat_sources={"air": self.meteo['temp_air']},
+                cop_0_35=ahp["cop_0_35"],
+                label="air_heat_pump")
+
+            b_ahp = Bus(label="b_ahp",
+                        outputs={air_heat_pump.b_th_in["air"]: Flow()})
+            s_shp = Source(label="s_ahp", outputs={b_ahp: Flow()})
+
+            energy_system.add(s_shp, b_ahp)
+
+            self.ahp_th_flows.extend(air_heat_pump.heat_out_flows)
+            self.ahp_el_flows.append((b_eldist.label,
+                                      b_el_ahp.label))
+        else:
+            air_heat_pump = None
+
         # Heat pump
         if "heat_pump" in kwargs:
             bhp = kwargs.pop("heat_pump")
@@ -274,7 +308,7 @@ class MetaModel:
                     thermal_power_limit=bhp['thermal_output'],
                     heat_sources=heat_sources,
                     cop_0_35=bhp["cop_0_35"],
-                    label="heat_pump")
+                    label="brine_heat_pump")
 
                 self.bhp_th_flows.extend(heat_pump.heat_out_flows)
                 self.bhp_el_flows.append((b_eldist.label,
