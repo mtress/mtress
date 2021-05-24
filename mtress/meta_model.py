@@ -9,9 +9,9 @@ from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          Model, Investment, constraints, GenericStorage,
                          NonConvex)
 
-from .layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
+from mtress.layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
                            HeatExchanger)
-from .physics import (HHV_WP, H2O_HEAT_FUSION, H2O_DENSITY)
+from mtress.physics import (HHV_WP, H2O_HEAT_FUSION, H2O_DENSITY)
 
 HIGH_VIRTUAL_COSTS = 1000
 
