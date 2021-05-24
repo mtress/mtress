@@ -56,14 +56,21 @@
     },
     "pv": {
         "nominal_power": 1,
-        "feed_in_subsidy": 75
+        "feed_in_subsidy": 75,
+        "spec_generation": "generation.csv:PV"
     },
     "wind_turbine": {
         "nominal_power": 1,
-        "feed_in_subsidy": 75
+        "feed_in_subsidy": 75,
+        "spec_generation": "generation.csv:WT"
     },
     "solar_thermal": {
-        "area": 0
+        "area": 0,
+        "spec_generation": {
+            "ST_20": "generation.csv:ST_20",
+            "ST_30": "generation.csv:ST_30",
+            "ST_40": "generation.csv:ST_40"
+        }
     },
     "power_to_heat": {
         "thermal_output": 0.05
@@ -85,12 +92,22 @@
             "demand_rate": 15000,
             "slp_price": 300,
             "surcharge": 130,
-            "eeg_levy": 64.123
+            "eeg_levy": 64.123,
+            "market" : 30
         },
         "gas": {"fossil_gas": 35,
                 "biomethane": 95,
                 "energy_tax": 5.5},
         "wood_pellet": 300
+    },
+    "meteorology": {
+        "temp_air": "meteo.csv:temp_air",
+        "temp_soil": "meteo.csv:temp_soil"
+    },
+    "demand": {
+        "electricity": "demand.csv:electricity",
+        "heating": "demand.csv:heating",
+        "dhw": "demand.csv:dhw"
     },
     "co2": {
         "el_in": 0.427,
