@@ -21,7 +21,7 @@
         "thermal_output": 0
     },
     "geothermal_heat_source": {
-        "thermal_output": 0,
+        "thermal_output": 0.1,
         "temperature": 15
     },
     "ice_storage": {
@@ -65,11 +65,13 @@
         "spec_generation": "generation.csv:WT"
     },
     "solar_thermal": {
-        "area": 0,
+        "area": 4,
         "spec_generation": {
+            "ST_0": "generation.csv:ST_20",
             "ST_20": "generation.csv:ST_20",
             "ST_30": "generation.csv:ST_30",
-            "ST_40": "generation.csv:ST_40"
+            "ST_40": "generation.csv:ST_40",
+            "ST_80": "generation.csv:ST_40"
         }
     },
     "power_to_heat": {
