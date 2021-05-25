@@ -16,6 +16,10 @@ def all_techs_model(number_of_time_steps=365 * 24,
     :param number_of_time_steps: number of time steps to consider
     :param slices: number of time slices
     :param silent: just solve and do not print results (for testing/ debug)
+
+    Eexample for working with time slices
+    w/o having to reload CSV files multiple times.
+    (Ignores CSV files named in json.)
     """
     start_global = time.time()
     solver_time = 0
@@ -29,11 +33,6 @@ def all_techs_model(number_of_time_steps=365 * 24,
                         sep=',',
                         parse_dates=True, dayfirst=True)
 
-    day_ahead = pd.read_csv(os.path.join(dir_path, 'day-ahead.csv'),
-                            comment='#', index_col=0,
-                            sep=',',
-                            parse_dates=True)
-
     demand = pd.read_csv(os.path.join(dir_path, 'demand.csv'),
                          comment='#', index_col=0,
                          sep=',',
@@ -44,11 +43,9 @@ def all_techs_model(number_of_time_steps=365 * 24,
                              sep=',',
                              parse_dates=True)
 
-    data_global = meteo.join(day_ahead)
-    data_global = data_global.join(demand)
+    data_global = meteo.join(demand)
     data_global = data_global.join(generation)
 
-    del day_ahead
     del demand
     del generation
 
@@ -72,8 +69,6 @@ def all_techs_model(number_of_time_steps=365 * 24,
             'meteorology': {
                 'temp_air': meteo['temp_air'],  # K
                 'temp_soil': meteo['temp_soil']},  # K
-            'energy_cost': {
-                'electricity': {'market': data['price']}},  # €/MW
             'demand': {
                 'electricity': data['electricity'],  # MW (time series)
                 'heating': data['heating'],  # MW (time series)
@@ -89,6 +84,11 @@ def all_techs_model(number_of_time_steps=365 * 24,
 
         if 'solar_thermal' in variables.keys():
             time_series['solar_thermal'] = {'spec_generation': data.filter(regex='ST')}  # MW/m^2
+            time_series['solar_thermal']['spec_generation'][
+                'ST_0'] = time_series['solar_thermal']['spec_generation'][
+                'ST_20']
+            time_series['solar_thermal']['spec_generation'][
+                'ST_80'] = 0
 
         for key1 in time_series:
             if key1 not in variables:
