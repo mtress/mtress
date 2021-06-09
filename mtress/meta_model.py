@@ -40,6 +40,10 @@ class MetaModel:
                  as well as a dict containing all used technology classes
         """
 
+        with open('config.txt', "w") as the_file:
+            print(kwargs, file=the_file)
+        exit()
+
         def _unpack_general_kwargs():
             """Unpack non-technology kwargs"""
             self.meteo = kwargs.pop('meteorology')
