@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numbers
 
+from copy import deepcopy
 import numpy as np
 import pandas as pd
 import pprint
@@ -625,9 +626,15 @@ class MetaModel:
         # CHP
         if 'chp' in kwargs and kwargs['chp']['electric_output'] > 0:
             chp = kwargs.pop('chp')
+            # According to § 7 Abs. 6 KWKG
+            subsidised_timesteps = deepcopy(
+                self.energy_cost['electricity']['market'])
+            subsidised_timesteps[subsidised_timesteps > 0] = 1
+            subsidised_timesteps[subsidised_timesteps <= 0] = 0
+
             self.chp_revenue_funded = (
-                    self.energy_cost['electricity']['market']
-                    + chp['feed_in_subsidy'])
+                self.energy_cost['electricity']['market']
+                + subsidised_timesteps * chp['feed_in_subsidy'])
             self.chp_revenue_unfunded = self.energy_cost[
                 'electricity']['market']
 
@@ -658,7 +665,8 @@ class MetaModel:
                     b_elxprt: Flow(
                         variable_costs=-(self.chp_revenue_funded)),
                     b_elprod: Flow(
-                        variable_costs=-chp['own_consumption_subsidy'])})
+                        variable_costs=-(subsidised_timesteps
+                                         * chp['own_consumption_subsidy']))})
 
             self.chp_export_funded_flows.append((b_el_chp_fund.label,
                                                  b_elxprt.label))
