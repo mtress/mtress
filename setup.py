@@ -14,7 +14,7 @@ setup(
     long_description_content_type="text/x-rst",
     zip_safe=False,
     install_requires=[
-        "oemof.solph >= 0.4",
+        "oemof.solph >= 0.4.4",
         "oemof.thermal >= 0.0.4"
     ]
 )

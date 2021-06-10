@@ -14,7 +14,7 @@ import pandas as pd
 
 from oemof.solph import views, processing
 
-from mtress.meta_model import MetaModel
+from mtress import MetaModel
 
 HIGH_ACCURACY = 1e-5
 OKAY_ACCURACY = 1e-5  # sometimes, 2.5 % are good enough
