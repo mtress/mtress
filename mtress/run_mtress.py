@@ -31,12 +31,16 @@ def run_mtress(parameters,
     :param time_range: tuple (first time step, last time step)
     :param solver: solver to use for oemof.solph
     """
-    if type(parameters) is not dict:
+    if type(parameters) is dict:
+        dir_path = parameters["dir_path"]
+        del parameters["dir_path"]
+    else:
         if type(parameters) is string:
+            dir_path = os.path.dirname(os.path.realpath(parameters))
             with open(parameters) as f:
                 parameters = json.load(f)
 
-    dir_path = os.path.dirname(os.path.realpath(json_file))
+
 
     _read_csv_files(parameters, dir_path, time_range=time_range)
 
