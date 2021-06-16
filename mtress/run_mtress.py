@@ -23,16 +23,18 @@ def _read_csv_files(parameter_dict, dir_path, time_range):
             parameter_dict[key] = csv_data[column_name]
 
 
-def run_mtress(json_file,
+def run_mtress(parameters,
                time_range=(0, -1),
                solver="cbc"):
     """
-    :param json_file: json file holding configuration
+    :param parameters: dict or file name of json file holding configuration
     :param time_range: tuple (first time step, last time step)
     :param solver: solver to use for oemof.solph
     """
-    with open(json_file) as f:
-        parameters = json.load(f)
+    if type(parameters) is not dict:
+        if type(parameters) is string:
+            with open(parameters) as f:
+                parameters = json.load(f)
 
     dir_path = os.path.dirname(os.path.realpath(json_file))
 
