@@ -37,7 +37,7 @@ def all_techs_model(first_time_step=0,
                                   "all_techs_example.json")
 
     # run model using input data as defined in that file
-    meta_model = run_mtress(json_file=json_file_name,
+    meta_model = run_mtress(parameters=json_file_name,
                             time_range=(first_time_step, last_time_step))
 
     # store result data in common positions

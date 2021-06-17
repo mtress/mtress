@@ -35,7 +35,7 @@ def run_mtress(parameters,
         dir_path = parameters["dir_path"]
         del parameters["dir_path"]
     else:
-        if type(parameters) is string:
+        if type(parameters) is str:
             dir_path = os.path.dirname(os.path.realpath(parameters))
             with open(parameters) as f:
                 parameters = json.load(f)
