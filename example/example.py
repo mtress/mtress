@@ -4,7 +4,7 @@ import pandas as pd
 import json
 import os
 
-from oemof.solph import views, processing
+from oemof.solph import views
 
 from mtress.run_mtress import run_mtress
 
@@ -39,15 +39,6 @@ def all_techs_model(first_time_step=0,
     # run model using input data as defined in that file
     meta_model = run_mtress(parameters=json_file_name,
                             time_range=(first_time_step, last_time_step))
-
-    # store result data in common positions
-    energy_system = meta_model.energy_system
-    energy_system.results['main'] = processing.results(
-        meta_model.model)
-    energy_system.results['main'] = views.convert_keys_to_strings(
-        energy_system.results['main'])
-    energy_system.results['meta'] = processing.meta_results(
-        meta_model.model)
 
     if not silent:
         print('\n')

@@ -8,7 +8,8 @@ import pprint
 
 from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          Model, Investment, constraints, GenericStorage,
-                         NonConvex)
+                         NonConvex, views)
+from oemof.solph.processing import meta_results, results
 
 from mtress.layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
                            HeatExchanger)
@@ -970,3 +971,21 @@ class MetaModel:
         assert self_sufficiency == self_sufficiency
 
         return np.round(self_sufficiency, 3)
+
+    def solve(self,
+              solver="cbc",
+              solve_kwargs={'tee': False},
+              cmdline_options={'ratio': 0.01}):
+        """
+        solves the model and puts results to expected locations
+        """
+        self.model.solve(solver=solver,
+                         solve_kwargs=solve_kwargs,
+                         solver_io='lp',
+                         cmdline_options=cmdline_options)
+
+        # store result data in common positions
+        self.energy_system.results['meta'] = meta_results(self.model)
+        self.energy_system.results['main'] = results(self.model)
+        self.energy_system.results['main'] = views.convert_keys_to_strings(
+            self.energy_system.results['main'])
