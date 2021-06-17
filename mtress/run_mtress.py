@@ -45,10 +45,9 @@ def run_mtress(parameters,
     _read_csv_files(parameters, dir_path, time_range=time_range)
 
     meta_model = MetaModel(**parameters)
-    meta_model.model.solve(solver=solver,
-                           solve_kwargs={'tee': False},
-                           solver_io='lp',
-                           cmdline_options={'ratio': 0.01})
+    meta_model.solve(solver=solver,
+                     solve_kwargs={'tee': False},
+                     cmdline_options={'ratio': 0.01})
 
     return meta_model
 
