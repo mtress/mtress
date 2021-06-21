@@ -957,9 +957,6 @@ class MetaModel:
         else:
             own_consumption = 1
 
-        # Check if own consumption is not nan
-        assert own_consumption == own_consumption
-
         return np.round(own_consumption, 3)
 
     def self_sufficiency(self):
@@ -972,9 +969,6 @@ class MetaModel:
         el_demand = self.aggregate_flows(self.demand_el_flows).sum()
 
         self_sufficiency = 1 - (self._electricity_import / el_demand)
-
-        # Check if self sufficiency is not nan
-        assert self_sufficiency == self_sufficiency
 
         return np.round(self_sufficiency, 3)
 
