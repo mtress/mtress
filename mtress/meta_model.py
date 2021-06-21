@@ -846,6 +846,21 @@ class MetaModel:
 
         return res
 
+    def _calc_energy_balance(self):
+        """
+        calculate exclusive export or import
+        """
+        self._raw_electricity_import = self.aggregate_flows(
+            self.electricity_import_flows)
+        self._raw_electricity_export = self.aggregate_flows(
+            self.electricity_export_flows)
+        electricity_balance = (self._raw_electricity_export
+                               - self._raw_electricity_import)
+        self._electricity_export = electricity_balance.copy()
+        self._electricity_export[electricity_balance < 0] = 0
+        self._electricity_import = -electricity_balance
+        self._electricity_import[electricity_balance >= 0] = 0
+
     def operational_costs(self, feed_in_order=None):
         """
         Extracts costs from the optimiser
@@ -861,10 +876,9 @@ class MetaModel:
                 'main'][flow]['sequences']['flow'].sum()
 
         if feed_in_order is not None:
+            self._calc_energy_balance()
             # calculate wrong numbers (selling not only excess electricity)
-            wrong_electricity_import = self.aggregate_flows(
-                self.electricity_import_flows)
-            wrong_import_costs = np.multiply(wrong_electricity_import,
+            wrong_import_costs = np.multiply(self._raw_electricity_import,
                                              self.grid_connection_in_costs)
             wrong_wt_revenue = self.wt_revenue * self.aggregate_flows(
                 self.wt_export_flows)
@@ -884,18 +898,10 @@ class MetaModel:
                      - wrong_import_costs.sum()
                      + wrong_export_revenue.sum())
 
-            # calculate exclusive export or import
-            wrong_electricity_export = self.aggregate_flows(
-                self.electricity_export_flows)
-            electricity_balance = (wrong_electricity_export
-                                   - wrong_electricity_import)
-            electricity_export = electricity_balance.copy()
-            electricity_export[electricity_balance < 0] = 0
-            electricity_import = -electricity_balance
-            electricity_import[electricity_balance >= 0] = 0
+            import_costs = (self._electricity_import
+                            * self.grid_connection_in_costs)
 
-            import_costs = electricity_import * self.grid_connection_in_costs
-
+            electricity_export = deepcopy(self._electricity_export)
             export_revenue = 0.0
             for feed_in in feed_in_order:
                 feed_in_flows = feed_in["flows"]
@@ -943,11 +949,11 @@ class MetaModel:
 
         :return: Own consumption
         """
+        self._calc_energy_balance()
         el_production = self.aggregate_flows(self.production_el_flows).sum()
-        el_export = self.aggregate_flows(self.electricity_export_flows).sum()
 
         if el_production > 0:
-            own_consumption = 1 - (el_export / el_production)
+            own_consumption = 1 - (self._electricity_export / el_production)
         else:
             own_consumption = 1
 
@@ -962,10 +968,10 @@ class MetaModel:
 
         :return: Self sufficiency
         """
-        el_import = self.aggregate_flows(self.grid_el_flows).sum()
+        self._calc_energy_balance()
         el_demand = self.aggregate_flows(self.demand_el_flows).sum()
 
-        self_sufficiency = 1 - (el_import / el_demand)
+        self_sufficiency = 1 - (self._electricity_import / el_demand)
 
         # Check if self sufficiency is not nan
         assert self_sufficiency == self_sufficiency
