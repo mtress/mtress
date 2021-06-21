@@ -935,11 +935,11 @@ class MetaModel:
         co2_import_el = el_import * self.spec_co2['el_in']
         co2_export_el = el_export * self.spec_co2['el_out']
 
-        co2_emission = (co2_import_fossil_gas.sum() +
-                        co2_import_biomethane.sum() +
-                        co2_import_el.sum() +
-                        co2_import_pellet.sum() +
-                        co2_export_el.sum())
+        co2_emission = (co2_import_fossil_gas.sum()
+                        + co2_import_biomethane.sum()
+                        + co2_import_el.sum()
+                        + co2_import_pellet.sum()
+                        - co2_export_el.sum())
 
         return np.round(co2_emission, 1)
 
