@@ -950,12 +950,13 @@ class MetaModel:
         :return: Own consumption
         """
         self._calc_energy_balance()
-        el_production = self.aggregate_flows(self.production_el_flows).sum()
+        el_production = self.aggregate_flows(self.production_el_flows)
 
-        if el_production > 0:
-            own_consumption = 1 - (self._electricity_export / el_production)
-        else:
-            own_consumption = 1
+        with np.errstate(divide='ignore', invalid='ignore'):
+            own_consumption = 1 - np.where(el_production > 0,
+                                           np.divide(self._electricity_export,
+                                                     el_production),
+                                           0)
 
         return np.round(own_consumption, 3)
 
@@ -966,9 +967,12 @@ class MetaModel:
         :return: Self sufficiency
         """
         self._calc_energy_balance()
-        el_demand = self.aggregate_flows(self.demand_el_flows).sum()
-
-        self_sufficiency = 1 - (self._electricity_import / el_demand)
+        el_demand = self.aggregate_flows(self.demand_el_flows)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            self_sufficiency = 1 - np.where(el_demand > 0,
+                                            np.divide(self._electricity_import,
+                                                      el_demand),
+                                           0)
 
         return np.round(self_sufficiency, 3)
 
