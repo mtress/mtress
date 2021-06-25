@@ -119,6 +119,10 @@ class MetaModel:
         self.solar_thermal_th_flows = list()
         self.geothermal_input_flows = list()
 
+        self.battery_inflows = list()
+        self.battery_outflows = list()
+        self.battery_content = list()
+
         self.th_storage_inflows = dict()
         self.th_storage_outflows = dict()
         self.th_storage_content = dict()
@@ -176,7 +180,8 @@ class MetaModel:
 
         co2_costs = np.array(self.spec_co2['el_out']) * self.spec_co2['price']
         m_el_out = Sink(label='m_el_out',
-                        inputs={b_grid_connection_out: Flow(variable_costs=co2_costs)})
+                        inputs={b_grid_connection_out: Flow(
+                            variable_costs=-co2_costs)})
         self.electricity_export_flows.append((b_grid_connection_out.label,
                                               m_el_out.label))
 
@@ -232,7 +237,7 @@ class MetaModel:
                                  reference_temperature=self.temps['reference'])
 
         # Heat Storage
-        if 'heat_storage' in kwargs:
+        if 'heat_storage' in kwargs and kwargs["heat_storage"]["volume"] > 0:
             hs = kwargs.pop('heat_storage')
             self._thermal_storage = MultiLayerStorage(
                 diameter=hs['diameter'],
@@ -795,6 +800,9 @@ class MetaModel:
                 outflow_conversion_factor=battery['efficiency_outflow'])
 
             energy_system.add(s_battery)
+            self.battery_content.append((s_battery.label, None))
+            self.battery_inflows.append((b_elprod.label, s_battery.label))
+            self.battery_outflows.append((s_battery.label, b_elprod.label))
 
         model = Model(energy_system)
 
