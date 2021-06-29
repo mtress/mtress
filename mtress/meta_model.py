@@ -960,7 +960,7 @@ class MetaModel:
         self._calc_energy_balance()
         el_production = sum(self.aggregate_flows(self.production_el_flows))
 
-        own_consumption = 1 - self._electricity_export/el_production
+        own_consumption = 1 - sum(self._electricity_export)/el_production
 
         return np.round(own_consumption, 3)
 
@@ -973,7 +973,7 @@ class MetaModel:
         self._calc_energy_balance()
         el_demand = sum(self.aggregate_flows(self.demand_el_flows))
 
-        self_sufficiency = 1 - self._electricity_import/el_demand
+        self_sufficiency = 1 - sum(self._electricity_import)/el_demand
 
         return np.round(self_sufficiency, 3)
 
