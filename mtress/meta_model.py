@@ -409,7 +409,7 @@ class MetaModel:
                     inputs={b_st: Flow(nominal_value=st["area"])},
                     outputs={b_tgs: Flow(nominal_value=1)},
                     conversion_factors={
-                        b_st: (1 / st['spec_generation'][
+                        b_tgs: (st['spec_generation'][
                             'ST_' + str(temp)]).to_list()})
 
                 self.solar_thermal_th_flows.append((st_level_label,
