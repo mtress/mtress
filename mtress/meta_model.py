@@ -828,7 +828,10 @@ class MetaModel:
                                     + self.pv_el_flows
                                     + self.chp_el_flows)
         self.gas_flows = self.fossil_gas_import_flows + self.biomethane_import_flows
-        self.demand_el_flows = self.demand_el_flows + self.p2h_el_flows + self.bhp_el_flows
+        self.demand_el_flows = (self.demand_el_flows
+                                + self.p2h_el_flows
+                                + self.ahp_el_flows
+                                + self.bhp_el_flows)
 
         self.energy_system = energy_system
         self.model = model
