@@ -41,7 +41,6 @@ def run_mtress(parameters,
             with open(parameters) as file:
                 parameters = json.load(file)
 
-
     _read_csv_files(parameters, dir_path, time_range=time_range)
 
     meta_model = MetaModel(**parameters)
