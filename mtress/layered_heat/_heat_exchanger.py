@@ -13,8 +13,6 @@ SPDX-License-Identifier: MIT
 
 from oemof import solph
 
-from mtress.physics import celsius_to_kelvin
-
 
 class HeatExchanger:
     """
@@ -45,12 +43,15 @@ class HeatExchanger:
 
             heat_drop = solph.Transformer(
                 label=label,
-                inputs={heat_layers.b_th[forward_flow_temperature]: solph.Flow()},
-                outputs={heat_layers.b_th[backward_flow_temperature]: solph.Flow(),
-                         heat_demand: solph.Flow()},
+                inputs={
+                    heat_layers.b_th[forward_flow_temperature]: solph.Flow()},
+                outputs={
+                    heat_layers.b_th[backward_flow_temperature]: solph.Flow(),
+                    heat_demand: solph.Flow()},
                 conversion_factors={
                     heat_layers.b_th[forward_flow_temperature]: 1,
-                    heat_layers.b_th[backward_flow_temperature]: heat_drop_ratio,
+                    heat_layers.b_th[backward_flow_temperature]:
+                        heat_drop_ratio,
                     heat_demand: 1 - heat_drop_ratio})
 
             self.backward_flow = (
@@ -60,7 +61,8 @@ class HeatExchanger:
             self.heat_drop_ratio = 0
             heat_drop = solph.Bus(
                 label=label,
-                inputs={heat_layers.b_th[forward_flow_temperature]: solph.Flow()},
+                inputs={
+                    heat_layers.b_th[forward_flow_temperature]: solph.Flow()},
                 outputs={heat_demand: solph.Flow()})
 
         self.forward_flow = (heat_layers.b_th[forward_flow_temperature].label,

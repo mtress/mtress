@@ -10,8 +10,6 @@ SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
-import numpy as np
-
 from oemof import solph
 from oemof import thermal
 

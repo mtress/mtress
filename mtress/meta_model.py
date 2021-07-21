@@ -2,17 +2,17 @@
 import numbers
 
 from copy import deepcopy
+import pprint
 import numpy as np
 import pandas as pd
-import pprint
 
 from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          Model, Investment, constraints, GenericStorage,
                          NonConvex, views)
 from oemof.solph.processing import meta_results, results
 
-from mtress.layered_heat import (HeatLayers, LayeredHeatPump, MultiLayerStorage,
-                           HeatExchanger)
+from mtress.layered_heat import (HeatLayers, LayeredHeatPump,
+                                 MultiLayerStorage, HeatExchanger)
 from mtress.physics import (HHV_WP, H2O_HEAT_FUSION, H2O_DENSITY)
 
 HIGH_VIRTUAL_COSTS = 1000
@@ -42,18 +42,15 @@ class MetaModel:
                  as well as a dict containing all used technology classes
         """
 
-        def _unpack_general_kwargs():
-            """Unpack non-technology kwargs"""
-            self.meteo = kwargs.pop('meteorology')
-            self.temps = kwargs.pop('temperatures')
-            self.energy_cost = kwargs.pop('energy_cost')
-            self.demand = kwargs.pop('demand')
-            self.spec_co2 = kwargs.pop('co2')
-            self.allow_missing_heat = kwargs.pop('allow_missing_heat', False)
-            self.exclusive_grid_connection = kwargs.pop(
-                'exclusive_grid_connection', True)
-
-        _unpack_general_kwargs()
+        ## Unpack non-technology kwargs
+        self.meteo = kwargs.pop('meteorology')
+        self.temps = kwargs.pop('temperatures')
+        self.energy_cost = kwargs.pop('energy_cost')
+        self.demand = kwargs.pop('demand')
+        self.spec_co2 = kwargs.pop('co2')
+        self.allow_missing_heat = kwargs.pop('allow_missing_heat', False)
+        self.exclusive_grid_connection = kwargs.pop(
+            'exclusive_grid_connection', True)
 
         # Create relevant temperature list
         temperature_levels = self.temps.get('additional', list())
@@ -352,7 +349,7 @@ class MetaModel:
 
             ###################################################################
             # Ice storage
-            if 'ice_storage' in kwargs and  kwargs['ice_storage']['volume'] > 0:
+            if 'ice_storage' in kwargs and kwargs['ice_storage']['volume'] > 0:
                 ihs = kwargs.pop('ice_storage')
                 b_ihs = Bus(label='b_ihs',
                             inputs={heat_layers.b_th_lowest: Flow()},
@@ -400,7 +397,8 @@ class MetaModel:
 
             energy_system.add(s_st, b_st)
 
-            if tgs and tgs["temperature"] not in heat_layers.temperature_levels:
+            if (tgs and tgs["temperature"]
+                    not in heat_layers.temperature_levels):
                 temp = tgs["temperature"]
                 temp_str = "{0:.0f}".format(temp)
                 st_level_label = 't_st_' + temp_str
@@ -512,7 +510,8 @@ class MetaModel:
 
             energy_system.add(b_th_dhw_local, d_dhw)
 
-            # We assume a heat drop but no energy loss due to the heat exchanger.
+            # We assume a heat drop but no energy loss
+            # due to the heat exchanger.
             heater_ratio = ((max(heat_layers.temperature_levels)
                              - self.temps['heat_drop_exchanger_dhw']
                              - self.temps['reference'])
@@ -551,7 +550,8 @@ class MetaModel:
 
             energy_system.add(b_th_dhw_adjacent, d_dhw_adjacent)
 
-            # We assume a heat drop but no energy loss due to the heat exchanger.
+            # We assume a heat drop but no energy loss
+            # due to the heat exchanger.
             heater_ratio = ((max(heat_layers.temperature_levels)
                              - self.temps['heat_drop_exchanger_dhw']
                              - self.temps['reference'])
@@ -810,13 +810,20 @@ class MetaModel:
             self._thermal_storage.add_shared_limit(model=model)
 
         if self.exclusive_grid_connection:
-            # Check if simultaneous  feed in and feed out might occur due to expediencies
-            expendency_pv = max(self.pv_revenue - self.grid_connection_in_costs)
-            expendency_wt = max(self.wt_revenue - self.grid_connection_in_costs)
-            expendency_chp = max(self.chp_revenue_funded - self.grid_connection_in_costs)
-            max_expendency = max([expendency_chp, expendency_pv, expendency_wt])
+            # Check if simultaneous  feed in
+            # and feed out might occur due to expediencies
+            expendency_pv = max(self.pv_revenue
+                                - self.grid_connection_in_costs)
+            expendency_wt = max(self.wt_revenue
+                                - self.grid_connection_in_costs)
+            expendency_chp = max(self.chp_revenue_funded
+                                 - self.grid_connection_in_costs)
+            max_expendency = max([expendency_chp,
+                                  expendency_pv,
+                                  expendency_wt])
 
-            # Only activate exclusive grid connection if such situations might occur
+            # Only activate exclusive grid connection
+            # if such situations might occur
             if max_expendency >= 0:
                 constraints.limit_active_flow_count_by_keyword(
                     model,
@@ -827,7 +834,8 @@ class MetaModel:
         self.production_el_flows = (self.wt_el_flows
                                     + self.pv_el_flows
                                     + self.chp_el_flows)
-        self.gas_flows = self.fossil_gas_import_flows + self.biomethane_import_flows
+        self.gas_flows = (self.fossil_gas_import_flows
+                          + self.biomethane_import_flows)
         self.demand_el_flows = (self.demand_el_flows
                                 + self.p2h_el_flows
                                 + self.ahp_el_flows
@@ -841,13 +849,21 @@ class MetaModel:
             pprint.pprint(kwargs)
             print(10 * "#")
 
+        # variables for net import/export
+        self._raw_electricity_import = None
+        self._raw_electricity_export = None
+        self._electricity_export = None
+        self._electricity_import = None
+
     def aggregate_flows(self, flows_to_aggregate):
         """
-        In the initialisation several lists are created which contain energy flows
-        of certain kinds (e.g. self.pv_flows or self.th_demand_flows). To aggregate
-        those timeseries to a joint timeseries you can use this function.
+        In the initialisation several lists are created which contain
+        energy flows of certain kinds (e.g. self.pv_flows or
+        self.th_demand_flows). To aggregate those timeseries to a joint
+        timeseries you can use this function.
 
-        :param flows_to_aggregate: List of string tuples describing the flows to aggregate
+        :param flows_to_aggregate: List of string tuples describing the
+               flows to aggregate
         :return: numpy array with aggregated time series
         """
         res = np.zeros(self.number_of_time_steps)
@@ -942,7 +958,8 @@ class MetaModel:
 
         co2_import_fossil_gas = fossil_gas_import * self.spec_co2['fossil_gas']
         co2_import_biomethane = biomethane_import * self.spec_co2['biomethane']
-        co2_import_pellet = pellet_import * HHV_WP * self.spec_co2['wood_pellet']
+        co2_import_pellet = (pellet_import * HHV_WP
+                             * self.spec_co2['wood_pellet'])
         co2_import_el = el_import * self.spec_co2['el_in']
         co2_export_el = el_export * self.spec_co2['el_out']
 
@@ -982,11 +999,15 @@ class MetaModel:
 
     def solve(self,
               solver="cbc",
-              solve_kwargs={'tee': False},
-              cmdline_options={'ratio': 0.01}):
+              solve_kwargs=None,
+              cmdline_options=None):
         """
         solves the model and puts results to expected locations
         """
+        if cmdline_options is None:
+            cmdline_options = {'ratio': 0.01}
+        if solve_kwargs is None:
+            solve_kwargs = {'tee': False}
         self.model.solve(solver=solver,
                          solve_kwargs=solve_kwargs,
                          solver_io='lp',

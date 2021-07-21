@@ -13,8 +13,6 @@ SPDX-License-Identifier: MIT
 
 from oemof import solph
 
-from mtress.physics import celsius_to_kelvin
-
 
 class HeatLayers:
     """

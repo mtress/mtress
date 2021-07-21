@@ -99,8 +99,9 @@ class LayeredHeatPump:
                         electricity_bus: 1/cop,
                         heat_layers.b_th_in[target_temperature]: 1})
 
-                self.heat_out_flows.append((heat_pump_level.label,
-                                            heat_layers.b_th_in[target_temperature].label))
+                self.heat_out_flows.append((
+                    heat_pump_level.label,
+                    heat_layers.b_th_in[target_temperature].label))
 
                 energy_system.add(heat_pump_level)
 
