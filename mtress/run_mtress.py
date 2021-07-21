@@ -19,6 +19,7 @@ def _read_csv_files(parameter_dict, dir_path, time_range):
                                    comment='#', index_col=0,
                                    sep=',',
                                    parse_dates=True)
+            last_step = min(time_range[1], len(csv_data))
             csv_data = csv_data.iloc[time_range[0]:time_range[1]]
             parameter_dict[key] = csv_data[column_name]
 
