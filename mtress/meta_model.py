@@ -41,9 +41,8 @@ class MetaModel:
         :return: Oemof energy system and model,
                  as well as a dict containing all used technology classes
         """
-
-        ## Unpack non-technology kwargs
-        self.meteo = kwargs.pop('meteorology')
+        # Unpack non-technology kwargs
+        self.meteorology = kwargs.pop('meteorology')
         self.temps = kwargs.pop('temperatures')
         self.energy_cost = kwargs.pop('energy_cost')
         self.demand = kwargs.pop('demand')
@@ -240,7 +239,7 @@ class MetaModel:
                 diameter=hs['diameter'],
                 volume=hs['volume'],
                 insulation_thickness=hs['insulation_thickness'],
-                ambient_temperature=self.meteo['temp_air'],
+                ambient_temperature=self.meteorology['temp_air'],
                 heat_layers=heat_layers)
             self.th_storage_inflows = self._thermal_storage.in_flows.values()
             self.th_storage_outflows = self._thermal_storage.out_flows.values()
@@ -265,7 +264,7 @@ class MetaModel:
                 heat_layers=heat_layers,
                 electricity_source=b_el_ahp,
                 thermal_power_limit=ahp['thermal_output'],
-                heat_sources={"air": self.meteo['temp_air']},
+                heat_sources={"air": self.meteorology['temp_air']},
                 cop_0_35=ahp["cop_0_35"],
                 label="air_heat_pump")
 
@@ -289,7 +288,7 @@ class MetaModel:
             if 'ice_storage' in kwargs:
                 heat_sources["ice"] = 0
             if 'near_surface_heat_source' in kwargs:
-                heat_sources["soil"] = self.meteo['temp_soil']
+                heat_sources["soil"] = self.meteorology['temp_soil']
             if 'geothermal_heat_source' in kwargs:
                 heat_sources["sonde"] = kwargs[
                     'geothermal_heat_source']['temperature']
@@ -458,26 +457,7 @@ class MetaModel:
 
         self.demand_el_flows.append((b_eldist.label,
                                      d_el_local.label))
-
-        # electricity not covered of the local electricity network,
-        # always created as there might be a booster but no explicit demand
-        b_el_adjacent = Bus(
-            label="b_el_adjacent",
-            inputs={b_elgrid: Flow(
-                variable_costs=self.energy_cost['electricity']['slp_price'])})
-
-        # electricity demands not covered of the local electricity network
-        if 'electricity_adjacent' in self.demand:
-            d_el_adjacent = Sink(
-                label='d_el_adjacent',
-                inputs={b_el_adjacent: Flow(
-                    fix=self.demand['electricity_adjacent'],
-                    nominal_value=1)})
-
-            self.demand_el_flows.append((b_el_adjacent.label,
-                                         d_el_adjacent.label))
-
-            energy_system.add(d_el_local, b_el_adjacent, d_el_adjacent)
+        energy_system.add(d_el_local)
 
         # create building heat
         b_th_buildings = Bus(label="b_th_buildings")
@@ -534,47 +514,6 @@ class MetaModel:
                 dhw_booster = Bus(label="dhw_booster",
                                   inputs={b_th_buildings: Flow()},
                                   outputs={b_th_dhw_local: Flow()})
-
-            energy_system.add(dhw_booster)
-
-        if 'dhw_adjacent' in self.demand and sum(
-                self.demand['dhw_adjacent'] > 0):
-            b_th_dhw_adjacent = Bus(label="b_th_dhw_local")
-
-            d_dhw_adjacent = Sink(label='d_dhw',
-                                  inputs={b_th_dhw_adjacent: Flow(
-                                      fix=self.demand['dhw_adjacent'],
-                                      nominal_value=1)})
-            self.demand_th_flows.append((b_th_dhw_adjacent.label,
-                                         d_dhw_adjacent.label))
-
-            energy_system.add(b_th_dhw_adjacent, d_dhw_adjacent)
-
-            # We assume a heat drop but no energy loss
-            # due to the heat exchanger.
-            heater_ratio = ((max(heat_layers.temperature_levels)
-                             - self.temps['heat_drop_exchanger_dhw']
-                             - self.temps['reference'])
-                            / (self.temps['dhw'] - self.temps['reference']))
-
-            if 0 < heater_ratio < 1:
-                dhw_booster = Transformer(label="dhw_booster",
-                                          inputs={b_el_adjacent: Flow(),
-                                                  b_th_buildings: Flow()},
-                                          outputs={b_th_dhw_adjacent: Flow()},
-                                          conversion_factors={
-                                              b_el_adjacent: 1 - heater_ratio,
-                                              b_th_buildings: heater_ratio,
-                                              b_th_dhw_adjacent: 1})
-
-                self.p2h_el_flows.append((b_eldist.label,
-                                          dhw_booster.label))
-                self.p2h_th_flows.append((dhw_booster.label,
-                                          b_th_dhw_adjacent.label))
-            else:
-                dhw_booster = Bus(label="dhw_booster",
-                                  inputs={b_th_buildings: Flow()},
-                                  outputs={b_th_dhw_adjacent: Flow()})
 
             energy_system.add(dhw_booster)
 
