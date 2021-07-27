@@ -1,10 +1,16 @@
 {
+    "demand": {
+        "electricity": {
+            "values": [0, 0, 0]
+        },
+        "heating": {
+            "values": [0, 0, 0],
+            "flow_temperature": 40,
+            "return_temperature": 30
+        }
+    },
     "temperatures": {
-        "reference": 0,
-        "dhw": 60,
-        "heat_drop_exchanger_dhw": 0,
-        "forward_flow": 40,
-        "backward_flow": 30
+        "reference": 0
     },
     "meteorology": {
         "temp_air": 0,
@@ -78,11 +84,6 @@
         "volume": 0,
         "diameter": 2,
         "insulation_thickness": 0
-    },
-    "demand": {
-        "electricity": [0, 0, 0],
-        "heating": [0, 0, 0],
-        "dhw": [0, 0, 0]
     },
     "energy_cost": {
         "electricity": {

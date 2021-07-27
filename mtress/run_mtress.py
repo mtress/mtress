@@ -42,6 +42,10 @@ def run_mtress(parameters,
 
     _read_csv_files(parameters, dir_path, time_range=time_range)
 
+    if "time_index" not in parameters:
+        parameters["time_index"] = parameters[
+            "demand"]["heating"]["values"].index
+
     meta_model = MetaModel(**parameters)
     meta_model.solve(solver=solver,
                      solve_kwargs={'tee': False},

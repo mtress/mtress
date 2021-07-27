@@ -18,7 +18,7 @@ def test_demand_only_exclusive():
     electricity_demand = np.full(3, 0.1)
 
     params = {
-        "demand": {"electricity": electricity_demand},
+        "demand": {"electricity": {"values": electricity_demand}},
         "energy_cost": {"electricity": {"demand_rate": 0.5}},
         "exclusive_grid_connection": True}
     meta_model, params = run_model_template(custom_params=params)
@@ -42,7 +42,7 @@ def test_demand_only_non_exclusive():
     electricity_demand = np.full(3, 0.1)
 
     params = {
-        "demand": {"electricity": electricity_demand},
+        "demand": {"electricity": {"values": electricity_demand}},
         "energy_cost": {"electricity": {"demand_rate": 0.5}},
         "exclusive_grid_connection": False}
     meta_model, params = run_model_template(custom_params=params)
@@ -71,7 +71,7 @@ def test_demand_supply_exclusive():
     el_market_price = feed_in_subsidy/2
 
     params = {
-        "demand": {"electricity": electricity_demand},
+        "demand": {"electricity": {"values": electricity_demand}},
         "energy_cost": {"electricity": {"market": el_market_price}},
         "pv": {
             "nominal_power": 1,
@@ -123,7 +123,7 @@ def test_demand_supply_non_exclusive():
     feed_in_subsidy_wind = 0.8
 
     params = {
-        "demand": {"electricity": electricity_demand},
+        "demand": {"electricity": {"values": electricity_demand}},
         "energy_cost": {"electricity": {"market": el_market_price}},
         "pv": {
             "nominal_power": 1,

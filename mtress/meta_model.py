@@ -61,8 +61,18 @@ class MetaModel:
 
         # Create relevant temperature list
         temperature_levels = self.temps.get('additional', list())
-        temperature_levels.append(self.temps['forward_flow'])
-        temperature_levels.append(self.temps['backward_flow'])
+
+        if 'dhw' in self.demand:
+            temperature_levels.append(self.demand['dhw'][
+                                          'flow_temperature'])
+            temperature_levels.append(self.demand['dhw'][
+                                          'return_temperature'])
+
+        if 'heating' in self.demand:
+            temperature_levels.append(self.demand['heating'][
+                                          'flow_temperature'])
+            temperature_levels.append(self.demand['heating'][
+                                          'return_temperature'])
 
         # Ensure unique temperatures
         temperature_levels = list(set(temperature_levels))
@@ -70,10 +80,10 @@ class MetaModel:
         self.temperature_levels = temperature_levels
 
         # Time range of the data (in a)
-        index = self.demand['heating'].index
-        self.number_of_time_steps = len(index)
-        index.freq = pd.infer_freq(index)
-        self.time_range = ((index[-1] - index[0] + index.freq)
+        time_index = kwargs.pop('time_index')
+        self.number_of_time_steps = len(time_index)
+        time_index.freq = pd.infer_freq(time_index)
+        self.time_range = ((time_index[-1] - time_index[0] + time_index.freq)
                            / pd.Timedelta('365D'))
 
         self.energy_cost["electricity"]["market"] = _array(
@@ -87,7 +97,7 @@ class MetaModel:
         ############################
         # Create energy system model
         ############################
-        energy_system = EnergySystem(timeindex=self.demand['heating'].index)
+        energy_system = EnergySystem(timeindex=time_index)
 
         # list of flows to identify different sources and sinks later
         # which use units of power
@@ -458,72 +468,61 @@ class MetaModel:
                 energy_system.add(t_st_level)
 
         # electricity demands covered of the local electricity network
-        d_el_local = Sink(
-            label='d_el_local',
-            inputs={b_eldist: Flow(fix=self.demand['electricity'],
-                                   nominal_value=1)})
+        if 'electricity' in self.demand:
+            d_el_local = Sink(
+                label='d_el_local',
+                inputs={b_eldist: Flow(fix=self.demand['electricity']['values'],
+                                       nominal_value=1)})
 
-        self.demand_el_flows.append((b_eldist.label,
-                                     d_el_local.label))
-        energy_system.add(d_el_local)
+            self.demand_el_flows.append((b_eldist.label,
+                                         d_el_local.label))
+            energy_system.add(d_el_local)
 
-        # create building heat
-        b_th_buildings = Bus(label="b_th_buildings")
-        energy_system.add(b_th_buildings)
+        if 'heating' in self.demand:
+            b_th_sh = Bus(label="b_th_sh")
+            energy_system.add(b_th_sh)
 
-        self.heat_exchanger_buildings = HeatExchanger(
-            heat_layers=heat_layers,
-            heat_demand=b_th_buildings,
-            label="heat_exchanger",
-            forward_flow_temperature=self.temps['forward_flow'],
-            backward_flow_temperature=(self.temps['backward_flow']))
+            self.heat_exchanger_heating = HeatExchanger(
+                heat_layers=heat_layers,
+                heat_demand=b_th_sh,
+                label="heat_exchanger_sh",
+                flow_temperature=self.demand['heating'][
+                    'flow_temperature'],
+                return_temperature=(self.demand['heating'][
+                    'return_temperature']))
 
-        d_sh = Sink(label='d_sh',
-                    inputs={b_th_buildings: Flow(
-                        fix=self.demand['heating'],
-                        nominal_value=1)})
-        self.demand_th_flows.append((b_th_buildings.label,
-                                     d_sh.label))
-        energy_system.add(d_sh)
+            d_sh = Sink(label='d_sh',
+                        inputs={b_th_sh: Flow(
+                            fix=self.demand['heating']['values'],
+                            nominal_value=1)})
+            self.demand_th_flows.append((b_th_sh.label,
+                                         d_sh.label))
+            energy_system.add(d_sh)
+        else:
+            self.heat_exchanger_heating = None
 
-        if sum(self.demand['dhw'] > 0):
-            b_th_dhw_local = Bus(label="b_th_dhw_local")
+        if 'dhw' in self.demand:
+            b_th_dhw = Bus(label="b_th_dhw")
+            energy_system.add(b_th_dhw)
+
+            self.heat_exchanger_dhw = HeatExchanger(
+                heat_layers=heat_layers,
+                heat_demand=b_th_dhw,
+                label="heat_exchanger_dhw",
+                flow_temperature=self.demand['dhw'][
+                    'flow_temperature'],
+                return_temperature=self.demand['dhw'][
+                    'return_temperature']),
 
             d_dhw = Sink(label='d_dhw',
-                         inputs={b_th_dhw_local: Flow(
-                             fix=self.demand['dhw'],
+                         inputs={b_th_dhw: Flow(
+                             fix=self.demand['dhw']['values'],
                              nominal_value=1)})
-            self.demand_th_flows.append((b_th_dhw_local.label,
+            self.demand_th_flows.append((b_th_dhw.label,
                                          d_dhw.label))
-
-            energy_system.add(b_th_dhw_local, d_dhw)
-
-            # We assume a heat drop but no energy loss
-            # due to the heat exchanger.
-            heater_ratio = ((max(heat_layers.temperature_levels)
-                             - self.temps['heat_drop_exchanger_dhw']
-                             - self.temps['reference'])
-                            / (self.temps['dhw'] - self.temps['reference']))
-
-            if 0 < heater_ratio < 1:
-                dhw_booster = Transformer(label="dhw_booster",
-                                          inputs={b_eldist: Flow(),
-                                                  b_th_buildings: Flow()},
-                                          outputs={b_th_dhw_local: Flow()},
-                                          conversion_factors={
-                                              b_eldist: 1 - heater_ratio,
-                                              b_th_buildings: heater_ratio,
-                                              b_th_dhw_local: 1})
-                self.p2h_el_flows.append((b_eldist.label,
-                                          dhw_booster.label))
-                self.p2h_th_flows.append((dhw_booster.label,
-                                          b_th_dhw_local.label))
-            else:
-                dhw_booster = Bus(label="dhw_booster",
-                                  inputs={b_th_buildings: Flow()},
-                                  outputs={b_th_dhw_local: Flow()})
-
-            energy_system.add(dhw_booster)
+            energy_system.add(d_dhw)
+        else:
+            self.heat_exchanger_dhw = None
 
         # create expensive source for missing heat to ensure model is solvable
         if self.allow_missing_heat:
