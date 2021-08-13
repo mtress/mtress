@@ -10,6 +10,7 @@ stages:
     - apt-get install git
     - pip install --upgrade pip
     - pip install git+https://github.com/oemof/oemof-thermal.git
+    - pip install git+https://github.com/oemof/oemof-solph.git
     - pip install -r requirements.txt
     - pip install pytest
 

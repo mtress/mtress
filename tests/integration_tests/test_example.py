@@ -16,7 +16,7 @@ from example import all_techs_model
 
 def test_example(number_of_time_steps=3,
                  silent=True):
-    return all_techs_model(number_of_time_steps=number_of_time_steps,
+    return all_techs_model(last_time_step=number_of_time_steps,
                            silent=silent)
 
 

@@ -13,14 +13,26 @@ SPDX-License-Identifier: MIT
 
 from oemof import solph
 
-from mtress.physics import celsius_to_kelvin
-
 
 class HeatLayers:
     """
     Connector class for modeling power flows with variable temperature levels,
     see https://arxiv.org/abs/2012.12664
+
+       Layer Inputs    Heat Layers       Demands
+
+ Rod-->(Qin(T2))      (Q(T2))
+          │   ↘      ↗      ↘
+          │   [HE1,2]        [HE2,1]--->(D(T2))
+          ↓           ↖      ↙
+      (Qin(T1))      (Q(T1))
+          │    ↘       ↗
+          │    [HE0,1]
+          ↓           ↖
+      (Qin(T0))------->(Q(T0))
+
     """
+
     def __init__(self,
                  energy_system,
                  temperature_levels,
@@ -31,15 +43,22 @@ class HeatLayers:
         :param temperature_levels: list [temperature]
         :param reference_temperature: reference temperature for energy (°C)
         """
+
         # Create object collections for temperature dependent technologies
         self.energy_system = energy_system
         self.b_th = dict()
         self.b_th_in = dict()
         # keep only unique values
+        if reference_temperature in temperature_levels:
+            temperature_levels.remove(reference_temperature)
         temperature_levels = list(set(temperature_levels))
         temperature_levels.sort()
         self._temperature_levels = temperature_levels
         self._reference_temperature = reference_temperature
+
+        error_msg = "Reference temperature needs to be the lowest one."
+
+        assert reference_temperature < temperature_levels[0], error_msg
 
         if len(label) > 0:
             label = label + '_'
@@ -79,10 +98,8 @@ class HeatLayers:
                 heater_label = (label
                                 + 'rise_' + temp_low_str
                                 + '_' + temp_high_str)
-                heater_ratio = ((celsius_to_kelvin(temp_low)
-                                 - self._reference_temperature)
-                                / (celsius_to_kelvin(temperature)
-                                   - self._reference_temperature))
+                heater_ratio = ((temp_low - self._reference_temperature)
+                                / (temperature - self._reference_temperature))
                 heater = solph.Transformer(
                     label=heater_label,
                     inputs={b_th_in_level: solph.Flow(),
