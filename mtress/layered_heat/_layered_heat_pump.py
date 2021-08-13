@@ -22,7 +22,31 @@ class LayeredHeatPump:
     Clustered heat pump for modeling power flows
     with variable temperature levels.
     Connects any input to any output using solph.Transformer
-    with shared resourcess, see https://arxiv.org/abs/2012.12664
+    with shared resources, see https://arxiv.org/abs/2012.12664
+
+    Flows:
+    E --> HP1,         E --> HP2,       E --> HP3
+    A --> HP1,         A --> HP2,       A --> HP3
+    1HP --> HP1,     1HP --> HP2,     1HP --> HP3
+    HP0 --> Qin(T1), HP1 --> Qin(T2), HP2 --> Qin(T3)
+
+    Sketch:
+        Resources     | Technologies |  Layer Inputs
+
+               ┏━━━━━━━━━━━━━━┓
+         ┌─────╂───────→[HP3]─╂────────→(Qin(T3))
+         │     ┃  ┌─────↗     ┃            ↓
+       (E,A)───╂──┼────→[HP2]─╂────────→(Qin(T2))
+         │     ┃  │┌─────↗    ┃            ↓
+         └─────╂──┼┼───→[HP1]─╂────────→(Qin(T1))
+               ┃ [1HP]────↗   ┃
+               ┗━━━━━━━━━━━━━━┛
+
+    The heat pump is modelled as an array of virtual heat pumps,
+    each with the correct COP for the corresponding temperatures.
+    To not allow producing more heat then the real heat pump,
+    all these virtual heat pumps share anergy and energy sources
+    and can further have one shared virtual normalisation source (1HP).
     """
     def __init__(self,
                  energy_system,
