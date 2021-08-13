@@ -31,6 +31,11 @@ class HeatLayers:
           ↓           ↖
       (Qin(T1))------>(Q(T1))
 
+    Heat sources connect to the Qin for the corresponding temperatures.
+    If efficiency increases with lower temperature,
+    techs should connect to all input nodes (see e.g. LayeredHeatPump).
+    Note that there are also heat supply techs with constant efficiency.
+    Those only need to connect to the hottest layer.
     """
 
     def __init__(self,
