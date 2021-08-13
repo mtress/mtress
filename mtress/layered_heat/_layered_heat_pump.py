@@ -24,25 +24,29 @@ class LayeredHeatPump:
     Connects any input to any output using solph.Transformer
     with shared resources, see https://arxiv.org/abs/2012.12664
 
-Basics of the MTRESS model
-    Resources      Technologies      Layer Inputs    Heat Layers          Demands
-
-        (E)--------->[Rod]------------>(Qin(T2))        (Q(T2))
-                                           │    ↘      ↗      ↘
-                ─────────────────          │    [HE1,2]        [HE2,1]--->(D(T2))
-               │                │          ↓           ↖      ↙
-               │     [HP2]      │      (Qin(T1))       (Q(T1))
-        (A)    │                │          │    ↘       ↗
-               │      [HP1]     │          │    [HE0,1]
-               │                │          ↓           ↖
-               │(1HP) [HP0]     │      (Qin(T0))-------->(Q(T0))
-                ─────────────────
-
     Flows:
-    E --> Rod, E --> HP2, E --> HP1, E --> HP0          HP2 ---> Qin(T2)
-    A --> HP2, A --> HP1, A --> HP0                     HP1 ---> Qin(T1)
-    1HP --> HP2, 1HP --> HP1, 1HP -->HP0                HP0 ---> Qin(T0)
+    E --> HP1,         E --> HP2,       E --> HP3
+    A --> HP1,         A --> HP2,       A --> HP3
+    1HP --> HP1,     1HP --> HP2,     1HP --> HP3
+    HP0 --> Qin(T1), HP1 --> Qin(T2), HP2 --> Qin(T3)
 
+    Sketch:
+        Resources     | Technologies |  Layer Inputs
+
+               ┏━━━━━━━━━━━━━━┓
+         ┌─────╂───────→[HP3]─╂────────→(Qin(T3))
+         │     ┃  ┌─────↗     ┃            ↓
+       (E,A)───╂──┼────→[HP2]─╂────────→(Qin(T2))
+         │     ┃  │┌─────↗    ┃            ↓
+         └─────╂──┼┼───→[HP1]─╂────────→(Qin(T1))
+               ┃ [1HP]────↗   ┃
+               ┗━━━━━━━━━━━━━━┛
+
+    The heat pump is modelled as an array of virtual heat pumps,
+    each with the correct COP for the corresponding temperatures.
+    To not allow producing more heat then the real heat pump,
+    all these virtual heat pumps share anergy and energy sources
+    and can further have one shared virtual normalisation source (1HP).
     """
     def __init__(self,
                  energy_system,

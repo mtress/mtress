@@ -21,15 +21,15 @@ class HeatLayers:
 
        Layer Inputs    Heat Layers       Demands
 
- Rod-->(Qin(T2))      (Q(T2))
-          │   ↘      ↗      ↘
-          │   [HE1,2]        [HE2,1]--->(D(T2))
-          ↓           ↖      ↙
-      (Qin(T1))      (Q(T1))
+      (Qin(T3))      (Q(T3))
+          │   ↘       ↗     ↘
+          │    [HE2,3]       [HE3,2]--->(D(T3))
+          ↓           ↖     ↙
+      (Qin(T2))      (Q(T2))
           │    ↘       ↗
-          │    [HE0,1]
+          │    [HE1,2]
           ↓           ↖
-      (Qin(T0))------->(Q(T0))
+      (Qin(T1))------>(Q(T1))
 
     """
 
