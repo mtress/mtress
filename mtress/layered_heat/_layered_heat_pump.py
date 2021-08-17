@@ -49,7 +49,6 @@ class LayeredHeatPump:
     and can further have one shared virtual normalisation source (1HP).
     """
     def __init__(self,
-                 energy_system,
                  heat_layers,
                  electricity_source,
                  heat_sources,
@@ -57,8 +56,7 @@ class LayeredHeatPump:
                  cop_0_35=4.6,
                  label=""):
         """
-        :param energy_system:
-        :param heat_layers:
+        :param heat_layers: HeatLayers object to attach to
         :param electricity_source:
         :param heat_sources:
         :param cop_0_35:
@@ -67,6 +65,8 @@ class LayeredHeatPump:
         self.b_th_in = dict()
         self.cop = dict()
         self.heat_out_flows = list()
+
+        energy_system = heat_layers.energy_system
 
         if len(label) > 0:
             label = label + "_"

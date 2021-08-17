@@ -18,6 +18,14 @@ class HeatExchanger:
     """
     For modeling power demands that lower temperature,
     see https://arxiv.org/abs/2012.12664
+
+    HeatLayers  HeatExchanger       Demand
+
+       (Q(T3))
+              ↘
+             [HE3,2]----------------->(D(T3))
+              ↙
+       (Q(T2))
     """
     def __init__(self,
                  heat_layers,
@@ -26,11 +34,11 @@ class HeatExchanger:
                  forward_flow_temperature,
                  backward_flow_temperature=None):
         """
-        :param heat_layers:
-        :param heat_demand:
-        :param label:
-        :param forward_flow_temperature:
-        :param backward_flow_temperature:
+        :param heat_layers: HeatLayers object to attach to
+        :param heat_demand: solph.Node (e.g. solph.Bus)
+        :param label: name for HeatExchanger
+        :param forward_flow_temperature: flow temperature
+        :param backward_flow_temperature: return temperature
         """
         energy_system = heat_layers.energy_system
 

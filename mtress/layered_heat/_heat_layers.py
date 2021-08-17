@@ -19,17 +19,17 @@ class HeatLayers:
     Connector class for modeling power flows with variable temperature levels,
     see https://arxiv.org/abs/2012.12664
 
-       Layer Inputs    Heat Layers       Demands
+      Layer Inputs        Layers Outputs
 
-      (Qin(T3))      (Q(T3))
-          │   ↘       ↗     ↘
-          │    [HE2,3]       [HE3,2]--->(D(T3))
-          ↓           ↖     ↙
-      (Qin(T2))      (Q(T2))
-          │    ↘       ↗
-          │    [HE1,2]
-          ↓           ↖
-      (Qin(T1))------>(Q(T1))
+      (Qin(T3))           (Q(T3))
+          │   ↘           ↗
+          │    [heater2,3]
+          ↓               ↖
+      (Qin(T2))           (Q(T2))
+          │    ↘          ↗
+          │    [heater1,2]
+          ↓               ↖
+      (Qin(T1))---------->(Q(T1))
 
     Heat sources connect to the Qin for the corresponding temperatures.
     If efficiency increases with lower temperature,

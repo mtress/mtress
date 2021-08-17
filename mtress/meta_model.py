@@ -274,7 +274,6 @@ class MetaModel:
             if 'thermal_output' not in ahp:
                 ahp['thermal_output'] = None
             air_heat_pump = LayeredHeatPump(
-                energy_system=energy_system,
                 heat_layers=heat_layers,
                 electricity_source=b_el_ahp,
                 thermal_power_limit=ahp['thermal_output'],
@@ -319,7 +318,6 @@ class MetaModel:
                 if 'thermal_output' not in bhp:
                     bhp['thermal_output'] = None
                 heat_pump = LayeredHeatPump(
-                    energy_system=energy_system,
                     heat_layers=heat_layers,
                     electricity_source=b_el_bhp,
                     thermal_power_limit=bhp['thermal_output'],
