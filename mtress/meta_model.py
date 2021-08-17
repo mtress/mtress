@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Generic model to be used to model residential energy supply systems
+
 SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
-SPDX-FileCopyrightText: Kehag Energiehandel GMbH
+SPDX-FileCopyrightText: kehag Energiehandel GMbH
 SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-FileCopyrightText: Lucas Schmeling
+SPDX-FileCopyrightText: Steffen Wehkamp
 
 SPDX-License-Identifier: MIT
 """
@@ -278,7 +281,6 @@ class MetaModel:
             if 'thermal_output' not in ahp:
                 ahp['thermal_output'] = None
             air_heat_pump = LayeredHeatPump(
-                energy_system=energy_system,
                 heat_layers=heat_layers,
                 electricity_source=b_el_ahp,
                 thermal_power_limit=ahp['thermal_output'],
@@ -323,7 +325,6 @@ class MetaModel:
                 if 'thermal_output' not in bhp:
                     bhp['thermal_output'] = None
                 heat_pump = LayeredHeatPump(
-                    energy_system=energy_system,
                     heat_layers=heat_layers,
                     electricity_source=b_el_bhp,
                     thermal_power_limit=bhp['thermal_output'],

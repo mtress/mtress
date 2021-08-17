@@ -19,18 +19,23 @@ class HeatLayers:
     Connector class for modeling power flows with variable temperature levels,
     see https://arxiv.org/abs/2012.12664
 
-       Layer Inputs    Heat Layers       Demands
+      Layer Inputs        Layers Outputs
 
- Rod-->(Qin(T2))      (Q(T2))
-          │   ↘      ↗      ↘
-          │   [HE1,2]        [HE2,1]--->(D(T2))
-          ↓           ↖      ↙
-      (Qin(T1))      (Q(T1))
-          │    ↘       ↗
-          │    [HE0,1]
-          ↓           ↖
-      (Qin(T0))------->(Q(T0))
+      (Qin(T3))           (Q(T3))
+          │   ↘           ↗
+          │    [heater2,3]
+          ↓               ↖
+      (Qin(T2))           (Q(T2))
+          │    ↘          ↗
+          │    [heater1,2]
+          ↓               ↖
+      (Qin(T1))---------->(Q(T1))
 
+    Heat sources connect to the Qin for the corresponding temperatures.
+    If efficiency increases with lower temperature,
+    techs should connect to all input nodes (see e.g. LayeredHeatPump).
+    Note that there are also heat supply techs with constant efficiency.
+    Those only need to connect to the hottest layer.
     """
 
     def __init__(self,
