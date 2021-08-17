@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+Script for using MTRESS using (only) the JSON interface
+
+SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
+SPDX-FileCopyrightText: Patrik Schönfeldt
+
+SPDX-License-Identifier: MIT
+"""
+
 import json
 import os
 import pandas as pd

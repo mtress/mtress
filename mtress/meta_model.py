@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+
+"""
+Generic model to be used to model residential energy supply systems
+
+SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
+SPDX-FileCopyrightText: kehag Energiehandel GMbH
+SPDX-FileCopyrightText: Patrik Schönfeldt
+SPDX-FileCopyrightText: Lucas Schmeling
+SPDX-FileCopyrightText: Steffen Wehkamp
+
+SPDX-License-Identifier: MIT
+"""
+
 import numbers
 
 from copy import deepcopy

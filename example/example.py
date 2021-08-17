@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
-import time
-import pandas as pd
-import json
+
+"""
+Example showing usage of MTRESS
+
+SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
+SPDX-FileCopyrightText: kehag Energiehandel GMbH
+SPDX-FileCopyrightText: Patrik Schönfeldt
+SPDX-FileCopyrightText: Lucas Schmeling
+
+SPDX-License-Identifier: MIT
+"""
+
 import os
 
 from oemof.solph import views
