@@ -13,6 +13,7 @@ SPDX-License-Identifier: MIT
 import json
 import os
 import pandas as pd
+import sys
 
 from mtress import MetaModel
 
@@ -60,7 +61,16 @@ def run_mtress(parameters,
 
 
 if __name__ == '__main__':
-    script_path = os.path.dirname(os.path.realpath(__file__))
-    json_file_name = os.path.join(script_path,
-                                  "../example/all_techs_example.json")
+    script_path = os.path.realpath(__file__)
+    if len(sys.argv) < 2:
+        script_dir = os.path.dirname(script_path)
+        json_file_name = os.path.join(script_dir,
+                                      "../example/all_techs_example.json")
+    else:
+        path = sys.argv[1]
+        if os.path.exists(path):
+            json_file_name = path
+        else:
+            print("Usage:", script_path, "config.json")
+            sys.exit()
     run_mtress(parameters=json_file_name)
