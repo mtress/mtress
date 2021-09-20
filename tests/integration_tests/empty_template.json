@@ -103,8 +103,10 @@
         "fossil_gas": 0.2,
         "biomethane": 0.15,
         "wood_pellet": 0.025,
-        "price": 0,
+        "price_el": 0,
+        "price_gas": 0,
         "el_in": 0,
         "el_out": 0
     }
 }
+
