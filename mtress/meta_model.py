@@ -162,6 +162,7 @@ class MetaModel:
 
         self.grid_connection_in_costs = (
                 self.energy_cost['electricity']['surcharge']
+                + self.energy_cost['electricity']['eeg_levy']
                 + self.energy_cost['electricity']['market']
                 + self.spec_co2['el_in']
                 * self.spec_co2['price_el'])
