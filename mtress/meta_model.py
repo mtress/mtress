@@ -534,8 +534,10 @@ class MetaModel:
                                               b_th_dhw_local: 1})
                 self.p2h_el_flows.append((b_eldist.label,
                                           dhw_booster.label))
-                self.p2h_th_flows.append((dhw_booster.label,
-                                          b_th_dhw_local.label))
+                # The following flow marks the heat added by the booster.
+                # Assuming 100 % efficiency fo the (electric) booster.
+                self.p2h_th_flows.append((b_eldist.label,
+                                          dhw_booster.label))
             else:
                 dhw_booster = Bus(label="dhw_booster",
                                   inputs={b_th_buildings: Flow()},
