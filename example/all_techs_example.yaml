@@ -1,58 +1,58 @@
 ---
 temperatures:
-  reference: 30
-  dhw: 60
-  heat_drop_exchanger_dhw: 5
-  forward_flow: 40
-  backward_flow: 30
+  reference: 30  # °C
+  dhw: 60  # °C
+  heat_drop_exchanger_dhw: 5  # °C
+  forward_flow: 40  # °C
+  backward_flow: 30  # °C
   additional:
-  - 80
+  - 80  # °C
 air_source_heat_pump:
-  electric_input: 0.1
-  cop_0_35: 3
+  electric_input: 0.1  # MW
+  cop_0_35: 3  # 1
 heat_pump:
-  electric_input: 0.1
-  cop_0_35: 4.6
+  electric_input: 0.1  # MW
+  cop_0_35: 4.6  # 1
 near_surface_heat_source:
-  thermal_output: 0.2
+  thermal_output: 0.2  # MW
 geothermal_heat_source:
-  thermal_output: 0.1
-  temperature: 15
+  thermal_output: 0.1  # MW
+  temperature: 15  # °C
 ice_storage:
-  volume: 5
-  height: 3
-  wall_thickness: 0.1
-  ceil_thickness: 0.2
+  volume: 5  # m³
+  height: 3  # m
+  wall_thickness: 0.1  # m
+  ceil_thickness: 0.2  # m
 thermal_ground_storage:
-  volume: 100
-  temperature: 20
-  heat_capacity: 0.025
+  volume: 100  # m³
+  temperature: 20  # °C
+  heat_capacity: 0.025  # MWh
 gas_boiler:
-  efficiency: 0.85
-  thermal_output: 0.1
+  efficiency: 0.85  # 1
+  thermal_output: 0.1  # MW
 pellet_boiler:
-  efficiency: 0.8
-  thermal_output: 0.1
+  efficiency: 0.8  # 1
+  thermal_output: 0.1  # MW
 chp:
-  biomethane_fraction: 0.2
-  funding_hours_per_year: 3500
-  electric_output: 0.1
-  electric_efficiency: 0.4
-  feed_in_subsidy: 75
-  own_consumption_subsidy: 35
-  thermal_output: 0.15
-  thermal_efficiency: 0.5
-  gas_input: 0.27
+  biomethane_fraction: 0.2  # 1
+  funding_hours_per_year: 3500  # h
+  electric_output: 0.1  # MW
+  electric_efficiency: 0.4  # 1
+  feed_in_subsidy: 75  # €/MWh
+  own_consumption_subsidy: 35  # €/MWh
+  thermal_output: 0.15  # MW
+  thermal_efficiency: 0.5  # 1
+  gas_input: 0.27  # MW
 pv:
-  nominal_power: 1
-  feed_in_subsidy: 75
+  nominal_power: 1  # MW
+  feed_in_subsidy: 75  # €/MWh
   spec_generation: generation.csv:PV
 wind_turbine:
-  nominal_power: 1
-  feed_in_subsidy: 75
+  nominal_power: 1  # MW
+  feed_in_subsidy: 75  # €/MWh
   spec_generation: generation.csv:WT
 solar_thermal:
-  area: 4
+  area: 4  # m²
   spec_generation:
     ST_0: generation.csv:ST_20
     ST_20: generation.csv:ST_20
@@ -60,29 +60,29 @@ solar_thermal:
     ST_40: generation.csv:ST_40
     ST_80: 0
 power_to_heat:
-  thermal_output: 0.05
+  thermal_output: 0.05  # MW
 battery:
-  power: 0.05
-  capacity: 0.25
-  efficiency_inflow: 0.98
-  efficiency_outflow: 0.98
-  self_discharge: 1.0e-06
+  power: 0.05  # MW
+  capacity: 0.25  # MWh
+  efficiency_inflow: 0.98  # 1
+  efficiency_outflow: 0.98  # 1
+  self_discharge: 1.0e-06  # 1/h
 heat_storage:
-  volume: 10
-  diameter: 2
-  insulation_thickness: 0.1
+  volume: 10  # m³
+  diameter: 2  # m
+  insulation_thickness: 0.1  # m
 energy_cost:
   electricity:
-    demand_rate: 15000
-    slp_price: 300
-    surcharge: 130
-    eeg_levy: 64.123
-    market: 30
+    demand_rate: 15000  # €/MW
+    slp_price: 300  # €/MWh
+    surcharge: 130  # €/MWh
+    eeg_levy: 64.123  # €/MWh
+    market: 30  # €/MWh
   gas:
-    fossil_gas: 35
-    biomethane: 95
-    energy_tax: 5.5
-  wood_pellet: 300
+    fossil_gas: 35  # €/MWh
+    biomethane: 95  # €/MWh
+    energy_tax: 5.5  # €/MWh
+  wood_pellet: 300  # €/MWh
 meteorology:
   temp_air: meteo.csv:temp_air
   temp_soil: meteo.csv:temp_soil
@@ -91,10 +91,10 @@ demand:
   heating: demand.csv:heating
   dhw: demand.csv:dhw
 co2:
-  el_in: 0.427
-  el_out: -0.427
-  fossil_gas: 0.202
-  biomethane: 0.148
-  wood_pellet: 0.023
-  price_el: 0
-  price_gas: 0
+  el_in: 0.427  # t/MWh
+  el_out: -0.427  # t/MWh
+  fossil_gas: 0.202  # t/MWh
+  biomethane: 0.148  # t/MWh
+  wood_pellet: 0.023  # t/MWh
+  price_el: 0  # €/t
+  price_gas: 0  # €/t
