@@ -7,7 +7,7 @@ def read(fname):
 
 setup(
     name="mtress",
-    version="0.0.0",
+    version="3.0.0dev",
     author="Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR), KEHAG Energiehandel GmbH",
     packages=["mtress"],
     long_description=read("README.md"),
