@@ -10,7 +10,7 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
-import json
+import yaml
 import os
 import pandas as pd
 import sys
@@ -38,7 +38,7 @@ def run_mtress(parameters,
                time_range=(0, -1),
                solver="cbc"):
     """
-    :param parameters: dict or file name of json file holding configuration
+    :param parameters: dict or file name of yaml file holding configuration
     :param time_range: tuple (first time step, last time step)
     :param solver: solver to use for oemof.solph
     """
@@ -49,7 +49,7 @@ def run_mtress(parameters,
         if isinstance(parameters, str):
             dir_path = os.path.dirname(os.path.realpath(parameters))
             with open(parameters) as file:
-                parameters = json.load(file)
+                parameters = yaml.safe_load(file)
 
     _read_csv_files(parameters, dir_path, time_range=time_range)
 
@@ -65,13 +65,13 @@ if __name__ == '__main__':
     script_path = os.path.realpath(__file__)
     if len(sys.argv) < 2:
         script_dir = os.path.dirname(script_path)
-        json_file_name = os.path.join(script_dir,
-                                      "../example/all_techs_example.json")
+        yaml_file_name = os.path.join(script_dir,
+                                      "../example/all_techs_example.yaml")
     else:
         path = sys.argv[1]
         if os.path.exists(path):
-            json_file_name = path
+            yaml_file_name = path
         else:
-            print("Usage:", script_path, "config.json")
+            print("Usage:", script_path, "config.yaml")
             sys.exit()
-    run_mtress(parameters=json_file_name)
+    run_mtress(parameters=yaml_file_name)

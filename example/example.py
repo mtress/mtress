@@ -42,11 +42,11 @@ def all_techs_model(first_time_step=0,
 
     # define input data source
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    json_file_name = os.path.join(dir_path,
-                                  "all_techs_example.json")
+    yaml_file_name = os.path.join(dir_path,
+                                  "all_techs_example.yaml")
 
     # run model using input data as defined in that file
-    meta_model = run_mtress(parameters=json_file_name,
+    meta_model = run_mtress(parameters=yaml_file_name,
                             time_range=(first_time_step, last_time_step))
 
     if not silent:
