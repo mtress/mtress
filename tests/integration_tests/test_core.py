@@ -6,7 +6,7 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 
 SPDX-License-Identifier: MIT
 """
-import json
+import yaml
 import os
 import math
 import numpy as np
@@ -25,9 +25,9 @@ def run_model_template(custom_params=None):
         custom_params = {}
 
     dir_name = os.path.dirname(__file__)
-    filename = os.path.join(dir_name, "empty_template.json")
+    filename = os.path.join(dir_name, "empty_template.yaml")
     with open(filename) as f:
-        params = json.load(f)
+        params = yaml.safe_load(f)
 
     for key1 in custom_params:
         if key1 not in params:
