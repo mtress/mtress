@@ -16,6 +16,6 @@ setup(
     install_requires=[
         "pyyaml >= 6.0",
         "oemof.solph >= 0.4.4",
-        "oemof.thermal >= 0.0.4",
+        "oemof.thermal >= 0.0.5",
     ]
 )
