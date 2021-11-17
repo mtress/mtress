@@ -169,9 +169,10 @@ class MetaModel:
 
         self.grid_connection_in_costs = (
                 self.energy_cost['electricity']['surcharge']
+                + self.energy_cost['electricity']['eeg_levy']
                 + self.energy_cost['electricity']['market']
                 + self.spec_co2['el_in']
-                * self.spec_co2['price'])
+                * self.spec_co2['price_el'])
         b_grid_connection_in = Bus(
             label="b_grid_connection_in",
             inputs={b_elgrid: Flow(
@@ -195,10 +196,8 @@ class MetaModel:
 
         energy_system.add(m_el_in, b_grid_connection_in, b_grid_connection_out)
 
-        co2_costs = np.array(self.spec_co2['el_out']) * self.spec_co2['price']
         m_el_out = Sink(label='m_el_out',
-                        inputs={b_grid_connection_out: Flow(
-                            variable_costs=-co2_costs)})
+                        inputs={b_grid_connection_out: Flow()})
         self.electricity_export_flows.append((b_grid_connection_out.label,
                                               m_el_out.label))
 
@@ -208,8 +207,9 @@ class MetaModel:
                 or ('chp' in kwargs
                     and kwargs['chp']['biomethane_fraction'] < 1)):
 
-            gas_price = self.energy_cost['gas']['fossil_gas'] \
-                        + self.spec_co2['fossil_gas'] * self.spec_co2['price']
+            gas_price = (self.energy_cost['gas']['fossil_gas']
+                         + self.spec_co2['fossil_gas']
+                         * self.spec_co2['price_gas'])
             m_fossil_gas = Source(
                 label='m_fossil_gas',
                 outputs={b_fossil_gas: Flow(variable_costs=gas_price)})
@@ -222,9 +222,7 @@ class MetaModel:
         if 'chp' in kwargs and kwargs['chp']['biomethane_fraction'] > 0:
             b_biomethane = Bus(label='b_biomethane')
 
-            biomethane_price = (self.energy_cost['gas']['biomethane']
-                                + self.spec_co2['biomethane']
-                                * self.spec_co2['price'])
+            biomethane_price = self.energy_cost['gas']['biomethane']
             m_biomethane = Source(
                 label='m_biomethane',
                 outputs={b_biomethane: Flow(variable_costs=biomethane_price)})
@@ -239,10 +237,7 @@ class MetaModel:
             m_pellet = Source(
                 label='m_pellet',
                 outputs={b_pellet: Flow(
-                    variable_costs=self.energy_cost['wood_pellet']
-                                   + self.spec_co2['wood_pellet']
-                                   * self.spec_co2['price']
-                                   * HHV_WP)})
+                    variable_costs=self.energy_cost['wood_pellet'])})
             self.pellet_import_flows.append((m_pellet.label, b_pellet.label))
 
             energy_system.add(b_pellet, m_pellet)
