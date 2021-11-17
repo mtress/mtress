@@ -13,7 +13,10 @@ from oemof.solph import Bus
 from oemof.solph import Flow
 from oemof.solph import Source
 
-from ._generic_technology import GenericTechnology
+from ._generic_technology import (
+    FlowType,
+    GenericTechnology,
+)
 
 
 class RenewableElectricitySource(GenericTechnology):
@@ -38,10 +41,14 @@ class RenewableElectricitySource(GenericTechnology):
             label=self._label + "_source",
             outputs={
                 bus: Flow(nominal_value=nominal_power,
-                              max=specific_generation)})
+                          max=specific_generation)})
 
-        self._flows_in["production"] = (source.label, bus.label)
-        self._flows_out["export"] = (bus.label, out_bus_external.label)
+        self._categorise_flow((source.label, bus.label),
+                              {FlowType.OUT,
+                               FlowType.PRODUCTION})
+        self._categorise_flow((bus.label, out_bus_external.label),
+                              {FlowType.OUT,
+                               FlowType.EXPORT})
 
         self._solph_nodes.add(source)
         self._solph_nodes.add(bus)

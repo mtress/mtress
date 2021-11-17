@@ -8,12 +8,14 @@ SPDX-License-Identifier: MIT
 """
 
 from . import layered_heat
+from ._generic_technology import FlowType
 from ._generic_technology import GenericTechnology
 from ._photovoltaics import Photovoltaics
 from ._wind_turbine import WindTurbine
 
 __all__ = [
     "layered_heat",
+    "FlowType",
     "GenericTechnology",
     "Photovoltaics",
     "WindTurbine",

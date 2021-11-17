@@ -9,6 +9,17 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
+from enum import Enum, auto
+
+
+class FlowType(Enum):
+    ALL = auto()
+    IN = auto()
+    OUT = auto()
+    PRODUCTION = auto()
+    STORAGE = auto()
+    EXPORT = auto()
+
 
 class GenericTechnology:
     """
@@ -16,19 +27,32 @@ class GenericTechnology:
     """
     def __init__(self,
                  label):
-        self._flows_in = dict()
-        self._flows_out = dict()
+        self._flows = {flow_type: set() for flow_type in FlowType}
         self._label = label
         self._solph_nodes = set()
 
-    @property
-    def flows_in(self):
-        return self._flows_in
+    def _categorise_flow(self, flow, flow_types):
+        """
+        categorises given flow under the named flow_types
+        """
+        for flow_type in flow_types | {FlowType.ALL}:
+            self._flows[flow_type].add(flow)
 
-    @property
-    def flows_out(self):
-        return self._flows_out
+    def get_flows(self, flow_types):
+        """
+        returns flows categorised under all named flow_types
+        """
+        flows = self._flows[FlowType.ALL].copy()
+        for flow_type in flow_types:
+            flows.intersection_update(self._flows[flow_type])
+        return flows
 
     @property
     def solph_nodes(self):
+        """
+        getter to add solph nodes to energy system
+
+        (alternative would be to hand a reference to the energy system
+        to the init function)
+        """
         return self._solph_nodes

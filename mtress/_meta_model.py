@@ -22,6 +22,7 @@ from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
 from oemof.solph.processing import meta_results, results
 
 from mtress.technologies import (
+    FlowType,
     Photovoltaics,
     WindTurbine,
 )
@@ -666,8 +667,8 @@ class MetaModel:
 
             self.pv_revenue = pv_params['feed_in_subsidy']
 
-            self.pv_el_flows.add(pv_object.flows_in["production"])
-            self.pv_export_flows.add(pv_object.flows_out["export"])
+            self.pv_el_flows.update(pv_object.get_flows({FlowType.PRODUCTION}))
+            self.pv_export_flows.update(pv_object.get_flows({FlowType.EXPORT}))
 
             for node in pv_object.solph_nodes:
                 energy_system.add(node)
@@ -707,8 +708,8 @@ class MetaModel:
 
             self.wt_revenue = wt_params['feed_in_subsidy']
 
-            self.wt_el_flows.add(wt_object.flows_in["production"])
-            self.wt_export_flows.add(wt_object.flows_out["export"])
+            self.wt_el_flows.update(wt_object.get_flows({FlowType.PRODUCTION}))
+            self.wt_export_flows.update(wt_object.get_flows({FlowType.EXPORT}))
 
             for node in wt_object.solph_nodes:
                 energy_system.add(node)
