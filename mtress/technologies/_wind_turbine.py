@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-pv wrapper for generic RenewableElectricitySource
+wind turbine wrapper for generic RenewableElectricitySource
 
 SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 SPDX-FileCopyrightText: Patrik Schönfeldt
@@ -12,9 +12,9 @@ SPDX-License-Identifier: MIT
 from ._renewable_electricity_source import RenewableElectricitySource
 
 
-class Photovoltaics(RenewableElectricitySource):
+class WindTurbine(RenewableElectricitySource):
     """
-    photovoltaics wrapper for generic RenewableElectricitySource
+    wind turbine wrapper for generic RenewableElectricitySource
     """
     def __init__(self,
                  nominal_power,

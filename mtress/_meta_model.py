@@ -10,7 +10,6 @@ SPDX-FileCopyrightText: Steffen Wehkamp
 
 SPDX-License-Identifier: MIT
 """
-import numbers
 
 from copy import deepcopy
 import pprint
@@ -22,7 +21,10 @@ from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          NonConvex, views)
 from oemof.solph.processing import meta_results, results
 
-from mtress.technologies import Photovoltaics
+from mtress.technologies import (
+    Photovoltaics,
+    WindTurbine,
+)
 from mtress.technologies.layered_heat import (
     HeatLayers,
     LayeredHeatPump,
@@ -30,22 +32,9 @@ from mtress.technologies.layered_heat import (
     HeatExchanger)
 from mtress.physics import (HHV_WP, H2O_HEAT_FUSION, H2O_DENSITY)
 
+from ._helpers import numeric_array
+
 HIGH_VIRTUAL_COSTS = 1000
-
-
-def _array(data, length):
-    if isinstance(data, numbers.Number):
-        data = np.full(length, fill_value=data)
-    elif isinstance(data, list) and len(data) == length:
-        data = np.array(data)
-    elif isinstance(data, pd.Series) and len(data) == length:
-        data = data.to_numpy()
-    elif isinstance(data, np.ndarray):
-        pass
-    else:
-        raise ValueError
-
-    return data
 
 
 class MetaModel:
@@ -93,13 +82,13 @@ class MetaModel:
         self.time_range = ((time_index[-1] - time_index[0] + time_index.freq)
                            / pd.Timedelta('365D'))
 
-        self.energy_cost["electricity"]["market"] = _array(
+        self.energy_cost["electricity"]["market"] = numeric_array(
             data=self.energy_cost["electricity"]["market"],
             length=self.number_of_time_steps)
 
         for quantity in ["el_in", "el_out"]:
-            self.spec_co2[quantity] = _array(data=self.spec_co2[quantity],
-                                             length=self.number_of_time_steps)
+            self.spec_co2[quantity] = numeric_array(data=self.spec_co2[quantity],
+                                                    length=self.number_of_time_steps)
 
         ############################
         # Create energy system model
@@ -440,7 +429,7 @@ class MetaModel:
                     inputs={b_st: Flow(nominal_value=st["area"])},
                     outputs={b_ihs: Flow(nominal_value=1)},
                     conversion_factors={
-                        b_ihs: _array(
+                        b_ihs: numeric_array(
                             st['spec_generation']['ST_' + str(temp)],
                             self.number_of_time_steps)})
 
@@ -459,7 +448,7 @@ class MetaModel:
                     inputs={b_st: Flow(nominal_value=st["area"])},
                     outputs={b_th_in_level: Flow(nominal_value=1)},
                     conversion_factors={
-                        b_th_in_level: _array(
+                        b_th_in_level: numeric_array(
                             st['spec_generation']['ST_' + str(temp)],
                             self.number_of_time_steps)})
 
@@ -677,7 +666,7 @@ class MetaModel:
 
             self.pv_revenue = pv_params['feed_in_subsidy']
 
-            self.pv_el_flows.add(pv_object.flows_in["solar"])
+            self.pv_el_flows.add(pv_object.flows_in["production"])
             self.pv_export_flows.add(pv_object.flows_out["export"])
 
             for node in pv_object.solph_nodes:
@@ -702,30 +691,27 @@ class MetaModel:
 
             self.p2h_el_flows.add((b_eldist.label, t_p2h.label))
             self.p2h_th_flows.add((t_p2h.label,
-                                      heat_layers.b_th_in_highest.label))
+                                   heat_layers.b_th_in_highest.label))
 
         # Wind Turbine
         if 'wind_turbine' in kwargs \
                 and kwargs['wind_turbine']['nominal_power'] > 0:
-            wind_turbine = kwargs.pop('wind_turbine')
-            self.wt_revenue = wind_turbine['feed_in_subsidy']
-            b_el_wt = Bus(
-                label="b_el_wt",
-                outputs={
-                    b_elxprt: Flow(variable_costs=-self.wt_revenue),
-                    b_elprod: Flow()})
+            wt_params = kwargs.pop('wind_turbine')
+            wt_object = WindTurbine(
+                nominal_power=wt_params["nominal_power"],
+                specific_generation=wt_params['spec_generation'],
+                funding=wt_params['feed_in_subsidy'],
+                out_bus_internal=b_elprod,
+                out_bus_external=b_elxprt,
+                label="wt")
 
-            self.wt_export_flows.add((b_el_wt.label, b_elxprt.label))
+            self.wt_revenue = wt_params['feed_in_subsidy']
 
-            t_wt = Source(
-                label='t_wt',
-                outputs={
-                    b_el_wt: Flow(
-                        nominal_value=wind_turbine["nominal_power"],
-                        max=wind_turbine['spec_generation'])})
-            self.wt_el_flows.add((t_wt.label, b_el_wt.label))
+            self.wt_el_flows.add(wt_object.flows_in["production"])
+            self.wt_export_flows.add(wt_object.flows_out["export"])
 
-            energy_system.add(t_wt, b_el_wt)
+            for node in wt_object.solph_nodes:
+                energy_system.add(node)
         else:
             self.wt_revenue = 0
 
