@@ -1,3 +1,7 @@
 .idea
 *.egg-info
 __pycache__
+.coverage
+.tox
+doc/mtress.wmf
+
