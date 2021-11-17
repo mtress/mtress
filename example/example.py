@@ -15,7 +15,7 @@ import os
 
 from oemof.solph import views
 
-from mtress.run_mtress import run_mtress
+from mtress import run_mtress
 
 
 def extract_result_sequence(results, label, resample=None):

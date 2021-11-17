@@ -22,8 +22,11 @@ from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
                          NonConvex, views)
 from oemof.solph.processing import meta_results, results
 
-from mtress.layered_heat import (HeatLayers, LayeredHeatPump,
-                                 MultiLayerStorage, HeatExchanger)
+from mtress.technologies.layered_heat import (
+    HeatLayers,
+    LayeredHeatPump,
+    MultiLayerStorage,
+    HeatExchanger)
 from mtress.physics import (HHV_WP, H2O_HEAT_FUSION, H2O_DENSITY)
 
 HIGH_VIRTUAL_COSTS = 1000
