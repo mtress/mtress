@@ -22,11 +22,13 @@ class WindTurbine(RenewableElectricitySource):
                  funding,
                  out_bus_internal,
                  out_bus_external,
-                 label):
+                 label,
+                 energy_system):
         super().__init__(
                  nominal_power,
                  specific_generation,
                  funding,
                  out_bus_internal,
                  out_bus_external,
-                 label)
+                 label,
+                 energy_system)

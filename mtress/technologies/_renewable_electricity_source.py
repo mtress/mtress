@@ -29,8 +29,9 @@ class RenewableElectricitySource(GenericTechnology):
                  funding,
                  out_bus_internal,
                  out_bus_external,
-                 label):
-        super().__init__(label)
+                 label,
+                 energy_system):
+        super().__init__(label, energy_system)
 
         bus = Bus(
             label=self._label + "_bus",
@@ -43,12 +44,14 @@ class RenewableElectricitySource(GenericTechnology):
                 bus: Flow(nominal_value=nominal_power,
                           max=specific_generation)})
 
-        self._categorise_flow((source.label, bus.label),
-                              {FlowType.OUT,
-                               FlowType.PRODUCTION})
-        self._categorise_flow((bus.label, out_bus_external.label),
-                              {FlowType.OUT,
-                               FlowType.EXPORT})
+        self.categorise_flow((source.label, bus.label),
+                             {FlowType.OUT,
+                              FlowType.PRODUCTION,
+                              FlowType.RENEWABLE})
+        self.categorise_flow((bus.label, out_bus_external.label),
+                             {FlowType.OUT,
+                              FlowType.EXPORT,
+                              FlowType.RENEWABLE})
 
-        self._solph_nodes.add(source)
-        self._solph_nodes.add(bus)
+        self._energy_system.add(source)
+        self._energy_system.add(bus)

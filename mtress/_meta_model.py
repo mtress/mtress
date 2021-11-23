@@ -663,15 +663,13 @@ class MetaModel:
                 funding=pv_params['feed_in_subsidy'],
                 out_bus_internal=b_elprod,
                 out_bus_external=b_elxprt,
-                label="pv")
+                label="pv",
+                energy_system=energy_system)
 
             self.pv_revenue = pv_params['feed_in_subsidy']
 
             self.pv_el_flows.update(pv_object.get_flows({FlowType.PRODUCTION}))
             self.pv_export_flows.update(pv_object.get_flows({FlowType.EXPORT}))
-
-            for node in pv_object.solph_nodes:
-                energy_system.add(node)
         else:
             self.pv_revenue = 0
 
@@ -704,15 +702,14 @@ class MetaModel:
                 funding=wt_params['feed_in_subsidy'],
                 out_bus_internal=b_elprod,
                 out_bus_external=b_elxprt,
-                label="wt")
+                label="wt",
+                energy_system=energy_system
+            )
 
             self.wt_revenue = wt_params['feed_in_subsidy']
 
             self.wt_el_flows.update(wt_object.get_flows({FlowType.PRODUCTION}))
             self.wt_export_flows.update(wt_object.get_flows({FlowType.EXPORT}))
-
-            for node in wt_object.solph_nodes:
-                energy_system.add(node)
         else:
             self.wt_revenue = 0
 
