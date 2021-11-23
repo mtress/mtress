@@ -11,6 +11,7 @@ from . import layered_heat
 from ._generic_technology import FlowType
 from ._generic_technology import GenericTechnology
 from ._photovoltaics import Photovoltaics
+from ._renewable_electricity_source import RenewableElectricitySource
 from ._wind_turbine import WindTurbine
 
 __all__ = [
@@ -18,5 +19,6 @@ __all__ = [
     "FlowType",
     "GenericTechnology",
     "Photovoltaics",
+    "RenewableElectricitySource",
     "WindTurbine",
 ]

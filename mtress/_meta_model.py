@@ -23,8 +23,7 @@ from oemof.solph.processing import meta_results, results
 
 from mtress.technologies import (
     FlowType,
-    Photovoltaics,
-    WindTurbine,
+    RenewableElectricitySource
 )
 from mtress.technologies.layered_heat import (
     HeatLayers,
@@ -657,7 +656,7 @@ class MetaModel:
         # PV
         if 'pv' in kwargs and kwargs['pv']['nominal_power'] > 0:
             pv_params = kwargs.pop('pv')
-            pv_object = Photovoltaics(
+            pv_object = RenewableElectricitySource(
                 nominal_power=pv_params["nominal_power"],
                 specific_generation=pv_params['spec_generation'],
                 funding=pv_params['feed_in_subsidy'],
@@ -696,7 +695,7 @@ class MetaModel:
         if 'wind_turbine' in kwargs \
                 and kwargs['wind_turbine']['nominal_power'] > 0:
             wt_params = kwargs.pop('wind_turbine')
-            wt_object = WindTurbine(
+            wt_object = RenewableElectricitySource(
                 nominal_power=wt_params["nominal_power"],
                 specific_generation=wt_params['spec_generation'],
                 funding=wt_params['feed_in_subsidy'],
