@@ -107,6 +107,7 @@ class MetaModel:
         self.electricity_export_flows = list()
 
         self.grid_el_flows = list()
+        self.adjacent_renewable_flows = list()
         self.pv_el_flows = list()
         self.pv_export_flows = list()
         self.wt_el_flows = list()
@@ -151,24 +152,60 @@ class MetaModel:
         b_elxprt = Bus(label="b_elxprt")  # electricity export network
         b_elgrid = Bus(label="b_elgrid")
 
-        energy_system.add(b_eldist, b_elprod, b_elxprt, b_elgrid)
+        # bus for adjacent renewable sources
+        b_el_adjacent = Bus(
+            label="b_el_adjacent",
+            inputs={b_elgrid: Flow()},
+            outputs={b_elgrid: Flow()}
+        )
+
+        energy_system.add(b_eldist, b_elprod, b_elxprt, b_elgrid,
+                          b_el_adjacent)
+
+        m_el_in = Source(
+            label='m_el_in',
+            outputs={b_el_adjacent: Flow(
+                variable_costs=1e-9,
+            )})
+        self.grid_el_flows.append((m_el_in.label, b_el_adjacent.label))
+
+        energy_system.add(m_el_in)
+
+        if 'adjacent_renewables' in kwargs:
+            s_el_adjacent = Source(
+                label='s_el_adjacent',
+                outputs={b_el_adjacent: Flow(
+                    max=kwargs['adjacent_renewables'],
+                    nominal_value=1
+                )}
+            )
+            self.adjacent_renewable_flows.append(
+                (s_el_adjacent.label, b_el_adjacent.label)
+            )
+            energy_system.add(s_el_adjacent)
+
+        if 'electricity_adjacent' in self.demand:
+            s_el_adjacent = Source(
+                label='d_el_adjacent',
+                outputs={b_el_adjacent: Flow(
+                    fix=self.demand['electricity_adjacent'],
+                    nominal_value=1
+                )}
+            )
+            energy_system.add(s_el_adjacent)
 
         # (unidirectional) grid connection
-
         # RLM customer for district and larger buildings
-        m_el_in = Source(label='m_el_in',
-                         outputs={b_elgrid: Flow()})
-        self.grid_el_flows.append((m_el_in.label, b_elgrid.label))
-
         self.grid_connection_in_costs = (
                 self.energy_cost['electricity']['surcharge']
                 + self.energy_cost['electricity']['eeg_levy']
                 + self.energy_cost['electricity']['market']
                 + self.spec_co2['el_in']
                 * self.spec_co2['price_el'])
+
         b_grid_connection_in = Bus(
             label="b_grid_connection_in",
-            inputs={b_elgrid: Flow(
+            inputs={b_el_adjacent: Flow(
                 variable_costs=self.grid_connection_in_costs,
                 investment=Investment(
                     ep_costs=self.energy_cost['electricity'][
@@ -177,7 +214,7 @@ class MetaModel:
                                     nominal_value=1e5,
                                     grid_connection=True)})
 
-        self.electricity_import_flows.append((b_elgrid.label,
+        self.electricity_import_flows.append((b_el_adjacent.label,
                                               b_grid_connection_in.label))
 
         # create external market to sell electricity to
@@ -187,7 +224,7 @@ class MetaModel:
                                    nominal_value=1e5,
                                    grid_connection=True)})
 
-        energy_system.add(m_el_in, b_grid_connection_in, b_grid_connection_out)
+        energy_system.add(b_grid_connection_in, b_grid_connection_out)
 
         m_el_out = Sink(label='m_el_out',
                         inputs={b_grid_connection_out: Flow()})
@@ -465,26 +502,6 @@ class MetaModel:
         self.demand_el_flows.append((b_eldist.label,
                                      d_el_local.label))
 
-        # electricity not covered of the local electricity network,
-        # always created as there might be a booster but no explicit demand
-        b_el_adjacent = Bus(
-            label="b_el_adjacent",
-            inputs={b_elgrid: Flow(
-                variable_costs=self.energy_cost['electricity']['slp_price'])})
-
-        # electricity demands not covered of the local electricity network
-        if 'electricity_adjacent' in self.demand:
-            d_el_adjacent = Sink(
-                label='d_el_adjacent',
-                inputs={b_el_adjacent: Flow(
-                    fix=self.demand['electricity_adjacent'],
-                    nominal_value=1)})
-
-            self.demand_el_flows.append((b_el_adjacent.label,
-                                         d_el_adjacent.label))
-
-            energy_system.add(d_el_local, b_el_adjacent, d_el_adjacent)
-
         # create building heat
         b_th_buildings = Bus(label="b_th_buildings")
         energy_system.add(b_th_buildings)
@@ -542,47 +559,6 @@ class MetaModel:
                 dhw_booster = Bus(label="dhw_booster",
                                   inputs={b_th_buildings: Flow()},
                                   outputs={b_th_dhw_local: Flow()})
-
-            energy_system.add(dhw_booster)
-
-        if 'dhw_adjacent' in self.demand and sum(
-                self.demand['dhw_adjacent'] > 0):
-            b_th_dhw_adjacent = Bus(label="b_th_dhw_local")
-
-            d_dhw_adjacent = Sink(label='d_dhw',
-                                  inputs={b_th_dhw_adjacent: Flow(
-                                      fix=self.demand['dhw_adjacent'],
-                                      nominal_value=1)})
-            self.demand_th_flows.append((b_th_dhw_adjacent.label,
-                                         d_dhw_adjacent.label))
-
-            energy_system.add(b_th_dhw_adjacent, d_dhw_adjacent)
-
-            # We assume a heat drop but no energy loss
-            # due to the heat exchanger.
-            heater_ratio = ((max(heat_layers.temperature_levels)
-                             - self.temps['heat_drop_exchanger_dhw']
-                             - self.temps['reference'])
-                            / (self.temps['dhw'] - self.temps['reference']))
-
-            if 0 < heater_ratio < 1:
-                dhw_booster = Transformer(label="dhw_booster",
-                                          inputs={b_el_adjacent: Flow(),
-                                                  b_th_buildings: Flow()},
-                                          outputs={b_th_dhw_adjacent: Flow()},
-                                          conversion_factors={
-                                              b_el_adjacent: 1 - heater_ratio,
-                                              b_th_buildings: heater_ratio,
-                                              b_th_dhw_adjacent: 1})
-
-                self.p2h_el_flows.append((b_eldist.label,
-                                          dhw_booster.label))
-                self.p2h_th_flows.append((dhw_booster.label,
-                                          b_th_dhw_adjacent.label))
-            else:
-                dhw_booster = Bus(label="dhw_booster",
-                                  inputs={b_th_buildings: Flow()},
-                                  outputs={b_th_dhw_adjacent: Flow()})
 
             energy_system.add(dhw_booster)
 
@@ -951,7 +927,7 @@ class MetaModel:
 
         return costs
 
-    def co2_emission(self):
+    def co2_emission(self, accuracy=1):
         """
         Calculates the CO2 Emission acc. to
         https://doi.org/10.3390/en13112967
@@ -962,14 +938,28 @@ class MetaModel:
         biomethane_import = self.aggregate_flows(self.biomethane_import_flows)
         pellet_import = self.aggregate_flows(self.pellet_import_flows)
         el_export = self.aggregate_flows(self.electricity_export_flows)
-        el_import = self.aggregate_flows(self.grid_el_flows)
+        el_import = self.aggregate_flows(self.electricity_import_flows)
 
         co2_import_fossil_gas = fossil_gas_import * self.spec_co2['fossil_gas']
         co2_import_biomethane = biomethane_import * self.spec_co2['biomethane']
         co2_import_pellet = (pellet_import * HHV_WP
                              * self.spec_co2['wood_pellet'])
-        co2_import_el = el_import * self.spec_co2['el_in']
-        co2_export_el = el_export * self.spec_co2['el_out']
+
+        electricity_from_grid = self.aggregate_flows(self.grid_el_flows)
+        electricity_from_adjacent = self.aggregate_flows(
+            self.adjacent_renewable_flows)
+        grid_electricity_fraction = (
+            electricity_from_grid
+            / (electricity_from_adjacent
+               + electricity_from_grid
+               + 1e-10)
+        )
+        co2_import_el = (el_import
+                         * grid_electricity_fraction
+                         * self.spec_co2['el_in'])
+        co2_export_el = (el_export
+                         * grid_electricity_fraction
+                         * self.spec_co2['el_out'])
 
         co2_emission = (co2_import_fossil_gas.sum()
                         + co2_import_biomethane.sum()
@@ -977,7 +967,7 @@ class MetaModel:
                         + co2_import_pellet.sum()
                         - co2_export_el.sum())
 
-        return np.round(co2_emission, 1)
+        return np.round(co2_emission, accuracy)
 
     def own_consumption(self):
         """
