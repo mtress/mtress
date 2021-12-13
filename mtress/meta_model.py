@@ -185,14 +185,14 @@ class MetaModel:
             energy_system.add(s_el_adjacent)
 
         if 'electricity_adjacent' in self.demand:
-            s_el_adjacent = Source(
+            d_el_adjacent = Sink(
                 label='d_el_adjacent',
-                outputs={b_el_adjacent: Flow(
+                inputs={b_el_adjacent: Flow(
                     fix=self.demand['electricity_adjacent'],
                     nominal_value=1
                 )}
             )
-            energy_system.add(s_el_adjacent)
+            energy_system.add(d_el_adjacent)
 
         # (unidirectional) grid connection
         # RLM customer for district and larger buildings
@@ -934,11 +934,11 @@ class MetaModel:
 
         :return: CO2 emission in operation as timeseries
         """
+        self._calc_energy_balance()
+
         fossil_gas_import = self.aggregate_flows(self.fossil_gas_import_flows)
         biomethane_import = self.aggregate_flows(self.biomethane_import_flows)
         pellet_import = self.aggregate_flows(self.pellet_import_flows)
-        el_export = self.aggregate_flows(self.electricity_export_flows)
-        el_import = self.aggregate_flows(self.electricity_import_flows)
 
         co2_import_fossil_gas = fossil_gas_import * self.spec_co2['fossil_gas']
         co2_import_biomethane = biomethane_import * self.spec_co2['biomethane']
@@ -954,10 +954,10 @@ class MetaModel:
                + electricity_from_grid
                + 1e-10)
         )
-        co2_import_el = (el_import
+        co2_import_el = (self._electricity_import
                          * grid_electricity_fraction
                          * self.spec_co2['el_in'])
-        co2_export_el = (el_export
+        co2_export_el = (self._electricity_export
                          * grid_electricity_fraction
                          * self.spec_co2['el_out'])
 
