@@ -1,17 +1,15 @@
 import os
 from setuptools import find_packages, setup
 
-import mtress
 
-
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+def read(file_name):
+    return open(os.path.join(os.path.dirname(__file__), file_name)).read()
 
 setup(
     name="mtress",
-    version=mtress.__version__,
+    version="2.1.0rc3",
     url="https://github.com/mtress/mtress",
-    author="Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR), KEHAG Energiehandel GmbH",
+    author="Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)",
     author_email="patrik.schoenfeldt@dlr.de",
     packages=find_packages(),
     classifiers=[
