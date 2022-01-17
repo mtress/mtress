@@ -5,4 +5,5 @@ __pycache__
 .tox
 doc/mtress.wmf
 dist/
+build/
 
