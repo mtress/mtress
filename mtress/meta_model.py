@@ -175,7 +175,7 @@ class MetaModel:
             s_el_adjacent = Source(
                 label='s_el_adjacent',
                 outputs={b_el_adjacent: Flow(
-                    max=kwargs['adjacent_renewables'],
+                    max=kwargs.pop('adjacent_renewables'),
                     nominal_value=1
                 )}
             )
