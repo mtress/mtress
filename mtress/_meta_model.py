@@ -890,20 +890,9 @@ class MetaModel:
         co2_import_pellet = (pellet_import * HHV_WP
                              * self.spec_co2['wood_pellet'])
 
-        electricity_from_grid = self.aggregate_flows(self.grid_el_flows)
-        electricity_from_adjacent = self.aggregate_flows(
-            self.adjacent_renewable_flows)
-        grid_electricity_fraction = (
-            electricity_from_grid
-            / (electricity_from_adjacent
-               + electricity_from_grid
-               + 1e-10)
-        )
         co2_import_el = (self._electricity_import
-                         * grid_electricity_fraction
                          * self.spec_co2['el_in'])
         co2_export_el = (self._electricity_export
-                         * grid_electricity_fraction
                          * self.spec_co2['el_out'])
 
         co2_emission = (co2_import_fossil_gas.sum()
