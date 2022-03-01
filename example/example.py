@@ -15,8 +15,10 @@ import os
 
 from oemof.solph import views
 
-from mtress import run_mtress
-
+from mtress import (
+    prepare_mtress_config,
+    run_mtress
+)
 
 def extract_result_sequence(results, label, resample=None):
     """
@@ -46,8 +48,11 @@ def all_techs_model(first_time_step=0,
                                   "all_techs_example.yaml")
 
     # run model using input data as defined in that file
-    meta_model = run_mtress(parameters=yaml_file_name,
-                            time_range=(first_time_step, last_time_step))
+    config = prepare_mtress_config(
+        parameters=yaml_file_name,
+        time_range=(first_time_step, last_time_step))
+
+    meta_model = run_mtress(parameters=config)
 
     if not silent:
         print('\n')
