@@ -1,10 +1,17 @@
 ---
+demand:
+  electricity:
+    values: demand.csv:electricity
+  heating:
+    values: demand.csv:heating
+    flow_temperature: 40  # °C
+    return_temperature: 30  # °C
+  dhw:
+    values: demand.csv:dhw
+    flow_temperature: 40  # °C
+    return_temperature: 30  # °C
 temperatures:
   reference: 30  # °C
-  dhw: 60  # °C
-  heat_drop_exchanger_dhw: 5  # °C
-  forward_flow: 40  # °C
-  backward_flow: 30  # °C
   additional:
   - 80  # °C
 air_source_heat_pump:
@@ -86,10 +93,6 @@ energy_cost:
 meteorology:
   temp_air: meteo.csv:temp_air
   temp_soil: meteo.csv:temp_soil
-demand:
-  electricity: demand.csv:electricity
-  heating: demand.csv:heating
-  dhw: demand.csv:dhw
 co2:
   el_in: 0.427  # t/MWh
   el_out: 0.427  # t/MWh

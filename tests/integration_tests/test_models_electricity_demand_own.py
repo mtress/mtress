@@ -20,7 +20,7 @@ def test_electricity_demand_ap():
     electricity_demand = np.full(3, 0.1)
 
     params = {
-        "demand": {"electricity": electricity_demand},
+        "demand": {"electricity": {"values": electricity_demand}},
         "energy_cost": {"electricity": {"demand_rate": 0.5,
                                         "slp_price": 0}}}
     meta_model, params = run_model_template(custom_params=params)
@@ -44,7 +44,7 @@ def test_electricity_demand_lp():
     electricity_demand = np.full(3, 0.1)
 
     params = {
-        "demand": {"electricity": electricity_demand},
+        "demand": {"electricity": {"values": electricity_demand}},
         "energy_cost": {"electricity": {
             "demand_rate": 1000,
             "AP": 0}}}
@@ -68,7 +68,7 @@ def test_electricity_demand_all_costs():
     electricity_demand = np.full(3, 0.1)
 
     params = {
-        "demand": {"electricity": electricity_demand},
+        "demand": {"electricity": {"values": electricity_demand}},
         "energy_cost": {"electricity": {
             "demand_rate": 1000,
             "AP": [15, 20, 15]}}}
@@ -99,8 +99,10 @@ def test_chp():
         "chp": {"gas_input": 4,
                 "thermal_output": 2,
                 "electric_output": 2},
-        "demand": {"heating": heat_demand,
-                   "electricity": electricity_demand},
+        "demand": {"heating": {"values": heat_demand,
+                               "flow_temperature": 40,
+                               "return_temperature": 30},
+                   "electricity": {"values": electricity_demand}},
         "public_grid": False}
     meta_model, params = run_model_template(custom_params=params)
 

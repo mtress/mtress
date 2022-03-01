@@ -21,6 +21,7 @@ def test_fully_solar():
     st_generation = 1
 
     st_generation = {"ST_20": 3 * [st_generation / 3],
+                     "ST_30": 0,
                      "ST_40": 3 * [st_generation / 3]}
     st_generation = pd.DataFrame(
         st_generation,
@@ -31,8 +32,12 @@ def test_fully_solar():
             "area": 1,
             "spec_generation": st_generation
         },
-        "demand": {"heating": 3 * [heat_demand / 3]},
-        "temperatures": {"backward_flow": 20}}
+        "demand": {
+            "heating": {
+                "values": 3 * [heat_demand/3],
+                "flow_temperature": 40,
+                "return_temperature": 20}
+        }}
     meta_model, params = run_model_template(custom_params=params)
 
     st_generation = meta_model.aggregate_flows(
@@ -62,8 +67,12 @@ def test_fully_solar_with_useless_storage():
             "spec_generation": st_generation
         },
         "heat_storage": {"volume": 2},
-        "demand": {"heating": 3 * [heat_demand / 3]},
-        "temperatures": {"backward_flow": 20}}
+        "demand": {
+            "heating": {
+                "values": 3 * [heat_demand/3],
+                "flow_temperature": 40,
+                "return_temperature": 20}
+        }}
     meta_model, params = run_model_template(custom_params=params)
 
     st_generation = meta_model.aggregate_flows(
@@ -96,10 +105,12 @@ def test_partly_solar():
             "spec_generation": st_generation
         },
         "demand": {
-            "heating": 3 * [heat_demand / 3]
+            "heating": {
+                "values": 3 * [heat_demand/3],
+                "flow_temperature": 40,
+                "return_temperature": 20}
         },
         "temperatures": {
-            "backward_flow": 20,
             "additional": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
@@ -125,9 +136,9 @@ def test_partly_solar_bad_timing():
     heat_demand = 1
     st_generation = 1
 
-    st_generation = {"ST_20": 3 * [1e-9],
-                     "ST_30": [1e-9, st_generation, 1e-9],
-                     "ST_40": 3 * [1e-9]}
+    st_generation = {"ST_20": 3 * [0],
+                     "ST_30": [0, st_generation, 0],
+                     "ST_40": 3 * [0]}
     st_generation = pd.DataFrame(
         st_generation,
         index=pd.date_range('1/1/2000', periods=3, freq='H'))
@@ -139,10 +150,12 @@ def test_partly_solar_bad_timing():
             "spec_generation": st_generation
         },
         "demand": {
-            "heating": 3 * [heat_demand / 3]
+            "heating": {
+                "values": 3 * [heat_demand/3],
+                "flow_temperature": 40,
+                "return_temperature": 20}
         },
         "temperatures": {
-            "backward_flow": 20,
             "additional": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
@@ -181,11 +194,14 @@ def test_partly_solar_with_storage():
             "area": 1,
             "spec_generation": st_generation},
         "demand": {
-            "heating": 3 * [heat_demand / 3]},
+            "heating": {
+                "values": 3 * [heat_demand/3],
+                "flow_temperature": 40,
+                "return_temperature": 20}
+        },
         "heat_storage": {
             "volume": 1e3},  # gigantic storage, so capacity plays no role
         "temperatures": {
-            "backward_flow": 20,
             "additional": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
@@ -223,10 +239,12 @@ def test_useless_solar():
             "spec_generation": st_generation
         },
         "demand": {
-            "heating": 3 * [heat_demand / 3]
+            "heating": {
+                "values": 3 * [heat_demand/3],
+                "flow_temperature": 40,
+                "return_temperature": 20}
         },
         "temperatures": {
-            "backward_flow": 20,
             "additional": [30]}}
     meta_model, params = run_model_template(custom_params=params)
 
@@ -242,18 +260,5 @@ def test_useless_solar():
                         abs_tol=1e-8)
 
 
-def test_missing_heat():
-    heat_demand = 0.3
-
-    params = {
-        "demand": {"heating": 3 * [heat_demand / 3]},
-        "allow_missing_heat": True
-    }
-    meta_model, params = run_model_template(custom_params=params)
-
-    thermal_demand = meta_model.aggregate_flows(meta_model.demand_th_flows).sum()
-    missing_heat = meta_model.aggregate_flows(meta_model.missing_heat_flow).sum()
-
-    assert math.isclose(thermal_demand, heat_demand)
-    assert math.isclose(missing_heat, heat_demand,
-                        rel_tol=HIGH_ACCURACY)
+if __name__ == "__main__":
+    test_fully_solar()

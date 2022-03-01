@@ -41,9 +41,9 @@ def run_model_template(custom_params=None):
                 else:
                     params[key1][key2] = custom_params[key1][key2]
 
-    params["demand"] = pd.DataFrame(
-        params["demand"],
-        index=pd.date_range('1/1/2000', periods=3, freq='H'))
+    if "time_index" not in params:
+        params["time_index"] = pd.date_range('1/1/2000', periods=3, freq='H')
+
     meta_model = MetaModel(**params)
 
     meta_model.model.solve(solver="cbc",
@@ -105,7 +105,7 @@ def test_missing_heat():
     heat_demand = 0.3
 
     params = {
-        "demand": {"heating": 3 * [heat_demand / 3]},
+        "demand": {"heating": {"values": 3 * [heat_demand / 3]}},
         "allow_missing_heat": True
     }
     meta_model, params = run_model_template(custom_params=params)
