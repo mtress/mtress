@@ -34,13 +34,13 @@ def _read_csv_files(parameter_dict, dir_path, time_range):
             parameter_dict[key] = csv_data[column_name]
 
 
-def run_mtress(parameters,
-               time_range=(0, -1),
-               solver="cbc"):
+def prepare_mtress_config(
+        parameters,
+        time_range=(0, -1)
+):
     """
     :param parameters: dict or file name of yaml file holding configuration
     :param time_range: tuple (first time step, last time step)
-    :param solver: solver to use for oemof.solph
     """
     if isinstance(parameters, dict):
         dir_path = parameters["dir_path"]
@@ -56,7 +56,15 @@ def run_mtress(parameters,
     if "time_index" not in parameters:
         parameters["time_index"] = parameters[
             "demand"]["heating"]["values"].index
+    return parameters
 
+
+def run_mtress(parameters,
+               solver="cbc"):
+    """
+    :param parameters: dict holding configuration
+    :param solver: solver to use for oemof.solph
+    """
     meta_model = MetaModel(**parameters)
     meta_model.solve(solver=solver,
                      solve_kwargs={'tee': False},
