@@ -154,11 +154,11 @@ class MetaModel:
         energy_system.add(b_eldist, b_elprod, b_elxprt, b_elgrid)
 
         # (unidirectional) grid connection
-
         # RLM customer for district and larger buildings
         m_el_in = Source(label='m_el_in',
                          outputs={b_elgrid: Flow()})
         self.grid_el_flows.add((m_el_in.label, b_elgrid.label))
+        energy_system.add(m_el_in)
 
         self.grid_connection_in_costs = (
                 self.energy_cost['electricity']['surcharge']
@@ -166,6 +166,7 @@ class MetaModel:
                 + self.energy_cost['electricity']['market']
                 + self.spec_co2['el_in']
                 * self.spec_co2['price_el'])
+
         b_grid_connection_in = Bus(
             label="b_grid_connection_in",
             inputs={b_elgrid: Flow(
@@ -187,7 +188,7 @@ class MetaModel:
                                    nominal_value=1e5,
                                    grid_connection=True)})
 
-        energy_system.add(m_el_in, b_grid_connection_in, b_grid_connection_out)
+        energy_system.add(b_grid_connection_in, b_grid_connection_out)
 
         m_el_out = Sink(label='m_el_out',
                         inputs={b_grid_connection_out: Flow()})
@@ -460,8 +461,9 @@ class MetaModel:
         if 'electricity' in self.demand:
             d_el_local = Sink(
                 label='d_el_local',
-                inputs={b_eldist: Flow(fix=self.demand['electricity']['values'],
-                                       nominal_value=1)})
+                inputs={b_eldist: Flow(
+                    fix=self.demand['electricity']['values'],
+                    nominal_value=1)})
 
             self.demand_el_flows.add((b_eldist.label,
                                          d_el_local.label))
@@ -501,7 +503,7 @@ class MetaModel:
                 flow_temperature=self.demand['dhw'][
                     'flow_temperature'],
                 return_temperature=self.demand['dhw'][
-                    'return_temperature']),
+                    'return_temperature'])
 
             d_dhw = Sink(label='d_dhw',
                          inputs={b_th_dhw: Flow(
@@ -870,25 +872,39 @@ class MetaModel:
 
         return costs
 
-    def co2_emission(self):
+    def co2_emission(self, accuracy=1):
         """
         Calculates the CO2 Emission acc. to
         https://doi.org/10.3390/en13112967
 
         :return: CO2 emission in operation as timeseries
         """
+        self._calc_energy_balance()
+
         fossil_gas_import = self.aggregate_flows(self.fossil_gas_import_flows)
         biomethane_import = self.aggregate_flows(self.biomethane_import_flows)
         pellet_import = self.aggregate_flows(self.pellet_import_flows)
-        el_export = self.aggregate_flows(self.electricity_export_flows)
-        el_import = self.aggregate_flows(self.grid_el_flows)
 
         co2_import_fossil_gas = fossil_gas_import * self.spec_co2['fossil_gas']
         co2_import_biomethane = biomethane_import * self.spec_co2['biomethane']
         co2_import_pellet = (pellet_import * HHV_WP
                              * self.spec_co2['wood_pellet'])
-        co2_import_el = el_import * self.spec_co2['el_in']
-        co2_export_el = el_export * self.spec_co2['el_out']
+
+        electricity_from_grid = self.aggregate_flows(self.grid_el_flows)
+        electricity_from_adjacent = self.aggregate_flows(
+            self.adjacent_renewable_flows)
+        grid_electricity_fraction = (
+            electricity_from_grid
+            / (electricity_from_adjacent
+               + electricity_from_grid
+               + 1e-10)
+        )
+        co2_import_el = (self._electricity_import
+                         * grid_electricity_fraction
+                         * self.spec_co2['el_in'])
+        co2_export_el = (self._electricity_export
+                         * grid_electricity_fraction
+                         * self.spec_co2['el_out'])
 
         co2_emission = (co2_import_fossil_gas.sum()
                         + co2_import_biomethane.sum()
@@ -896,7 +912,7 @@ class MetaModel:
                         + co2_import_pellet.sum()
                         - co2_export_el.sum())
 
-        return np.round(co2_emission, 1)
+        return np.round(co2_emission, accuracy)
 
     def own_consumption(self):
         """

@@ -95,7 +95,7 @@ meteorology:
   temp_soil: meteo.csv:temp_soil
 co2:
   el_in: 0.427  # t/MWh
-  el_out: -0.427  # t/MWh
+  el_out: 0.427  # t/MWh
   fossil_gas: 0.202  # t/MWh
   biomethane: 0.148  # t/MWh
   wood_pellet: 0.023  # t/MWh

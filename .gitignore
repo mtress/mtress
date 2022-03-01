@@ -4,4 +4,6 @@ __pycache__
 .coverage
 .tox
 doc/mtress.wmf
+dist/
+build/
 

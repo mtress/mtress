@@ -88,7 +88,7 @@ def test_demand_supply_exclusive():
         abs_tol=HIGH_ACCURACY)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.grid_el_flows).sum(),
+        meta_model.aggregate_flows(meta_model.electricity_import_flows).sum(),
         electricity_import.sum(),
         abs_tol=HIGH_ACCURACY)
 
@@ -145,7 +145,7 @@ def test_demand_supply_non_exclusive():
         abs_tol=HIGH_ACCURACY)
 
     assert math.isclose(
-        meta_model.aggregate_flows(meta_model.grid_el_flows).sum(),
+        meta_model.aggregate_flows(meta_model.electricity_import_flows).sum(),
         electricity_demand.sum(),
         abs_tol=HIGH_ACCURACY)
 
