@@ -27,9 +27,8 @@ class GenericTechnology:
     """
     The class GenericTechnology is meant to be used as an interface
     """
-    def __init__(self,
-                 label,
-                 energy_system):
+
+    def __init__(self, label, energy_system):
         self._flows = {flow_type: set() for flow_type in FlowType}
         self._label = label
         self._energy_system = energy_system

@@ -13,14 +13,14 @@ SPDX-License-Identifier: MIT
 
 import numpy as np
 
-from ._constants import (SECONDS_PER_HOUR, ZERO_CELSIUS)
+from ._constants import SECONDS_PER_HOUR, ZERO_CELSIUS
 
 
 def kilo_to_mega(arg):
     """
     use to make explicit unit conversions instead of just dividing by 1000
     """
-    return arg/1000
+    return arg / 1000
 
 
 def celsius_to_kelvin(arg):
@@ -71,19 +71,17 @@ def lorenz_cop(temp_in, temp_out):
     return temp_out / np.maximum(temp_out - temp_in, 1e-3)
 
 
-def calc_cop(temp_input,
-             temp_output,
-             cop_0_35=4.6):
+def calc_cop(temp_input, temp_output, cop_0_35=4.6):
     """
     :param temp_input: Higher Temperature of the source (K)
     :param temp_output: Flow Temperature of the heating system (K)
     :param cop_0_35: COP for B0/W35
     :return: Scaled COP for the given temperatures
     """
-    cpf = cop_0_35 / lorenz_cop(temp_in=celsius_to_kelvin(0),
-                                temp_out=celsius_to_kelvin(35))
+    cpf = cop_0_35 / lorenz_cop(
+        temp_in=celsius_to_kelvin(0), temp_out=celsius_to_kelvin(35)
+    )
 
-    cop = cpf * lorenz_cop(temp_in=temp_input,
-                           temp_out=temp_output)
+    cop = cpf * lorenz_cop(temp_in=temp_input, temp_out=temp_output)
 
     return cop

@@ -38,11 +38,9 @@ class HeatLayers:
     Those only need to connect to the hottest layer.
     """
 
-    def __init__(self,
-                 energy_system,
-                 temperature_levels,
-                 reference_temperature,
-                 label=''):
+    def __init__(
+        self, energy_system, temperature_levels, reference_temperature, label=""
+    ):
         """
         :param energy_system: solph.EnergySystem
         :param temperature_levels: list [temperature]
@@ -66,28 +64,32 @@ class HeatLayers:
         assert reference_temperature < temperature_levels[0], error_msg
 
         if len(label) > 0:
-            label = label + '_'
+            label = label + "_"
 
         temp_low = None
         for temperature in self._temperature_levels:
             # Naming of new temperature bus
             temperature_str = "{0:.0f}".format(temperature)
-            b_th_label = label + 'b_th_' + temperature_str
-            b_th_in_label = label + 'b_th_in_' + temperature_str
+            b_th_label = label + "b_th_" + temperature_str
+            b_th_in_label = label + "b_th_in_" + temperature_str
 
             ################################################################
             # Thermal buses
             b_th_level = solph.Bus(label=b_th_label)
 
             if temp_low is None:
-                b_th_in_level = solph.Bus(label=b_th_in_label,
-                                          outputs={b_th_level: solph.Flow()})
+                b_th_in_level = solph.Bus(
+                    label=b_th_in_label, outputs={b_th_level: solph.Flow()}
+                )
                 self.b_th_lowest = b_th_level
             else:
                 b_th_in_level = solph.Bus(
                     label=b_th_in_label,
-                    outputs={self.b_th_in[temp_low]: solph.Flow(),
-                             b_th_level: solph.Flow()})
+                    outputs={
+                        self.b_th_in[temp_low]: solph.Flow(),
+                        b_th_level: solph.Flow(),
+                    },
+                )
             self.b_th_in_highest = b_th_in_level
 
             self.b_th[temperature] = b_th_level
@@ -100,20 +102,23 @@ class HeatLayers:
             if temp_low is not None:
                 temp_low_str = "{0:.0f}".format(temp_low)
                 temp_high_str = "{0:.0f}".format(temperature)
-                heater_label = (label
-                                + 'rise_' + temp_low_str
-                                + '_' + temp_high_str)
-                heater_ratio = ((temp_low - self._reference_temperature)
-                                / (temperature - self._reference_temperature))
+                heater_label = label + "rise_" + temp_low_str + "_" + temp_high_str
+                heater_ratio = (temp_low - self._reference_temperature) / (
+                    temperature - self._reference_temperature
+                )
                 heater = solph.Transformer(
                     label=heater_label,
-                    inputs={b_th_in_level: solph.Flow(),
-                            self.b_th[temp_low]: solph.Flow()},
+                    inputs={
+                        b_th_in_level: solph.Flow(),
+                        self.b_th[temp_low]: solph.Flow(),
+                    },
                     outputs={b_th_level: solph.Flow()},
                     conversion_factors={
                         b_th_in_level: 1 - heater_ratio,
                         self.b_th[temp_low]: heater_ratio,
-                        b_th_level: 1})
+                        b_th_level: 1,
+                    },
+                )
 
                 energy_system.add(heater)
 

@@ -13,9 +13,13 @@ SPDX-License-Identifier: MIT
 from oemof import solph
 from oemof import thermal
 
-from mtress.physics import (kilo_to_mega, kJ_to_MWh,
-                            H2O_DENSITY, H2O_HEAT_CAPACITY,
-                            TC_INSULATION)
+from mtress.physics import (
+    kilo_to_mega,
+    kJ_to_MWh,
+    H2O_DENSITY,
+    H2O_HEAT_CAPACITY,
+    TC_INSULATION,
+)
 
 
 class MultiLayerStorage:
@@ -24,13 +28,16 @@ class MultiLayerStorage:
     One storage per temperature levels with shared resources.
     See https://arxiv.org/abs/2012.12664
     """
-    def __init__(self,
-                 diameter,
-                 volume,
-                 insulation_thickness,
-                 ambient_temperature,
-                 heat_layers,
-                 label=""):
+
+    def __init__(
+        self,
+        diameter,
+        volume,
+        insulation_thickness,
+        ambient_temperature,
+        heat_layers,
+        label="",
+    ):
         """
         :param diameter: numeric scalar (in m)
         :param volume: numeric scalar (in m³)
@@ -49,15 +56,14 @@ class MultiLayerStorage:
         self._heat_storage_insulation = insulation_thickness
 
         self._loss_rate = {}
-        self._fixed_losses = {"abs": {},
-                              "rel": {}}
+        self._fixed_losses = {"abs": {}, "rel": {}}
 
         self.in_flows = dict()
         self.out_flows = dict()
         self.content = dict()
 
         if len(label) > 0:
-            self.label = label + '_'
+            self.label = label + "_"
         else:
             self.label = "s_heat_"
 
@@ -66,26 +72,28 @@ class MultiLayerStorage:
             storage_label = self.label + temperature_str
             b_th_level = heat_layers.b_th[temperature]
 
-            hs_capacity = self.heat_storage_volume * \
-                          kJ_to_MWh((temperature
-                                     - heat_layers.reference_temperature) *
-                                    H2O_DENSITY *
-                                    H2O_HEAT_CAPACITY)
+            hs_capacity = self.heat_storage_volume * kJ_to_MWh(
+                (temperature - heat_layers.reference_temperature)
+                * H2O_DENSITY
+                * H2O_HEAT_CAPACITY
+            )
 
             if self._heat_storage_insulation <= 0:
                 hs_loss_rate = 0
                 hs_fixed_losses_relative = 0
                 hs_fixed_losses_absolute = 0
             else:
-                (hs_loss_rate,
-                 hs_fixed_losses_relative,
-                 hs_fixed_losses_absolute) = (
-                    thermal.stratified_thermal_storage.calculate_losses(
-                        u_value=TC_INSULATION / self._heat_storage_insulation,
-                        diameter=diameter,
-                        temp_h=temperature,
-                        temp_c=self._reference_temperature,
-                        temp_env=ambient_temperature))
+                (
+                    hs_loss_rate,
+                    hs_fixed_losses_relative,
+                    hs_fixed_losses_absolute,
+                ) = thermal.stratified_thermal_storage.calculate_losses(
+                    u_value=TC_INSULATION / self._heat_storage_insulation,
+                    diameter=diameter,
+                    temp_h=temperature,
+                    temp_c=self._reference_temperature,
+                    temp_env=ambient_temperature,
+                )
 
             # losses to the upper side of the storage will just leave the
             # storage for the uppermost level.
@@ -104,7 +112,7 @@ class MultiLayerStorage:
                 nominal_storage_capacity=hs_capacity,
                 loss_rate=hs_loss_rate,
                 fixed_losses_absolute=hs_fixed_losses_absolute,
-                fixed_losses_relative=hs_fixed_losses_relative
+                fixed_losses_relative=hs_fixed_losses_relative,
             )
             self.in_flows[temperature] = (b_th_level.label, s_heat.label)
             self.out_flows[temperature] = (s_heat.label, b_th_level.label)
@@ -117,22 +125,28 @@ class MultiLayerStorage:
         """
         :param model: solph.model
         """
-        w_factor = [1 / kilo_to_mega(H2O_HEAT_CAPACITY
-                                     * H2O_DENSITY
-                                     * (temp - self._reference_temperature))
-                    for temp in self._temperature_levels]
+        w_factor = [
+            1
+            / kilo_to_mega(
+                H2O_HEAT_CAPACITY * H2O_DENSITY * (temp - self._reference_temperature)
+            )
+            for temp in self._temperature_levels
+        ]
 
         solph.constraints.shared_limit(
-            model, model.GenericStorageBlock.storage_content,
-            self.label+'storage_limit', self._h_storage_comp, w_factor,
-            upper_limit=self.heat_storage_volume)
+            model,
+            model.GenericStorageBlock.storage_content,
+            self.label + "storage_limit",
+            self._h_storage_comp,
+            w_factor,
+            upper_limit=self.heat_storage_volume,
+        )
 
     @property
     def combined_inflow(self):
         heat = 0
         for res in self.in_flows.values():
-            heat += self.energy_system.results['main'][res][
-                'sequences']['flow']
+            heat += self.energy_system.results["main"][res]["sequences"]["flow"]
 
         return heat
 
@@ -140,8 +154,7 @@ class MultiLayerStorage:
     def combined_outflow(self):
         heat = 0
         for res in self.out_flows.values():
-            heat += self.energy_system.results['main'][res][
-                'sequences']['flow']
+            heat += self.energy_system.results["main"][res]["sequences"]["flow"]
 
         return heat
 

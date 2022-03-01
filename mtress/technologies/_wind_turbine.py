@@ -16,19 +16,23 @@ class WindTurbine(RenewableElectricitySource):
     """
     wind turbine wrapper for generic RenewableElectricitySource
     """
-    def __init__(self,
-                 nominal_power,
-                 specific_generation,
-                 funding,
-                 out_bus_internal,
-                 out_bus_external,
-                 label,
-                 energy_system):
+
+    def __init__(
+        self,
+        nominal_power,
+        specific_generation,
+        funding,
+        out_bus_internal,
+        out_bus_external,
+        label,
+        energy_system,
+    ):
         super().__init__(
-                 nominal_power,
-                 specific_generation,
-                 funding,
-                 out_bus_internal,
-                 out_bus_external,
-                 label,
-                 energy_system)
+            nominal_power,
+            specific_generation,
+            funding,
+            out_bus_internal,
+            out_bus_external,
+            label,
+            energy_system,
+        )

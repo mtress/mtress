@@ -27,12 +27,10 @@ class HeatExchanger:
               ↙
        (Q(T2))
     """
-    def __init__(self,
-                 heat_layers,
-                 heat_demand,
-                 label,
-                 flow_temperature,
-                 return_temperature=None):
+
+    def __init__(
+        self, heat_layers, heat_demand, label, flow_temperature, return_temperature=None
+    ):
         """
         :param heat_layers: HeatLayers object to attach to
         :param heat_demand: solph.Node (e.g. solph.Bus)
@@ -43,38 +41,38 @@ class HeatExchanger:
         energy_system = heat_layers.energy_system
 
         if heat_layers.reference_temperature < return_temperature:
-            heat_drop_ratio = ((return_temperature
-                                - heat_layers.reference_temperature)
-                               / (flow_temperature
-                                  - heat_layers.reference_temperature))
+            heat_drop_ratio = (
+                return_temperature - heat_layers.reference_temperature
+            ) / (flow_temperature - heat_layers.reference_temperature)
             self.heat_drop_ratio = heat_drop_ratio
 
             heat_drop = solph.Transformer(
                 label=label,
-                inputs={
-                    heat_layers.b_th[flow_temperature]: solph.Flow()},
+                inputs={heat_layers.b_th[flow_temperature]: solph.Flow()},
                 outputs={
                     heat_layers.b_th[return_temperature]: solph.Flow(),
-                    heat_demand: solph.Flow()},
+                    heat_demand: solph.Flow(),
+                },
                 conversion_factors={
                     heat_layers.b_th[flow_temperature]: 1,
-                    heat_layers.b_th[return_temperature]:
-                        heat_drop_ratio,
-                    heat_demand: 1 - heat_drop_ratio})
+                    heat_layers.b_th[return_temperature]: heat_drop_ratio,
+                    heat_demand: 1 - heat_drop_ratio,
+                },
+            )
 
             self.backward_flow = (
                 heat_drop.label,
-                heat_layers.b_th[return_temperature].label)
+                heat_layers.b_th[return_temperature].label,
+            )
         else:
             self.heat_drop_ratio = 0
             heat_drop = solph.Bus(
                 label=label,
-                inputs={
-                    heat_layers.b_th[flow_temperature]: solph.Flow()},
-                outputs={heat_demand: solph.Flow()})
+                inputs={heat_layers.b_th[flow_temperature]: solph.Flow()},
+                outputs={heat_demand: solph.Flow()},
+            )
 
-        self.forward_flow = (heat_layers.b_th[flow_temperature].label,
-                             heat_drop.label)
+        self.forward_flow = (heat_layers.b_th[flow_temperature].label, heat_drop.label)
 
         self.supply_flow = (heat_drop.label, heat_demand)
 
@@ -87,4 +85,4 @@ class HeatExchanger:
         Total energy calculated as
         difference between forward and backward flows
         """
-        return results_dict[self.supply_flow]['sequences']['flow']
+        return results_dict[self.supply_flow]["sequences"]["flow"]
