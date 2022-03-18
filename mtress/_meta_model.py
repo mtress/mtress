@@ -368,19 +368,24 @@ class MetaModel:
                 energy_system.add(s_shp, b_shp)
 
             # deep geothermal
-            if (
-                "geothermal_heat_source" in kwargs
-                and kwargs["geothermal_heat_source"]["thermal_output"] > 0
-            ):
+            if "geothermal_heat_source" in kwargs:
                 ghp = kwargs.pop("geothermal_heat_source")
-                b_ghp = Bus(label="b_ghp", outputs={heat_pump.b_th_in["sonde"]: Flow()})
-                s_ghp = Source(
-                    label="s_ghp",
-                    outputs={b_ghp: Flow(nominal_value=ghp["thermal_output"])},
+                geothermal_power = numeric_array(
+                    ghp["thermal_output"],
+                    self.number_of_time_steps,
                 )
+                if max(geothermal_power) > 0:
+                    b_ghp = Bus(
+                        label="b_ghp",
+                        outputs={heat_pump.b_th_in["sonde"]: Flow()}
+                    )
+                    s_ghp = Source(
+                        label="s_ghp",
+                        outputs={b_ghp: Flow(nominal_value=ghp["thermal_output"])},
+                    )
 
-                self.geothermal_input_flows.add((s_ghp.label, b_ghp.label))
-                energy_system.add(s_ghp, b_ghp)
+                    self.geothermal_input_flows.add((s_ghp.label, b_ghp.label))
+                    energy_system.add(s_ghp, b_ghp)
 
             ###################################################################
             # Ice storage
