@@ -13,13 +13,19 @@ SPDX-License-Identifier: MIT
 
 from oemof import solph
 
-from mtress.physics import celsius_to_kelvin
-
 
 class HeatExchanger:
     """
     For modeling power demands that lower temperature,
     see https://arxiv.org/abs/2012.12664
+
+    HeatLayers  HeatExchanger       Demand
+
+       (Q(T3))
+              ↘
+             [HE3,2]----------------->(D(T3))
+              ↙
+       (Q(T2))
     """
     def __init__(self,
                  heat_layers,
@@ -28,11 +34,11 @@ class HeatExchanger:
                  forward_flow_temperature,
                  backward_flow_temperature=None):
         """
-        :param heat_layers:
-        :param heat_demand:
-        :param label:
-        :param forward_flow_temperature:
-        :param backward_flow_temperature:
+        :param heat_layers: HeatLayers object to attach to
+        :param heat_demand: solph.Node (e.g. solph.Bus)
+        :param label: name for HeatExchanger
+        :param forward_flow_temperature: flow temperature
+        :param backward_flow_temperature: return temperature
         """
         energy_system = heat_layers.energy_system
 
@@ -45,12 +51,15 @@ class HeatExchanger:
 
             heat_drop = solph.Transformer(
                 label=label,
-                inputs={heat_layers.b_th[forward_flow_temperature]: solph.Flow()},
-                outputs={heat_layers.b_th[backward_flow_temperature]: solph.Flow(),
-                         heat_demand: solph.Flow()},
+                inputs={
+                    heat_layers.b_th[forward_flow_temperature]: solph.Flow()},
+                outputs={
+                    heat_layers.b_th[backward_flow_temperature]: solph.Flow(),
+                    heat_demand: solph.Flow()},
                 conversion_factors={
                     heat_layers.b_th[forward_flow_temperature]: 1,
-                    heat_layers.b_th[backward_flow_temperature]: heat_drop_ratio,
+                    heat_layers.b_th[backward_flow_temperature]:
+                        heat_drop_ratio,
                     heat_demand: 1 - heat_drop_ratio})
 
             self.backward_flow = (
@@ -60,7 +69,8 @@ class HeatExchanger:
             self.heat_drop_ratio = 0
             heat_drop = solph.Bus(
                 label=label,
-                inputs={heat_layers.b_th[forward_flow_temperature]: solph.Flow()},
+                inputs={
+                    heat_layers.b_th[forward_flow_temperature]: solph.Flow()},
                 outputs={heat_demand: solph.Flow()})
 
         self.forward_flow = (heat_layers.b_th[forward_flow_temperature].label,

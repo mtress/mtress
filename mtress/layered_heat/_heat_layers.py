@@ -13,14 +13,31 @@ SPDX-License-Identifier: MIT
 
 from oemof import solph
 
-from mtress.physics import celsius_to_kelvin
-
 
 class HeatLayers:
     """
     Connector class for modeling power flows with variable temperature levels,
     see https://arxiv.org/abs/2012.12664
+
+      Layer Inputs        Layers Outputs
+
+      (Qin(T3))           (Q(T3))
+          │   ↘           ↗
+          │    [heater2,3]
+          ↓               ↖
+      (Qin(T2))           (Q(T2))
+          │    ↘          ↗
+          │    [heater1,2]
+          ↓               ↖
+      (Qin(T1))---------->(Q(T1))
+
+    Heat sources connect to the Qin for the corresponding temperatures.
+    If efficiency increases with lower temperature,
+    techs should connect to all input nodes (see e.g. LayeredHeatPump).
+    Note that there are also heat supply techs with constant efficiency.
+    Those only need to connect to the hottest layer.
     """
+
     def __init__(self,
                  energy_system,
                  temperature_levels,
@@ -31,6 +48,7 @@ class HeatLayers:
         :param temperature_levels: list [temperature]
         :param reference_temperature: reference temperature for energy (°C)
         """
+
         # Create object collections for temperature dependent technologies
         self.energy_system = energy_system
         self.b_th = dict()

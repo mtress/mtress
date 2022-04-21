@@ -1,12 +1,21 @@
 # -*- coding: utf-8 -*-
-import time
-import pandas as pd
-import json
+
+"""
+Example showing usage of MTRESS
+
+SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
+SPDX-FileCopyrightText: kehag Energiehandel GMbH
+SPDX-FileCopyrightText: Patrik Schönfeldt
+SPDX-FileCopyrightText: Lucas Schmeling
+
+SPDX-License-Identifier: MIT
+"""
+
 import os
 
-from oemof.solph import views, processing
+from oemof.solph import views
 
-from mtress.meta_model import MetaModel
+from mtress.run_mtress import run_mtress
 
 
 def extract_result_sequence(results, label, resample=None):
@@ -22,107 +31,23 @@ def extract_result_sequence(results, label, resample=None):
     return sequences
 
 
-def all_techs_model(number_of_time_steps=365 * 24,
+def all_techs_model(first_time_step=0,
+                    last_time_step=-1,
                     silent=False):
     """
-    :param number_of_time_steps: number of time steps to consider
+    :param first_time_step: first time step to consider (int)
+    :param last_time_step: last time step to consider (int)
     :param silent: just solve and do not print results (for testing/ debug)
     """
+
+    # define input data source
     dir_path = os.path.dirname(os.path.realpath(__file__))
+    yaml_file_name = os.path.join(dir_path,
+                                  "all_techs_example.yaml")
 
-    with open(os.path.join(dir_path, 'all_techs_example.json')) as f:
-        variables = json.load(f)
-
-    meteo = pd.read_csv(os.path.join(dir_path, 'meteo.csv'),
-                        comment='#', index_col=0,
-                        sep=',',
-                        parse_dates=True)
-
-    day_ahead = pd.read_csv(os.path.join(dir_path, 'day-ahead.csv'),
-                            comment='#', index_col=0,
-                            sep=',',
-                            parse_dates=True)
-
-    demand = pd.read_csv(os.path.join(dir_path, 'demand.csv'),
-                         comment='#', index_col=0,
-                         sep=',',
-                         parse_dates=True)
-
-    generation = pd.read_csv(os.path.join(dir_path, 'generation.csv'),
-                             comment='#', index_col=0,
-                             sep=',',
-                             parse_dates=True)
-
-    data = meteo.join(day_ahead)
-    data = data.join(demand)
-    data = data.join(generation)
-
-    del day_ahead
-    del demand
-    del generation
-
-    data = data.dropna()
-    data = data.resample("1h").mean()
-
-    data = data.head(number_of_time_steps)
-
-    time_series = {
-        'meteorology': {
-            'temp_air': meteo['temp_air'],  # K
-            'temp_soil': meteo['temp_soil']},  # K
-        'energy_cost': {
-            'electricity': {'market': data['price']}},  # €/MW
-        'demand': {
-            'electricity': data['electricity'],  # MW (time series)
-            'heating': data['heating'],  # MW (time series)
-            'dhw': data['dhw']}  # MW (time series),
-    }
-
-    # Only add timeseries if technology is present in model
-    if 'pv' in variables.keys():
-        time_series['pv'] = {'spec_generation': data['PV']}  # MW
-
-    if 'wind_turbine' in variables.keys():
-        time_series['wind_turbine'] = {'spec_generation': data['WT']}  # MW
-
-    if 'solar_thermal' in variables.keys():
-        time_series['solar_thermal'] = {'spec_generation': data.filter(regex='ST')}  # MW/m^2
-
-    for key1 in time_series:
-        if key1 not in variables:
-            variables[key1] = time_series[key1]
-        else:
-            for key2 in time_series[key1]:
-                if type(time_series[key1][key2]) == dict:
-                    for key3 in time_series[key1][key2]:
-                        variables[key1][key2][key3] = time_series[key1][key2][key3]
-                else:
-                    variables[key1][key2] = time_series[key1][key2]
-
-    variables["exclusive_grid_connection"] = True
-    variables["allow_missing_heat"] = False
-    meta_model = MetaModel(**variables)
-
-    if not silent:
-        print('Start solving')
-    start = time.time()
-    meta_model.model.solve(solver="cbc",
-                           solve_kwargs={'tee': False},
-                           solver_io='lp',
-                           cmdline_options={'ratio': 0.01})
-    end = time.time()
-    if not silent:
-        print("Time to solve: " + str(end - start) + " Seconds")
-
-    energy_system = meta_model.energy_system
-    energy_system.results['valid'] = True
-    energy_system.results['main'] = processing.results(
-        meta_model.model)
-    energy_system.results['main'] = views.convert_keys_to_strings(
-        energy_system.results['main'])
-    energy_system.results['meta'] = processing.meta_results(
-        meta_model.model)
-
+    # run model using input data as defined in that file
+    meta_model = run_mtress(parameters=yaml_file_name,
+                            time_range=(first_time_step, last_time_step))
 
     if not silent:
         print('\n')
@@ -185,8 +110,17 @@ def all_techs_model(number_of_time_steps=365 * 24,
         print("{:04.1f} % WT coverage: {:.3f}".format(
             100 * wt_generation / el_demand, wt_generation))
 
+        print("\n")
+        total_electricity_generation = pv_generation + wt_generation + chp_el_generation
+        if total_electricity_generation > el_demand:
+            renewable_share_el = 100 * (pv_generation + wt_generation) / total_electricity_generation
+        else:
+            renewable_share_el = 100 * (pv_generation + wt_generation) / el_demand
+        print("{:04.1f} % Renewable share of electricity: {:.3f}".format(
+            renewable_share_el, pv_generation + wt_generation))
+
     return meta_model
 
 
 if __name__ == '__main__':
-    all_techs_model(number_of_time_steps=7 * 24)
+    all_techs_model(last_time_step=7 * 24)
