@@ -7,7 +7,7 @@ def read(file_name):
 
 setup(
     name="mtress",
-    version="2.1.0rc4",
+    version="2.1.0",
     url="https://github.com/mtress/mtress",
     author="Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)",
     author_email="patrik.schoenfeldt@dlr.de",
@@ -35,5 +35,5 @@ setup(
         "pyyaml >= 6.0",
         "oemof.solph >= 0.4.4",
         "oemof.thermal >= 0.0.5",
-    ]
+    ],
 )
