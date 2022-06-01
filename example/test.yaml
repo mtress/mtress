@@ -1,0 +1,41 @@
+locations:
+  LocationA:
+    energy_cost:
+      electricity:
+        demand_rate: 15000  # €/MW
+        working: 300  # €/MWh
+      gas:
+        working_price: 95  # €/MWh
+        demand_rate: 5.5  # €/MW
+      wood_pellet: 300  # €/MWh
+    
+    meteorology:
+      temp_air: meteo.csv:temp_air
+      temp_soil: meteo.csv:temp_soil
+    
+    energy_carriers:
+      Heat: # class name
+        reference_temperature: 10 # °C
+        temperature_levels:
+          - 35. # °C
+          - 60. # °C
+          - 80. # °C
+      Electricity:
+        grid_connection: True
+
+    demand:
+      electricity:
+        - level: 400.
+          values: demand.csv:lv_demand
+        - level: 20000.
+          values: demand.csv:mv_demand
+      heat:
+        - flow: 50.
+          return: 30.
+          values: demand.csv:heating
+        - flow: 65.
+          return: 40.
+          values: demand.csv:dhw_heat_exchanger
+        - flow: 65.
+          return: 10.
+          values: demand.csv:dhw_fresh_water_refill
