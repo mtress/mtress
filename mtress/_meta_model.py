@@ -14,7 +14,9 @@ SPDX-License-Identifier: MIT
 from copy import deepcopy
 import pprint
 import numpy as np
+import os
 import pandas as pd
+import yaml
 
 from oemof.solph import (
     Bus,
@@ -54,6 +56,22 @@ class MetaModel:
         :return: Oemof energy system and model,
                  as well as a dict containing all used technology classes
         """
+
+        config_file = kwargs.pop("save_config", None)
+        if config_file is not None:
+            yaml_ending = ".yaml"
+            wrong_yaml_ending_message = (
+                "Parameter 'save_config' expects a valid name for a yaml file "
+                "including the enging '.yaml'."
+            )
+            assert (
+                config_file[-len(yaml_ending):] != yaml_ending,
+                wrong_yaml_ending_message
+            )
+            dir_path = os.path.dirname(os.path.realpath(config_file))
+            with open(dir_path, "w") as out:
+                yaml.dump(kwargs, out)
+
         # Unpack non-technology kwargs
         self.meteorology = kwargs.pop("meteorology")
         self.temps = kwargs.pop("temperatures")
