@@ -4,14 +4,6 @@ from abc import ABC
 
 from oemof import solph
 
-PREFIXES = {
-    solph.Bus: "b",
-    solph.Sink: "d",
-    solph.Source: "s",
-    solph.Transformer: "t",
-    solph.GenericStorage: "st",
-}
-
 
 class AbstractComponent(ABC):
     """Abstract MTRESS component."""
@@ -21,12 +13,21 @@ class AbstractComponent(ABC):
         self._location = location
         self._name = name
 
-    def _generate_label(self, element, identifier):
+    def _generate_label(self, identifier):
         """Generate a unique label for the generated solph components."""
-        prefix = PREFIXES.get(element, "n")
-        return f"{self._location.name}:{self._name}:{prefix}_{identifier}"
+        return f"{self.location.name}:{self.name}:{identifier}"
 
     @property
     def name(self):
         """Return name of MTRESS component."""
         return self._name
+
+    @property
+    def location(self):
+        """Return location this component belongs to."""
+        return self._location
+
+    @property
+    def meta_model(self):
+        """Return meta model this component belongs to."""
+        return self.location.meta_model

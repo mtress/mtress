@@ -13,7 +13,7 @@ locations:
       temp_air: meteo.csv:temp_air
       temp_soil: meteo.csv:temp_soil
     
-    energy_carriers:
+    carriers:
       Heat: # class name
         reference_temperature: 10 # °C
         temperature_levels:
@@ -24,18 +24,7 @@ locations:
         grid_connection: True
 
     demand:
-      electricity:
-        - level: 400.
-          values: demand.csv:lv_demand
-        - level: 20000.
-          values: demand.csv:mv_demand
-      heat:
-        - flow: 50.
-          return: 30.
-          values: demand.csv:heating
-        - flow: 65.
-          return: 40.
-          values: demand.csv:dhw_heat_exchanger
-        - flow: 65.
-          return: 10.
-          values: demand.csv:dhw_fresh_water_refill
+      Electricity:
+        time_series: demand.csv:electricity
+      SpaceHeating:
+        time_series: demand.csv:space_heating
