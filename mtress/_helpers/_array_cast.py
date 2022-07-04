@@ -25,3 +25,23 @@ def numeric_array(data, length):
         raise ValueError
 
     return data
+
+
+def cast_to_base_types(data):
+    """
+    Recursively casts common types to (nested) Python base types such as
+    lists, dicts, and strings
+    """
+    if type(data) is dict:
+        for key in data:
+            data[key] = cast_to_base_types(data[key])
+    elif type(data) is pd.Series:
+        data = data.tolist()
+    elif type(data) is pd.DatetimeIndex:
+        data = [timestamp.strftime("%Y-%m-%dT%H:%M:%S%z") for timestamp in data.tolist()]
+
+    elif type(data) is list:
+        for chunk in data:
+            chunk = cast_to_base_types(chunk)
+
+    return data
