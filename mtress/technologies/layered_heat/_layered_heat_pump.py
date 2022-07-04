@@ -14,6 +14,7 @@ SPDX-License-Identifier: MIT
 from oemof import solph
 
 from mtress.physics import calc_cop, celsius_to_kelvin
+from mtress._helpers import numeric_array
 
 
 class LayeredHeatPump:
@@ -96,7 +97,13 @@ class LayeredHeatPump:
         energy_system.add(electricity_bus, heat_budget_split, heat_budget)
 
         for source in heat_sources:
-            temperature_lower = heat_sources[source]
+            if type(heat_sources[source]) is list:
+                temperature_lower = numeric_array(
+                    heat_sources[source],
+                    length=len(heat_sources[source]),
+                )
+            else:
+                temperature_lower = heat_sources[source]
             heat_source = solph.Bus(label=label + "in_" + source)
             self.b_th_in[source] = heat_source
             energy_system.add(heat_source)
