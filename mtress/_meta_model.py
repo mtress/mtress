@@ -43,7 +43,10 @@ from mtress.technologies.layered_heat import (
 )
 from mtress.physics import HHV_WP, H2O_HEAT_FUSION, H2O_DENSITY
 
-from ._helpers import numeric_array
+from ._helpers import (
+    numeric_array,
+    cast_to_base_types,
+)
 
 HIGH_VIRTUAL_COSTS = 1000
 
@@ -59,18 +62,18 @@ class MetaModel:
 
         config_file = kwargs.pop("save_config", None)
         if config_file is not None:
+            cast_to_base_types(kwargs)
             yaml_ending = ".yaml"
             wrong_yaml_ending_message = (
                 "Parameter 'save_config' expects a valid name for a yaml file "
                 "including the enging '.yaml'."
             )
-            assert (
-                config_file[-len(yaml_ending):] != yaml_ending,
-                wrong_yaml_ending_message
-            )
+            config_file_ending = config_file[-len(yaml_ending):]
+            assert config_file_ending == yaml_ending, wrong_yaml_ending_message
             dir_path = os.path.dirname(os.path.realpath(config_file))
-            with open(dir_path, "w") as out:
-                yaml.dump(kwargs, out)
+            yaml_file_name = os.path.join(dir_path, config_file)
+            with open(yaml_file_name, "w") as out:
+                yaml.safe_dump(kwargs, out)
 
         # Unpack non-technology kwargs
         self.meteorology = kwargs.pop("meteorology")
@@ -99,6 +102,7 @@ class MetaModel:
 
         # Time range of the data (in a)
         time_index = kwargs.pop("time_index")
+        time_index = pd.DatetimeIndex(time_index)
         self.number_of_time_steps = len(time_index)
         time_index.freq = pd.infer_freq(time_index)
         self.time_range = (
@@ -293,7 +297,10 @@ class MetaModel:
                 diameter=hs["diameter"],
                 volume=hs["volume"],
                 insulation_thickness=hs["insulation_thickness"],
-                ambient_temperature=self.meteorology["temp_air"],
+                ambient_temperature=numeric_array(
+                    self.meteorology["temp_air"],
+                    length=self.number_of_time_steps,
+                ),
                 heat_layers=heat_layers,
             )
             self.th_storage_inflows = self._thermal_storage.in_flows.values()
@@ -471,7 +478,10 @@ class MetaModel:
                     inputs={b_st: Flow(nominal_value=st["area"])},
                     outputs={b_tgs: Flow(nominal_value=1)},
                     conversion_factors={
-                        b_tgs: (st["spec_generation"]["ST_" + str(temp)]).to_list()
+                        b_tgs: numeric_array(
+                            st["spec_generation"]["ST_" + str(temp)],
+                            length=self.number_of_time_steps,
+                        )
                     },
                 )
 
