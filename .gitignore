@@ -6,4 +6,4 @@ __pycache__
 doc/mtress.wmf
 dist/
 build/
-
+.ipynb_checkpoints/
