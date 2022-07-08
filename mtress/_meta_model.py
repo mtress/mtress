@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from oemof import solph
 
-from . import carriers, demands
+from . import carriers, demands, technologies
 
 # from . import technologies
 
@@ -14,7 +14,7 @@ class Location:
 
         # Initialize energy carriers
         self._carriers = {}
-        for carrier_name, carrier_config in config["carriers"].items():
+        for carrier_name, carrier_config in config.get("carriers", {}).items():
             assert hasattr(
                 carriers, carrier_name
             ), f"Energy carrier {carrier_name} not implemented"
@@ -24,13 +24,29 @@ class Location:
 
         # Initialize demands
         self._demands = {}
-        for demand_name, demand_config in config["demands"].items():
+        for demand_name, demand_config in config.get("demands", {}).items():
             assert hasattr(
                 demands, demand_name
             ), f"Demand {demand_name} not implemented"
 
             cls = getattr(demands, demand_name)
             self._demands[cls] = cls(location=self, **demand_config)
+
+        self._components = {}
+        for component_name, component_config in config.get("components", {}).items():
+            technology_name = component_config["technology"]
+            assert hasattr(
+                technologies, technology_name
+            ), f"Technology {technology_name} not implemented"
+
+            cls = getattr(technologies, technology_name)
+            self._components[component_name] = cls(
+                name=component_name, location=self, **component_config["parameters"]
+            )
+
+        # After all components have been added, add interconnections
+        for _, component in self._components.items():
+            component.add_interconnections()
 
         # self.technologies = {}
         # for tech_name, tech_config in config.get("technologies", {}):
@@ -44,8 +60,6 @@ class Location:
 
         # # After all technologies have been added to the location we add interconnections
         # # e.g. connect anergy sources to heat pumps
-        # for tech in self.technologies:
-        #     tech.add_interconnections()
 
     @property
     def name(self):
@@ -77,6 +91,16 @@ class Location:
         :param demand: Demand type
         """
         return self._demands[demand]
+
+    def get_components(self, technology: type):
+        """
+        Get components by technology.
+
+        :param technology: Technology type
+        """
+        return [
+            obj for _, obj in self._components.items() if isinstance(obj, technology)
+        ]
 
 
 class MetaModel:
