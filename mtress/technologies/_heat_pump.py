@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-
 """
-heat pump to be used with HeatLayer
+Heat pump to be used with the layered heat energy carrier.
 
 SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 SPDX-FileCopyrightText: kehag Energiehandel GMbH
@@ -71,7 +69,8 @@ class HeatPump(AbstractTechnology):
             inputs={electricity_carrier.distribution: solph.Flow()},
         )
 
-        # Create bus and source for a combined thermal power limit on all temperature levels
+        # Create bus and source for a combined thermal power limit on all temperature
+        # levels
         self._heat_budget_bus = heat_budget_bus = solph.Bus(
             label=self._generate_label("heat_budget_bus")
         )

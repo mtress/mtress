@@ -14,7 +14,7 @@ class Electricity(AbstractCarrier):
     """
 
     def __init__(self, grid_connection=True, **kwargs):
-        """Prepare electricity energy carrier and add solph components to the energy system."""
+        """Initialize electricity carrier."""
         super().__init__(**kwargs)
 
         self.production = None
