@@ -23,8 +23,20 @@ locations:
       Electricity:
         grid_connection: True
 
-    demand:
+    demands:
       Electricity:
         time_series: demand.csv:electricity
       SpaceHeating:
         time_series: demand.csv:space_heating
+    
+    components:
+      air_source:
+        technology: AirHeatExchanger
+        parameters:
+          nominal_power: 7.
+          air_temperatures: .1
+      hp0:
+        technology: HeatPump
+        parameters:
+          cop_0_35: 2.
+          thermal_power_limit: 0.1 # MW
