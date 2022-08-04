@@ -2,6 +2,8 @@
 
 from abc import ABC, abstractmethod
 
+from oemof import solph
+
 from .._abstract_component import AbstractComponent
 
 
@@ -16,7 +18,15 @@ class AbstractTechnology(AbstractComponent):
         connects to a heat pump. These interconnections have to be made
         after creation of the technologies.
         """
-        pass
+
+    def add_constraints(self, model: solph.Model):
+        """
+        Add model constraints.
+
+        Some technologies require constraints, e.g. a shared limit on a
+        storage with multiple temperature levels. These constraints can
+        not be created prior to the model generation.
+        """
 
 
 class AbstractAnergySource(ABC):
