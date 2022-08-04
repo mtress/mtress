@@ -85,3 +85,28 @@ def calc_cop(temp_input, temp_output, cop_0_35=4.6):
     cop = cpf * lorenz_cop(temp_in=temp_input, temp_out=temp_output)
 
     return cop
+
+
+def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2):
+    r"""
+    Calculate the energy demand to compress an ideal gas at constant temperature.
+
+    This function calculates the energy demand for an isothermal compression
+    of 1 kg of an ideal gas with gas constant R from pressure p_in to pressure
+    p_out.
+
+    The work required for isothermal compression from pressure level
+    :math:`p_\mathrm{in}` to :math:`p_\mathrm{out}` at the temperature
+    :math:`T` in Kelvin is given by
+    .. math:: W = R \cdot T \cdot \ln \frac{p_\mathrm{out}}{p_\mathrm{in}} \,,
+
+    where :math:`R` denotes the gas constant of the gas in question.
+
+    :param p_in: Inlet pressure in bar
+    :param p_out: Outlet pressure in bar
+    :param T: Temperature in deg C, defaults to 20
+    :param R: Gas constant in  J / (kg * K), defaults to 4124.2
+    :return: Energy required for compression in kWh
+    """
+    T += 273.15  # Convert temperature to Kelvin
+    return R * T * np.log(p_out / p_in) / (3600 * 1000)
