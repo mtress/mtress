@@ -11,13 +11,12 @@ SPDX-FileCopyrightText: Lucas Schmeling
 SPDX-License-Identifier: MIT
 """
 
-import numpy as np
 from oemof import solph
 
-from ._abstract_carrier import AbstractCarrier
+from ._abstract_carrier import AbstractLayeredCarrier
 
 
-class Heat(AbstractCarrier):
+class Heat(AbstractLayeredCarrier):
     """
     Connector class for modelling power flows with variable temperature levels.
 
@@ -40,32 +39,33 @@ class Heat(AbstractCarrier):
 
     Heat sources connect to the Qin for the corresponding temperatures.
     If efficiency increases with lower temperature,
-    techs should connect to all input nodes (see e.g. LayeredHeatPump).
+    techs should connect to all input nodes (see e.g. HeatPump).
     Note that there are also heat supply techs with constant efficiency.
     Those only need to connect to the hottest layer.
     """
 
     def __init__(self, temperature_levels: list, reference_temperature=0, **kwargs):
-        """Initialize heat energy carrier and add components."""
-        super().__init__(**kwargs)
+        """
+        Initialize heat energy carrier and add components.
+
+        :param temperature_levels: Temperature levels
+        :param reference_temperature: Reference temperature
+        """
+        super().__init__(levels=temperature_levels, **kwargs)
 
         # Defining temperatures
         # If no reference temperature is given, we use 0°C
-        self._reference_temperature = reference_temperature
-        self._temperature_levels = np.unique(temperature_levels)
+        self._reference = reference_temperature
 
         assert (
-            self._reference_temperature < self._temperature_levels[0]
+            self._reference < self._levels[0]
         ), "Reference temperature should be lower than the lowest temperature level"
 
         self.outputs = {}
         self.inputs = {}
 
-        """Add solph components to the energy system."""
-        # Create object collections for temperature dependent technologies
-
         temp_low = None
-        for temperature in self._temperature_levels:
+        for temperature in self._levels:
             # Naming of new temperature bus
             b_out_label = self._generate_label(f"out_{temperature:.0f}")
             b_in_label = self._generate_label(f"in_{temperature:.0f}")
@@ -97,8 +97,8 @@ class Heat(AbstractCarrier):
                     f"rise_{temp_low:.0f}_{temperature:.0f}"
                 )
 
-                heater_ratio = (temp_low - self._reference_temperature) / (
-                    temperature - self._reference_temperature
+                heater_ratio = (temp_low - self._reference) / (
+                    temperature - self._reference
                 )
                 heater = solph.Transformer(
                     label=heater_label,
@@ -122,9 +122,9 @@ class Heat(AbstractCarrier):
     @property
     def temperature_levels(self):
         """Return the list of temperature levels."""
-        return self._temperature_levels
+        return self.levels
 
     @property
     def reference_temperature(self):
         """Return the reference temperature."""
-        return self._reference_temperature
+        return self._reference
