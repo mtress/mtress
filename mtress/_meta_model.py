@@ -1,3 +1,5 @@
+"""The MTRESS meta model itself."""
+
 import numpy as np
 import pandas as pd
 from oemof import solph
@@ -8,7 +10,16 @@ from . import carriers, demands, technologies
 
 
 class Location:
+    """Location of a MTRESS meta model."""
+
     def __init__(self, name: str, config: dict, meta_model):
+        """
+        Create location instance.
+
+        :param name: User friendly name of the location
+        :param config: Configuration dict for this location
+        :param meta_model: Reference to the meta model
+        """
         self._name = name
         self._meta_model = meta_model
 
@@ -48,18 +59,10 @@ class Location:
         for _, component in self._components.items():
             component.add_interconnections()
 
-        # self.technologies = {}
-        # for tech_name, tech_config in config.get("technologies", {}):
-        #     tech = tech_config.get("technology")
-
-        #     assert hasattr(technologies, tech), f"Technology {tech} not implemented"
-        #     techcls = getattr(technologies, tech)
-
-        #     cfg = tech_config.get("parameters")
-        #     self.technologies[tech_name] = tech_cls(name=tech_name, location=self, energy_system=energy_system, **cfg)
-
-        # # After all technologies have been added to the location we add interconnections
-        # # e.g. connect anergy sources to heat pumps
+    def add_constraints(self, model: solph.Model):
+        """Add constraints to the model."""
+        for _, component in self._components.items():
+            component.add_constraints(model)
 
     @property
     def name(self):
@@ -104,9 +107,10 @@ class Location:
 
 
 class MetaModel:
-    """Meta model of the energy system.0"""
+    """Meta model of the energy system."""
 
     def __init__(self, config):
+        """Initialize the meta model."""
         # TODO: Read configuration
 
         self._locations = {}
@@ -115,8 +119,37 @@ class MetaModel:
         self.timeindex = idx = pd.date_range(start="2020-01-01", freq="H", periods=10)
         self._energy_system = solph.EnergySystem(timeindex=idx)
 
-    #         for location_name, location_config in config["locations"].items():
-    #             self._locations[location_name] = Location(config=location_config, meta_model=self)
+        for location_name, location_config in config.get("locations", {}).items():
+            self._locations[location_name] = Location(
+                name=location_name, config=location_config, meta_model=self
+            )
+
+    def add_constraints(self, model):
+        """Add constraints to the model."""
+        for _, location in self._locations:
+            location.add_constraints(model)
+
+    def solve(
+        self,
+        solver: str = "cbc",
+        solve_kwargs: dict = None,
+        cmdline_options: dict = None,
+    ):
+        """Solve generated energy system model."""
+        model = solph.Model(self.energy_system)
+        self.add_constraints(model)
+
+        kwargs = {"solver": solver}
+        if solve_kwargs is not None:
+            kwargs["solve_kwargs"] = solve_kwargs
+
+        if cmdline_options is not None:
+            kwargs["cmdline_options"] = cmdline_options
+
+        model.solve(**kwargs)
+
+        return model
+
     @property
     def energy_system(self):
         """Return reference to generated EnergySystem object."""
