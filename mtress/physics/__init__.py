@@ -9,27 +9,29 @@ SPDX-FileCopyrightText: Lucas Schmeling
 SPDX-License-Identifier: MIT
 """
 
-from ._helper_functions import (
-    kilo_to_mega,
-    celsius_to_kelvin,
-    kelvin_to_celsius,
-    kJ_to_MWh,
-    mean_logarithmic_temperature,
-    lorenz_cop,
-    calc_cop,
-)
-
 from ._constants import (
-    ZERO_CELSIUS,
-    HS_PER_HI_GAS,
-    HS_PER_HI_WP,
-    HHV_WP,
+    H2_HHV,
+    H2_LHV,
+    H2O_DENSITY,
     H2O_HEAT_CAPACITY,
     H2O_HEAT_FUSION,
-    H2O_DENSITY,
+    HHV_WP,
+    HS_PER_HI_GAS,
+    HS_PER_HI_WP,
+    SECONDS_PER_HOUR,
     TC_CONCRETE,
     TC_INSULATION,
-    SECONDS_PER_HOUR,
+    ZERO_CELSIUS,
+)
+from ._helper_functions import (
+    calc_cop,
+    calc_isothermal_compression_energy,
+    celsius_to_kelvin,
+    kelvin_to_celsius,
+    kilo_to_mega,
+    kJ_to_MWh,
+    lorenz_cop,
+    mean_logarithmic_temperature,
 )
 
 __all__ = [
@@ -47,7 +49,10 @@ __all__ = [
     "H2O_HEAT_CAPACITY",
     "H2O_HEAT_FUSION",
     "H2O_DENSITY",
+    "H2_LHV",
+    "H2_HHV",
     "TC_CONCRETE",
     "TC_INSULATION",
     "SECONDS_PER_HOUR",
+    "calc_isothermal_compression_energy",
 ]
