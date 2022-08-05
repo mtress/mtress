@@ -7,7 +7,7 @@ from ..physics import calc_isothermal_compression_energy
 from ._abstract_technology import AbstractTechnology
 
 
-class IdealCompressor(AbstractTechnology):
+class H2Compressor(AbstractTechnology):
     """Ideal gas compressor."""
 
     def __init__(
