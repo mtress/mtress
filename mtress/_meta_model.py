@@ -1,12 +1,11 @@
 """The MTRESS meta model itself."""
 
-import numpy as np
+import h5py
 import pandas as pd
 from oemof import solph
 
 from . import carriers, demands, technologies
-
-# from . import technologies
+from ._helpers import get_from_dict, read_input_data
 
 
 class Location:
@@ -109,11 +108,21 @@ class Location:
 class MetaModel:
     """Meta model of the energy system."""
 
-    def __init__(self, config):
-        """Initialize the meta model."""
-        # TODO: Read configuration
+    def __init__(self, config: dict):
+        """
+        Initialize the meta model.
 
+        :param config: Configuration dictionary
+        """
         self._locations = {}
+
+        if (
+            cache_file := get_from_dict(config, "general.cache", default=None)
+            is not None
+        ):
+            self._cache = h5py.File(cache_file, "r")
+        else:
+            self._cache = None
 
         # TODO: Proper initialization of the EnergySystem object
         self.timeindex = idx = pd.date_range(start="2020-01-01", freq="H", periods=10)
@@ -155,9 +164,17 @@ class MetaModel:
         """Return reference to generated EnergySystem object."""
         return self._energy_system
 
-    def get_timeseries(self, name):
-        """Read and cache time series."""
-        # TODO
-        return pd.Series(
-            np.random.randint(0, 100, size=len(self.timeindex)), index=self.timeindex
-        )
+    def get_timeseries(self, specifier) -> pd.Series:
+        """
+        Read and cache time series.
+
+        :param specifier: Data specifier
+        """
+        if self._cache is None:
+            _series = read_input_data(specifier)
+            return _series.reindex()
+        else:
+            return pd.Series(
+                self._cache[specifier],
+                index=self.timeindex,
+            )
