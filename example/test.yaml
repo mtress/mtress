@@ -1,3 +1,19 @@
+general:
+  start: 2021-07-10 00:00:00
+  end: 2022-05-20 23:59:59
+  freq: 15T
+  # cache: None
+  working_directory: ./tmp/results
+  loglevel: INFO
+  cbc:
+    solve_kwargs:
+      tee: False
+      keepfiles: False
+    cmdline_options:
+      ratio: .001
+      sec: 14400 # 4 hours
+      threads: 4
+
 locations:
   LocationA:
     energy_cost:
