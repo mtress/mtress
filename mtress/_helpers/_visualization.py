@@ -31,13 +31,10 @@ def generate_graph(energysystem, label_extractor=None):
         name = nodes[node] = re.sub(r"[^a-zA-Z0-9_]+", "__", node.label)
         update_in_dict(locations, node.label, (name, type(node)), sep=":")
 
-    pprint.pprint(locations)
-
     for location, components in locations.items():
         with dot.subgraph(name=f"cluster_{location}") as location_subgraph:
             location_subgraph.attr(label=location)
 
-            pprint.pprint(components)
             for component, elements in components.items():
                 with location_subgraph.subgraph(
                     name=f"cluster_{location}_{component}"
