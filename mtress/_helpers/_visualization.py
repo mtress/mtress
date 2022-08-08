@@ -1,10 +1,10 @@
-import pprint
+"""Visulisation of energy system."""
 import re
 
 import graphviz
 import oemof.solph
 
-from ._util import get_from_dict, update_in_dict
+from ._util import update_in_dict
 
 # Define shapes for the component types
 SHAPES = {
@@ -19,7 +19,8 @@ SHAPES = {
 def generate_graph(energysystem, label_extractor=None):
     """Generate graphviz graph from energysystem."""
     if label_extractor is None:
-        label_extractor = lambda n: n.split(":")
+        def label_extractor(label):
+            return label.split(":")
 
     dot = graphviz.Digraph(format="png")
 
