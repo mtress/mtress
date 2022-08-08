@@ -1,7 +1,13 @@
 general:
-  start: 2021-07-10 00:00:00
-  end: 2022-05-20 23:59:59
-  freq: 15T
+  timeindex:
+    start: 2021-07-10 00:00:00
+    end: 2022-05-20 23:59:59
+    freq: 15T
+  # timeindex: timeindex.csv
+  # timeindex:
+  #  - 2021-01-01 00:00:00
+  #  - ...
+
   # cache: None
   working_directory: ./tmp/results
   loglevel: INFO
@@ -38,21 +44,44 @@ locations:
           - 80. # °C
       Electricity:
         grid_connection: True
+      Hydrogen:
+        pressure_levels:
+          - 30 
+          - 350
+          - 700
 
     demands:
       Electricity:
-        time_series: demand.csv:electricity
+        time_series: FILE:demand.csv:electricity
       SpaceHeating:
-        time_series: demand.csv:space_heating
+        time_series: FILE:demand.csv:space_heating
     
     components:
       air_source:
         technology: AirHeatExchanger
         parameters:
           nominal_power: 7.
-          air_temperatures: .1
+          air_temperatures: TIMESERIES:temp_air
       hp0:
         technology: HeatPump
         parameters:
           cop_0_35: 2.
           thermal_power_limit: 0.1 # MW
+
+      heater:
+        technology: FixedTemperatureHeater
+        parameters:
+          nominal_value: 100.
+          flow_temperature: 60.
+          return_temperature: 35.
+
+      compressor0:
+        technology: H2Compressor
+        parameters:
+          nominal_power: 100.
+      electrolyzer0:
+        technology: PEMElectrolyzer
+        parameters:
+          nominal_power: 100.
+          
+      

@@ -46,3 +46,8 @@ class Hydrogen(AbstractLayeredCarrier):
     def inputs(self):
         """Alias for outputs."""
         return self.outputs
+
+    @property
+    def pressure_levels(self):
+        """Alias for levels."""
+        return self.levels

@@ -69,7 +69,7 @@ class AbstractTechnology(AbstractComponent):
 
 
 class AbstractAnergySource(ABC):
-    """Base class for anergy providing technologies."""
+    """Interface class for anergy providing technologies."""
 
     @property
     @abstractmethod

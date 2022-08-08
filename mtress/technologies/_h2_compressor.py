@@ -2,7 +2,7 @@
 
 from oemof import solph
 
-from ..carriers import Hydrogen
+from ..carriers import Electricity, Hydrogen
 from ..physics import calc_isothermal_compression_energy
 from ._abstract_technology import AbstractTechnology
 
@@ -16,15 +16,24 @@ class H2Compressor(AbstractTechnology):
         """
         Initialize air heat exchanger for e.g. heat pumps.
 
-        :param nominal_power: Nominal power of the heat exchanger.
-        :param isothermal_efficiency: Isothermal efficiency of the compressor
+        :param nominal_power: Nominal power
+        :param isothermal_efficiency: Isothermal efficiency of the compressor, defaults to .85
         """
         super().__init__(**kwargs)
 
         self._nominal_power = nominal_power
 
         h2_carrier = self.location.get_carrier(Hydrogen)
-        electrical_bus = solph.Bus(label=self._generate_label("electrical_bus"))
+        electricity_carrier = self.location.get_carrier(Electricity)
+
+        electrical_bus = solph.Bus(
+            label=self._generate_label("electrical_bus"),
+            inputs={
+                electricity_carrier.distribution: solph.Flow(
+                    nominal_value=self._nominal_power
+                )
+            },
+        )
 
         self.location.energy_system.add(electrical_bus)
 
@@ -53,11 +62,3 @@ class H2Compressor(AbstractTechnology):
                 self.location.energy_system.add(compressor)
 
             pressure_low = pressure
-
-        source = solph.Bus(label=self._generate_label("source"))
-        self._bus = bus = solph.Bus(
-            label=self._generate_label("output"),
-            inputs={source: solph.Flow(nominal_value=nominal_power)},
-        )
-
-        self.location.energy_system.add(source, bus)

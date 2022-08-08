@@ -34,7 +34,7 @@ class AbstractLayeredCarrier(AbstractCarrier):
             return level, level
 
         # Extend levels by positive and negative infinity to prevent index errors
-        _levels = [np.NINF] + self._levels + [np.PINF]
+        _levels = np.concatenate(([np.NINF], self._levels, [np.PINF]))
         i = np.searchsorted(_levels, level)
         return _levels[i - 1], _levels[i]
 
