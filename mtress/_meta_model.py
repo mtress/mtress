@@ -1,6 +1,5 @@
 """The MTRESS meta model itself."""
 
-import h5py
 import pandas as pd
 from oemof import solph
 
@@ -116,13 +115,13 @@ class MetaModel:
         """
         self._locations = {}
 
-        if (
-            cache_file := get_from_dict(config, "general.cache", default=None)
-            is not None
-        ):
-            self._cache = h5py.File(cache_file, "r")
-        else:
-            self._cache = None
+        # if (
+        #     cache_file := get_from_dict(config, "general.cache", default=None)
+        #     is not None
+        # ):
+        #     self._cache = h5py.File(cache_file, "r")
+        # else:
+        #     self._cache = None
 
         # TODO: Proper initialization of the EnergySystem object
         self.timeindex = idx = pd.date_range(start="2020-01-01", freq="H", periods=10)
@@ -170,11 +169,13 @@ class MetaModel:
 
         :param specifier: Data specifier
         """
-        if self._cache is None:
-            _series = read_input_data(specifier)
-            return _series.reindex()
-        else:
-            return pd.Series(
-                self._cache[specifier],
-                index=self.timeindex,
-            )
+        return pd.Series(0, index=self.timeindex)
+
+        # if self._cache is None:
+        #     _series = read_input_data(specifier)
+        #     return _series.reindex()
+
+        # return pd.Series(
+        #     self._cache[specifier],
+        #     index=self.timeindex,
+        # )
