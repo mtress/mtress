@@ -107,27 +107,27 @@ class Location:
 class MetaModel:
     """Meta model of the energy system."""
 
-    def __init__(self, config: dict):
+    def __init__(
+            self,
+            time_index: dict|pd.DatetimeIndex,
+            locations=None,
+    ):
         """
         Initialize the meta model.
 
-        :param config: Configuration dictionary
+        :param time_index:  time index definition for the soph model
+        :param locations: configuration dictionary for locations
         """
+        if locations is None:
+            locations = dict()
         self._locations = {}
 
-        # if (
-        #     cache_file := get_from_dict(config, "general.cache", default=None)
-        #     is not None
-        # ):
-        #     self._cache = h5py.File(cache_file, "r")
-        # else:
-        #     self._cache = None
+        if type(time_index) == dict:
+            self.time_index = time_index = pd.date_range(**time_index)
 
-        # TODO: Proper initialization of the EnergySystem object
-        self.timeindex = idx = pd.date_range(start="2020-01-01", freq="H", periods=10)
-        self._energy_system = solph.EnergySystem(timeindex=idx)
+        self._energy_system = solph.EnergySystem(timeindex=time_index)
 
-        for location_name, location_config in config.get("locations", {}).items():
+        for location_name, location_config in locations.items():
             self._locations[location_name] = Location(
                 name=location_name, config=location_config, meta_model=self
             )
@@ -169,7 +169,7 @@ class MetaModel:
 
         :param specifier: Data specifier
         """
-        return pd.Series(0, index=self.timeindex)
+        return pd.Series(0, index=self.time_index)
 
         # if self._cache is None:
         #     _series = read_input_data(specifier)
@@ -177,5 +177,5 @@ class MetaModel:
 
         # return pd.Series(
         #     self._cache[specifier],
-        #     index=self.timeindex,
+        #     index=self.time_index,
         # )
