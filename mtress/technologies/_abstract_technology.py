@@ -24,9 +24,9 @@ class FlowType(Enum):
 class AbstractTechnology(AbstractComponent):
     """Base class for MTRESS technologies."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, location, name):
         """Initialize technology."""
-        super().__init__(**kwargs)
+        super().__init__(location, name)
         self._flows = {flow_type: set() for flow_type in FlowType}
 
     def add_interconnections(self):
