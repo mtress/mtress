@@ -55,7 +55,7 @@ class MetaModel:
                  as well as a dict containing all used technology classes
         """
 
-        ## Unpack non-technology kwargs
+        # Unpack non-technology kwargs
         self.meteo = kwargs.pop('meteorology')
         self.temps = kwargs.pop('temperatures')
         self.energy_cost = kwargs.pop('energy_cost')
@@ -779,6 +779,7 @@ class MetaModel:
                 outputs={
                     b_elprod: Flow(nominal_value=battery['power'])},
                 loss_rate=battery['self_discharge'],
+                initial_storage_level=battery.get('initial_storage_level', None),
                 nominal_storage_capacity=battery['capacity'],
                 inflow_conversion_factor=battery['efficiency_inflow'],
                 outflow_conversion_factor=battery['efficiency_outflow'])
