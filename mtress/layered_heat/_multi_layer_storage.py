@@ -117,7 +117,7 @@ class MultiLayerStorage:
             )
             self.in_flows[temperature] = (b_th_level.label, s_heat.label)
             self.out_flows[temperature] = (s_heat.label, b_th_level.label)
-            self.content[temperature] = (s_heat.label, None)
+            self.content[temperature] = (s_heat.label, "None")
 
             self._h_storage_comp.append(s_heat)
             self.energy_system.add(s_heat)
