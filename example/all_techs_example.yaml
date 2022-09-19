@@ -64,7 +64,7 @@ power_to_heat:
 battery:
   power: 0.05  # MW
   capacity: 0.25  # MWh
-  initial_storage_level: 0.5  # %
+  initial_storage_level: 0.5  # 1
   efficiency_inflow: 0.98  # 1
   efficiency_outflow: 0.98  # 1
   self_discharge: 1.0e-06  # 1/h
