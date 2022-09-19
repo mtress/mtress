@@ -286,7 +286,9 @@ class MetaModel:
                 volume=hs['volume'],
                 insulation_thickness=hs['insulation_thickness'],
                 ambient_temperature=self.meteo['temp_air'],
-                heat_layers=heat_layers)
+                heat_layers=heat_layers,
+                initial_storage_levels=hs.get("initial_storage_levels", None),
+            )
             self.th_storage_inflows = self._thermal_storage.in_flows.values()
             self.th_storage_outflows = self._thermal_storage.out_flows.values()
             self.th_storage_content = self._thermal_storage.content.values()

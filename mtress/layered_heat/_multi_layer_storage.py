@@ -30,6 +30,7 @@ class MultiLayerStorage:
                  insulation_thickness,
                  ambient_temperature,
                  heat_layers,
+                 initial_storage_levels,
                  label=""):
         """
         :param diameter: numeric scalar (in m)
@@ -37,6 +38,7 @@ class MultiLayerStorage:
         :param insulation_thickness: width of insulation (in m)
         :param ambient_temperature: numeric scalar or sequence (in °C)
         :param heat_layers: HeatLayers object
+        :param initial_storage_levels: initial storage levels (relative)
         """
         self._h_storage_comp = list()
 
@@ -45,6 +47,11 @@ class MultiLayerStorage:
         self._reference_temperature = heat_layers.reference_temperature
 
         self.heat_storage_volume = volume
+
+        if initial_storage_levels is None:
+            initial_storage_levels = dict()
+        else:
+            assert sum(initial_storage_levels.values()) <= 1
 
         self._heat_storage_insulation = insulation_thickness
 
@@ -104,7 +111,9 @@ class MultiLayerStorage:
                 nominal_storage_capacity=hs_capacity,
                 loss_rate=hs_loss_rate,
                 fixed_losses_absolute=hs_fixed_losses_absolute,
-                fixed_losses_relative=hs_fixed_losses_relative
+                fixed_losses_relative=hs_fixed_losses_relative,
+                initial_storage_level=initial_storage_levels.get(temperature,
+                                                                 None),
             )
             self.in_flows[temperature] = (b_th_level.label, s_heat.label)
             self.out_flows[temperature] = (s_heat.label, b_th_level.label)

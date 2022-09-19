@@ -6,6 +6,7 @@ temperatures:
   forward_flow: 40  # °C
   backward_flow: 30  # °C
   additional:
+  - 60  # °C
   - 80  # °C
 air_source_heat_pump:
   electric_input: 0.1  # MW
@@ -72,6 +73,10 @@ heat_storage:
   volume: 10  # m³
   diameter: 2  # m
   insulation_thickness: 0.1  # m
+  initial_storage_levels: # sum of the following needs to be <= 1
+    40: 0.2  # 1
+    60: 0.1  # 1
+    80: 0  # 1
 energy_cost:
   electricity:
     demand_rate: 15000  # €/MW
