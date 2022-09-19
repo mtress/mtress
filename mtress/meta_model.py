@@ -55,7 +55,7 @@ class MetaModel:
                  as well as a dict containing all used technology classes
         """
 
-        ## Unpack non-technology kwargs
+        # Unpack non-technology kwargs
         self.meteo = kwargs.pop('meteorology')
         self.temps = kwargs.pop('temperatures')
         self.energy_cost = kwargs.pop('energy_cost')
@@ -132,7 +132,7 @@ class MetaModel:
 
         self.battery_inflows = list()
         self.battery_outflows = list()
-        self.battery_content = list()
+        self.battery_content = None
 
         self.th_storage_inflows = dict()
         self.th_storage_outflows = dict()
@@ -286,10 +286,12 @@ class MetaModel:
                 volume=hs['volume'],
                 insulation_thickness=hs['insulation_thickness'],
                 ambient_temperature=self.meteo['temp_air'],
-                heat_layers=heat_layers)
+                heat_layers=heat_layers,
+                initial_storage_levels=hs.get("initial_storage_levels", None),
+            )
             self.th_storage_inflows = self._thermal_storage.in_flows.values()
             self.th_storage_outflows = self._thermal_storage.out_flows.values()
-            self.th_storage_content = self._thermal_storage.content.values()
+            self.th_storage_content = self._thermal_storage.content
         else:
             self._thermal_storage = None
 
@@ -779,12 +781,13 @@ class MetaModel:
                 outputs={
                     b_elprod: Flow(nominal_value=battery['power'])},
                 loss_rate=battery['self_discharge'],
+                initial_storage_level=battery.get('initial_storage_level', None),
                 nominal_storage_capacity=battery['capacity'],
                 inflow_conversion_factor=battery['efficiency_inflow'],
                 outflow_conversion_factor=battery['efficiency_outflow'])
 
             energy_system.add(s_battery)
-            self.battery_content.append((s_battery.label, None))
+            self.battery_content = (s_battery.label, "None")
             self.battery_inflows.append((b_elprod.label, s_battery.label))
             self.battery_outflows.append((s_battery.label, b_elprod.label))
 
@@ -854,6 +857,18 @@ class MetaModel:
         for flow in flows_to_aggregate:
             res += self.energy_system.results['main'][flow][
                 'sequences']['flow'].to_numpy()
+
+        return res
+
+    def storage_contents(self, storage_identifier):
+        if type(storage_identifier) == dict:
+            res = dict()
+            for level in storage_identifier:
+                res[level] = self.energy_system.results['main'][
+                    storage_identifier[level]]['sequences']['storage_content'].to_numpy()
+        else:
+            res = self.energy_system.results['main'][storage_identifier][
+                'sequences']['storage_content'].to_numpy()
 
         return res
 
