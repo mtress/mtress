@@ -59,6 +59,7 @@ solar_thermal:
     ST_20: generation.csv:ST_20
     ST_30: generation.csv:ST_30
     ST_40: generation.csv:ST_40
+    ST_60: generation.csv:ST_40
     ST_80: 0
 power_to_heat:
   thermal_output: 0.05  # MW
