@@ -12,6 +12,7 @@ from ._h2_compressor import H2Compressor
 from ._h2_electrolyzer import PEMElectrolyzer
 from ._heat_pump import HeatPump
 from ._multi_layer_storage import HeatStorage
+from ._photovoltaics import Photovoltaics
 from ._space_heating import FixedTemperatureHeater
 
 __all__ = [
@@ -20,5 +21,6 @@ __all__ = [
     "PEMElectrolyzer",
     "HeatPump",
     "HeatStorage",
+    "Photovoltaics",
     "FixedTemperatureHeater",
 ]
