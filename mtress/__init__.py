@@ -25,6 +25,7 @@ __version__ = "3.0.0dev0"
 #     "run_mtress",
 # ]
 
-from ._meta_model import Location, MetaModel
+from ._location import Location
+from ._meta_model import MetaModel
 
 __all__ = ["Location", "MetaModel"]
