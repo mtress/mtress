@@ -1,5 +1,7 @@
 """The MTRESS meta model itself."""
 
+from time import time
+
 import pandas as pd
 from oemof import solph
 
@@ -10,9 +12,9 @@ class MetaModel:
     """Meta model of the energy system."""
 
     def __init__(
-            self,
-            time_index: dict | pd.DatetimeIndex,
-            locations=None,
+        self,
+        time_index: dict | list | pd.DatetimeIndex,
+        locations=None,
     ):
         """
         Initialize the meta model.
@@ -20,19 +22,23 @@ class MetaModel:
         :param time_index:  time index definition for the soph model
         :param locations: configuration dictionary for locations
         """
-        if locations is None:
-            locations = dict()
-        self._locations = {}
-
-        if type(time_index) == dict:
+        if isinstance(time_index, dict):
             self.time_index = time_index = pd.date_range(**time_index)
+        elif isinstance(time_index, list):
+            raise NotImplemented("Not implemented yet")
+            # TODO: Cast list of times to pd.DatetimeIndex
+        else:
+            self.time_index = time_index
 
-        self._energy_system = solph.EnergySystem(timeindex=time_index)
+        self._energy_system = solph.EnergySystem(timeindex=self.time_index)
 
-        for location_name, location_config in locations.items():
-            self._locations[location_name] = Location(
-                name=location_name, config=location_config, meta_model=self
-            )
+        # Initialize locations
+        self._locations = {}
+        if locations is not None:
+            for location_name, location_config in locations.items():
+                self._locations[location_name] = Location(
+                    name=location_name, config=location_config, meta_model=self
+                )
 
     def add_constraints(self, model):
         """Add constraints to the model."""
@@ -64,20 +70,3 @@ class MetaModel:
     def energy_system(self):
         """Return reference to generated EnergySystem object."""
         return self._energy_system
-
-    def get_timeseries(self, specifier) -> pd.Series:
-        """
-        Read and cache time series.
-
-        :param specifier: Data specifier
-        """
-        return pd.Series(0, index=self.time_index)
-
-        # if self._cache is None:
-        #     _series = read_input_data(specifier)
-        #     return _series.reindex()
-
-        # return pd.Series(
-        #     self._cache[specifier],
-        #     index=self.time_index,
-        # )
