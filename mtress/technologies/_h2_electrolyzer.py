@@ -1,4 +1,4 @@
-"""This module provides hydrogen electrolyzers."""
+"""This module provides hydrogen electrolysers."""
 
 import logging
 
@@ -26,7 +26,7 @@ class PEMElectrolyzer(AbstractTechnology):
         **kwargs,
     ):
         """
-        Initialize air heat exchanger for e.g. heat pumps.
+        Initialize PEM electrolyser.
 
         :param nominal_power: Nominal electrical power of the component
         :param hydrogen_efficiency: Electrical efficiency of the electrolyzer,

@@ -15,9 +15,9 @@ class FixedTemperatureHeater(AbstractTechnology):
     temperature level.
 
       (Q(T2))
-         │    ↘
-         │    [heater1,2] ───→ (Qdemand)
-         ↓    ↙
+              ↘
+              [heater1,2] ───→ (Qdemand)
+              ↙
       (Q(T1))
 
     """

@@ -14,7 +14,7 @@ class H2Compressor(AbstractTechnology):
         self, nominal_power: float, isothermal_efficiency: float = 0.85, **kwargs
     ):
         """
-        Initialize air heat exchanger for e.g. heat pumps.
+        Initialize H2 compressor.
 
         :param nominal_power: Nominal power
         :param isothermal_efficiency: Isothermal efficiency of the compressor, defaults to .85
