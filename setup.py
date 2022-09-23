@@ -27,7 +27,7 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.10",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     zip_safe=False,
