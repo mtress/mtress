@@ -40,7 +40,10 @@ def update_in_dict(
 
 
 def get_from_dict(
-    dictionary: dict, keys: list[str] | str, sep: str = ".", default: Any = None
+    dictionary: dict,
+    keys: list[str] | str,
+    sep: str = ".",
+    default: Any = None,
 ) -> Any:
     """
     Get value from nested dictionary.

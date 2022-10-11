@@ -49,7 +49,10 @@ class HeatPump(AbstractTechnology):
     """
 
     def __init__(
-        self, thermal_power_limit: float = None, cop_0_35: float = 4.6, **kwargs
+        self,
+        thermal_power_limit: float = None,
+        cop_0_35: float = 4.6,
+        **kwargs,
     ):
         """
         Initialize heat pump component.
@@ -79,7 +82,9 @@ class HeatPump(AbstractTechnology):
             heat_budget_source = solph.Source(
                 label=self._generate_label("heat_budget_source"),
                 outputs={
-                    heat_budget_bus: solph.Flow(nominal_value=thermal_power_limit)
+                    heat_budget_bus: solph.Flow(
+                        nominal_value=thermal_power_limit
+                    )
                 },
             )
         else:
@@ -96,7 +101,9 @@ class HeatPump(AbstractTechnology):
         """Add connections to anergy sources."""
         heat_carrier = self.location.get_carrier(Heat)
 
-        for anergy_source in self.location.get_components(AbstractAnergySource):
+        for anergy_source in self.location.get_components(
+            AbstractAnergySource
+        ):
             # Add tranformers for each heat source.
             for target_temperature in heat_carrier.temperature_levels:
                 cop = calc_cop(
@@ -114,7 +121,9 @@ class HeatPump(AbstractTechnology):
                         self._electricity_bus: solph.Flow(),
                         self._heat_budget_bus: solph.Flow(),
                     },
-                    outputs={heat_carrier.inputs[target_temperature]: solph.Flow()},
+                    outputs={
+                        heat_carrier.inputs[target_temperature]: solph.Flow()
+                    },
                     conversion_factors={
                         anergy_source.bus: (cop - 1) / cop,
                         self._electricity_bus: 1 / cop,

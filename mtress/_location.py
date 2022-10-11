@@ -77,11 +77,15 @@ class Location:
 
         cls = getattr(mt_technologies, technology_name)
         self._components[component_type] = cls(
-            name=component_type, location=self, **component_config["parameters"]
+            name=component_type,
+            location=self,
+            **component_config["parameters"],
         )
 
     def _create_demand(self, demand_type: str, demand_config: dict):
-        assert hasattr(mt_demands, demand_type), f"Demand {demand_type} not implemented"
+        assert hasattr(
+            mt_demands, demand_type
+        ), f"Demand {demand_type} not implemented"
 
         cls = getattr(mt_demands, demand_type)
         self._demands[cls] = cls(location=self, **demand_config)
@@ -130,5 +134,7 @@ class Location:
         :param technology: Technology type
         """
         return [
-            obj for _, obj in self._components.items() if isinstance(obj, technology)
+            obj
+            for _, obj in self._components.items()
+            if isinstance(obj, technology)
         ]

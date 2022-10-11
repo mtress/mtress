@@ -51,7 +51,10 @@ class FixedTemperatureHeater(AbstractTechnology):
         assert (
             return_temperature in carrier.temperature_levels
             or return_temperature == carrier.reference_temperature
-        ), "Return temperature must be a temperature level or the reference temperature"
+        ), (
+            "Return temperature must be a temperature level or the reference"
+            " temperature"
+        )
 
         output_flow = (
             solph.Flow()
@@ -72,9 +75,9 @@ class FixedTemperatureHeater(AbstractTechnology):
                 },
             )
         else:
-            temperature_ratio = (return_temperature - carrier.reference_temperature) / (
-                flow_temperature - carrier.reference_temperature
-            )
+            temperature_ratio = (
+                return_temperature - carrier.reference_temperature
+            ) / (flow_temperature - carrier.reference_temperature)
 
             heater = solph.Transformer(
                 label=self._generate_label("heater"),

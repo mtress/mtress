@@ -15,7 +15,11 @@ class SpaceHeating(AbstractDemand):
         self.input = bus = solph.Bus(label=self._generate_label("input"))
         sink = solph.Sink(
             label=self._generate_label("sink"),
-            inputs={bus: solph.Flow(fix=self.meta_model.get_timeseries(time_series))},
+            inputs={
+                bus: solph.Flow(
+                    fix=self.meta_model.get_timeseries(time_series)
+                )
+            },
         )
 
         # TODO: categorize out flow
