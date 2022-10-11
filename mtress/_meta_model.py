@@ -37,7 +37,7 @@ class MetaModel:
         if locations is not None:
             for location_name, location_config in locations.items():
                 self._locations[location_name] = Location(
-                    name=location_name, config=location_config, meta_model=self
+                    name=location_name, meta_model=self, **location_config
                 )
 
     def add_constraints(self, model):
