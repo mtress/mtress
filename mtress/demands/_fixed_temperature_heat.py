@@ -1,17 +1,16 @@
 """Room heating technologies."""
 
 from numbers import Number
-from typing import Optional
+from collections.abc import Sequence
 from oemof import solph
 
-from ..carriers import Heat
-from ..demands import SpaceHeating
-from ._abstract_technology import AbstractTechnology
+from mtress.carriers import Heat
+from ._abstract_demand import AbstractDemand
 
 
-class FixedTemperatureHeater(AbstractTechnology):
+class FixedTemperatureHeat(AbstractDemand):
     """
-    Space heating with a fixede flow and return temperature.
+    Space heating with a fixed flow and return temperature.
 
     Takes energy from the flow temperature level and returns energy at the lower return
     temperature level.
@@ -28,7 +27,7 @@ class FixedTemperatureHeater(AbstractTechnology):
         self,
         flow_temperature: float,
         return_temperature: float,
-        nominal_value: Optional[Number] = None,
+        time_series: Sequence[Number],
         **kwargs
     ):
         """
@@ -36,16 +35,14 @@ class FixedTemperatureHeater(AbstractTechnology):
 
         :param flow_temperature: Flow temperature
         :param return_temperature: Return temperature
-        :param nominal_value: Nominal power of the heater
         """
-        super().__init__(**kwargs, name=__class__)
+        super().__init__(**kwargs)
 
         assert (
             flow_temperature > return_temperature
         ), "Flow must be higher than return temperature"
 
         carrier = self.location.get_carrier(Heat)
-        demand = self.location.get_demand(SpaceHeating)
 
         assert (
             flow_temperature in carrier.temperature_levels
@@ -58,22 +55,28 @@ class FixedTemperatureHeater(AbstractTechnology):
             " temperature"
         )
 
-        output_flow = (
-            solph.Flow()
-            if nominal_value is None
-            else solph.Flow(nominal_value=nominal_value)
+        self.output = output = solph.Bus(label=self._generate_label("drained_heat"))
+
+        sink = solph.Sink(
+            label=self._generate_label("sink"),
+            inputs={
+                output: solph.Flow(
+                    nominal_value=1,
+                    fix=time_series,
+                )
+            },
         )
 
         if return_temperature == carrier.reference_temperature:
             # If the return temperature is the reference temperature we just take the
             # energy from the appropriate level
             heater = solph.Transformer(
-                label=self._generate_label("heater"),
+                label=self._generate_label("heat_exchanger"),
                 inputs={carrier.outputs[flow_temperature]: solph.Flow()},
-                outputs={demand.input: output_flow},
+                outputs={output: solph.Flow()},
                 conversion_factors={
                     carrier.outputs[flow_temperature]: 1,
-                    demand.input: 1,
+                    output: 1,
                 },
             )
         else:
@@ -82,17 +85,17 @@ class FixedTemperatureHeater(AbstractTechnology):
             ) / (flow_temperature - carrier.reference_temperature)
 
             heater = solph.Transformer(
-                label=self._generate_label("heater"),
+                label=self._generate_label("heat_exchanger"),
                 inputs={carrier.outputs[flow_temperature]: solph.Flow()},
                 outputs={
                     carrier.outputs[return_temperature]: solph.Flow(),
-                    demand.input: output_flow,
+                    output: solph.Flow(),
                 },
                 conversion_factors={
                     carrier.outputs[flow_temperature]: 1,
-                    demand.input: 1 - temperature_ratio,
+                    output: 1 - temperature_ratio,
                     carrier.outputs[return_temperature]: temperature_ratio,
                 },
             )
 
-        self.location.energy_system.add(heater)
+        self.location.energy_system.add(heater, output, sink)

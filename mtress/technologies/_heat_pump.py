@@ -79,20 +79,14 @@ class HeatPump(AbstractTechnology):
             label=self._generate_label("heat_budget_bus")
         )
 
-        if thermal_power_limit is not None:
-            heat_budget_source = solph.Source(
-                label=self._generate_label("heat_budget_source"),
-                outputs={
-                    heat_budget_bus: solph.Flow(
-                        nominal_value=thermal_power_limit
-                    )
-                },
-            )
-        else:
-            heat_budget_source = solph.Source(
-                label=self._generate_label("heat_budget_source"),
-                outputs={heat_budget_bus: solph.Flow()},
-            )
+        heat_budget_source = solph.Source(
+            label=self._generate_label("heat_budget_source"),
+            outputs={
+                heat_budget_bus: solph.Flow(
+                    nominal_value=thermal_power_limit
+                )
+            },
+        )
 
         self.location.energy_system.add(
             electricity_bus, heat_budget_bus, heat_budget_source
@@ -118,7 +112,7 @@ class HeatPump(AbstractTechnology):
                         f"{anergy_source.name}_{target_temperature:.0f}"
                     ),
                     inputs={
-                        anergy_source.bus: solph.Flow(),
+                        #anergy_source.bus: solph.Flow(),
                         self._electricity_bus: solph.Flow(),
                         self._heat_budget_bus: solph.Flow(),
                     },
@@ -126,6 +120,7 @@ class HeatPump(AbstractTechnology):
                         heat_carrier.inputs[target_temperature]: solph.Flow()
                     },
                     conversion_factors={
+                        self._heat_budget_bus: 1,
                         anergy_source.bus: (cop - 1) / cop,
                         self._electricity_bus: 1 / cop,
                         heat_carrier.inputs[target_temperature]: 1,

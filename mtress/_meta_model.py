@@ -40,10 +40,11 @@ class MetaModel:
                     name=location_name, meta_model=self, **location_config
                 )
 
-    def add_constraints(self, model):
+    def _add_constraints(self, model):
         """Add constraints to the model."""
-        for _, location in self._locations:
-            location.add_constraints(model)
+
+    def add_location(self, location):
+        self._locations[location.name] = location
 
     def solve(
         self,
@@ -51,9 +52,12 @@ class MetaModel:
         solve_kwargs: dict = None,
         cmdline_options: dict = None,
     ):
+        for location in self._locations.values():
+            location.add_interconnections()
+
         """Solve generated energy system model."""
         model = solph.Model(self.energy_system)
-        self.add_constraints(model)
+        self._add_constraints(model)
 
         kwargs = {"solver": solver}
         if solve_kwargs is not None:

@@ -55,11 +55,7 @@ class Electricity(AbstractCarrier):
                 )
             },
             outputs={
-                b_dist: solph.Flow(
-                    nonconvex=solph.NonConvex(),
-                    nominal_value=1e5,
-                    grid_connection=True,
-                )
+                b_dist: solph.Flow()
             },
         )
 
@@ -67,11 +63,7 @@ class Electricity(AbstractCarrier):
         b_grid_out = solph.Bus(
             label=self._generate_label("grid_out"),
             inputs={
-                b_export: solph.Flow(
-                    nonconvex=solph.NonConvex(),
-                    nominal_value=1e5,
-                    grid_connection=True,
-                )
+                b_export: solph.Flow()
             },
         )
 

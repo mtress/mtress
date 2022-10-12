@@ -32,6 +32,8 @@ class Location:
         self._name = name
         self._meta_model = meta_model
 
+        meta_model.add_location(self)
+
         if carriers is None:
             carriers = dict()
         if demands is None:
@@ -60,7 +62,7 @@ class Location:
     def add_constraints(self, model: solph.Model):
         """Add constraints to the model."""
         for _, component in self._components.items():
-            component.add_constraints(model)
+            component._add_constraints(model)
 
     def _create_carrier(self, carrier_type: str, carrier_config: dict):
         assert hasattr(
@@ -99,6 +101,10 @@ class Location:
 
     def add_component(self, component: AbstractComponent):
         self._components[type(component)] = component
+
+    def add_interconnections(self):
+        for component in self._components.values():
+            component.add_interconnections()
 
     @property
     def name(self):
