@@ -1,5 +1,7 @@
 """Room heating technologies."""
 
+from numbers import Number
+from typing import Optional
 from oemof import solph
 
 from ..carriers import Heat
@@ -26,7 +28,7 @@ class FixedTemperatureHeater(AbstractTechnology):
         self,
         flow_temperature: float,
         return_temperature: float,
-        nominal_value: None,
+        nominal_value: Optional[Number] = None,
         **kwargs
     ):
         """
@@ -36,7 +38,7 @@ class FixedTemperatureHeater(AbstractTechnology):
         :param return_temperature: Return temperature
         :param nominal_value: Nominal power of the heater
         """
-        super().__init__(**kwargs)
+        super().__init__(**kwargs, name=__class__)
 
         assert (
             flow_temperature > return_temperature

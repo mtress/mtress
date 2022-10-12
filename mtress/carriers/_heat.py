@@ -67,6 +67,8 @@ class Heat(AbstractLayeredCarrier):
         self.outputs = {}
         self.inputs = {}
 
+        self.location.add_carrier(self)
+
         temp_low = None
         for temperature in self._levels:
             # Naming of new temperature bus

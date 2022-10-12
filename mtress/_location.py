@@ -3,6 +3,7 @@
 from typing import Optional
 from oemof import solph
 
+from ._abstract_component import AbstractComponent
 from .carriers._abstract_carrier import AbstractCarrier
 from .demands._abstract_demand import AbstractDemand
 from . import carriers as mt_carriers
@@ -95,6 +96,9 @@ class Location:
 
     def add_demand(self, demand: AbstractDemand):
         self._demands[type(demand)] = demand
+
+    def add_component(self, component: AbstractComponent):
+        self._components[type(component)] = component
 
     @property
     def name(self):

@@ -17,13 +17,18 @@ class Electricity(AbstractDemand):
 
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
+        self.location.add_demand(self)
+
         self.input = bus = solph.Bus(
             label=self._generate_label("input"),
             inputs={electricity_carrier.distribution: solph.Flow()},
         )
         sink = solph.Sink(
             label=self._generate_label("sink"),
-            inputs={bus: solph.Flow(fix=time_series)},
+            inputs={bus: solph.Flow(
+                nominal_value=1,
+                fix=time_series
+            )},
         )
 
         # TODO: categorize out flow

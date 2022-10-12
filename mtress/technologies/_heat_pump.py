@@ -8,7 +8,6 @@ SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
-
 from oemof import solph
 
 from ..carriers import Electricity, Heat
@@ -60,7 +59,9 @@ class HeatPump(AbstractTechnology):
         :param thermal_power_limit: Thermal power limit on all temperature ranges
         :param cop_0_35: COP for the temperature rise 0°C to 35°C
         """
-        super().__init__(**kwargs)
+        super().__init__(**kwargs, name=__class__)
+
+        self.location.add_component(self)
 
         self._cop_0_35 = cop_0_35
 
