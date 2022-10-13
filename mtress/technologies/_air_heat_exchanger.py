@@ -29,14 +29,15 @@ class AirHeatExchanger(AbstractTechnology, AbstractAnergySource):
 
         self._nominal_power = nominal_power
 
-        # TODO: Read (and cache) CSV
         self._air_temperatures = numeric_array(air_temperatures)
-        # air_temperatures
 
-        source = solph.Bus(label=self._generate_label("source"))
         self._bus = bus = solph.Bus(
             label=self._generate_label("output"),
-            inputs={source: solph.Flow(nominal_value=nominal_power)},
+        )
+
+        source = solph.Source(
+            label=self._generate_label("source"),
+            outputs={bus: solph.Flow(nominal_value=nominal_power)},
         )
 
         self.location.energy_system.add(source, bus)

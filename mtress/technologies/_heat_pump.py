@@ -112,7 +112,7 @@ class HeatPump(AbstractTechnology):
                         f"{anergy_source.name}_{target_temperature:.0f}"
                     ),
                     inputs={
-                        #anergy_source.bus: solph.Flow(),
+                        anergy_source.bus: solph.Flow(),
                         self._electricity_bus: solph.Flow(),
                         self._heat_budget_bus: solph.Flow(),
                     },
