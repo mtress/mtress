@@ -48,7 +48,10 @@ class Photovoltaics(RenewableElectricitySource):
         )
 
         self._mc = pvlib.modelchain.ModelChain(
-            self._system, self._loc, aoi_model="physical", spectral_model="no_loss"
+            self._system,
+            self._loc,
+            aoi_model="physical",
+            spectral_model="no_loss",
         )
 
         self._weather = simulation_data.get(

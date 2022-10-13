@@ -19,6 +19,7 @@ SHAPES = {
 def generate_graph(energysystem, label_extractor=None):
     """Generate graphviz graph from energysystem."""
     if label_extractor is None:
+
         def label_extractor(label):
             return label.split(":")
 

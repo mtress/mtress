@@ -1,14 +1,27 @@
 """Locations in a meta model."""
 
+from typing import Optional
 from oemof import solph
 
-from . import carriers, demands, technologies
+from ._abstract_component import AbstractComponent
+from .carriers._abstract_carrier import AbstractCarrier
+from .demands._abstract_demand import AbstractDemand
+from . import carriers as mt_carriers
+from . import demands as mt_demands
+from . import technologies as mt_technologies
 
 
 class Location:
     """Location of a MTRESS meta model."""
 
-    def __init__(self, name: str, config: dict, meta_model):
+    def __init__(
+        self,
+        meta_model,
+        name: str,
+        carriers: Optional[dict] = None,
+        demands: Optional[dict] = None,
+        components: Optional[dict] = None,
+    ):
         """
         Create location instance.
 
@@ -19,37 +32,28 @@ class Location:
         self._name = name
         self._meta_model = meta_model
 
+        meta_model.add_location(self)
+
+        if carriers is None:
+            carriers = dict()
+        if demands is None:
+            demands = dict()
+        if components is None:
+            components = dict()
+
         # Initialize energy carriers
         self._carriers = {}
-        for carrier_name, carrier_config in config.get("carriers", {}).items():
-            assert hasattr(
-                carriers, carrier_name
-            ), f"Energy carrier {carrier_name} not implemented"
-
-            cls = getattr(carriers, carrier_name)
-            self._carriers[cls] = cls(location=self, **carrier_config)
+        for carrier_name, carrier_config in carriers.items():
+            self._create_carrier(carrier_name, carrier_config)
 
         # Initialize demands
         self._demands = {}
-        for demand_name, demand_config in config.get("demands", {}).items():
-            assert hasattr(
-                demands, demand_name
-            ), f"Demand {demand_name} not implemented"
-
-            cls = getattr(demands, demand_name)
-            self._demands[cls] = cls(location=self, **demand_config)
+        for demand_name, demand_config in demands.items():
+            self._create_demand(demand_name, demand_config)
 
         self._components = {}
-        for component_name, component_config in config.get("components", {}).items():
-            technology_name = component_config["technology"]
-            assert hasattr(
-                technologies, technology_name
-            ), f"Technology {technology_name} not implemented"
-
-            cls = getattr(technologies, technology_name)
-            self._components[component_name] = cls(
-                name=component_name, location=self, **component_config["parameters"]
-            )
+        for component_name, component_config in components.items():
+            self._create_component(component_name, component_config)
 
         # After all components have been added, add interconnections
         for _, component in self._components.items():
@@ -58,7 +62,49 @@ class Location:
     def add_constraints(self, model: solph.Model):
         """Add constraints to the model."""
         for _, component in self._components.items():
-            component.add_constraints(model)
+            component._add_constraints(model)
+
+    def _create_carrier(self, carrier_type: str, carrier_config: dict):
+        assert hasattr(
+            mt_carriers, carrier_type
+        ), f"Energy carrier {carrier_type} not implemented"
+
+        cls = getattr(mt_carriers, carrier_type)
+        self._carriers[cls] = cls(location=self, **carrier_config)
+
+    def _create_component(self, component_type: str, component_config: dict):
+        technology_name = component_config["technology"]
+        assert hasattr(
+            mt_technologies, technology_name
+        ), f"Technology {technology_name} not implemented"
+
+        cls = getattr(mt_technologies, technology_name)
+        self._components[component_type] = cls(
+            name=component_type,
+            location=self,
+            **component_config["parameters"],
+        )
+
+    def _create_demand(self, demand_type: str, demand_config: dict):
+        assert hasattr(
+            mt_demands, demand_type
+        ), f"Demand {demand_type} not implemented"
+
+        cls = getattr(mt_demands, demand_type)
+        self._demands[cls] = cls(location=self, **demand_config)
+
+    def add_carrier(self, carrier: AbstractCarrier):
+        self._carriers[type(carrier)] = carrier
+
+    def add_demand(self, demand: AbstractDemand):
+        self._demands[type(demand)] = demand
+
+    def add_component(self, component: AbstractComponent):
+        self._components[type(component)] = component
+
+    def add_interconnections(self):
+        for component in self._components.values():
+            component.add_interconnections()
 
     @property
     def name(self):
@@ -98,5 +144,7 @@ class Location:
         :param technology: Technology type
         """
         return [
-            obj for _, obj in self._components.items() if isinstance(obj, technology)
+            obj
+            for _, obj in self._components.items()
+            if isinstance(obj, technology)
         ]
