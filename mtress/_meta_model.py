@@ -1,25 +1,71 @@
 """The MTRESS meta model itself."""
 
+from typing import Optional
+
 import pandas as pd
 from oemof import solph
 
 from . import Location
+from ._abstract_component import AbstractComponent, AbstractSolphComponent
+from ._data_handler import DataHandler
 
 
 class MetaModel:
     """Meta model of the energy system."""
 
+    def __init__(self):
+        """Initialize the meta model."""
+        self.locations: dict[Location] = {}
+
+    @classmethod
+    def from_config(cls, config: dict):
+        """Generate the meta model from a configuration dict."""
+        # TODO: Implement me!
+        raise NotImplementedError("Not implemented yet")
+
+        # def _create_carrier(self, carrier_type: str, carrier_config: dict):
+        #     assert hasattr(
+        #         mt_carriers, carrier_type
+        #     ), f"Energy carrier {carrier_type} not implemented"
+
+        #     cls = getattr(mt_carriers, carrier_type)
+        #     self._carriers[cls] = cls(location=self, **carrier_config)
+
+        # def _create_component(self, component_type: str, component_config: dict):
+        #     technology_name = component_config["technology"]
+        #     assert hasattr(
+        #         mt_technologies, technology_name
+        #     ), f"Technology {technology_name} not implemented"
+
+        #     cls = getattr(mt_technologies, technology_name)
+        #     self._components[component_type] = cls(
+        #         name=component_type,
+        #         location=self,
+        #         **component_config["parameters"],
+        #     )
+
+        # def _create_demand(self, demand_type: str, demand_config: dict):
+        #     assert hasattr(mt_demands, demand_type), f"Demand {demand_type} not implemented"
+
+        #     cls = getattr(mt_demands, demand_type)
+        #     self._demands[cls] = cls(location=self, **demand_config)
+
+    def add_location(self, location):
+        """Add a new location to the meta model."""
+        self.locations[location.name] = location
+
+
+class SolphModel:
+    """Model adapter for MTRESS Model."""
+
     def __init__(
         self,
+        meta_model: MetaModel,
         timeindex: dict | list | pd.DatetimeIndex,
-        locations=None,
     ):
-        """
-        Initialize the meta model.
+        """Initialize model."""
+        self._meta_model = meta_model
 
-        :param time_index:  time index definition for the soph model
-        :param locations: configuration dictionary for locations
-        """
         match timeindex:
             case list() as values:
                 self.timeindex = pd.DatetimeIndex(values)
@@ -30,82 +76,60 @@ class MetaModel:
             case _:
                 raise ValueError("Don't know how to process timeindex specification")
 
-        self._cache: dict[pd.DataFrame] = {}
+        self._data = DataHandler(self.timeindex)
+
+        self._energy_system = None
+
+    def build_solph_energy_system(self):
+        """Build the `oemof.solph` representation of the energy system."""
 
         self._energy_system = solph.EnergySystem(timeindex=self.timeindex)
 
-        # Initialize locations
-        self._locations = {}
-        if locations is not None:
-            for location_name, location_config in locations.items():
-                self._locations[location_name] = Location(
-                    name=location_name, meta_model=self, **location_config
-                )
+        for _, location in self._meta_model.locations.items():
+            component: AbstractSolphComponent
 
-    def get_timeseries(self, specifier: str | pd.Series | list):
-        """
-        Prepare a time series for the usage in MTRESS.
+            # Build cores of carriers, demands and technologies
+            for component in [
+                *location.carriers,
+                *location.demands,
+                *location.technologies,
+            ]:
+                component.build_core()
 
-        This method takes a time series specifier and reads a
-        time series from a file or checks a provided series for completeness.
-        """
-        match specifier:
-            case str() if specifier.startswith("FILE:"):
-                _, file, column = specifier.split(":", maxsplit=2)
-                series = self._read_from_file(file, column)
+            # Build cores of carriers, demands and technologies
+            for component in [
+                *location.carriers,
+                *location.demands,
+                *location.technologies,
+            ]:
+                component.establish_interconnections()
 
-                # Call function again to check series for consistency
-                return self.get_timeseries(series)
+        # TODO: Add inter-location connections
 
-            case pd.Series() as series:
-                if not self.timeindex.isin(series.index).all():
-                    raise KeyError("Provided series doesn't cover time index")
+        return self._energy_system
 
-                return series.reindex(self.timeindex)
+    def build_solph_model(self):
+        """Build the `oemof.solph` representation of the model."""
+        model = solph.Model(self._energy_system)
 
-            case list() as values:
-                if not len(values) == len(self.timeindex):
-                    raise ValueError("Length of list differs from time index length")
-
-                return pd.Series(data=values, index=self.timeindex)
-
-            case _:
-                raise ValueError(f"Time series specifier {specifier} not supported")
-
-    def _read_from_file(self, file: str, column: str):
-        """Read a column from a file."""
-        if file in self._cache and column in self._cache[file]:
-            # This column was already read from the file
-            return self._cache[file][column]
-
-        if file.lower().endswith(".csv"):
-            self._cache[file] = data = pd.read_csv(file, index_col=0, parse_dates=True)
-            return data[column]
-
-        if file.lower().endswith(".h5"):
-            raise NotImplementedError("HDF5 file support not implemented yet")
-
-        raise NotImplementedError(f"Unsupported file format for file {file}")
-
-    def _add_constraints(self, model):
-        """Add constraints to the model."""
-
-    def add_location(self, location):
-        self._locations[location.name] = location
+        component: AbstractSolphComponent
+        for _, location in self._meta_model.locations.items():
+            # Add model constraints
+            for component in [
+                *location.carriers,
+                *location.demands,
+                *location.technologies,
+            ]:
+                component.add_constraints(model)
 
     def solve(
         self,
+        model: solph.Model,
         solver: str = "cbc",
         solve_kwargs: dict = None,
         cmdline_options: dict = None,
     ):
-        for location in self._locations.values():
-            location.add_interconnections()
-
         """Solve generated energy system model."""
-        model = solph.Model(self.energy_system)
-        self._add_constraints(model)
-
         kwargs = {"solver": solver}
         if solve_kwargs is not None:
             kwargs["solve_kwargs"] = solve_kwargs
@@ -116,8 +140,3 @@ class MetaModel:
         model.solve(**kwargs)
 
         return model
-
-    @property
-    def energy_system(self):
-        """Return reference to generated EnergySystem object."""
-        return self._energy_system
