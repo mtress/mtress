@@ -9,9 +9,15 @@ from .._abstract_component import AbstractComponent
 class AbstractCarrier(AbstractComponent):
     """Abstract carrier class to ensure a unified interface."""
 
-    def __init__(self, location):
+    def __init__(self, location, costs=None):
         """Initialize carrier."""
         super().__init__(location, "ec_" + self.__class__.__name__.lower())
+
+        if costs is None:
+            self.costs = dict()
+        else:
+            self.costs = costs
+        # TODO: check if both, "working_price" and "demand_rate", are defined.
 
 
 class AbstractLayeredCarrier(AbstractCarrier):

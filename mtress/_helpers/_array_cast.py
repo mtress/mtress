@@ -12,7 +12,9 @@ import numpy as np
 import pandas as pd
 
 
-def numeric_array(data, length):
+def numeric_array(data, length=None):
+    if length is None:
+        length = len(data)
     if isinstance(data, numbers.Number):
         data = np.full(length, fill_value=data)
     elif isinstance(data, list) and len(data) == length:

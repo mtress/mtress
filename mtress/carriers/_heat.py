@@ -44,7 +44,9 @@ class Heat(AbstractLayeredCarrier):
     Those only need to connect to the hottest layer.
     """
 
-    def __init__(self, temperature_levels: list, reference_temperature=0, **kwargs):
+    def __init__(
+        self, temperature_levels: list, reference_temperature=0, **kwargs
+    ):
         """
         Initialize heat energy carrier and add components.
 
@@ -57,12 +59,15 @@ class Heat(AbstractLayeredCarrier):
         # If no reference temperature is given, we use 0°C
         self._reference = reference_temperature
 
-        assert (
-            self._reference < self._levels[0]
-        ), "Reference temperature should be lower than the lowest temperature level"
+        assert self._reference < self._levels[0], (
+            "Reference temperature should be lower than the lowest temperature"
+            " level"
+        )
 
         self.outputs = {}
         self.inputs = {}
+
+        self.location.add_carrier(self)
 
         temp_low = None
         for temperature in self._levels:
@@ -75,7 +80,9 @@ class Heat(AbstractLayeredCarrier):
             b_out = solph.Bus(label=b_out_label)
 
             if temp_low is None:
-                bus_in = solph.Bus(label=b_in_label, outputs={b_out: solph.Flow()})
+                bus_in = solph.Bus(
+                    label=b_in_label, outputs={b_out: solph.Flow()}
+                )
             else:
                 bus_in = solph.Bus(
                     label=b_in_label,

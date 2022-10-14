@@ -11,7 +11,10 @@ class H2Compressor(AbstractTechnology):
     """Ideal gas compressor."""
 
     def __init__(
-        self, nominal_power: float, isothermal_efficiency: float = 0.85, **kwargs
+        self,
+        nominal_power: float,
+        isothermal_efficiency: float = 0.85,
+        **kwargs,
     ):
         """
         Initialize H2 compressor.
@@ -53,7 +56,9 @@ class H2Compressor(AbstractTechnology):
                         h2_carrier.outputs[pressure_low]: 1,
                         h2_carrier.outputs[pressure]: 1,
                         electrical_bus: (
-                            calc_isothermal_compression_energy(pressure_low, pressure)
+                            calc_isothermal_compression_energy(
+                                pressure_low, pressure
+                            )
                             / isothermal_efficiency
                         ),
                     },

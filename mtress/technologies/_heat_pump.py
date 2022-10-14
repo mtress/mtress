@@ -8,7 +8,6 @@ SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
-
 from oemof import solph
 
 from ..carriers import Electricity, Heat
@@ -49,7 +48,10 @@ class HeatPump(AbstractTechnology):
     """
 
     def __init__(
-        self, thermal_power_limit: float = None, cop_0_35: float = 4.6, **kwargs
+        self,
+        thermal_power_limit: float = None,
+        cop_0_35: float = 4.6,
+        **kwargs,
     ):
         """
         Initialize heat pump component.
@@ -57,7 +59,9 @@ class HeatPump(AbstractTechnology):
         :param thermal_power_limit: Thermal power limit on all temperature ranges
         :param cop_0_35: COP for the temperature rise 0°C to 35°C
         """
-        super().__init__(**kwargs)
+        super().__init__(**kwargs, name=__class__)
+
+        self.location.add_component(self)
 
         self._cop_0_35 = cop_0_35
 
@@ -75,18 +79,14 @@ class HeatPump(AbstractTechnology):
             label=self._generate_label("heat_budget_bus")
         )
 
-        if thermal_power_limit is not None:
-            heat_budget_source = solph.Source(
-                label=self._generate_label("heat_budget_source"),
-                outputs={
-                    heat_budget_bus: solph.Flow(nominal_value=thermal_power_limit)
-                },
-            )
-        else:
-            heat_budget_source = solph.Source(
-                label=self._generate_label("heat_budget_source"),
-                outputs={heat_budget_bus: solph.Flow()},
-            )
+        heat_budget_source = solph.Source(
+            label=self._generate_label("heat_budget_source"),
+            outputs={
+                heat_budget_bus: solph.Flow(
+                    nominal_value=thermal_power_limit
+                )
+            },
+        )
 
         self.location.energy_system.add(
             electricity_bus, heat_budget_bus, heat_budget_source
@@ -96,7 +96,9 @@ class HeatPump(AbstractTechnology):
         """Add connections to anergy sources."""
         heat_carrier = self.location.get_carrier(Heat)
 
-        for anergy_source in self.location.get_components(AbstractAnergySource):
+        for anergy_source in self.location.get_components(
+            AbstractAnergySource
+        ):
             # Add tranformers for each heat source.
             for target_temperature in heat_carrier.temperature_levels:
                 cop = calc_cop(
@@ -114,8 +116,11 @@ class HeatPump(AbstractTechnology):
                         self._electricity_bus: solph.Flow(),
                         self._heat_budget_bus: solph.Flow(),
                     },
-                    outputs={heat_carrier.inputs[target_temperature]: solph.Flow()},
+                    outputs={
+                        heat_carrier.inputs[target_temperature]: solph.Flow()
+                    },
                     conversion_factors={
+                        self._heat_budget_bus: 1,
                         anergy_source.bus: (cop - 1) / cop,
                         self._electricity_bus: 1 / cop,
                         heat_carrier.inputs[target_temperature]: 1,

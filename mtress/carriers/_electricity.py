@@ -21,40 +21,41 @@ class Electricity(AbstractCarrier):
         self.distribution = None
         self.grid_connection = grid_connection
 
-        self.distribution = b_dist = solph.Bus(label=self._generate_label("dist"))
+        self.distribution = b_dist = solph.Bus(
+            label=self._generate_label("dist")
+        )
         self.production = b_prod = solph.Bus(
             label=self._generate_label("prod"),
             outputs={b_dist: solph.Flow()},
         )
+        self.location.add_carrier(self)
 
-        b_export = solph.Bus(label=self._generate_label("export"))
-        b_grid = solph.Bus(label=self._generate_label("grid"))
+        b_export = solph.Bus(label=self._generate_label("b_export"))
+        b_grid = solph.Bus(label=self._generate_label("b_grid"))
 
         self.location.energy_system.add(b_dist, b_prod, b_export, b_grid)
 
         # (unidirectional) grid connection
         # RLM customer for district and larger buildings
         s_import = solph.Source(
-            label=self._generate_label("grid_in"), outputs={b_grid: solph.Flow()}
+            label=self._generate_label("s_import"),
+            outputs={b_grid: solph.Flow()},
         )
         self.location.energy_system.add(s_import)
         # TODO: Categorize import flow
-
-        costs = {"working_price": 0, "demand_rate": 0}
-        # self._location.costs
 
         b_grid_in = solph.Bus(
             label=self._generate_label("grid_in"),
             inputs={
                 b_grid: solph.Flow(
-                    variable_costs=costs["working_price"],
-                    investment=solph.Investment(ep_costs=costs["demand_rate"]),
+                    variable_costs=self.costs["working_price"],
+                    investment=solph.Investment(
+                        ep_costs=self.costs["demand_rate"]
+                    ),
                 )
             },
             outputs={
-                b_dist: solph.Flow(
-                    nonconvex=solph.NonConvex(), nominal_value=1e5, grid_connection=True
-                )
+                b_dist: solph.Flow()
             },
         )
 
@@ -62,9 +63,7 @@ class Electricity(AbstractCarrier):
         b_grid_out = solph.Bus(
             label=self._generate_label("grid_out"),
             inputs={
-                b_export: solph.Flow(
-                    nonconvex=solph.NonConvex(), nominal_value=1e5, grid_connection=True
-                )
+                b_export: solph.Flow()
             },
         )
 

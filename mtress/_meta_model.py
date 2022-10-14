@@ -39,7 +39,7 @@ class MetaModel:
         if locations is not None:
             for location_name, location_config in locations.items():
                 self._locations[location_name] = Location(
-                    name=location_name, config=location_config, meta_model=self
+                    name=location_name, meta_model=self, **location_config
                 )
 
     def get_timeseries(self, specifier: str | pd.Series | list):
@@ -87,10 +87,11 @@ class MetaModel:
 
         raise NotImplementedError(f"Unsupported file format for file {file}")
 
-    def add_constraints(self, model):
+    def _add_constraints(self, model):
         """Add constraints to the model."""
-        for _, location in self._locations:
-            location.add_constraints(model)
+
+    def add_location(self, location):
+        self._locations[location.name] = location
 
     def solve(
         self,
@@ -98,9 +99,12 @@ class MetaModel:
         solve_kwargs: dict = None,
         cmdline_options: dict = None,
     ):
+        for location in self._locations.values():
+            location.add_interconnections()
+
         """Solve generated energy system model."""
         model = solph.Model(self.energy_system)
-        self.add_constraints(model)
+        self._add_constraints(model)
 
         kwargs = {"solver": solver}
         if solve_kwargs is not None:
