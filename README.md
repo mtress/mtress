@@ -9,3 +9,12 @@ of the implemented supply technologies.
 The development was partly funded by the Federal Ministry for Economic Affairs and Energy (BMWi)
 and the Federal Ministry of Education and Research (BMBF) of Germany
 in the project ENaQ (project number 03SBE111).
+
+
+## Installation
+
+MTRESS depends on solph, which is automatically instaled using pip
+if you `pip-install mtress`. However, pip will not install a solver,
+to perform the actual optimisation. Please refer to the
+[https://oemof-solph.readthedocs.io/en/v0.4.4/readme.html#installing-a-solver](documentation of solph)
+to learn how to install a solver.
