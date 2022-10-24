@@ -50,8 +50,7 @@ class HeatPump(AbstractTechnology):
     def __init__(
         self,
         thermal_power_limit: float = None,
-        cop_0_35: float = 4.6,
-        **kwargs,
+        cop_0_35: float = 4.6
     ):
         """
         Initialize heat pump component.
@@ -59,12 +58,14 @@ class HeatPump(AbstractTechnology):
         :param thermal_power_limit: Thermal power limit on all temperature ranges
         :param cop_0_35: COP for the temperature rise 0°C to 35°C
         """
-        super().__init__(**kwargs, name=__class__)
+        super().__init__(name=__class__)
 
-        self.location.add_component(self)
-
+        self._thermal_power_limit = thermal_power_limit
         self._cop_0_35 = cop_0_35
+        self._electricity_bus = None
+        self._heat_budget_bus = None
 
+    def build(self):
         # Add electrical connection
         electricity_carrier = self.location.get_carrier(Electricity)
 
@@ -83,7 +84,7 @@ class HeatPump(AbstractTechnology):
             label=self._generate_label("heat_budget_source"),
             outputs={
                 heat_budget_bus: solph.Flow(
-                    nominal_value=thermal_power_limit
+                    nominal_value=self._thermal_power_limit
                 )
             },
         )

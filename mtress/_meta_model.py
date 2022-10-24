@@ -11,7 +11,7 @@ class MetaModel:
 
     def __init__(
         self,
-        timeindex: dict | list | pd.DatetimeIndex,
+        time_index: dict | list | pd.DatetimeIndex,
         locations=None,
     ):
         """
@@ -20,19 +20,19 @@ class MetaModel:
         :param time_index:  time index definition for the soph model
         :param locations: configuration dictionary for locations
         """
-        match timeindex:
+        match time_index:
             case list() as values:
-                self.timeindex = pd.DatetimeIndex(values)
+                self.time_index = pd.DatetimeIndex(values)
             case pd.DatetimeIndex as idx:
-                self.timeindex = idx
+                self.time_index = idx
             case dict() as params:
-                self.timeindex = pd.date_range(**params)
+                self.time_index = pd.date_range(**params)
             case _:
-                raise ValueError("Don't know how to process timeindex specification")
+                raise ValueError("Don't know how to process time_index specification")
 
         self._cache: dict[pd.DataFrame] = {}
 
-        self._energy_system = solph.EnergySystem(timeindex=self.timeindex)
+        self._energy_system = solph.EnergySystem(timeindex=self.time_index)
 
         # Initialize locations
         self._locations = {}
@@ -58,16 +58,16 @@ class MetaModel:
                 return self.get_timeseries(series)
 
             case pd.Series() as series:
-                if not self.timeindex.isin(series.index).all():
+                if not self.time_index.isin(series.index).all():
                     raise KeyError("Provided series doesn't cover time index")
 
-                return series.reindex(self.timeindex)
+                return series.reindex(self.time_index)
 
             case list() as values:
-                if not len(values) == len(self.timeindex):
+                if not len(values) == len(self.time_index):
                     raise ValueError("Length of list differs from time index length")
 
-                return pd.Series(data=values, index=self.timeindex)
+                return pd.Series(data=values, index=self.time_index)
 
             case _:
                 raise ValueError(f"Time series specifier {specifier} not supported")
@@ -92,6 +92,7 @@ class MetaModel:
 
     def add_location(self, location):
         self._locations[location.name] = location
+        location.register(self)
 
     def solve(
         self,
@@ -100,6 +101,7 @@ class MetaModel:
         cmdline_options: dict = None,
     ):
         for location in self._locations.values():
+            location.build()
             location.add_interconnections()
 
         """Solve generated energy system model."""

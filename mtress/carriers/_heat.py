@@ -45,7 +45,7 @@ class Heat(AbstractLayeredCarrier):
     """
 
     def __init__(
-        self, temperature_levels: list, reference_temperature=0, **kwargs
+        self, temperature_levels: list, reference_temperature=0
     ):
         """
         Initialize heat energy carrier and add components.
@@ -53,7 +53,7 @@ class Heat(AbstractLayeredCarrier):
         :param temperature_levels: Temperature levels
         :param reference_temperature: Reference temperature
         """
-        super().__init__(levels=temperature_levels, **kwargs)
+        super().__init__(levels=temperature_levels)
 
         # Defining temperatures
         # If no reference temperature is given, we use 0°C
@@ -67,8 +67,7 @@ class Heat(AbstractLayeredCarrier):
         self.outputs = {}
         self.inputs = {}
 
-        self.location.add_carrier(self)
-
+    def build(self):
         temp_low = None
         for temperature in self._levels:
             # Naming of new temperature bus

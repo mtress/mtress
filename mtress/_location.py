@@ -16,7 +16,6 @@ class Location:
 
     def __init__(
         self,
-        meta_model,
         name: str,
         carriers: Optional[dict] = None,
         demands: Optional[dict] = None,
@@ -30,9 +29,7 @@ class Location:
         :param meta_model: Reference to the meta model
         """
         self._name = name
-        self._meta_model = meta_model
-
-        meta_model.add_location(self)
+        self._meta_model = None
 
         if carriers is None:
             carriers = dict()
@@ -55,14 +52,24 @@ class Location:
         for component_name, component_config in components.items():
             self._create_component(component_name, component_config)
 
-        # After all components have been added, add interconnections
-        for _, component in self._components.items():
+    def register(self, meta_model):
+        self._meta_model = meta_model
+
+    def build(self):
+        for carrier in self._carriers.values():
+            carrier.build()
+        for demand in self._demands.values():
+            demand.build()
+        for component in self._components.values():
+            component.build()
+
+        for component in self._components.values():
             component.add_interconnections()
 
     def add_constraints(self, model: solph.Model):
         """Add constraints to the model."""
         for _, component in self._components.items():
-            component._add_constraints(model)
+            component.add_constraints(model)
 
     def _create_carrier(self, carrier_type: str, carrier_config: dict):
         assert hasattr(
@@ -95,12 +102,15 @@ class Location:
 
     def add_carrier(self, carrier: AbstractCarrier):
         self._carriers[type(carrier)] = carrier
+        carrier.register(self)
 
     def add_demand(self, demand: AbstractDemand):
         self._demands[type(demand)] = demand
+        demand.register(self)
 
     def add_component(self, component: AbstractComponent):
         self._components[type(component)] = component
+        component.register(self)
 
     def add_interconnections(self):
         for component in self._components.values():

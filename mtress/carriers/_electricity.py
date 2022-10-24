@@ -16,10 +16,12 @@ class Electricity(AbstractCarrier):
     def __init__(self, grid_connection=True, **kwargs):
         """Initialize electricity carrier."""
         super().__init__(**kwargs)
+        self._grid_connection = grid_connection
 
+    def build(self):
         self.production = None
         self.distribution = None
-        self.grid_connection = grid_connection
+        self.grid_connection = self._grid_connection
 
         self.distribution = b_dist = solph.Bus(
             label=self._generate_label("dist")

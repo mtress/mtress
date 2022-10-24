@@ -55,7 +55,7 @@ class Photovoltaics(RenewableElectricitySource):
         )
 
         self._weather = simulation_data.get(
-            "weather", self._loc.get_clearsky(location.energy_system.timeindex)
+            "weather", self._loc.get_clearsky(location.energy_system.time_index)
         )
 
         self._mc.run_model(self._weather)

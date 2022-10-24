@@ -25,19 +25,20 @@ class AirHeatExchanger(AbstractTechnology, AbstractAnergySource):
         """
         super().__init__(**kwargs, name=__class__)
 
-        self.location.add_component(self)
-
         self._nominal_power = nominal_power
 
         self._air_temperatures = numeric_array(air_temperatures)
 
+        self._bus = None
+
+    def build(self):
         self._bus = bus = solph.Bus(
             label=self._generate_label("output"),
         )
 
         source = solph.Source(
             label=self._generate_label("source"),
-            outputs={bus: solph.Flow(nominal_value=nominal_power)},
+            outputs={bus: solph.Flow(nominal_value=self._nominal_power)},
         )
 
         self.location.energy_system.add(source, bus)

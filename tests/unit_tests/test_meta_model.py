@@ -19,14 +19,14 @@ def test_minimal_initialisation_with_date_range():
         freq=frequency,
     )
     meta_model = MetaModel(time_index=date_range)
-    assert meta_model.energy_system.timeindex.freq == frequency
+    assert meta_model.energy_system.time_index.freq == frequency
     assert (
         datetime.datetime.strptime(first_index, "%Y-%m-%d %H:%M:%S")
-        == meta_model.energy_system.timeindex[0]
+        == meta_model.energy_system.time_index[0]
     )
     assert (
         datetime.datetime.strptime(last_index, "%Y-%m-%d %H:%M:%S")
-        == meta_model.energy_system.timeindex[-1]
+        == meta_model.energy_system.time_index[-1]
     )
 
 
@@ -39,12 +39,12 @@ def test_minimal_initialisation_with_time_index_dict():
         "end": last_index,
         "freq": frequency,
     })
-    assert meta_model.energy_system.timeindex.freq == frequency
+    assert meta_model.energy_system.time_index.freq == frequency
     assert (
         datetime.datetime.strptime(first_index, "%Y-%m-%d %H:%M:%S")
-        == meta_model.energy_system.timeindex[0]
+        == meta_model.energy_system.time_index[0]
     )
     assert (
         datetime.datetime.strptime(last_index, "%Y-%m-%d %H:%M:%S")
-        == meta_model.energy_system.timeindex[-1]
+        == meta_model.energy_system.time_index[-1]
     )
