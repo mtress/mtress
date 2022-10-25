@@ -45,8 +45,8 @@ class Location:
 
         # Initialize demands
         self._demands = {}
-        for demand_name, demand_config in demands.items():
-            self._create_demand(demand_name, demand_config)
+        for demand_type, demand_config in demands.items():
+            self._create_demand(demand_type, demand_config)
 
         self._components = {}
         for component_name, component_config in components.items():
@@ -102,7 +102,7 @@ class Location:
         carrier.register(self)
 
     def add_demand(self, demand: AbstractDemand):
-        self._demands[type(demand)] = demand
+        self._demands[demand.name] = demand
         demand.register(self)
 
     def add_component(self, component: AbstractComponent):
@@ -136,13 +136,15 @@ class Location:
         """
         return self._carriers[carrier]
 
-    def get_demand(self, demand: type):
+    def get_demands(self, demand: type):
         """
         Return demand object.
 
         :param demand: Demand type
         """
-        return self._demands[demand]
+        return [
+            self._demands[demand]
+        ]
 
     def get_components(self, technology: type):
         """

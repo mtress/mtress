@@ -11,9 +11,9 @@ from ._abstract_demand import AbstractDemand
 class Electricity(AbstractDemand):
     """Class representing an electricity demand."""
 
-    def __init__(self, time_series: Sequence[Number]):
+    def __init__(self, name: str, time_series: Sequence[Number]):
         """Initialize heat energy carrier and add components."""
-        super().__init__()
+        super().__init__(name)
         self._time_series = time_series
         self.input = None
 

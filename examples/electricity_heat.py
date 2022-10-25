@@ -16,20 +16,29 @@ house_1.add_carrier(
 )
 
 house_1.add_demand(
-    demands.Electricity(time_series=[9])
+    demands.Electricity(name="electricity demand", time_series=[9])
 )
 
 house_1.add_carrier(
     carriers.Heat(
-        temperature_levels=[30],
-        reference_temperature=20,
+        temperature_levels=[20, 30, 55],
+        reference_temperature=10,
     )
 )
 house_1.add_demand(
     demands.FixedTemperatureHeat(
+        name="space heating",
         flow_temperature=30,
         return_temperature=20,
         time_series=[50],
+    )
+)
+house_1.add_demand(
+    demands.FixedTemperatureHeat(
+        name="hot water",
+        flow_temperature=55,
+        return_temperature=10,
+        time_series=[3],
     )
 )
 
@@ -44,7 +53,7 @@ house_1.add_component(
 solved_model = energy_system.solve(solve_kwargs={"tee": True})
 
 plot = generate_graph(solved_model.es)
-plot.render(format="pdf")
+plot.render(format="png", renderer="cairo", formatter="gdiplus")
 
 solved_model.write('electricity_heat.lp',
                    io_options={'symbolic_solver_labels': True})

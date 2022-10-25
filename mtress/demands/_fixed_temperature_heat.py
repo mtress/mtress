@@ -25,6 +25,7 @@ class FixedTemperatureHeat(AbstractDemand):
 
     def __init__(
         self,
+        name: str,
         flow_temperature: float,
         return_temperature: float,
         time_series: Sequence[Number]
@@ -35,7 +36,7 @@ class FixedTemperatureHeat(AbstractDemand):
         :param flow_temperature: Flow temperature
         :param return_temperature: Return temperature
         """
-        super().__init__()
+        super().__init__(name)
         self._flow_temperature = flow_temperature
         self._return_temperature = return_temperature
         self._time_series = time_series
