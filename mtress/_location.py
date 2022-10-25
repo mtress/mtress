@@ -63,9 +63,6 @@ class Location:
         for component in self._components.values():
             component.build()
 
-        for component in self._components.values():
-            component.add_interconnections()
-
     def add_constraints(self, model: solph.Model):
         """Add constraints to the model."""
         for _, component in self._components.items():
