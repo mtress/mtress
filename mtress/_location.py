@@ -14,6 +14,27 @@ from . import technologies as mt_technologies
 class Location:
     """Location of a MTRESS meta model."""
 
+    """
+    Functionality: A location is able to collect / accomodate energy 
+        carriers, components and demands.
+    
+    Procedure: Create a meta model first (see meta_model class). 
+        Afterwards create / initialize an (empty) location
+        and add it to the meta model by doing the following:
+        
+        house_1 = Location(name='house_1')
+        meta_model.add_location(house_1)
+        
+    Notice: To allow for automatic connections between the components
+        and demands, every energy carrier (e.g. electricity or heat) and
+        every component (e.g. a heat pump) can only be defined once
+        per location (or left out). To define multiple instances of one
+        energy carrier with different configurations, multiple locations
+        have to be defined.
+        
+    Further procedure is described in the carrier and demand classes. 
+    """
+
     def __init__(
         self,
         name: str,
