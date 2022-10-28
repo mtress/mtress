@@ -12,13 +12,10 @@ house_1 = Location(name="house_1")
 meta_model.add_location(house_1)
 
 house_1.add_carrier(
-    carriers.Electricity(costs={"working_price": 35, "demand_rate": 0})
-)
-print(1)
+    carriers.Electricity(costs={"working_price": 35, "demand_rate": 0}))
+
 house_1.add_demand(
-    demands.Electricity(time_series=[0, 0.5, 9])
-)
-print(1)
+    demands.Electricity(time_series=[0, 0.5, 9]))
+
 solved_model = meta_model.solve(solve_kwargs={"tee": True})
-print(1)
 solved_model.write('electricity_only.lp', io_options={'symbolic_solver_labels': True})

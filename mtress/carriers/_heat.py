@@ -44,6 +44,33 @@ class Heat(AbstractLayeredCarrier):
     Those only need to connect to the hottest layer.
     """
 
+    """
+   Functionality: Heat connections at a location. This class represents a local heat 
+       grid. The energy carrier heat allows to optimise both, temperature and heat, 
+       as the temperature has a significant impact on the performance of renewable 
+       energy supply systems. This is done by defining several discrete temperature
+       levels. 
+       Besides the temperature levels, a reference temperature can be defined. 
+       This can be useful to simplify the model by setting the reference 
+       to a return temperature, resulting in the corresponding return flow to be
+       considered at zero energy. 
+       
+       Other components and demands might be added to the energy_system by
+       their respective classes / functions and are automatically connected
+       to their fitting busses by the carrier.
+              
+   Procedure: Create a simple heat carrier by doing the following
+          
+           house_1.add_carrier(carriers.Heat(temperature_levels=[30],
+                                             reference_temperature=20))
+
+   Notice: Some temperatures, i.e. the ones of sources for heat pump, are not 
+        considered by the energy carrier. To emphasise that fact, these
+        sources are defined as anergy sources, which are not connected to the 
+        energy carrier but only to the heat pump.
+
+   """
+
     def __init__(
         self, temperature_levels: list, reference_temperature=0
     ):

@@ -23,6 +23,27 @@ class FixedTemperatureHeat(AbstractDemand):
 
     """
 
+    """
+    Functionality: Demands contain time series of energy that is needed.
+        The heat demand automatically connects to its corresponding 
+        heat  carrier. A name identifying the demand has to be given that
+        is unique for the location, because multiple demands of one type 
+        can exist for one location. Also, the heat demand needs a 
+        specified temperature level. 
+        
+    Procedure: Create a simple heat demand by doing the following:
+    
+            house_1.add_demand(demands.FixedTemperatureHeat(
+                flow_temperature=30,
+                return_temperature=20,
+                time_series=[50]))
+        
+    Notice: While energy from electricity and the gaseous carriers is
+     just consumed, heat demands have a returning energy flow.
+    """
+
+
+
     def __init__(
         self,
         flow_temperature: float,

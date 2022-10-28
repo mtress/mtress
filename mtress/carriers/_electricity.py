@@ -12,8 +12,8 @@ class Electricity(AbstractCarrier):
         to the global electricity grid.
 
         All default busses, sources and sinks are automatically generated
-        and interconnected, when the carrier is initialized. Automatically
-        generated are the following: busses for the production, distribution,
+        and interconnected when the carrier is initialized. Automatically
+        generated are the following: one bus each for production, distribution,
         export, grid_in (actual grid supply with costs), grid_out (external
         market to sell electricity to) as well as a source (additional
         unidirictional grid connection) and a sink (export).
@@ -24,8 +24,7 @@ class Electricity(AbstractCarrier):
 
     Procedure: Create a simple electricity carrier by doing the following
         and adding costs to the grid supply.
-    #TODO: the demand_rate refers to..
-    #TODO: the term demand_rate feels really unintuitive --> better variable_name for that?
+    TODO: the term demand_rate feels really unintuitive --> better variable_name for that?
 
             house_1.add_carrier(
                 carriers.Electricity(costs={"working_price": 35, "demand_rate": 0})

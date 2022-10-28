@@ -1,0 +1,63 @@
+digraph {
+	subgraph cluster_house_1 {
+		label=house_1
+		subgraph cluster_house_1_ec_electricity {
+			label=ec_electricity
+			house_1__ec_electricity__dist [label=dist shape=ellipse]
+			house_1__ec_electricity__prod [label=prod shape=ellipse]
+			house_1__ec_electricity__b_export [label=b_export shape=ellipse]
+			house_1__ec_electricity__b_grid [label=b_grid shape=ellipse]
+			house_1__ec_electricity__s_import [label=s_import shape=trapezium]
+			house_1__ec_electricity__grid_in [label=grid_in shape=ellipse]
+			house_1__ec_electricity__grid_out [label=grid_out shape=ellipse]
+			house_1__ec_electricity__export [label=export shape=invtrapezium]
+		}
+		subgraph cluster_house_1_ec_heat {
+			label=ec_heat
+			house_1__ec_heat__out_30 [label=out_30 shape=ellipse]
+			house_1__ec_heat__in_30 [label=in_30 shape=ellipse]
+		}
+		subgraph cluster_house_1_d_electricity {
+			label=d_electricity
+			house_1__d_electricity__input [label=input shape=ellipse]
+			house_1__d_electricity__sink [label=sink shape=invtrapezium]
+		}
+		subgraph cluster_house_1_d_fixedtemperatureheat {
+			label=d_fixedtemperatureheat
+			house_1__d_fixedtemperatureheat__heat_exchanger [label=heat_exchanger shape=octagon]
+			house_1__d_fixedtemperatureheat__drained_heat [label=drained_heat shape=ellipse]
+			house_1__d_fixedtemperatureheat__sink [label=sink shape=invtrapezium]
+		}
+		subgraph "cluster_house_1_<class 'mtress.technologies._heat_pump.HeatPump'>" {
+			label=<class 'mtress.technologies._heat_pump.HeatPump'>
+			house_1__class__mtress__technologies___heat_pump__HeatPump__electricity [label=electricity shape=ellipse]
+			house_1__class__mtress__technologies___heat_pump__HeatPump__heat_budget_bus [label=heat_budget_bus shape=ellipse]
+			house_1__class__mtress__technologies___heat_pump__HeatPump__heat_budget_source [label=heat_budget_source shape=trapezium]
+			house_1__class__mtress__technologies___heat_pump__HeatPump__class__mtress__technologies___air_heat_exchanger__AirHeatExchanger___30 [label="<class 'mtress.technologies._air_heat_exchanger.AirHeatExchanger'>_30" shape=octagon]
+		}
+		subgraph "cluster_house_1_<class 'mtress.technologies._air_heat_exchanger.AirHeatExchanger'>" {
+			label=<class 'mtress.technologies._air_heat_exchanger.AirHeatExchanger'>
+			house_1__class__mtress__technologies___air_heat_exchanger__AirHeatExchanger__source [label=source shape=trapezium]
+			house_1__class__mtress__technologies___air_heat_exchanger__AirHeatExchanger__output [label=output shape=ellipse]
+		}
+	}
+	house_1__ec_electricity__dist -> house_1__d_electricity__input
+	house_1__ec_electricity__dist -> house_1__class__mtress__technologies___heat_pump__HeatPump__electricity
+	house_1__ec_electricity__prod -> house_1__ec_electricity__dist
+	house_1__ec_electricity__b_export -> house_1__ec_electricity__grid_out
+	house_1__ec_electricity__b_grid -> house_1__ec_electricity__grid_in
+	house_1__ec_electricity__s_import -> house_1__ec_electricity__b_grid
+	house_1__ec_electricity__grid_in -> house_1__ec_electricity__dist
+	house_1__ec_electricity__grid_out -> house_1__ec_electricity__export
+	house_1__ec_heat__out_30 -> house_1__d_fixedtemperatureheat__heat_exchanger
+	house_1__ec_heat__in_30 -> house_1__ec_heat__out_30
+	house_1__d_electricity__input -> house_1__d_electricity__sink
+	house_1__d_fixedtemperatureheat__heat_exchanger -> house_1__d_fixedtemperatureheat__drained_heat
+	house_1__d_fixedtemperatureheat__drained_heat -> house_1__d_fixedtemperatureheat__sink
+	house_1__class__mtress__technologies___heat_pump__HeatPump__electricity -> house_1__class__mtress__technologies___heat_pump__HeatPump__class__mtress__technologies___air_heat_exchanger__AirHeatExchanger___30
+	house_1__class__mtress__technologies___heat_pump__HeatPump__heat_budget_bus -> house_1__class__mtress__technologies___heat_pump__HeatPump__class__mtress__technologies___air_heat_exchanger__AirHeatExchanger___30
+	house_1__class__mtress__technologies___heat_pump__HeatPump__heat_budget_source -> house_1__class__mtress__technologies___heat_pump__HeatPump__heat_budget_bus
+	house_1__class__mtress__technologies___air_heat_exchanger__AirHeatExchanger__source -> house_1__class__mtress__technologies___air_heat_exchanger__AirHeatExchanger__output
+	house_1__class__mtress__technologies___air_heat_exchanger__AirHeatExchanger__output -> house_1__class__mtress__technologies___heat_pump__HeatPump__class__mtress__technologies___air_heat_exchanger__AirHeatExchanger___30
+	house_1__class__mtress__technologies___heat_pump__HeatPump__class__mtress__technologies___air_heat_exchanger__AirHeatExchanger___30 -> house_1__ec_heat__in_30
+}
