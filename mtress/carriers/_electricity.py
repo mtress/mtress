@@ -7,10 +7,32 @@ from ._abstract_carrier import AbstractCarrier
 
 class Electricity(AbstractCarrier):
     """
-    Electricity connections at a location.
+    Functionality: Electricity connections at a location. This class
+        represents a local electricity grid with or without connection
+        to the global electricity grid.
 
-    This class represents a local electricity grid with or without connection
-    to the global electricity grid.
+        All default busses, sources and sinks are automatically generated
+        and interconnected, when the carrier is initialized. Automatically
+        generated are the following: busses for the production, distribution,
+        export, grid_in (actual grid supply with costs), grid_out (external
+        market to sell electricity to) as well as a source (additional
+        unidirictional grid connection) and a sink (export).
+
+        Other components and demands might be added to the energy_system by
+        their respective classes / functions and are automatically connected
+        to their fitting busses by the carrier.
+
+    Procedure: Create a simple electricity carrier by doing the following
+        and adding costs to the grid supply.
+    #TODO: the demand_rate refers to..
+    #TODO: the term demand_rate feels really unintuitive --> better variable_name for that?
+
+            house_1.add_carrier(
+                carriers.Electricity(costs={"working_price": 35, "demand_rate": 0})
+
+    Notice: Costs of the grid supply (working_price and demand_rate) need to
+        be specified.
+
     """
 
     def __init__(self, grid_connection=True, **kwargs):
