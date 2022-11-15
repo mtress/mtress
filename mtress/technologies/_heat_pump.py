@@ -42,10 +42,15 @@ class HeatPump(AbstractTechnology):
 
     The heat pump is modelled as an array of virtual heat pumps,
     each with the correct COP for the corresponding temperatures.
-    To not allow producing more heat then the real heat pump,
+    To not allow producing more heat than the real heat pump,
     all these virtual heat pumps share anergy and energy sources
     and can further have one shared virtual normalisation source (1HP).
+
+    The heat pump also connects to every available anergy source at
+    the location. The COPs are automatically calculated based on the
+    information given by the heat carrier and the anergy sources.
     """
+
 
     def __init__(
         self,

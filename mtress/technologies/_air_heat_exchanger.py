@@ -9,7 +9,20 @@ from ._abstract_technology import AbstractAnergySource, AbstractTechnology
 
 
 class AirHeatExchanger(AbstractTechnology, AbstractAnergySource):
-    """Air heat exchanger for e.g. heat pumps."""
+    """
+    Functionality: Air heat exchanger for e.g. heat pumps. Holds a time
+        series of both the temperature and the power limit that can be
+        drawn from the source.
+
+    Procedure: Create a simple air heat exchanger by doing the following:
+
+        house_1.add_component(
+            technologies.AirHeatExchanger(air_temperatures=[3])
+
+    Further documentation regarding anergy found in the class
+    AbstractAnergysource.
+
+    """
 
     def __init__(
             self,

@@ -73,7 +73,16 @@ class AbstractTechnology(AbstractComponent):
 
 
 class AbstractAnergySource(ABC):
-    """Interface class for anergy providing technologies."""
+    """Interface class for anergy providing technologies.
+
+    Functionality/Notice: There can be several anergy sources, such as
+        a down hole heat exchanger or air source heat exchanger.
+        They hold a time series for both the temperature and the
+        power limit that can be drawn from the source. Additionally
+        a total limit can be defined, which is particularly
+        important for geothermal sources that need to recover.
+
+    """
 
     @property
     @abstractmethod
