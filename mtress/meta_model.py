@@ -18,10 +18,30 @@ from copy import deepcopy
 import pprint
 import numpy as np
 import pandas as pd
-
-from oemof.solph import (Bus, EnergySystem, Flow, Sink, Source, Transformer,
-                         Model, Investment, constraints, GenericStorage,
-                         NonConvex, views)
+from oemof.solph import (
+    Bus,
+    EnergySystem,
+    Flow,
+    Model,
+    Investment,
+    constraints,
+    NonConvex,
+    views,
+)
+try:
+    from oemof.solph.components import (
+        Sink,
+        Source,
+        Transformer,
+        GenericStorage,
+    )
+except ImportError:  # solph <= v0.4
+    from oemof.solph import (
+        Sink,
+        Source,
+        Transformer,
+        GenericStorage,
+    )
 from oemof.solph.processing import meta_results, results
 
 from mtress.layered_heat import (HeatLayers, LayeredHeatPump,

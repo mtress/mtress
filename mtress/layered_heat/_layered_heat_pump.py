@@ -11,7 +11,22 @@ SPDX-FileCopyrightText: Lucas Schmeling
 SPDX-License-Identifier: MIT
 """
 
-from oemof import solph
+from oemof.solph import (
+    Bus,
+    Flow,
+)
+try:
+    from oemof.solph.components import (
+        Sink,
+        Source,
+        Transformer,
+    )
+except ImportError:  # solph <= v0.4
+    from oemof.solph import (
+        Sink,
+        Source,
+        Transformer,
+    )
 
 from mtress.physics import (calc_cop,
                             celsius_to_kelvin)
@@ -71,21 +86,21 @@ class LayeredHeatPump:
         if len(label) > 0:
             label = label + "_"
 
-        electricity_bus = solph.Bus(label=label+"heat_pump_electricity",
-                                    inputs={electricity_source: solph.Flow()})
+        electricity_bus = Bus(label=label+"heat_pump_electricity",
+                                    inputs={electricity_source: Flow()})
 
-        heat_budget_split = solph.Bus(label=label+"heat_budget_split")
+        heat_budget_split = Bus(label=label+"heat_budget_split")
         if thermal_power_limit:
-            heat_budget = solph.Source(
+            heat_budget = Source(
                 label=label+"heat_budget",
                 outputs={
-                    heat_budget_split: solph.Flow(
+                    heat_budget_split: Flow(
                         nominal_value=thermal_power_limit)})
         else:
-            heat_budget = solph.Source(
+            heat_budget = Source(
                 label=label+"heat_budget",
                 outputs={
-                    heat_budget_split: solph.Flow()})
+                    heat_budget_split: Flow()})
 
         self.heat_budget_flow = (heat_budget.label,
                                  heat_budget_split.label)
@@ -94,7 +109,7 @@ class LayeredHeatPump:
 
         for source in heat_sources:
             temperature_lower = heat_sources[source]
-            heat_source = solph.Bus(
+            heat_source = Bus(
                 label=label+"in_"+source)
             self.b_th_in[source] = heat_source
             energy_system.add(heat_source)
@@ -110,14 +125,14 @@ class LayeredHeatPump:
 
                 self.cop[(source, target_temperature)] = cop
 
-                heat_pump_level = solph.Transformer(
+                heat_pump_level = Transformer(
                     label=hp_str,
                     inputs={
-                        heat_source: solph.Flow(),
-                        electricity_bus: solph.Flow(),
-                        heat_budget_split: solph.Flow()},
+                        heat_source: Flow(),
+                        electricity_bus: Flow(),
+                        heat_budget_split: Flow()},
                     outputs={
-                        heat_layers.b_th_in[target_temperature]: solph.Flow()},
+                        heat_layers.b_th_in[target_temperature]: Flow()},
                     conversion_factors={
                         heat_source: (cop-1) / cop,
                         electricity_bus: 1/cop,
