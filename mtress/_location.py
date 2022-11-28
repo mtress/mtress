@@ -40,10 +40,12 @@ class Location:
         self._carriers[type(carrier)] = carrier
 
     def add_demand(self, demand: AbstractDemand):
+        """Add a demand to the location."""
         self._demands[type(demand)] = demand
 
-    def add_component(self, component: AbstractComponent):
-        self._technologies[type(component)] = component
+    def add_technology(self, technology: AbstractComponent):
+        """Add a demand to the location."""
+        self._technologies[type(technology)] = technology
 
     @property
     def name(self):

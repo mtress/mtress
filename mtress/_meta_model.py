@@ -56,7 +56,7 @@ class MetaModel:
 
 
 class SolphModel:
-    """Model adapter for MTRESS Model."""
+    """Model adapter for MTRESS meta model."""
 
     def __init__(
         self,
