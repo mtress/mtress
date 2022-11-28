@@ -1,12 +1,11 @@
 """The MTRESS meta model itself."""
 
-from typing import Optional
 
 import pandas as pd
 from oemof import solph
 
 from . import Location
-from ._abstract_component import AbstractComponent, AbstractSolphComponent
+from ._abstract_component import AbstractSolphComponent
 from ._data_handler import DataHandler
 
 
@@ -54,9 +53,30 @@ class MetaModel:
         """Add a new location to the meta model."""
         self.locations[location.name] = location
 
+    @property
+    def components(self):
+        """Return an iterator over all components of all locations."""
+        for _, location in self.locations.items():
+            component: AbstractSolphComponent
+
+            # Build cores of carriers, demands and technologies
+            for component in [
+                *location.carriers,
+                *location.demands,
+                *location.technologies,
+            ]:
+                yield component
+
 
 class SolphModel:
     """Model adapter for MTRESS meta model."""
+
+    data: DataHandler
+
+    energy_system: solph.EnergySystem
+    model: solph.Model
+
+    components: dict = {}
 
     def __init__(
         self,
@@ -76,15 +96,11 @@ class SolphModel:
             case _:
                 raise ValueError("Don't know how to process timeindex specification")
 
-        self._data = DataHandler(self.timeindex)
-
-        self._energy_system = None
+        self.data = DataHandler(self.timeindex)
+        self.energy_system = solph.EnergySystem(timeindex=self.timeindex)
 
     def build_solph_energy_system(self):
         """Build the `oemof.solph` representation of the energy system."""
-
-        self._energy_system = solph.EnergySystem(timeindex=self.timeindex)
-
         for _, location in self._meta_model.locations.items():
             component: AbstractSolphComponent
 
@@ -94,7 +110,7 @@ class SolphModel:
                 *location.demands,
                 *location.technologies,
             ]:
-                component.build_core()
+                component.build_core(self)
 
             # Build cores of carriers, demands and technologies
             for component in [
@@ -102,15 +118,13 @@ class SolphModel:
                 *location.demands,
                 *location.technologies,
             ]:
-                component.establish_interconnections()
+                component.establish_interconnections(self)
 
         # TODO: Add inter-location connections
 
-        return self._energy_system
-
     def build_solph_model(self):
         """Build the `oemof.solph` representation of the model."""
-        model = solph.Model(self._energy_system)
+        self.model = solph.Model(self.energy_system)
 
         component: AbstractSolphComponent
         for _, location in self._meta_model.locations.items():
@@ -120,7 +134,7 @@ class SolphModel:
                 *location.demands,
                 *location.technologies,
             ]:
-                component.add_constraints(model)
+                component.add_constraints(self)
 
     def solve(
         self,

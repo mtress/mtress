@@ -9,15 +9,9 @@ from .._abstract_component import AbstractComponent
 class AbstractCarrier(AbstractComponent):
     """Abstract carrier class to ensure a unified interface."""
 
-    def __init__(self, location, costs=None):
+    def __init__(self):
         """Initialize carrier."""
-        super().__init__(location, "ec_" + self.__class__.__name__.lower())
-
-        if costs is None:
-            self.costs = dict()
-        else:
-            self.costs = costs
-        # TODO: check if both, "working_price" and "demand_rate", are defined.
+        super().__init__("c_" + self.__class__.__name__.lower())
 
 
 class AbstractLayeredCarrier(AbstractCarrier):
@@ -28,9 +22,9 @@ class AbstractLayeredCarrier(AbstractCarrier):
     heat with multiple temperature levels or gases with multiple pressure levels.
     """
 
-    def __init__(self, levels, location):
+    def __init__(self, levels):
         """Initialize carrier."""
-        super().__init__(location)
+        super().__init__()
 
         self._levels = np.unique(levels)
 

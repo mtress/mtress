@@ -1,11 +1,16 @@
 """Electricity energy carrier."""
 
+
+from typing import Optional
+
 from oemof import solph
 
+from .._abstract_component import AbstractSolphComponent
+from .._meta_model import SolphModel
 from ._abstract_carrier import AbstractCarrier
 
 
-class Electricity(AbstractCarrier):
+class Electricity(AbstractCarrier, AbstractSolphComponent):
     """
     Electricity connections at a location.
 
@@ -13,17 +18,27 @@ class Electricity(AbstractCarrier):
     to the global electricity grid.
     """
 
-    def __init__(self, grid_connection=True, **kwargs):
+    def __init__(
+        self,
+        grid_connection=True,
+        working_rate: Optional[float] = None,
+        demand_rate: Optional[float] = None,
+    ):
         """Initialize electricity carrier."""
-        super().__init__(**kwargs)
+        super().__init__()
 
-        self.production = None
-        self.distribution = None
         self.grid_connection = grid_connection
 
-        self.distribution = b_dist = solph.Bus(
-            label=self._generate_label("dist")
-        )
+        self.working_rate = working_rate
+        self.demand_rate = demand_rate
+
+        # Prepare variables for
+        self.distribution = None
+        self.production = None
+
+    def build_core(self, solph_model: SolphModel):
+        """Build solph components."""
+        self.distribution = b_dist = solph.Bus(label=self._generate_label("dist"))
         self.production = b_prod = solph.Bus(
             label=self._generate_label("prod"),
             outputs={b_dist: solph.Flow()},
@@ -49,22 +64,16 @@ class Electricity(AbstractCarrier):
             inputs={
                 b_grid: solph.Flow(
                     variable_costs=self.costs["working_price"],
-                    investment=solph.Investment(
-                        ep_costs=self.costs["demand_rate"]
-                    ),
+                    investment=solph.Investment(ep_costs=self.costs["demand_rate"]),
                 )
             },
-            outputs={
-                b_dist: solph.Flow()
-            },
+            outputs={b_dist: solph.Flow()},
         )
 
         # create external market to sell electricity to
         b_grid_out = solph.Bus(
             label=self._generate_label("grid_out"),
-            inputs={
-                b_export: solph.Flow()
-            },
+            inputs={b_export: solph.Flow()},
         )
 
         self.location.energy_system.add(b_grid_in, b_grid_out)
