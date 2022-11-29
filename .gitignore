@@ -7,3 +7,7 @@ doc/mtress.wmf
 dist/
 build/
 .ipynb_checkpoints/
+
+# Individual obsolete files
+mtress/_meta_model_bak.py
+example/meta_model_config.yaml

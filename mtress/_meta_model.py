@@ -1,6 +1,8 @@
 """The MTRESS meta model itself."""
 
 
+from typing import Callable, Iterable
+
 import pandas as pd
 from oemof import solph
 
@@ -54,12 +56,12 @@ class MetaModel:
         self.locations[location.name] = location
 
     @property
-    def components(self):
+    def components(self) -> Iterable[AbstractSolphComponent]:
         """Return an iterator over all components of all locations."""
         for _, location in self.locations.items():
             component: AbstractSolphComponent
 
-            # Build cores of carriers, demands and technologies
+            # Iterate over carriers, demands and all technologies
             for component in [
                 *location.carriers,
                 *location.demands,
@@ -97,28 +99,46 @@ class SolphModel:
                 raise ValueError("Don't know how to process timeindex specification")
 
         self.data = DataHandler(self.timeindex)
+
+        # Registry of solph components
+        self._solph_components = {}
         self.energy_system = solph.EnergySystem(timeindex=self.timeindex)
+
+        # Store a reference to the solph model
+        for component in self._meta_model.components:
+            component.register_solph_model(self)
+
+    def add_solph_component(
+        self,
+        mtress_component: AbstractSolphComponent,
+        label: str,
+        solph_component: Callable,
+        **kwargs,
+    ):
+        """Add a solph component, e.g. a Bus, to the solph energy system."""
+        # Generate a unique label
+        _full_label = ":".join([*mtress_component.identifier, label])
+
+        if (mtress_component, label) in self._solph_components:
+            raise KeyError(f"Solph component named {_full_label} already exists")
+
+        _component = solph_component(label=_full_label, **kwargs)
+        self._solph_components[(mtress_component, label)] = _component
+        self.energy_system.add(_component)
+
+        return _component
+
+    def get_solph_component(self, mtress_component: AbstractSolphComponent, label: str):
+        """Get a solph component by component and label."""
+        return self._solph_components[(mtress_component, label)]
 
     def build_solph_energy_system(self):
         """Build the `oemof.solph` representation of the energy system."""
-        for _, location in self._meta_model.locations.items():
-            component: AbstractSolphComponent
+        for component in self._meta_model.components:
+            component.build_core()
 
-            # Build cores of carriers, demands and technologies
-            for component in [
-                *location.carriers,
-                *location.demands,
-                *location.technologies,
-            ]:
-                component.build_core(self)
-
-            # Build cores of carriers, demands and technologies
-            for component in [
-                *location.carriers,
-                *location.demands,
-                *location.technologies,
-            ]:
-                component.establish_interconnections(self)
+        for component in self._meta_model.components:
+            component.establish_interconnections()
 
         # TODO: Add inter-location connections
 
@@ -126,15 +146,8 @@ class SolphModel:
         """Build the `oemof.solph` representation of the model."""
         self.model = solph.Model(self.energy_system)
 
-        component: AbstractSolphComponent
-        for _, location in self._meta_model.locations.items():
-            # Add model constraints
-            for component in [
-                *location.carriers,
-                *location.demands,
-                *location.technologies,
-            ]:
-                component.add_constraints(self)
+        for component in self._meta_model.components:
+            component.add_constraints()
 
     def solve(
         self,
