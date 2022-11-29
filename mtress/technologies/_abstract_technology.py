@@ -3,8 +3,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto
 
-from oemof import solph
-
 from .._abstract_component import AbstractComponent
 
 

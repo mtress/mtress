@@ -26,7 +26,7 @@ class AirHeatExchanger(
         self.air_temperatures = air_temperatures
 
         # Solph model interfaces
-        self.bus = None
+        self._bus = None
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -34,7 +34,7 @@ class AirHeatExchanger(
             self.air_temperatures
         )
 
-        self.bus = bus = self._solph_model.add_solph_component(
+        self._bus = _bus = self._solph_model.add_solph_component(
             mtress_component=self,
             label="output",
             solph_component=solph.Bus,
@@ -44,10 +44,15 @@ class AirHeatExchanger(
             mtress_component=self,
             label="source",
             solph_component=solph.Source,
-            outputs={bus: solph.Flow(nominal_value=self.nominal_power)},
+            outputs={_bus: solph.Flow(nominal_value=self.nominal_power)},
         )
 
     @property
     def temperature(self):
         """Return temperature level of anergy source."""
         return self.air_temperatures
+
+    @property
+    def _bus(self):
+        """Return _bus to connect to."""
+        return self._bus
