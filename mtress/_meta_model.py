@@ -117,7 +117,7 @@ class SolphModel:
     ):
         """Add a solph component, e.g. a Bus, to the solph energy system."""
         # Generate a unique label
-        _full_label = ":".join([*mtress_component.identifier, label])
+        _full_label = self.get_label(mtress_component, label)
 
         if (mtress_component, label) in self._solph_components:
             raise KeyError(f"Solph component named {_full_label} already exists")
@@ -127,6 +127,10 @@ class SolphModel:
         self.energy_system.add(_component)
 
         return _component
+
+    def get_label(self, mtress_component, label):
+        """Generate a unique label for a component."""
+        return ":".join([*mtress_component.identifier, label])
 
     def get_solph_component(self, mtress_component: AbstractSolphComponent, label: str):
         """Get a solph component by component and label."""
