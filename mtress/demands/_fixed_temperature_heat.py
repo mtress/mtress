@@ -1,14 +1,15 @@
 """Room heating technologies."""
 
-from numbers import Number
-from collections.abc import Sequence
+
+from mtress import carriers
 from oemof import solph
 
-from mtress.carriers import Heat
+from .._abstract_component import AbstractSolphComponent
+from ..carriers import Heat
 from ._abstract_demand import AbstractDemand
 
 
-class FixedTemperatureHeat(AbstractDemand):
+class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
     """
     Space heating with a fixed flow and return temperature.
 
@@ -23,79 +24,84 @@ class FixedTemperatureHeat(AbstractDemand):
 
     """
 
-    def __init__(
-        self,
-        flow_temperature: float,
-        return_temperature: float,
-        time_series: Sequence[Number],
-        **kwargs
-    ):
+    def __init__(self, flow_temperature: float, return_temperature: float, time_series):
         """
         Initialize space heater.
 
         :param flow_temperature: Flow temperature
         :param return_temperature: Return temperature
         """
-        super().__init__(**kwargs)
+        super().__init__()
 
-        assert (
-            flow_temperature > return_temperature
-        ), "Flow must be higher than return temperature"
+        if not flow_temperature > return_temperature:
+            raise ValueError("Flow must be higher than return temperature")
 
         carrier = self.location.get_carrier(Heat)
 
-        assert (
-            flow_temperature in carrier.temperature_levels
-        ), "Flow temperature must be a temperature level"
-        assert (
-            return_temperature in carrier.temperature_levels
-            or return_temperature == carrier.reference_temperature
-        ), (
-            "Return temperature must be a temperature level or the reference"
-            " temperature"
-        )
+        if flow_temperature not in carrier.temperature_levels:
+            raise ValueError("Flow temperature must be a temperature level")
 
-        self.output = output = solph.Bus(label=self._generate_label("drained_heat"))
+        if (
+            return_temperature not in carrier.temperature_levels
+            and return_temperature != carrier.reference_temperature
+        ):
+            raise ValueError(
+                "Return must be a temperature level or the reference temperature"
+            )
 
-        sink = solph.Sink(
-            label=self._generate_label("sink"),
-            inputs={
-                output: solph.Flow(
-                    nominal_value=1,
-                    fix=time_series,
-                )
-            },
-        )
+        self.flow_temperature = flow_temperature
+        self.return_temperature = return_temperature
 
-        if return_temperature == carrier.reference_temperature:
+        self._time_series = time_series
+
+    def build_core(self):
+        """Build core structure of oemof.solph representation."""
+        carrier = self.location.get_carrier(Heat)
+
+        if self.return_temperature == carrier.reference_temperature:
             # If the return temperature is the reference temperature we just take the
             # energy from the appropriate level
-            heater = solph.Transformer(
-                label=self._generate_label("heat_exchanger"),
-                inputs={carrier.outputs[flow_temperature]: solph.Flow()},
-                outputs={output: solph.Flow()},
-                conversion_factors={
-                    carrier.outputs[flow_temperature]: 1,
-                    output: 1,
-                },
+            output = self._solph_model.add_solph_component(
+                mtress_component=self,
+                label="output",
+                solph_component=solph.Bus,
+                inputs={carrier.outputs[self.flow_temperature]: solph.Flow()},
             )
         else:
             temperature_ratio = (
-                return_temperature - carrier.reference_temperature
-            ) / (flow_temperature - carrier.reference_temperature)
+                self.return_temperature - carrier.reference_temperature
+            ) / (self.flow_temperature - carrier.reference_temperature)
 
-            heater = solph.Transformer(
-                label=self._generate_label("heat_exchanger"),
-                inputs={carrier.outputs[flow_temperature]: solph.Flow()},
+            output = self._solph_model.add_solph_component(
+                mtress_component=self,
+                label="output",
+                solph_component=solph.Bus,
+            )
+
+            self._solph_model.add_solph_component(
+                mtress_component=self,
+                label="heat_exchanger",
+                inputs={
+                    carrier.outputs[self.flow_temperature]: solph.Flow(),
+                },
                 outputs={
-                    carrier.outputs[return_temperature]: solph.Flow(),
+                    carrier.outputs[self.return_temperature]: solph.Flow(),
                     output: solph.Flow(),
                 },
                 conversion_factors={
-                    carrier.outputs[flow_temperature]: 1,
+                    carrier.outputs[self.flow_temperature]: 1,
                     output: 1 - temperature_ratio,
-                    carrier.outputs[return_temperature]: temperature_ratio,
+                    carrier.outputs[self.return_temperature]: temperature_ratio,
                 },
             )
 
-        self.location.energy_system.add(heater, output, sink)
+        self._solph_model.add_solph_component(
+            mtress_component=self,
+            label="sink",
+            inputs={
+                output: solph.Flow(
+                    nominal_value=1,
+                    fix=self._solph_model.data.get_timeseries(self._time_series),
+                )
+            },
+        )

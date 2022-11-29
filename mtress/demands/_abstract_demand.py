@@ -11,6 +11,6 @@ class AbstractDemand(AbstractComponent):
     `_add_solph_components` method.
     """
 
-    def __init__(self, location):
+    def __init__(self):
         """Initialize demand."""
-        super().__init__(location, "d_" + self.__class__.__name__.lower())
+        super().__init__("d_" + self.__class__.__name__.lower())
