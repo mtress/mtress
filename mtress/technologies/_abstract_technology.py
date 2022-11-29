@@ -24,29 +24,12 @@ class FlowType(Enum):
 class AbstractTechnology(AbstractComponent):
     """Base class for MTRESS technologies."""
 
-    def __init__(self, location, name):
+    def __init__(self, name: str):
         """Initialize technology."""
-        super().__init__(location, name)
+        super().__init__(name)
         self._flows = {flow_type: set() for flow_type in FlowType}
 
-    def add_interconnections(self):
-        """
-        Add technology interconnections.
-
-        Some technologies require interconnections, e.g. an ice storage
-        connects to a heat pump. These interconnections have to be made
-        after creation of the technologies.
-        """
-
-    def add_constraints(self, model: solph.Model):
-        """
-        Add model constraints.
-
-        Some technologies require constraints, e.g. a shared limit on a
-        storage with multiple temperature levels. These constraints can
-        not be created prior to the model generation.
-        """
-
+    # TODO: The flow categorization logic should probably move to a solph specific class
     def categorise_flow(self, flow, flow_types):
         """Categorise given flow under the named flow_types."""
         for flow_type in flow_types | {FlowType.ALL}:

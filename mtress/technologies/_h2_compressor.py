@@ -2,19 +2,20 @@
 
 from oemof import solph
 
+from .._abstract_component import AbstractSolphComponent
 from ..carriers import Electricity, Hydrogen
 from ..physics import calc_isothermal_compression_energy
 from ._abstract_technology import AbstractTechnology
 
 
-class H2Compressor(AbstractTechnology):
+class H2Compressor(AbstractTechnology, AbstractSolphComponent):
     """Ideal gas compressor."""
 
     def __init__(
         self,
+        name: str,
         nominal_power: float,
         isothermal_efficiency: float = 0.85,
-        **kwargs,
     ):
         """
         Initialize H2 compressor.
@@ -22,31 +23,34 @@ class H2Compressor(AbstractTechnology):
         :param nominal_power: Nominal power
         :param isothermal_efficiency: Isothermal efficiency of the compressor, defaults to .85
         """
-        super().__init__(**kwargs)
+        super().__init__(name)
 
-        self._nominal_power = nominal_power
+        self.nominal_power = nominal_power
+        self.isothermal_efficiency = isothermal_efficiency
 
+    def build_core(self):
+        """Build core structure of oemof.solph representation."""
         h2_carrier = self.location.get_carrier(Hydrogen)
         electricity_carrier = self.location.get_carrier(Electricity)
 
-        electrical_bus = solph.Bus(
-            label=self._generate_label("electrical_bus"),
+        electrical_bus = self._solph_model.add_solph_component(
+            mtress_component=self,
+            label="electrical_bus",
+            solph_component=solph.Bus,
             inputs={
                 electricity_carrier.distribution: solph.Flow(
-                    nominal_value=self._nominal_power
+                    nominal_value=self.nominal_power
                 )
             },
         )
 
-        self.location.energy_system.add(electrical_bus)
-
         pressure_low = None
         for pressure in h2_carrier.pressure_levels:
             if pressure_low is not None:
-                compressor = solph.Transformer(
-                    label=self._generate_label(
-                        f"compress_{pressure_low:.0f}_{pressure:.0f}"
-                    ),
+                self._solph_model.add_solph_component(
+                    mtress_component=self,
+                    label=f"compress_{pressure_low:.0f}_{pressure:.0f}",
+                    solph_component=solph.Transformer,
                     inputs={
                         electrical_bus: solph.Flow(),
                         h2_carrier.outputs[pressure_low]: solph.Flow(),
@@ -56,14 +60,10 @@ class H2Compressor(AbstractTechnology):
                         h2_carrier.outputs[pressure_low]: 1,
                         h2_carrier.outputs[pressure]: 1,
                         electrical_bus: (
-                            calc_isothermal_compression_energy(
-                                pressure_low, pressure
-                            )
-                            / isothermal_efficiency
+                            calc_isothermal_compression_energy(pressure_low, pressure)
+                            / self.isothermal_efficiency
                         ),
                     },
                 )
-
-                self.location.energy_system.add(compressor)
 
             pressure_low = pressure
