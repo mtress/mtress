@@ -1,8 +1,14 @@
 """Abstract MTRESS components."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 from ._meta_model import SolphModel
+
+if TYPE_CHECKING:
+    from ._location import Location
 
 
 class AbstractComponent(ABC):
@@ -31,6 +37,13 @@ class AbstractComponent(ABC):
     def location(self):
         """Return location this component belongs to."""
         return self._location
+
+    def register_location(self, location: Location):
+        """Register this component to a location."""
+        if self._location is not None:
+            raise Exception("Location already registered")
+
+        self._location = location
 
     @property
     def meta_model(self):

@@ -11,7 +11,7 @@ class DataHandler:
         self.timeindex = timeindex
         self._cache: dict[pd.DataFrame] = {}
 
-    def get_timeseries(self, specifier: str | pd.Series | list):
+    def get_timeseries(self, specifier: str | pd.Series | list | float):
         """
         Prepare a time series for the usage in MTRESS.
 
@@ -37,6 +37,9 @@ class DataHandler:
                     raise ValueError("Length of list differs from time index length")
 
                 return pd.Series(data=values, index=self.timeindex)
+            
+            case float() as value:
+                return pd.Series(data=value, index=self.timeindex)
 
             case _:
                 raise ValueError(f"Time series specifier {specifier} not supported")

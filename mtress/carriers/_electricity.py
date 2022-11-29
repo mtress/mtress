@@ -78,7 +78,8 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
 
         self._solph_model.add_solph_component(
             mtress_component=self,
-            label="grid_export",
+            label="sink_export",
+            solph_component=solph.Sink,
             inputs={b_grid_export: solph.Flow()},
         )
 

@@ -88,26 +88,26 @@ class HeatPump(AbstractTechnology, AbstractSolphComponent):
 
         # Create bus and source for a combined thermal power limit on all temperature
         # levels
-        heat_budget_source = self._solph_model.add_solph_component(
-            mtress_component=self,
-            label="heat_budget_source",
-            solph_component=solph.Source,
-        )
-
-        self.heat_budget_bus = self._solph_model.add_solph_component(
+        self.heat_budget_bus = heat_budget_bus = self._solph_model.add_solph_component(
             mtress_component=self,
             label="heat_budget_bus",
             solph_component=solph.Bus,
-            inputs={
-                heat_budget_source: solph.Flow(nominal_value=self.thermal_power_limit)
+        )
+
+        self._solph_model.add_solph_component(
+            mtress_component=self,
+            label="heat_budget_source",
+            solph_component=solph.Source,
+            outputs={
+                heat_budget_bus: solph.Flow(nominal_value=self.thermal_power_limit)
             },
         )
 
-    def add_interconnections(self):
+    def establish_interconnections(self):
         """Add connections to anergy sources."""
         heat_carrier = self.location.get_carrier(Heat)
 
-        for anergy_source in self.location.get_components(AbstractAnergySource):
+        for anergy_source in self.location.get_technology(AbstractAnergySource):
             if self.anergy_sources is None or anergy_source.name in self.anergy_sources:
                 # Add tranformers for each heat source.
                 for target_temperature in heat_carrier.temperature_levels:

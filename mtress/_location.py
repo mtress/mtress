@@ -1,13 +1,6 @@
 """Locations in a meta model."""
 
-from curses import meta
-from typing import Optional
 
-from oemof import solph
-
-from . import carriers as mt_carriers
-from . import demands as mt_demands
-from . import technologies as mt_technologies
 from ._abstract_component import AbstractComponent
 from .carriers._abstract_carrier import AbstractCarrier
 from .demands._abstract_demand import AbstractDemand
@@ -37,15 +30,18 @@ class Location:
 
     def add_carrier(self, carrier: AbstractCarrier):
         """Add a carrier to the location."""
+        carrier.register_location(self)
         self._carriers[type(carrier)] = carrier
 
     def add_demand(self, demand: AbstractDemand):
         """Add a demand to the location."""
+        demand.register_location(self)
         self._demands[type(demand)] = demand
 
     def add_technology(self, technology: AbstractComponent):
         """Add a demand to the location."""
-        self._technologies[type(technology)] = technology
+        technology.register_location(self)
+        self._technologies[technology.name] = technology
 
     @property
     def name(self):
@@ -73,12 +69,24 @@ class Location:
         """
         return self._demands[demand]
 
-    def get_components(self, technology: type):
+    def get_technology(self, technology: type):
         """
         Get components by technology.
 
         :param technology: Technology type
         """
         return [
-            obj for _, obj in self._components.items() if isinstance(obj, technology)
+            obj for _, obj in self._technologies.items() if isinstance(obj, technology)
         ]
+
+    @property
+    def carriers(self):
+        return self._carriers.values()
+
+    @property
+    def demands(self):
+        return self._demands.values()
+
+    @property
+    def technologies(self):
+        return self._technologies.values()

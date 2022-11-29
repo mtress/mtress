@@ -53,6 +53,6 @@ class AirHeatExchanger(
         return self.air_temperatures
 
     @property
-    def _bus(self):
+    def bus(self):
         """Return _bus to connect to."""
         return self._bus

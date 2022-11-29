@@ -1,13 +1,17 @@
 """The MTRESS meta model itself."""
 
 
-from typing import Callable, Iterable
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Callable, Iterable
 
 import pandas as pd
 from oemof import solph
 
-from . import Location
-from ._abstract_component import AbstractSolphComponent
+if TYPE_CHECKING:
+    from ._location import Location
+    from ._abstract_component import AbstractSolphComponent, AbstractComponent
+
 from ._data_handler import DataHandler
 
 
@@ -51,15 +55,16 @@ class MetaModel:
         #     cls = getattr(mt_demands, demand_type)
         #     self._demands[cls] = cls(location=self, **demand_config)
 
-    def add_location(self, location):
+    def add_location(self, location: Location):
         """Add a new location to the meta model."""
+        location.assign_meta_model(self)
         self.locations[location.name] = location
 
     @property
-    def components(self) -> Iterable[AbstractSolphComponent]:
+    def components(self) -> Iterable[AbstractComponent]:
         """Return an iterator over all components of all locations."""
         for _, location in self.locations.items():
-            component: AbstractSolphComponent
+            component: AbstractComponent
 
             # Iterate over carriers, demands and all technologies
             for component in [

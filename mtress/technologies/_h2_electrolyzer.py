@@ -85,7 +85,7 @@ class PEMElectrolyzer(AbstractTechnology, AbstractSolphComponent):
                 "higher than suitable temperature level"
             )
 
-        heat_bus = 
+        heat_bus = heat_carrier.inputs[temp_level]
 
         # TODO: Minimal power implementieren
         self._solph_model.add_solph_component(
