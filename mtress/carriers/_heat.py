@@ -13,10 +13,11 @@ SPDX-License-Identifier: MIT
 
 from oemof import solph
 
+from .._abstract_component import AbstractSolphComponent
 from ._abstract_carrier import AbstractLayeredCarrier
 
 
-class Heat(AbstractLayeredCarrier):
+class Heat(AbstractLayeredCarrier, AbstractSolphComponent):
     """
     Connector class for modelling power flows with variable temperature levels.
 
@@ -44,9 +45,7 @@ class Heat(AbstractLayeredCarrier):
     Those only need to connect to the hottest layer.
     """
 
-    def __init__(
-        self, temperature_levels: list, reference_temperature=0, **kwargs
-    ):
+    def __init__(self, temperature_levels: list, reference_temperature=0, **kwargs):
         """
         Initialize heat energy carrier and add components.
 
@@ -60,32 +59,36 @@ class Heat(AbstractLayeredCarrier):
         self._reference = reference_temperature
 
         assert self._reference < self._levels[0], (
-            "Reference temperature should be lower than the lowest temperature"
-            " level"
+            "Reference temperature should be lower than the lowest temperature" " level"
         )
 
+        # Properties for solph interfaces
         self.outputs = {}
         self.inputs = {}
 
-        self.location.add_carrier(self)
-
+    def build_core(self):
+        """Build core structure of oemof.solph representation."""
         temp_low = None
         for temperature in self._levels:
-            # Naming of new temperature bus
-            b_out_label = self._generate_label(f"out_{temperature:.0f}")
-            b_in_label = self._generate_label(f"in_{temperature:.0f}")
-
-            ################################################################
             # Thermal buses
-            b_out = solph.Bus(label=b_out_label)
+            b_out = self._solph_model.add_solph_component(
+                mtress_component=self,
+                label=f"out_{temperature:.0f}",
+                solph_component=solph.Bus,
+            )
 
             if temp_low is None:
-                bus_in = solph.Bus(
-                    label=b_in_label, outputs={b_out: solph.Flow()}
+                bus_in = self._solph_model.add_solph_component(
+                    mtress_component=self,
+                    label=f"in_{temperature:.0f}",
+                    solph_component=solph.Bus,
+                    outputs={b_out: solph.Flow()},
                 )
             else:
-                bus_in = solph.Bus(
-                    label=b_in_label,
+                bus_in = self._solph_model.add_solph_component(
+                    mtress_component=self,
+                    label=f"in_{temperature:.0f}",
+                    solph_component=solph.Bus,
                     outputs={
                         self.inputs[temp_low]: solph.Flow(),
                         b_out: solph.Flow(),
@@ -95,33 +98,25 @@ class Heat(AbstractLayeredCarrier):
             self.outputs[temperature] = b_out
             self.inputs[temperature] = bus_in
 
-            self.location.energy_system.add(b_out, bus_in)
-
-            ################################################################
             # Temperature risers
             if temp_low is not None:
-                heater_label = self._generate_label(
-                    f"rise_{temp_low:.0f}_{temperature:.0f}"
-                )
+                ratio = (temp_low - self._reference) / (temperature - self._reference)
 
-                heater_ratio = (temp_low - self._reference) / (
-                    temperature - self._reference
-                )
-                heater = solph.Transformer(
-                    label=heater_label,
+                self._solph_model.add_solph_component(
+                    mtress_component=self,
+                    label=f"rise_{temp_low:.0f}_{temperature:.0f}",
+                    solph_component=solph.Transformer,
                     inputs={
                         bus_in: solph.Flow(),
                         self.outputs[temp_low]: solph.Flow(),
                     },
                     outputs={b_out: solph.Flow()},
                     conversion_factors={
-                        bus_in: 1 - heater_ratio,
-                        self.outputs[temp_low]: heater_ratio,
+                        bus_in: 1 - ratio,
+                        self.outputs[temp_low]: ratio,
                         b_out: 1,
                     },
                 )
-
-                self.location.energy_system.add(heater)
 
             # prepare for next iteration of the loop
             temp_low = temperature

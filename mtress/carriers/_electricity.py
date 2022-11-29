@@ -31,15 +31,19 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
         self.working_rate = working_rate
         self.demand_rate = demand_rate
 
+        # Properties for connection oemof.solph busses
+        self.distribution = None
+        self.production = None
+
     def build_core(self):
         """Build solph components."""
-        b_dist = self._solph_model.add_solph_component(
+        self.distribution = b_dist = self._solph_model.add_solph_component(
             mtress_component=self,
             label="distribution",
             solph_component=solph.Bus,
         )
 
-        self._solph_model.add_solph_component(
+        self.production = self._solph_model.add_solph_component(
             mtress_component=self,
             label="production",
             solph_component=solph.Bus,
@@ -51,7 +55,7 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
             label="grid_export",
             solph_component=solph.Bus,
         )
-        
+
         b_grid_import = self._solph_model.add_solph_component(
             mtress_component=self,
             label="grid_import",
