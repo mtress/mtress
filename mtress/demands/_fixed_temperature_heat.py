@@ -1,7 +1,6 @@
 """Room heating technologies."""
 
 
-from mtress import carriers
 from oemof import solph
 
 from .._abstract_component import AbstractSolphComponent

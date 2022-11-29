@@ -1,7 +1,5 @@
 """Electricity energy carrier."""
 
-from collections.abc import Sequence
-from numbers import Number
 
 from oemof import solph
 
