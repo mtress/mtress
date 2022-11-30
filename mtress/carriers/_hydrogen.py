@@ -4,10 +4,11 @@
 
 from oemof import solph
 
+from .._abstract_component import AbstractSolphComponent
 from ._abstract_carrier import AbstractLayeredCarrier
 
 
-class Hydrogen(AbstractLayeredCarrier):
+class Hydrogen(AbstractLayeredCarrier, AbstractSolphComponent):
     """
     Connector class for modelling hydrogen flows with variable pressure levels.
 
@@ -43,22 +44,28 @@ class Hydrogen(AbstractLayeredCarrier):
         """
         super().__init__(levels=pressure_levels, **kwargs)
 
-        self.outputs = {}
+        # Init solph interfaces
+        self.busses = {}
 
+    def build_core(self):
+        """Build core structure of oemof.solph representation."""
         pressure_low = None
         for pressure in self._levels:
-            bus_label = self._generate_label(f"out_{pressure:.0f}")
-
             if pressure_low is None:
-                bus = solph.Bus(label=bus_label)
+                bus = self._solph_model.add_solph_component(
+                    mtress_component=self,
+                    label=f"out_{pressure:.0f}",
+                    solph_component=solph.Bus,
+                )
             else:
-                bus = solph.Bus(
-                    label=bus_label,
-                    outputs={self.outputs[pressure_low]: solph.Flow()},
+                bus = self._solph_model.add_solph_component(
+                    mtress_component=self,
+                    label=f"out_{pressure:.0f}",
+                    solph_component=solph.Bus,
+                    outputs={self.busses[pressure_low]: solph.Flow()},
                 )
 
-            self.outputs[pressure] = bus
-            self.location.energy_system.add(bus)
+            self.busses[pressure] = bus
 
             # prepare for next iteration of the loop
             pressure_low = pressure
@@ -66,7 +73,7 @@ class Hydrogen(AbstractLayeredCarrier):
     @property
     def inputs(self):
         """Alias for outputs."""
-        return self.outputs
+        return self.busses
 
     @property
     def pressure_levels(self):

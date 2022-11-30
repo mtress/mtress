@@ -1,11 +1,15 @@
 """Electricity energy carrier."""
 
+
+from typing import Optional
+
 from oemof import solph
 
+from .._abstract_component import AbstractSolphComponent
 from ._abstract_carrier import AbstractCarrier
 
 
-class Electricity(AbstractCarrier):
+class Electricity(AbstractCarrier, AbstractSolphComponent):
     """
     Functionality: Electricity connections at a location. This class
         represents a local electricity grid with or without connection
@@ -34,68 +38,76 @@ class Electricity(AbstractCarrier):
 
     """
 
-    def __init__(self, grid_connection=True, **kwargs):
+    def __init__(
+        self,
+        grid_connection: bool = True,
+        working_rate: Optional[float] = None,
+        demand_rate: Optional[float] = None,
+    ):
         """Initialize electricity carrier."""
-        super().__init__(**kwargs)
-        self._grid_connection = grid_connection
+        super().__init__()
 
-    def build(self):
-        self.production = None
+        self.grid_connection = grid_connection
+
+        self.working_rate = working_rate
+        self.demand_rate = demand_rate
+
+        # Properties for connection oemof.solph busses
         self.distribution = None
-        self.grid_connection = self._grid_connection
+        self.production = None
 
-        self.distribution = b_dist = solph.Bus(
-            label=self._generate_label("dist")
+    def build_core(self):
+        """Build solph components."""
+        self.distribution = b_dist = self._solph_model.add_solph_component(
+            mtress_component=self,
+            label="distribution",
+            solph_component=solph.Bus,
         )
-        self.production = b_prod = solph.Bus(
-            label=self._generate_label("prod"),
+
+        self.production = b_prod = self._solph_model.add_solph_component(
+            mtress_component=self,
+            label="production",
+            solph_component=solph.Bus,
             outputs={b_dist: solph.Flow()},
         )
-        self.location.add_carrier(self)
 
-        b_export = solph.Bus(label=self._generate_label("b_export"))
-        b_grid = solph.Bus(label=self._generate_label("b_grid"))
+        if self.grid_connection:
+            b_grid_export = self._solph_model.add_solph_component(
+                mtress_component=self,
+                label="grid_export",
+                solph_component=solph.Bus,
+                inputs={b_prod: solph.Flow()},
+            )
 
-        self.location.energy_system.add(b_dist, b_prod, b_export, b_grid)
+            self._solph_model.add_solph_component(
+                mtress_component=self,
+                label="sink_export",
+                solph_component=solph.Sink,
+                inputs={b_grid_export: solph.Flow()},
+                # TODO: Add revenues
+                # Is this the correct place for revenues? Or should they be an option
+                # for the generating technologies?
+            )
 
-        # (unidirectional) grid connection
-        # RLM customer for district and larger buildings
-        s_import = solph.Source(
-            label=self._generate_label("s_import"),
-            outputs={b_grid: solph.Flow()},
-        )
-        self.location.energy_system.add(s_import)
-        # TODO: Categorize import flow
+            b_grid_import = self._solph_model.add_solph_component(
+                mtress_component=self,
+                label="grid_import",
+                solph_component=solph.Bus,
+                outputs={b_dist: solph.Flow()},
+            )
 
-        b_grid_in = solph.Bus(
-            label=self._generate_label("grid_in"),
-            inputs={
-                b_grid: solph.Flow(
-                    variable_costs=self.costs["working_price"],
-                    investment=solph.Investment(
-                        ep_costs=self.costs["demand_rate"]
-                    ),
-                )
-            },
-            outputs={
-                b_dist: solph.Flow()
-            },
-        )
+            # (unidirectional) grid connection
+            # RLM customer for district and larger buildings
+            self._solph_model.add_solph_component(
+                mtress_component=self,
+                label="source_import",
+                solph_component=solph.Source,
+                outputs={
+                    b_grid_import: solph.Flow(
+                        variable_costs=self.working_rate,
+                        investment=solph.Investment(ep_costs=self.demand_rate),
+                    )
+                },
+            )
 
-        # create external market to sell electricity to
-        b_grid_out = solph.Bus(
-            label=self._generate_label("grid_out"),
-            inputs={
-                b_export: solph.Flow()
-            },
-        )
-
-        self.location.energy_system.add(b_grid_in, b_grid_out)
-
-        d_out = solph.Sink(
-            self._generate_label("export"),
-            inputs={b_grid_out: solph.Flow()},
-        )
-        self.location.energy_system.add(d_out)
-
-        # TODO: categorize out flow
+        # TODO: Categorize flows

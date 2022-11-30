@@ -13,10 +13,11 @@ SPDX-License-Identifier: MIT
 
 from oemof import solph
 
+from .._abstract_component import AbstractSolphComponent
 from ._abstract_carrier import AbstractLayeredCarrier
 
 
-class Heat(AbstractLayeredCarrier):
+class Heat(AbstractLayeredCarrier, AbstractSolphComponent):
     """
     Connector class for modelling power flows with variable temperature levels.
 
@@ -42,37 +43,35 @@ class Heat(AbstractLayeredCarrier):
     techs should connect to all input nodes (see e.g. HeatPump).
     Note that there are also heat supply techs with constant efficiency.
     Those only need to connect to the hottest layer.
-    """
 
-    """
-    Functionality: Heat connections at a location. This class represents a local heat 
-       grid. The energy carrier heat allows to optimise both, temperature and heat, 
-       as the temperature has a significant impact on the performance of renewable 
+    Functionality: Heat connections at a location. This class represents a local heat
+       grid. The energy carrier heat allows to optimise both, temperature and heat,
+       as the temperature has a significant impact on the performance of renewable
        energy supply systems. This is done by defining several discrete temperature
-       levels. 
-       Besides the temperature levels, a reference temperature can be defined. 
-       This can be useful to simplify the model by setting the reference 
+       levels.
+       Besides the temperature levels, a reference temperature can be defined.
+       This can be useful to simplify the model by setting the reference
        to a return temperature, resulting in the corresponding return flow to be
-       considered at zero energy. 
-       
+       considered at zero energy.
+
        Other components and demands might be added to the energy_system by
        their respective classes / functions and are automatically connected
        to their fitting busses by the carrier.
-              
+
     Procedure: Create a simple heat carrier by doing the following
-          
+
            house_1.add_carrier(carriers.Heat(temperature_levels=[30],
                                              reference_temperature=20))
 
-    Notice: Some temperatures, i.e. the ones of sources for heat pump, are not 
+    Notice: Some temperatures, i.e. the ones of sources for heat pump, are not
         considered by the energy carrier. To emphasise that fact, these
-        sources are defined as anergy sources, which are not connected to the 
+        sources are defined as anergy sources, which are not connected to the
         energy carrier but only to the heat pump.
 
     """
 
     def __init__(
-        self, temperature_levels: list, reference_temperature=0
+        self, temperature_levels: list[float], reference_temperature: float = 0
     ):
         """
         Initialize heat energy carrier and add components.
@@ -87,31 +86,36 @@ class Heat(AbstractLayeredCarrier):
         self._reference = reference_temperature
 
         assert self._reference < self._levels[0], (
-            "Reference temperature should be lower than the lowest temperature"
-            " level"
+            "Reference temperature should be lower than the lowest temperature" " level"
         )
 
+        # Properties for solph interfaces
         self.outputs = {}
         self.inputs = {}
 
-    def build(self):
+    def build_core(self):
+        """Build core structure of oemof.solph representation."""
         temp_low = None
         for temperature in self._levels:
-            # Naming of new temperature bus
-            b_out_label = self._generate_label(f"out_{temperature:.0f}")
-            b_in_label = self._generate_label(f"in_{temperature:.0f}")
-
-            ################################################################
             # Thermal buses
-            b_out = solph.Bus(label=b_out_label)
+            b_out = self._solph_model.add_solph_component(
+                mtress_component=self,
+                label=f"out_{temperature:.0f}",
+                solph_component=solph.Bus,
+            )
 
             if temp_low is None:
-                bus_in = solph.Bus(
-                    label=b_in_label, outputs={b_out: solph.Flow()}
+                bus_in = self._solph_model.add_solph_component(
+                    mtress_component=self,
+                    label=f"in_{temperature:.0f}",
+                    solph_component=solph.Bus,
+                    outputs={b_out: solph.Flow()},
                 )
             else:
-                bus_in = solph.Bus(
-                    label=b_in_label,
+                bus_in = self._solph_model.add_solph_component(
+                    mtress_component=self,
+                    label=f"in_{temperature:.0f}",
+                    solph_component=solph.Bus,
                     outputs={
                         self.inputs[temp_low]: solph.Flow(),
                         b_out: solph.Flow(),
@@ -121,33 +125,25 @@ class Heat(AbstractLayeredCarrier):
             self.outputs[temperature] = b_out
             self.inputs[temperature] = bus_in
 
-            self.location.energy_system.add(b_out, bus_in)
-
-            ################################################################
             # Temperature risers
             if temp_low is not None:
-                heater_label = self._generate_label(
-                    f"rise_{temp_low:.0f}_{temperature:.0f}"
-                )
+                ratio = (temp_low - self._reference) / (temperature - self._reference)
 
-                heater_ratio = (temp_low - self._reference) / (
-                    temperature - self._reference
-                )
-                heater = solph.Transformer(
-                    label=heater_label,
+                self._solph_model.add_solph_component(
+                    mtress_component=self,
+                    label=f"rise_{temp_low:.0f}_{temperature:.0f}",
+                    solph_component=solph.Transformer,
                     inputs={
                         bus_in: solph.Flow(),
                         self.outputs[temp_low]: solph.Flow(),
                     },
                     outputs={b_out: solph.Flow()},
                     conversion_factors={
-                        bus_in: 1 - heater_ratio,
-                        self.outputs[temp_low]: heater_ratio,
+                        bus_in: 1 - ratio,
+                        self.outputs[temp_low]: ratio,
                         b_out: 1,
                     },
                 )
-
-                self.location.energy_system.add(heater)
 
             # prepare for next iteration of the loop
             temp_low = temperature

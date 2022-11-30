@@ -1,44 +1,118 @@
 """The MTRESS meta model itself."""
 
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Callable, Iterable
+
 import pandas as pd
 from oemof import solph
 
-from . import Location
+if TYPE_CHECKING:
+    from ._location import Location
+    from ._abstract_component import AbstractSolphComponent, AbstractComponent
+
+from ._data_handler import DataHandler
 
 
 class MetaModel:
-    """Meta model of the energy system."""
-
     """
-      Functionality: A meta model acts as a container for the model. 
-        It contains global information, such as the time / a timeseries,
-        as well as defaults which can be overwritten for specific 
-        locations (e.g. weather data). Once the energy system is about 
-        to be solved, it makes sureevery location has all the needed 
-        connections and constraints set.   
-           
-      Procedure: Create a (basic) meta model by doing the following:
-          meta_model = MetaModel(time_index={
-                "start": "2021-07-10 00:00:00",
-                "end": "2021-07-10 02:00:00",
-                "freq": "60T"}
+    Meta model of the energy system.
 
-      Further procedure is described in the location class.   
-      """
+    Functionality: A meta model acts as a container for the model.
+    It contains global information, such as the time / a timeseries,
+    as well as defaults which can be overwritten for specific
+    locations (e.g. weather data). Once the energy system is about
+    to be solved, it makes sureevery location has all the needed
+    connections and constraints set.
 
+    Procedure: Create a (basic) meta model by doing the following:
+        meta_model = MetaModel()
+
+    Further procedure is described in the location class.
+    """
+
+    def __init__(self):
+        """Initialize the meta model."""
+        self.locations: dict[Location] = {}
+
+    @classmethod
+    def from_config(cls, config: dict):
+        """Generate the meta model from a configuration dict."""
+        # TODO: Implement me!
+        raise NotImplementedError("Not implemented yet")
+
+        # def _create_carrier(self, carrier_type: str, carrier_config: dict):
+        #     assert hasattr(
+        #         mt_carriers, carrier_type
+        #     ), f"Energy carrier {carrier_type} not implemented"
+
+        #     cls = getattr(mt_carriers, carrier_type)
+        #     self._carriers[cls] = cls(location=self, **carrier_config)
+
+        # def _create_component(self, component_type: str, component_config: dict):
+        #     technology_name = component_config["technology"]
+        #     assert hasattr(
+        #         mt_technologies, technology_name
+        #     ), f"Technology {technology_name} not implemented"
+
+        #     cls = getattr(mt_technologies, technology_name)
+        #     self._components[component_type] = cls(
+        #         name=component_type,
+        #         location=self,
+        #         **component_config["parameters"],
+        #     )
+
+        # def _create_demand(self, demand_type: str, demand_config: dict):
+        #     assert hasattr(mt_demands, demand_type), f"Demand {demand_type} not implemented"
+
+        #     cls = getattr(mt_demands, demand_type)
+        #     self._demands[cls] = cls(location=self, **demand_config)
+
+    def add_location(self, location: Location):
+        """Add a new location to the meta model."""
+        location.assign_meta_model(self)
+        self.locations[location.name] = location
+
+    @property
+    def components(self) -> Iterable[AbstractComponent]:
+        """Return an iterator over all components of all locations."""
+        for _, location in self.locations.items():
+            component: AbstractComponent
+
+            # Iterate over carriers, demands and all technologies
+            for component in [
+                *location.carriers,
+                *location.demands,
+                *location.technologies,
+            ]:
+                yield component
+
+
+class SolphModel:
+    """Model adapter for MTRESS meta model."""
+
+    data: DataHandler
+
+    energy_system: solph.EnergySystem
+    model: solph.Model
+
+    components: dict = {}
 
     def __init__(
         self,
-        time_index: dict | list | pd.DatetimeIndex,
-        locations=None,
+        meta_model: MetaModel,
+        timeindex: dict | list | pd.DatetimeIndex,
     ):
         """
-        Initialize the meta model.
+        Initialize model.
 
         :param time_index:  time index definition for the soph model
         :param locations: configuration dictionary for locations
         """
-        match time_index:
+        self._meta_model = meta_model
+
+        match timeindex:
             case list() as values:
                 self.time_index = pd.DatetimeIndex(values)
             case pd.DatetimeIndex as idx:
@@ -48,84 +122,69 @@ class MetaModel:
             case _:
                 raise ValueError("Don't know how to process time_index specification")
 
-        self._cache: dict[pd.DataFrame] = {}
+        self.data = DataHandler(self.timeindex)
 
-        self._energy_system = solph.EnergySystem(timeindex=self.time_index)
+        # Registry of solph components
+        self._solph_components = {}
+        self.energy_system = solph.EnergySystem(timeindex=self.timeindex)
 
-        # Initialize locations
-        self._locations = {}
-        if locations is not None:
-            for location_name, location_config in locations.items():
-                self._locations[location_name] = Location(
-                    name=location_name, meta_model=self, **location_config
-                )
+        # Store a reference to the solph model
+        for component in self._meta_model.components:
+            component.register_solph_model(self)
 
-    def get_timeseries(self, specifier: str | pd.Series | list):
-        """
-        Prepare a time series for the usage in MTRESS.
+    def add_solph_component(
+        self,
+        mtress_component: AbstractSolphComponent,
+        label: str,
+        solph_component: Callable,
+        **kwargs,
+    ):
+        """Add a solph component, e.g. a Bus, to the solph energy system."""
+        # Generate a unique label
+        _full_label = self.get_label(mtress_component, label)
 
-        This method takes a time series specifier and reads a
-        time series from a file or checks a provided series for completeness.
-        """
-        match specifier:
-            case str() if specifier.startswith("FILE:"):
-                _, file, column = specifier.split(":", maxsplit=2)
-                series = self._read_from_file(file, column)
+        if (mtress_component, label) in self._solph_components:
+            raise KeyError(f"Solph component named {_full_label} already exists")
 
-                # Call function again to check series for consistency
-                return self.get_timeseries(series)
+        _component = solph_component(label=_full_label, **kwargs)
+        self._solph_components[(mtress_component, label)] = _component
+        self.energy_system.add(_component)
 
-            case pd.Series() as series:
-                if not self.time_index.isin(series.index).all():
-                    raise KeyError("Provided series doesn't cover time index")
+        return _component
 
-                return series.reindex(self.time_index)
+    def get_label(self, mtress_component, label):
+        """Generate a unique label for a component."""
+        return ":".join([*mtress_component.identifier, label])
 
-            case list() as values:
-                if not len(values) == len(self.time_index):
-                    raise ValueError("Length of list differs from time index length")
+    def get_solph_component(self, mtress_component: AbstractSolphComponent, label: str):
+        """Get a solph component by component and label."""
+        return self._solph_components[(mtress_component, label)]
 
-                return pd.Series(data=values, index=self.time_index)
+    def build_solph_energy_system(self):
+        """Build the `oemof.solph` representation of the energy system."""
+        for component in self._meta_model.components:
+            component.build_core()
 
-            case _:
-                raise ValueError(f"Time series specifier {specifier} not supported")
+        for component in self._meta_model.components:
+            component.establish_interconnections()
 
-    def _read_from_file(self, file: str, column: str):
-        """Read a column from a file."""
-        if file in self._cache and column in self._cache[file]:
-            # This column was already read from the file
-            return self._cache[file][column]
+        # TODO: Add inter-location connections
 
-        if file.lower().endswith(".csv"):
-            self._cache[file] = data = pd.read_csv(file, index_col=0, parse_dates=True)
-            return data[column]
+    def build_solph_model(self):
+        """Build the `oemof.solph` representation of the model."""
+        self.model = solph.Model(self.energy_system)
 
-        if file.lower().endswith(".h5"):
-            raise NotImplementedError("HDF5 file support not implemented yet")
-
-        raise NotImplementedError(f"Unsupported file format for file {file}")
-
-    def _add_constraints(self, model):
-        """Add constraints to the model."""
-
-    def add_location(self, location):
-        self._locations[location.name] = location
-        location.register(self)
+        for component in self._meta_model.components:
+            component.add_constraints()
 
     def solve(
         self,
+        model: solph.Model,
         solver: str = "cbc",
         solve_kwargs: dict = None,
         cmdline_options: dict = None,
     ):
-        for location in self._locations.values():
-            location.build()
-            location.add_interconnections()
-
         """Solve generated energy system model."""
-        model = solph.Model(self.energy_system)
-        self._add_constraints(model)
-
         kwargs = {"solver": solver}
         if solve_kwargs is not None:
             kwargs["solve_kwargs"] = solve_kwargs
@@ -136,8 +195,3 @@ class MetaModel:
         model.solve(**kwargs)
 
         return model
-
-    @property
-    def energy_system(self):
-        """Return reference to generated EnergySystem object."""
-        return self._energy_system
