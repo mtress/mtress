@@ -52,19 +52,6 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
         if not flow_temperature > return_temperature:
             raise ValueError("Flow must be higher than return temperature")
 
-        carrier = self.location.get_carrier(Heat)
-
-        if flow_temperature not in carrier.temperature_levels:
-            raise ValueError("Flow temperature must be a temperature level")
-
-        if (
-            return_temperature not in carrier.temperature_levels
-            and return_temperature != carrier.reference_temperature
-        ):
-            raise ValueError(
-                "Return must be a temperature level or the reference temperature"
-            )
-
         self.flow_temperature = flow_temperature
         self.return_temperature = return_temperature
 
@@ -73,6 +60,17 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         carrier = self.location.get_carrier(Heat)
+
+        if self.flow_temperature not in carrier.temperature_levels:
+            raise ValueError("Flow temperature must be a temperature level")
+
+        if (
+            self.return_temperature not in carrier.temperature_levels
+            and self.return_temperature != carrier.reference_temperature
+        ):
+            raise ValueError(
+                "Return must be a temperature level or the reference temperature"
+            )
 
         if self.return_temperature == carrier.reference_temperature:
             # If the return temperature is the reference temperature we just take the
@@ -114,6 +112,7 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
         self._solph_model.add_solph_component(
             mtress_component=self,
             label="sink",
+            solph_component=solph.Sink,
             inputs={
                 output: solph.Flow(
                     nominal_value=1,

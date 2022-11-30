@@ -107,20 +107,20 @@ class SolphModel:
         """
         Initialize model.
 
-        :param time_index:  time index definition for the soph model
+        :param timeindex:  time index definition for the soph model
         :param locations: configuration dictionary for locations
         """
         self._meta_model = meta_model
 
         match timeindex:
             case list() as values:
-                self.time_index = pd.DatetimeIndex(values)
+                self.timeindex = pd.DatetimeIndex(values)
             case pd.DatetimeIndex as idx:
-                self.time_index = idx
+                self.timeindex = idx
             case dict() as params:
-                self.time_index = pd.date_range(**params)
+                self.timeindex = pd.date_range(**params)
             case _:
-                raise ValueError("Don't know how to process time_index specification")
+                raise ValueError("Don't know how to process timeindex specification")
 
         self.data = DataHandler(self.timeindex)
 
@@ -179,7 +179,6 @@ class SolphModel:
 
     def solve(
         self,
-        model: solph.Model,
         solver: str = "cbc",
         solve_kwargs: dict = None,
         cmdline_options: dict = None,
@@ -192,6 +191,6 @@ class SolphModel:
         if cmdline_options is not None:
             kwargs["cmdline_options"] = cmdline_options
 
-        model.solve(**kwargs)
+        self.model.solve(**kwargs)
 
-        return model
+        return self.model

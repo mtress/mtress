@@ -10,6 +10,6 @@ SPDX-License-Identifier: MIT
 __version__ = "3.0.0dev0"
 
 from ._location import Location
-from ._meta_model import MetaModel
+from ._meta_model import MetaModel, SolphModel
 
-__all__ = ["Location", "MetaModel"]
+__all__ = ["Location", "MetaModel", "SolphModel"]
