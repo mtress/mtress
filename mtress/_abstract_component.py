@@ -28,9 +28,6 @@ class AbstractComponent(ABC):
         """Return identifier of this component."""
         return [self.location.name, self.name]
 
-    def register(self, location):
-        self._location = location
-
     @property
     def name(self):
         """Return name of MTRESS component."""

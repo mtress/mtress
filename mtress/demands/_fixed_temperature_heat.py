@@ -40,14 +40,16 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
      just consumed, heat demands have a returning energy flow.
     """
 
-    def __init__(self, flow_temperature: float, return_temperature: float, time_series):
+    def __init__(
+        self, name: str, flow_temperature: float, return_temperature: float, time_series
+    ):
         """
         Initialize space heater.
 
         :param flow_temperature: Flow temperature
         :param return_temperature: Return temperature
         """
-        super().__init__()
+        super().__init__(name)
 
         if not flow_temperature > return_temperature:
             raise ValueError("Flow must be higher than return temperature")

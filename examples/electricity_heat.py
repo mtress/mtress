@@ -3,22 +3,22 @@ Basic working 'electricity and heat' example.
 
 Basic working 'electricity and heat' example which includes a location (house),
 electricity wise: an electricity carrier which acts as a electricity
-source/supply from the official grid (working price of 35 ct/kWh) as well as 
+source/supply from the official grid (working price of 35 ct/kWh) as well as
 a demand (consumer) with a demand time series.
 And heat wise: a heat carrier, a heat pump, an air heat exchanger as well as
 a heat demand time series.
 
 At first an energy system (here meta_model) is defined with a time series (index).
-Afterwards a location is defined and added to the energysystem. Then the 
-electricity carrier and electricity demand (time series) are added to the 
+Afterwards a location is defined and added to the energysystem. Then the
+electricity carrier and electricity demand (time series) are added to the
 energysystem. Furthermore a heat carrier is defined with specific temp-
 erature level(s) and a reference temperature. Then  a heat demand (time series)
 is added with a certain flow and return temperature. Lastly, a heat pump with
-a possible thermal power limit and an air heat exchanger with a certain air 
-temperature are added to the energy system.  
+a possible thermal power limit and an air heat exchanger with a certain air
+temperature are added to the energy system.
 
 Finally, the energy system is optimised/solved via meta_model.solve, a plot is
-created and the solver output is written to an .lp file.   
+created and the solver output is written to an .lp file.
 """
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 from mtress._helpers._visualization import generate_graph
