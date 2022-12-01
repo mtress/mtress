@@ -1,7 +1,7 @@
 """Electricity energy carrier."""
 
 
-from oemof import solph
+from oemof.solph import Bus, Flow, Sink
 
 from .._abstract_component import AbstractSolphComponent
 from ..carriers import Electricity as ElectricityCarrier
@@ -32,7 +32,7 @@ class Electricity(AbstractDemand, AbstractSolphComponent):
 
     def __init__(self, time_series):
         """Initialize heat energy carrier and add components."""
-        super().__init__(name)
+        super().__init__()
         self._time_series = time_series
         self.input = None
 
@@ -43,16 +43,16 @@ class Electricity(AbstractDemand, AbstractSolphComponent):
         bus = self._solph_model.add_solph_component(
             mtress_component=self,
             label="input",
-            solph_component=solph.Bus,
-            inputs={electricity_carrier.distribution: solph.Flow()},
+            solph_component=Bus,
+            inputs={electricity_carrier.distribution: Flow()},
         )
 
         self._solph_model.add_solph_component(
             mtress_component=self,
             label="sink",
-            solph_component=solph.Sink,
+            solph_component=Sink,
             inputs={
-                bus: solph.Flow(
+                bus: Flow(
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(self._time_series),
                 )

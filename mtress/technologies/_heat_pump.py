@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 """
 from typing import Optional
 
-from oemof import solph
+from oemof.solph import Bus, Flow, Source, Transformer
 
 from .._abstract_component import AbstractSolphComponent
 from ..carriers import Electricity, Heat
@@ -22,7 +22,7 @@ class HeatPump(AbstractTechnology, AbstractSolphComponent):
     """
     Clustered heat pump for modeling power flows with variable temperature levels.
 
-    Connects any input to any output using solph.Transformer
+    Connects any input to any output using Transformer
     with shared resources, see https://arxiv.org/abs/2012.12664
 
     Flows:
@@ -86,8 +86,8 @@ class HeatPump(AbstractTechnology, AbstractSolphComponent):
         self.electricity_bus = self._solph_model.add_solph_component(
             mtress_component=self,
             label="electricity",
-            solph_component=solph.Bus,
-            inputs={electricity_carrier.distribution: solph.Flow()},
+            solph_component=Bus,
+            inputs={electricity_carrier.distribution: Flow()},
         )
 
         # Create bus and source for a combined thermal power limit on all temperature
@@ -95,16 +95,14 @@ class HeatPump(AbstractTechnology, AbstractSolphComponent):
         self.heat_budget_bus = heat_budget_bus = self._solph_model.add_solph_component(
             mtress_component=self,
             label="heat_budget_bus",
-            solph_component=solph.Bus,
+            solph_component=Bus,
         )
 
         self._solph_model.add_solph_component(
             mtress_component=self,
             label="heat_budget_source",
-            solph_component=solph.Source,
-            outputs={
-                heat_budget_bus: solph.Flow(nominal_value=self.thermal_power_limit)
-            },
+            solph_component=Source,
+            outputs={heat_budget_bus: Flow(nominal_value=self.thermal_power_limit)},
         )
 
     def establish_interconnections(self):
@@ -124,14 +122,14 @@ class HeatPump(AbstractTechnology, AbstractSolphComponent):
                     self._solph_model.add_solph_component(
                         mtress_component=self,
                         label=f"{anergy_source.name}_{target_temperature:.0f}",
-                        solph_component=solph.Transformer,
+                        solph_component=Transformer,
                         inputs={
-                            anergy_source.bus: solph.Flow(),
-                            self.electricity_bus: solph.Flow(),
-                            self.heat_budget_bus: solph.Flow(),
+                            anergy_source.bus: Flow(),
+                            self.electricity_bus: Flow(),
+                            self.heat_budget_bus: Flow(),
                         },
                         outputs={
-                            heat_carrier.inputs[target_temperature]: solph.Flow(),
+                            heat_carrier.inputs[target_temperature]: Flow(),
                         },
                         conversion_factors={
                             self.heat_budget_bus: 1,

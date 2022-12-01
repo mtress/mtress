@@ -11,7 +11,7 @@ SPDX-FileCopyrightText: Lucas Schmeling
 SPDX-License-Identifier: MIT
 """
 
-from oemof import solph
+from oemof.solph import Bus, Flow, Transformer
 
 from .._abstract_component import AbstractSolphComponent
 from ._abstract_carrier import AbstractLayeredCarrier
@@ -101,24 +101,24 @@ class Heat(AbstractLayeredCarrier, AbstractSolphComponent):
             b_out = self._solph_model.add_solph_component(
                 mtress_component=self,
                 label=f"out_{temperature:.0f}",
-                solph_component=solph.Bus,
+                solph_component=Bus,
             )
 
             if temp_low is None:
                 bus_in = self._solph_model.add_solph_component(
                     mtress_component=self,
                     label=f"in_{temperature:.0f}",
-                    solph_component=solph.Bus,
-                    outputs={b_out: solph.Flow()},
+                    solph_component=Bus,
+                    outputs={b_out: Flow()},
                 )
             else:
                 bus_in = self._solph_model.add_solph_component(
                     mtress_component=self,
                     label=f"in_{temperature:.0f}",
-                    solph_component=solph.Bus,
+                    solph_component=Bus,
                     outputs={
-                        self.inputs[temp_low]: solph.Flow(),
-                        b_out: solph.Flow(),
+                        self.inputs[temp_low]: Flow(),
+                        b_out: Flow(),
                     },
                 )
 
@@ -132,12 +132,12 @@ class Heat(AbstractLayeredCarrier, AbstractSolphComponent):
                 self._solph_model.add_solph_component(
                     mtress_component=self,
                     label=f"rise_{temp_low:.0f}_{temperature:.0f}",
-                    solph_component=solph.Transformer,
+                    solph_component=Transformer,
                     inputs={
-                        bus_in: solph.Flow(),
-                        self.outputs[temp_low]: solph.Flow(),
+                        bus_in: Flow(),
+                        self.outputs[temp_low]: Flow(),
                     },
-                    outputs={b_out: solph.Flow()},
+                    outputs={b_out: Flow()},
                     conversion_factors={
                         bus_in: 1 - ratio,
                         self.outputs[temp_low]: ratio,

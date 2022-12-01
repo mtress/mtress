@@ -1,10 +1,9 @@
 """This module provides hydrogen electrolysers."""
 
 import logging
-from multiprocessing.sharedctypes import Value
 
 import numpy as np
-from oemof import solph
+from oemof.solph import Flow, Transformer
 
 from .._abstract_component import AbstractSolphComponent
 from ..carriers import Electricity, Heat, Hydrogen
@@ -91,11 +90,11 @@ class PEMElectrolyzer(AbstractTechnology, AbstractSolphComponent):
         self._solph_model.add_solph_component(
             mtress_component=self,
             label="transformer",
-            solph_component=solph.Transformer,
-            inputs={electrical_bus: solph.Flow(nominal_value=self.nominal_power)},
+            solph_component=Transformer,
+            inputs={electrical_bus: Flow(nominal_value=self.nominal_power)},
             outputs={
-                h2_bus: solph.Flow(),
-                heat_bus: solph.Flow(),
+                h2_bus: Flow(),
+                heat_bus: Flow(),
             },
             conversion_factors={
                 electrical_bus: 1,

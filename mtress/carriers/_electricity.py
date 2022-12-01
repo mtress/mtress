@@ -3,7 +3,7 @@
 
 from typing import Optional
 
-from oemof import solph
+from oemof.solph import Bus, Flow, Investment, Sink, Source
 
 from .._abstract_component import AbstractSolphComponent
 from ._abstract_carrier import AbstractCarrier
@@ -11,6 +11,8 @@ from ._abstract_carrier import AbstractCarrier
 
 class Electricity(AbstractCarrier, AbstractSolphComponent):
     """
+    Electricity energy carrier.
+
     Functionality: Electricity connections at a location. This class
         represents a local electricity grid with or without connection
         to the global electricity grid.
@@ -28,7 +30,6 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
 
     Procedure: Create a simple electricity carrier by doing the following
         and adding costs to the grid supply.
-    TODO: the term demand_rate feels really unintuitive --> better variable_name for that?
 
             house_1.add_carrier(
                 carriers.Electricity(costs={"working_price": 35, "demand_rate": 0})
@@ -38,6 +39,7 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
 
     """
 
+    # TODO: the term demand_rate feels unintuitive; better variable_name for that?
     def __init__(
         self,
         grid_connection: bool = True,
@@ -61,29 +63,29 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
         self.distribution = b_dist = self._solph_model.add_solph_component(
             mtress_component=self,
             label="distribution",
-            solph_component=solph.Bus,
+            solph_component=Bus,
         )
 
         self.production = b_prod = self._solph_model.add_solph_component(
             mtress_component=self,
             label="production",
-            solph_component=solph.Bus,
-            outputs={b_dist: solph.Flow()},
+            solph_component=Bus,
+            outputs={b_dist: Flow()},
         )
 
         if self.grid_connection:
             b_grid_export = self._solph_model.add_solph_component(
                 mtress_component=self,
                 label="grid_export",
-                solph_component=solph.Bus,
-                inputs={b_prod: solph.Flow()},
+                solph_component=Bus,
+                inputs={b_prod: Flow()},
             )
 
             self._solph_model.add_solph_component(
                 mtress_component=self,
                 label="sink_export",
-                solph_component=solph.Sink,
-                inputs={b_grid_export: solph.Flow()},
+                solph_component=Sink,
+                inputs={b_grid_export: Flow()},
                 # TODO: Add revenues
                 # Is this the correct place for revenues? Or should they be an option
                 # for the generating technologies?
@@ -92,8 +94,8 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
             b_grid_import = self._solph_model.add_solph_component(
                 mtress_component=self,
                 label="grid_import",
-                solph_component=solph.Bus,
-                outputs={b_dist: solph.Flow()},
+                solph_component=Bus,
+                outputs={b_dist: Flow()},
             )
 
             # (unidirectional) grid connection
@@ -101,11 +103,11 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
             self._solph_model.add_solph_component(
                 mtress_component=self,
                 label="source_import",
-                solph_component=solph.Source,
+                solph_component=Source,
                 outputs={
-                    b_grid_import: solph.Flow(
+                    b_grid_import: Flow(
                         variable_costs=self.working_rate,
-                        investment=solph.Investment(ep_costs=self.demand_rate),
+                        investment=Investment(ep_costs=self.demand_rate),
                     )
                 },
             )

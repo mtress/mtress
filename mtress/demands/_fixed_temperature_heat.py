@@ -1,7 +1,7 @@
 """Room heating technologies."""
 
 
-from oemof import solph
+from oemof.solph import Bus, Flow, Sink, Transformer
 
 from .._abstract_component import AbstractSolphComponent
 from ..carriers import Heat
@@ -78,8 +78,8 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
             output = self._solph_model.add_solph_component(
                 mtress_component=self,
                 label="output",
-                solph_component=solph.Bus,
-                inputs={carrier.outputs[self.flow_temperature]: solph.Flow()},
+                solph_component=Bus,
+                inputs={carrier.outputs[self.flow_temperature]: Flow()},
             )
         else:
             temperature_ratio = (
@@ -89,18 +89,19 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
             output = self._solph_model.add_solph_component(
                 mtress_component=self,
                 label="output",
-                solph_component=solph.Bus,
+                solph_component=Bus,
             )
 
             self._solph_model.add_solph_component(
                 mtress_component=self,
                 label="heat_exchanger",
+                solph_component=Transformer,
                 inputs={
-                    carrier.outputs[self.flow_temperature]: solph.Flow(),
+                    carrier.outputs[self.flow_temperature]: Flow(),
                 },
                 outputs={
-                    carrier.outputs[self.return_temperature]: solph.Flow(),
-                    output: solph.Flow(),
+                    carrier.outputs[self.return_temperature]: Flow(),
+                    output: Flow(),
                 },
                 conversion_factors={
                     carrier.outputs[self.flow_temperature]: 1,
@@ -112,9 +113,9 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
         self._solph_model.add_solph_component(
             mtress_component=self,
             label="sink",
-            solph_component=solph.Sink,
+            solph_component=Sink,
             inputs={
-                output: solph.Flow(
+                output: Flow(
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(self._time_series),
                 )

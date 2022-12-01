@@ -1,7 +1,7 @@
 """This module provides a class representing an air heat exchanger."""
 
 
-from oemof import solph
+from oemof.solph import Bus, Flow, Source
 
 from .._abstract_component import AbstractSolphComponent
 from ._abstract_technology import AbstractAnergySource, AbstractTechnology
@@ -52,14 +52,14 @@ class AirHeatExchanger(
         self._bus = _bus = self._solph_model.add_solph_component(
             mtress_component=self,
             label="output",
-            solph_component=solph.Bus,
+            solph_component=Bus,
         )
 
         self._solph_model.add_solph_component(
             mtress_component=self,
             label="source",
-            solph_component=solph.Source,
-            outputs={_bus: solph.Flow(nominal_value=self.nominal_power)},
+            solph_component=Source,
+            outputs={_bus: Flow(nominal_value=self.nominal_power)},
         )
 
     @property

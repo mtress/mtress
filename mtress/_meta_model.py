@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable, Iterable
 
 import pandas as pd
-from oemof import solph
+from oemof.solph import EnergySystem, Model
 
 if TYPE_CHECKING:
     from ._location import Location
@@ -94,8 +94,8 @@ class SolphModel:
 
     data: DataHandler
 
-    energy_system: solph.EnergySystem
-    model: solph.Model
+    energy_system: EnergySystem
+    model: Model
 
     components: dict = {}
 
@@ -126,7 +126,7 @@ class SolphModel:
 
         # Registry of solph components
         self._solph_components = {}
-        self.energy_system = solph.EnergySystem(timeindex=self.timeindex)
+        self.energy_system = EnergySystem(timeindex=self.timeindex)
 
         # Store a reference to the solph model
         for component in self._meta_model.components:
@@ -172,7 +172,7 @@ class SolphModel:
 
     def build_solph_model(self):
         """Build the `oemof.solph` representation of the model."""
-        self.model = solph.Model(self.energy_system)
+        self.model = Model(self.energy_system)
 
         for component in self._meta_model.components:
             component.add_constraints()
