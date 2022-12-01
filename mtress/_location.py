@@ -82,13 +82,13 @@ class Location:
         """
         return self._carriers[carrier]
 
-    def get_demand(self, demand: type):
+    def get_demands(self, demand: type):
         """
         Return demand object.
 
         :param demand: Demand type
         """
-        return self._demands[demand]
+        return [self._demands[demand]]
 
     def get_technology(self, technology: type):
         """

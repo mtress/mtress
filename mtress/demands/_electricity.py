@@ -32,7 +32,7 @@ class Electricity(AbstractDemand, AbstractSolphComponent):
 
     def __init__(self, time_series):
         """Initialize heat energy carrier and add components."""
-        super().__init__()
+        super().__init__(name)
         self._time_series = time_series
         self.input = None
 
