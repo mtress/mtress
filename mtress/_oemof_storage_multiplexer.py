@@ -1,4 +1,3 @@
-# pylint: disable=invalid-name
 # -*- coding: utf-8 -*-
 
 """A constraint to have one common limit for several components.
@@ -9,7 +8,6 @@ SPDX-License-Identifier: MIT
 
 """
 
-from pprint import pprint
 
 from oemof.solph import Bus, Model
 from oemof.solph.components import GenericStorage
@@ -26,6 +24,8 @@ def storage_multiplexer_constraint(
     levels: list[float],
 ):
     r"""
+    Add constraits to implement a storage content dependent multiplexer.
+
     Adds a constraint to the given model that restricts
     the weighted sum of variables to a corridor.
 
@@ -86,76 +86,129 @@ def storage_multiplexer_constraint(
     ...    "limit_storage", components,
     ...    [1, 1], upper_limit=5)
     """
-    # Set for indexing the weight variables
-    def init_level_indices(m):
-        return [(ts, level) for ts in m.TIMESTEPS for level in levels]
+    # http://yetanothermathprogrammingconsultant.blogspot.com/2015/10/piecewise-linear-functions-in-mip-models.html
+    intervals = {
+        f"interval_{i:02d}": (lower, upper)
+        for i, (lower, upper) in enumerate(zip(levels[:-1], levels[1:]))
+    }
 
-    level_indices = po.Set(dimen=2, ordered=True, initialize=init_level_indices)
-    setattr(model, f"{name}_level_indices", level_indices)
+    # Set for indexing the intervals (each interval is represented by its lower bound)
+    def init_interval_indices(model):
+        return [
+            (interval, timestep)
+            for timestep in model.TIMESTEPS
+            for interval in intervals
+        ]
 
-    # Set for indexing the SOS constraint per timestep
-    def init_sos_indices(m, ts):  # pylint: disable=unsused-argument
-        return [(ts, level) for level in levels]
+    interval_indices = po.Set(dimen=2, ordered=True, initialize=init_interval_indices)
+    setattr(model, f"{name}_interval_indices", interval_indices)
 
-    sos_indices = po.Set(
-        model.TIMESTEPS,
-        dimen=2,
-        ordered=True,
-        initialize=init_sos_indices,
-    )
-    setattr(model, f"{name}_sos_indices", sos_indices)
+    # Binary variable indicating active interval
+    active_interval = po.Var(interval_indices, domain=po.Binary, bounds=(0, 1))
+    setattr(model, f"{name}_active_interval", active_interval)
 
-    # Variable indicating the active interval
-    weights = po.Var(level_indices, bounds=(0, 1))
-    setattr(model, f"{name}_weights", weights)
+    # Allow exactly one interval to be active
+    def init_active_interval_constraint(_, timestep):
+        expr = 0
+        for interval in intervals:
+            expr += active_interval[interval, timestep]
 
-    # Allow only two weigths per timestep to be positive
+        return expr == 1
+
     setattr(
         model,
-        f"{name}_sos_constraint",
-        po.SOSConstraint(
-            model.TIMESTEPS,
-            var=weights,
-            index=sos_indices,
-            sos=2,
-        ),
+        f"{name}_active_interval_constraint",
+        po.Constraint(model.TIMESTEPS, rule=init_active_interval_constraint),
     )
 
-    # Couple the weigths (i.e. the active level) with the storage content, i.e.
-    #   levels[n] * weights[n] + levels[n+1] * weights[n+1] == storage_content
-    # With the SOS2 constraint above this means
-    #     weigths[n] > 0 and weigths[n+1] > 0
-    # only if
-    #     levels[n] <= storage_content <= levels[n+1]
-    def couple_levels_with_storage(model, ts):
-        expr = 0
-        for l, u in zip(levels[:-1], levels[1:]):
-            expr += weights[ts, l] * l + weights[ts, u] * u
+    # Storage content variable for each interval, which is non-zero iff. the storage
+    # content lies in the respective interval
+    storage_content = po.Var(interval_indices, domain=po.Reals)
+    setattr(model, f"{name}_storage_content", storage_content)
 
-        expr -= model.GenericStorageBlock.storage_content[storage_component, ts]
+    def init_upper_bound_constraints(_, interval, timestep):
+        _, upper_bound = intervals[interval]
+
+        expr = 0
+        expr += storage_content[interval, timestep]
+        expr -= active_interval[interval, timestep] * upper_bound
+
+        return expr <= 0
+
+    setattr(
+        model,
+        f"{name}_upper_bound_constraints",
+        po.Constraint(interval_indices, rule=init_upper_bound_constraints),
+    )
+
+    def init_lower_bound_constraints(_, interval, timestep):
+        lower_bound, _ = intervals[interval]
+
+        expr = 0
+        expr += storage_content[interval, timestep]
+        expr -= active_interval[interval, timestep] * lower_bound
+
+        return 0 <= expr
+
+    setattr(
+        model,
+        f"{name}_lower_bound_constraints",
+        po.Constraint(interval_indices, rule=init_lower_bound_constraints),
+    )
+
+    def init_storage_content_equality_constraints(_, timestep):
+        expr = 0
+
+        for interval in intervals:
+            expr += storage_content[interval, timestep]
+
+        expr -= model.GenericStorageBlock.storage_content[storage_component, timestep]
         return expr == 0
 
     setattr(
         model,
-        f"{name}_weights_coupling",
-        po.Constraint(model.TIMESTEPS, rule=couple_levels_with_storage),
+        f"{name}_equality_constraints",
+        po.Constraint(model.TIMESTEPS, rule=init_storage_content_equality_constraints),
     )
 
+    # Set for indexing the levels variables
+    # def init_level_indices(model):
+    #     return [(level, timestep) for timestep in model.TIMESTEPS for level in levels]
+
+    # level_indices = po.Set(dimen=2, ordered=True, initialize=init_level_indices)
+    # setattr(model, f"{name}_level_indices", level_indices)
+
+    # Now we can constrain the input and output flows
     # Helper mapping the levels to the input components
-    input_map = dict((l, c) for (l, c) in zip(levels, input_level_components))
+    input_map = {
+        level: component for (level, component) in zip(levels, input_level_components)
+    }
 
-    # Define constraints on the input flows
-    def constrain_input_flows(m, ts, fl):
-        expr = 0
+    def constrain_lowest_level(model, timestep):
+        lowest_level_component, *_ = input_level_components
 
-        # Iterate over all levels lower that the input flows level
-        for l in [l for l in levels if l < fl]:
-            expr -= weights[ts, l]
+        expr = model.flow[lowest_level_component, multiplexer_component, timestep]
+        return expr <= 0
 
-        # TODO: multiply with energy per level interval
-        # TODO: multiply with timedelta
+    setattr(
+        model,
+        f"{name}_lowest_level_flow",
+        po.Constraint(model.TIMESTEPS, rule=constrain_lowest_level),
+    )
 
-        expr += m.flow[input_map[fl], multiplexer_component, ts]
+    def constrain_input_flows(model, interval, timestep):
+        lower_bound, upper_bound = intervals[interval]
+        lower_intervals = {
+            i: (lo, up) for i, (lo, up) in intervals.items() if lo <= lower_bound
+        }
+
+        bound = 0
+        bound += upper_bound
+        for interval in lower_intervals:
+            bound -= storage_content[interval, timestep]
+
+        expr = model.flow[input_map[upper_bound], multiplexer_component, timestep]
+        expr -= bound
 
         return expr <= 0
 
@@ -163,30 +216,31 @@ def storage_multiplexer_constraint(
     setattr(
         model,
         f"{name}_input_constraints",
-        po.Constraint(level_indices, rule=constrain_input_flows),
+        po.Constraint(interval_indices, rule=constrain_input_flows),
     )
 
     # Helper mapping the levels to the output components
     output_map = dict((l, c) for (l, c) in zip(levels, output_level_components))
 
-    # Define constraints on the input flows
-    def constrain_output_flows(m, ts, fl):
-        expr = 0
+    def constrain_output_flows(model, interval, timestep):
+        lower_bound, upper_bound = intervals[interval]
+        higher_intervals = {
+            i: (lo, up) for i, (lo, up) in intervals.items() if up >= upper_bound
+        }
 
-        # Iterate over all levels lower that the output flows level
-        for l in [l for l in levels if l > fl]:
-            expr -= weights[ts, l]
+        bound = 0
+        bound -= lower_bound
+        for interval in higher_intervals:
+            bound += storage_content[interval, timestep]
 
-        # TODO: multiply with energy per level interval
-        # TODO: multiply with timedelta
-
-        expr += m.flow[multiplexer_component, output_map[fl], ts]
+        expr = model.flow[multiplexer_component, output_map[lower_bound], timestep]
+        expr -= bound
 
         return expr <= 0
 
     # Create constraints
     setattr(
         model,
-        f"{name}_output_constraints",
-        po.Constraint(level_indices, rule=constrain_output_flows),
+        f"{name}_input_constraints",
+        po.Constraint(interval_indices, rule=constrain_output_flows),
     )
