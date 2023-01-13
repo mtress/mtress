@@ -165,7 +165,11 @@ def storage_multiplexer_constraint(
     def couple_levels_with_storage(model, timestep):
         expr = 0
         for level in levels:
-            expr += weights[level, timestep] * level
+            expr += (
+                weights[level, timestep]
+                * level
+                * storage_component.nominal_storage_capacity
+            )
 
         expr -= model.GenericStorageBlock.storage_content[storage_component, timestep]
         return expr == 0
@@ -196,14 +200,14 @@ def storage_multiplexer_constraint(
     input_map = dict((l, c) for (l, c) in zip(levels, input_level_components))
 
     # Define constraints on the input flows
-    def constrain_input_flows(model, flow_level, timesteps):
+    def constrain_input_flows(model, flow_level, timestep):
         expr = 0
-        expr -= sum(weights[level, timesteps] for level in levels if level < flow_level)
+        expr -= sum(weights[level, timestep] for level in levels if level < flow_level)
 
         # TODO: multiply with energy per level interval
         # TODO: multiply with timedelta
 
-        expr += model.flow[input_map[flow_level], multiplexer_component, timesteps]
+        expr += model.flow[input_map[flow_level], multiplexer_component, timestep]
 
         return expr <= 0
 
