@@ -1,7 +1,8 @@
 """Room heating technologies."""
 
 
-from oemof.solph import Bus, Flow, Sink, Transformer
+from oemof.solph import Bus, Flow
+from oemof.solph.components import Sink, Transformer
 
 from .._abstract_component import AbstractSolphComponent
 from ..carriers import Heat

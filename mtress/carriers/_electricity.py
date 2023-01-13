@@ -3,7 +3,8 @@
 
 from typing import Optional
 
-from oemof.solph import Bus, Flow, Investment, Sink, Source
+from oemof.solph import Bus, Flow, Investment
+from oemof.solph.components import Sink, Source
 
 from .._abstract_component import AbstractSolphComponent
 from ._abstract_carrier import AbstractCarrier
