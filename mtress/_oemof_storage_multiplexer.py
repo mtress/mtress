@@ -26,66 +26,28 @@ def storage_multiplexer_constraint(
     r"""
     Add constraits to implement a storage content dependent multiplexer.
 
-    Adds a constraint to the given model that restricts
-    the weighted sum of variables to a corridor.
-
-    **The following constraints are build:**
-
-      .. math::
-        l_\mathrm{low} \le \sum v_i(t) \times w_i(t) \le l_\mathrm{up}
-        \forall t
-
     Parameters
     ----------
     model : oemof.solph.Model
         Model to which the constraint is added.
-    limit_name : string
-        Name of the constraint to create
-    quantity : pyomo.core.base.var.IndexedVar
-        Shared Pyomo variable for all components of a type.
-    components : list of components
-        list of components of the same type
-    weights : list of numeric values
-        has to have the same length as the list of components
-    lower_limit : numeric
-        the lower limit
-    upper_limit : numeric
-        the lower limit
+    name : string
+        Name of the multiplexer.
+    storage_component : oemof.solph.components.GenericStorage
+        Storage component whose content should mandate the possible inputs and outputs.
+    multiplexer_component : oemof.solph.Bus
+        Bus which connects the input and output levels to the storage.
+    input_level_components : list of oemof.solph.Bus
+        List of buses which act as inputs (must be same length as levels parameter)
+    output_level_components : list of oemof.solph.Bus
+        List of buses which act as outputs (must be same length as levels parameter)
+    levels : list of float
+        List of storage content levels corresponding to the input and output components,
+        i.e. for a given value in this list, the corresponding input can be active if
+        the storage content is lower than this value.
 
-    Examples
-    --------
-    The constraint can e.g. be used to define a common storage
-    that is shared between parties but that do not exchange
-    energy on balance sheet.
-    Thus, every party has their own bus and storage, respectively,
-    to model the energy flow. However, as the physical storage is shared,
-    it has a common limit.
-
-    >>> import pandas as pd
-    >>> from oemof import solph
-    >>> date_time_index = pd.date_range('1/1/2012', periods=5, freq='H')
-    >>> energysystem = solph.EnergySystem(timeindex=date_time_index)
-    >>> b1 = solph.buses.Bus(label="Party1Bus")
-    >>> b2 = solph.buses.Bus(label="Party2Bus")
-    >>> storage1 = solph.components.GenericStorage(
-    ...     label="Party1Storage",
-    ...     nominal_storage_capacity=5,
-    ...     inputs={b1: solph.flows.Flow()},
-    ...     outputs={b1: solph.flows.Flow()})
-    >>> storage2 = solph.components.GenericStorage(
-    ...     label="Party2Storage",
-    ...     nominal_storage_capacity=5,
-    ...     inputs={b1: solph.flows.Flow()},
-    ...     outputs={b1: solph.flows.Flow()})
-    >>> energysystem.add(b1, b2, storage1, storage2)
-    >>> components = [storage1, storage2]
-    >>> model = solph.Model(energysystem)
-    >>> solph.constraints.shared_limit(
-    ...    model,
-    ...    model.GenericStorageBlock.storage_content,
-    ...    "limit_storage", components,
-    ...    [1, 1], upper_limit=5)
     """
+    # TODO: Add example.
+
     # http://yetanothermathprogrammingconsultant.blogspot.com/2015/10/piecewise-linear-functions-in-mip-models.html
     # Helper mapping
     intervals = {
@@ -165,11 +127,7 @@ def storage_multiplexer_constraint(
     def couple_levels_with_storage(model, timestep):
         expr = 0
         for level in levels:
-            expr += (
-                weights[level, timestep]
-                * level
-                * storage_component.nominal_storage_capacity
-            )
+            expr += weights[level, timestep] * level
 
         expr -= model.GenericStorageBlock.storage_content[storage_component, timestep]
         return expr == 0
@@ -197,17 +155,22 @@ def storage_multiplexer_constraint(
 
     # Now we can constrain the input and output flows
     # Helper mapping the levels to the input components
-    input_map = dict((l, c) for (l, c) in zip(levels, input_level_components))
+    input_map = dict(zip(levels, input_level_components))
+    input_energy = {upp: upp - low for low, upp in zip(levels[:-1], levels[1:])}
 
     # Define constraints on the input flows
     def constrain_input_flows(model, flow_level, timestep):
         expr = 0
+
+        # Energy of the interval below the flow level
         expr -= sum(weights[level, timestep] for level in levels if level < flow_level)
+        expr *= input_energy.get(flow_level, 0)
 
-        # TODO: multiply with energy per level interval
-        # TODO: multiply with timedelta
-
-        expr += model.flow[input_map[flow_level], multiplexer_component, timestep]
+        # Energy which is extracted in this timestep
+        expr += (
+            model.flow[input_map[flow_level], multiplexer_component, timestep]
+            * model.timeincrement[timestep]
+        )
 
         return expr <= 0
 
@@ -219,17 +182,22 @@ def storage_multiplexer_constraint(
     )
 
     # Helper mapping the levels to the output components
-    output_map = dict((l, c) for (l, c) in zip(levels, output_level_components))
+    output_map = dict(zip(levels, output_level_components))
+    output_energy = {low: upp - low for low, upp in zip(levels[:-1], levels[1:])}
 
     # Define constraints on the input flows
     def constrain_output_flows(model, flow_level, timestep):
         expr = 0
+
+        # Energy of the interval above the flow level
         expr -= sum(weights[level, timestep] for level in levels if level > flow_level)
+        expr *= output_energy.get(flow_level, 0)
 
-        # TODO: multiply with energy per level interval
-        # TODO: multiply with timedelta
-
-        expr += model.flow[multiplexer_component, output_map[flow_level], timestep]
+        # Energy which is extracted in this timestep
+        expr += (
+            model.flow[multiplexer_component, output_map[flow_level], timestep]
+            * model.timeincrement[timestep]
+        )
 
         return expr <= 0
 
