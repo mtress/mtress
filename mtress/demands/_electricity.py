@@ -1,7 +1,8 @@
-"""Electricity energy carrier."""
+"""Electricity energy demand."""
 
 
-from oemof.solph import Bus, Flow, Sink
+from oemof.solph import Bus, Flow
+from oemof.solph.components import Sink
 
 from .._abstract_component import AbstractSolphComponent
 from ..carriers import Electricity as ElectricityCarrier

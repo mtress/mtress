@@ -11,7 +11,8 @@ SPDX-FileCopyrightText: Lucas Schmeling
 SPDX-License-Identifier: MIT
 """
 
-from oemof.solph import Bus, Flow, Transformer
+from oemof.solph import Bus, Flow
+from oemof.solph.components import Transformer
 
 from .._abstract_component import AbstractSolphComponent
 from ._abstract_carrier import AbstractLayeredCarrier
