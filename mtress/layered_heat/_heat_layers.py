@@ -11,7 +11,22 @@ SPDX-FileCopyrightText: Lucas Schmeling
 SPDX-License-Identifier: MIT
 """
 
-from oemof import solph
+from oemof.solph import (
+    Bus,
+    Flow,
+)
+try:
+    from oemof.solph.components import (
+        Sink,
+        Source,
+        Transformer,
+    )
+except ImportError:  # solph <= v0.4
+    from oemof.solph import (
+        Sink,
+        Source,
+        Transformer,
+    )
 
 
 class HeatLayers:
@@ -77,17 +92,17 @@ class HeatLayers:
 
             ################################################################
             # Thermal buses
-            b_th_level = solph.Bus(label=b_th_label)
+            b_th_level = Bus(label=b_th_label)
 
             if temp_low is None:
-                b_th_in_level = solph.Bus(label=b_th_in_label,
-                                          outputs={b_th_level: solph.Flow()})
+                b_th_in_level = Bus(label=b_th_in_label,
+                                          outputs={b_th_level: Flow()})
                 self.b_th_lowest = b_th_level
             else:
-                b_th_in_level = solph.Bus(
+                b_th_in_level = Bus(
                     label=b_th_in_label,
-                    outputs={self.b_th_in[temp_low]: solph.Flow(),
-                             b_th_level: solph.Flow()})
+                    outputs={self.b_th_in[temp_low]: Flow(),
+                             b_th_level: Flow()})
             self.b_th_in_highest = b_th_in_level
 
             self.b_th[temperature] = b_th_level
@@ -105,11 +120,11 @@ class HeatLayers:
                                 + '_' + temp_high_str)
                 heater_ratio = ((temp_low - self._reference_temperature)
                                 / (temperature - self._reference_temperature))
-                heater = solph.Transformer(
+                heater = Transformer(
                     label=heater_label,
-                    inputs={b_th_in_level: solph.Flow(),
-                            self.b_th[temp_low]: solph.Flow()},
-                    outputs={b_th_level: solph.Flow()},
+                    inputs={b_th_in_level: Flow(),
+                            self.b_th[temp_low]: Flow()},
+                    outputs={b_th_level: Flow()},
                     conversion_factors={
                         b_th_in_level: 1 - heater_ratio,
                         self.b_th[temp_low]: heater_ratio,

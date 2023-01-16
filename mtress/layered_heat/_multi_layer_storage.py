@@ -10,7 +10,11 @@ SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
-from oemof import solph
+from oemof.solph import (
+    constraints,
+    Flow,
+)
+from oemof.solph.components import GenericStorage
 from oemof import thermal
 
 from mtress.physics import (kilo_to_mega, kJ_to_MWh,
@@ -104,10 +108,10 @@ class MultiLayerStorage:
             self._fixed_losses["abs"][temperature] = hs_fixed_losses_absolute
             self._fixed_losses["rel"][temperature] = hs_fixed_losses_relative
 
-            s_heat = solph.GenericStorage(
+            s_heat = GenericStorage(
                 label=storage_label,
-                inputs={b_th_level: solph.Flow()},
-                outputs={b_th_level: solph.Flow()},
+                inputs={b_th_level: Flow()},
+                outputs={b_th_level: Flow()},
                 nominal_storage_capacity=hs_capacity,
                 loss_rate=hs_loss_rate,
                 fixed_losses_absolute=hs_fixed_losses_absolute,
@@ -131,7 +135,7 @@ class MultiLayerStorage:
                                      * (temp - self._reference_temperature))
                     for temp in self._temperature_levels]
 
-        solph.constraints.shared_limit(
+        constraints.shared_limit(
             model, model.GenericStorageBlock.storage_content,
             self.label+'storage_limit', self._h_storage_comp, w_factor,
             upper_limit=self.heat_storage_volume)
