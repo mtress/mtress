@@ -51,13 +51,11 @@ class Location:
         """Add a carrier to the location."""
         carrier.register_location(self)
         self._carriers[type(carrier)] = carrier
-        carrier.register(self)
 
     def add_demand(self, demand: AbstractDemand):
         """Add a demand to the location."""
         demand.register_location(self)
         self._demands[type(demand)] = demand
-        demand.register(self)
 
     def add_technology(self, technology: AbstractComponent):
         """Add a demand to the location."""
