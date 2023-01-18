@@ -115,7 +115,7 @@ class SolphModel:
         match timeindex:
             case list() as values:
                 self.timeindex = pd.DatetimeIndex(values)
-            case pd.DatetimeIndex as idx:
+            case pd.DatetimeIndex() as idx:
                 self.timeindex = idx
             case dict() as params:
                 self.timeindex = pd.date_range(**params)
