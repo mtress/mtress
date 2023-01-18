@@ -21,13 +21,10 @@ class Photovoltaics(RenewableElectricitySource):
 
     def __init__(
         self,
+        location,
+        name,
         pv_system_params,
         simulation_data,
-        funding,
-        out_bus_internal,
-        out_bus_external,
-        label,
-        energy_system,
     ):
         self._loc = pvlib.location.Location(
             latitude=pv_system_params["latitude"],
@@ -46,16 +43,19 @@ class Photovoltaics(RenewableElectricitySource):
             surface_azimuth=pv_system_params["surface_azimuth"],
             module_parameters=module_parameters,
             temperature_model_parameters=temperature_model_parameters,
-            name=label,
+            name=name,
             inverter_parameters=dict(pdc0=3),
         )
 
         self._mc = pvlib.modelchain.ModelChain(
-            self._system, self._loc, aoi_model="physical", spectral_model="no_loss"
+            self._system,
+            self._loc,
+            aoi_model="physical",
+            spectral_model="no_loss",
         )
 
         self._weather = simulation_data.get(
-            "weather", self._loc.get_clearsky(energy_system.timeindex)
+            "weather", self._loc.get_clearsky(location.energy_system.time_index)
         )
 
         self._mc.run_model(self._weather)
@@ -64,11 +64,8 @@ class Photovoltaics(RenewableElectricitySource):
         self.specific_generation = self._mc.results.ac
 
         super().__init__(
-            self.nominal_power,
-            self.specific_generation,
-            funding,
-            out_bus_internal,
-            out_bus_external,
-            label,
-            energy_system,
+            location=location,
+            name=name,
+            nominal_power=self.nominal_power,
+            specific_generation=self.specific_generation,
         )

@@ -25,7 +25,11 @@ HHV_WP = 4.8  # kWh/kg  /  MWh/t
 # Water in heat storage
 H2O_HEAT_CAPACITY = 4.182  # kJ/(kg*K)
 H2O_HEAT_FUSION = 0.09265  # MWh/t, = 333.55 J/g
-H2O_DENSITY = 1000  # Kg/m^3
+H2O_DENSITY = 1000  # kg/m^3
+
+# Hydrogen
+H2_LHV = 33.33  # kWh/kg
+H2_HHV = 39.41  # kWh/kg
 
 # Thermal conductivity
 TC_CONCRETE = 0.8  # W / (m * K)
