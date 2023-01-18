@@ -126,7 +126,7 @@ class SolphModel:
 
         # Registry of solph components
         self._solph_components = {}
-        self.energy_system = EnergySystem(timeindex=self.timeindex)
+        self.energy_system = EnergySystem(timeindex=self.timeindex, infer_last_interval=False)
 
         # Store a reference to the solph model
         for component in self._meta_model.components:
