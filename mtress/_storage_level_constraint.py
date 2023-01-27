@@ -16,11 +16,11 @@ def storage_level_constraint(
     name: str,
     storage_component: GenericStorage,
     multiplexer_component: Bus,
-    input_nodes: dict[Node: float],
-    output_nodes: dict[Node: float],
+    input_levels: dict[Node:float] = None,
+    output_levels: dict[Node:float] = None,
 ):
     r"""
-    Add constraits to implement storage content based access.
+    Add constraints to implement storage content based access.
 
     Parameters
     ----------
@@ -32,40 +32,42 @@ def storage_level_constraint(
         Storage component whose content should mandate the possible inputs and outputs.
     multiplexer_component : oemof.solph.Bus
         Bus which connects the input and output levels to the storage.
-    input_nodes : dictionary with oemof.solph.Bus as keys and float as values
+    input_levels : dictionary with oemof.solph.Bus as keys and float as values
         Dictionary of buses which act as inputs and corresponding levels
-    output_nodes : dictionary with oemof.solph.Bus as keys and float as values
+    output_levels : dictionary with oemof.solph.Bus as keys and float as values
         Dictionary of buses which act as outputs and corresponding level
 
     Note that all flows effected by this constraint will be <= 1.
-    
+
     Verbose description can be found in https://arxiv.org/abs/2211.14080
     """
+    if input_levels is None:
+        input_levels = {}
+    if output_levels is None:
+        output_levels = {}
 
     def _outputs():
-        OUTPUTS = po.Set(
-            initialize=output_nodes.keys()
-        )
+        OUTPUTS = po.Set(initialize=output_levels.keys())
         setattr(model, f"{name}_OUTPUTS", OUTPUTS)
 
         active_output = po.Var(
-            OUTPUTS,
-            model.TIMESTEPS,
-            domain=po.Binary,
-            bounds=(0, 1)
+            OUTPUTS, model.TIMESTEPS, domain=po.Binary, bounds=(0, 1)
         )
         setattr(model, f"{name}_active_output", active_output)
 
         constraint_name = f"{name}_output_active_constraint"
-        def _output_active_rule(model):
-            for t in model.TIMESTEPS:
-                for o in output_nodes:
-                    getattr(model, constraint_name).add(
+
+        def _output_active_rule(m):
+            for t in m.TIMESTEPS:
+                for o in output_levels:
+                    getattr(m, constraint_name).add(
                         (o, t),
-                        model.GenericStorageBlock.storage_content[storage_component, t]
+                        m.GenericStorageBlock.storage_content[
+                            storage_component, t + 1
+                        ]
                         >= active_output[o, t]
-                        * output_nodes[o]
-                        * storage_component.nominal_storage_capacity
+                        * output_levels[o]
+                        * storage_component.nominal_storage_capacity,
                     )
 
         setattr(
@@ -79,49 +81,46 @@ def storage_level_constraint(
         )
         setattr(
             model,
-            constraint_name +"build",
+            constraint_name + "build",
             po.BuildAction(rule=_output_active_rule),
         )
 
         # Define constraints on the output flows
-        def _constraint_output_rule(model, output, timestep):
-            return (
-                model.flow[multiplexer_component, output, timestep]
-                <= active_output[output, timestep]
-            )
+        def _constraint_output_rule(m, o, t):
+            return m.flow[multiplexer_component, o, t] <= active_output[o, t]
 
         setattr(
             model,
             f"{name}_output_constraint",
-            po.Constraint(OUTPUTS, model.TIMESTEPS, rule=_constraint_output_rule),
+            po.Constraint(
+                OUTPUTS, model.TIMESTEPS, rule=_constraint_output_rule
+            ),
         )
-    
+
     _outputs()
 
     def _inputs():
-        INPUTS = po.Set(
-            initialize=input_nodes.keys()
-        )
+        INPUTS = po.Set(initialize=input_levels.keys())
         setattr(model, f"{name}_INPUTS", INPUTS)
-        
-        active_input = po.Var(
-            INPUTS,
-            model.TIMESTEPS,
-            domain=po.Binary,
-            bounds=(0, 1)
+
+        inactive_input = po.Var(
+            INPUTS, model.TIMESTEPS, domain=po.Binary, bounds=(0, 1)
         )
-        setattr(model, f"{name}_active_input", active_input)
+        setattr(model, f"{name}_active_input", inactive_input)
 
         constraint_name = f"{name}_input_active_constraint"
+
         def _input_active_rule(model):
             for t in model.TIMESTEPS:
-                for o in input_nodes:
+                for o in input_levels:
                     getattr(model, constraint_name).add(
                         (o, t),
-                        model.GenericStorageBlock.storage_content[storage_component, t]
+                        model.GenericStorageBlock.storage_content[
+                            storage_component, t + 1
+                        ]
                         / storage_component.nominal_storage_capacity
-                        - input_nodes[o]
-                        >= 1 - active_input[o, t]
+                        - input_levels[o]
+                        >= inactive_input[o, t],
                     )
 
         setattr(
@@ -135,23 +134,24 @@ def storage_level_constraint(
         )
         setattr(
             model,
-            constraint_name +"build",
+            constraint_name + "build",
             po.BuildAction(rule=_input_active_rule),
         )
 
         # Define constraints on the input flows
-        def _constraint_input_rule(model, input, timestep):
+        def _constraint_input_rule(m, i, t):
             return (
-                model.flow[input, multiplexer_component, timestep]
-                >= active_input[input, timestep]
+                m.flow[i, multiplexer_component, t] <= 1 - inactive_input[i, t]
             )
 
         setattr(
             model,
             f"{name}_input_constraint",
-            po.Constraint(INPUTS, model.TIMESTEPS, rule=_constraint_input_rule),
+            po.Constraint(
+                INPUTS, model.TIMESTEPS, rule=_constraint_input_rule
+            ),
         )
-    
+
     _inputs()
 
     return
