@@ -3,11 +3,13 @@ from oemof.solph import Bus, EnergySystem, Flow, Model
 from oemof.solph.components import GenericStorage, Source, Sink
 from oemof.solph.processing import results
 
+import matplotlib.pyplot as plt
+
 from mtress._storage_level_constraint import storage_level_constraint
 
 
 es = EnergySystem(
-    timeindex=pd.date_range("2022-01-01", freq="60T", periods=12),
+    timeindex=pd.date_range("2022-01-01", freq="60T", periods=16),
     infer_last_interval=True,
 )
 
@@ -26,15 +28,21 @@ storage = GenericStorage(
 
 es.add(multiplexer, storage)
 
+in_1 = Source(
+    label="in_1",
+    outputs={multiplexer: Flow(nominal_value=0.1)}
+)
+es.add(in_1)
+
 out_0 = Sink(
     label="out_0",
-    inputs={multiplexer: Flow(nominal_value=0.1, variable_costs=-0.1)}
+    inputs={multiplexer: Flow(nominal_value=0.25, variable_costs=-0.1)}
 )
 es.add(out_0)
 
 out_1 = Sink(
     label="out_1",
-    inputs={multiplexer: Flow(nominal_value=0.1, variable_costs=-0.1)}
+    inputs={multiplexer: Flow(nominal_value=0.15, variable_costs=-0.1)}
 )
 es.add(out_1)
 
@@ -46,12 +54,35 @@ storage_level_constraint(
     name="multiplexer",
     storage_component=storage,
     multiplexer_component=multiplexer,
-    input_levels={},
-    output_levels={out_0: 0,
-                   out_1: 2/3},
+    input_levels={in_1: 1/3},
+    output_levels={out_0: 0.1, out_1: 1/2},
 )
 model.solve()
 
 my_results = results(model)
 
-print(my_results[(storage, None)]["sequences"])
+df = pd.DataFrame(my_results[(storage, None)]["sequences"])
+df["out_status"] = my_results[(out_1, None)]["sequences"]
+df["in_status"] = 1 - my_results[(in_1, None)]["sequences"]
+
+df["in1"] = my_results[(in_1, multiplexer)]["sequences"]
+df["out0"] = my_results[(multiplexer, out_0)]["sequences"]
+df["out1"] = my_results[(multiplexer, out_1)]["sequences"]
+
+plt.step(df.index, df["in1"], where="post", label="inflow (<1/3)")
+plt.step(df.index, df["out0"], where="post", label="outflow (>0.1)")
+plt.step(df.index, df["out1"], where="post", label="outflow (>0.5)")
+
+plt.grid()
+plt.legend()
+
+plt.twinx()
+
+plt.plot(df.index, df["storage_content"], "r-", label="storage content")
+plt.ylim(0, 3)
+plt.legend(loc="center right")
+
+print(df)
+
+plt.show()
+

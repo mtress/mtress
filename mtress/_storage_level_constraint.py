@@ -110,17 +110,17 @@ def storage_level_constraint(
 
         constraint_name = f"{name}_input_active_constraint"
 
-        def _input_active_rule(model):
-            for t in model.TIMESTEPS:
+        def _input_active_rule(m):
+            for t in m.TIMESTEPS:
                 for o in input_levels:
-                    getattr(model, constraint_name).add(
+                    getattr(m, constraint_name).add(
                         (o, t),
-                        model.GenericStorageBlock.storage_content[
-                            storage_component, t + 1
+                        m.GenericStorageBlock.storage_content[
+                            storage_component, t
                         ]
                         / storage_component.nominal_storage_capacity
                         - input_levels[o]
-                        >= inactive_input[o, t],
+                        <= inactive_input[o, t],
                     )
 
         setattr(
