@@ -1,7 +1,10 @@
 """Locations in a meta model."""
 
 
+from typing import Dict, Iterable
+
 from ._abstract_component import AbstractComponent
+from ._meta_model import MetaModel
 from .carriers._abstract_carrier import AbstractCarrier
 from .demands._abstract_demand import AbstractDemand
 
@@ -36,14 +39,14 @@ class Location:
 
         :param name: User friendly name of the location
         """
-        self._name = name
-        self._meta_model = None
+        self._name: str = name
+        self._meta_model: MetaModel = None
 
-        self._carriers = {}
-        self._technologies = {}
-        self._demands = {}
+        self._carriers: Dict[type, AbstractCarrier] = {}
+        self._demands: Dict[type, AbstractDemand] = {}
+        self._technologies: Dict[str, AbstractComponent] = {}
 
-    def assign_meta_model(self, meta_model):
+    def assign_meta_model(self, meta_model: MetaModel):
         """Store reference to meta model."""
         self._meta_model = meta_model
 
@@ -63,7 +66,7 @@ class Location:
         self._technologies[technology.name] = technology
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return name of the location."""
         return self._name
 
@@ -72,7 +75,7 @@ class Location:
         """Return meta model this location belongs to."""
         return self._meta_model
 
-    def get_carrier(self, carrier: type):
+    def get_carrier(self, carrier: type) -> AbstractCarrier:
         """
         Return the energy carrier object.
 
@@ -80,7 +83,7 @@ class Location:
         """
         return self._carriers[carrier]
 
-    def get_demands(self, demand: type):
+    def get_demands(self, demand: type) -> AbstractDemand:
         """
         Return demand object.
 
@@ -88,7 +91,7 @@ class Location:
         """
         return [self._demands[demand]]
 
-    def get_technology(self, technology: type):
+    def get_technology(self, technology: type) -> AbstractComponent:
         """
         Get components by technology.
 
@@ -99,16 +102,16 @@ class Location:
         ]
 
     @property
-    def carriers(self):
+    def carriers(self) -> Iterable[AbstractCarrier]:
         """Get all carriers of this location."""
         return self._carriers.values()
 
     @property
-    def demands(self):
+    def demands(self) -> Iterable[AbstractDemand]:
         """Get all demands of this location."""
         return self._demands.values()
 
     @property
-    def technologies(self):
+    def technologies(self) -> Iterable[AbstractComponent]:
         """Get all technologies of this location."""
         return self._technologies.values()

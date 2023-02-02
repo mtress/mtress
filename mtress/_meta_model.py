@@ -3,16 +3,16 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Iterable
+from typing import TYPE_CHECKING, Callable, Dict, Iterable, Tuple
 
 import pandas as pd
 from oemof.solph import EnergySystem, Model
 
-if TYPE_CHECKING:
-    from ._location import Location
-    from ._abstract_component import AbstractSolphComponent, AbstractComponent
-
 from ._data_handler import DataHandler
+
+if TYPE_CHECKING:
+    from ._abstract_component import AbstractComponent, AbstractSolphComponent
+    from ._location import Location
 
 
 class MetaModel:
@@ -34,7 +34,7 @@ class MetaModel:
 
     def __init__(self):
         """Initialize the meta model."""
-        self.locations: dict[Location] = {}
+        self.locations: Dict[str, Location] = {}
 
     @classmethod
     def from_config(cls, config: dict):
@@ -42,32 +42,6 @@ class MetaModel:
         # TODO: Implement me!
         raise NotImplementedError("Not implemented yet")
 
-        # def _create_carrier(self, carrier_type: str, carrier_config: dict):
-        #     assert hasattr(
-        #         mt_carriers, carrier_type
-        #     ), f"Energy carrier {carrier_type} not implemented"
-
-        #     cls = getattr(mt_carriers, carrier_type)
-        #     self._carriers[cls] = cls(location=self, **carrier_config)
-
-        # def _create_component(self, component_type: str, component_config: dict):
-        #     technology_name = component_config["technology"]
-        #     assert hasattr(
-        #         mt_technologies, technology_name
-        #     ), f"Technology {technology_name} not implemented"
-
-        #     cls = getattr(mt_technologies, technology_name)
-        #     self._components[component_type] = cls(
-        #         name=component_type,
-        #         location=self,
-        #         **component_config["parameters"],
-        #     )
-
-        # def _create_demand(self, demand_type: str, demand_config: dict):
-        #     assert hasattr(mt_demands, demand_type), f"Demand {demand_type} not implemented"
-
-        #     cls = getattr(mt_demands, demand_type)
-        #     self._demands[cls] = cls(location=self, **demand_config)
 
     def add_location(self, location: Location):
         """Add a new location to the meta model."""
@@ -97,7 +71,7 @@ class SolphModel:
     energy_system: EnergySystem
     model: Model
 
-    components: dict = {}
+    _solph_components: Dict[Tuple[AbstractSolphComponent, str], object] = {}
 
     def __init__(
         self,
@@ -126,7 +100,9 @@ class SolphModel:
 
         # Registry of solph components
         self._solph_components = {}
-        self.energy_system = EnergySystem(timeindex=self.timeindex, infer_last_interval=False)
+        self.energy_system = EnergySystem(
+            timeindex=self.timeindex, infer_last_interval=False
+        )
 
         # Store a reference to the solph model
         for component in self._meta_model.components:
