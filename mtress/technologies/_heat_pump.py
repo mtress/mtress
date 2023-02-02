@@ -10,7 +10,8 @@ SPDX-License-Identifier: MIT
 """
 from typing import Optional
 
-from oemof.solph import Bus, Flow, Source, Transformer
+from oemof.solph import Bus, Flow
+from oemof.solph.components import Source, Transformer
 
 from .._abstract_component import AbstractSolphComponent
 from ..carriers import Electricity, Heat

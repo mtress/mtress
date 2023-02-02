@@ -2,17 +2,18 @@
 import re
 
 import graphviz
-import oemof.solph
+from oemof.solph import Bus
+from oemof.solph.components import GenericStorage, Sink, Source, Transformer
 
 from ._util import update_in_dict
 
 # Define shapes for the component types
 SHAPES = {
-    oemof.solph.Source: "trapezium",
-    oemof.solph.Sink: "invtrapezium",
-    oemof.solph.Bus: "ellipse",
-    oemof.solph.Transformer: "octagon",
-    oemof.solph.GenericStorage: "cylinder",
+    Source: "trapezium",
+    Sink: "invtrapezium",
+    Bus: "ellipse",
+    Transformer: "octagon",
+    GenericStorage: "cylinder",
 }
 
 

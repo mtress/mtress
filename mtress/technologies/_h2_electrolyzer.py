@@ -1,9 +1,11 @@
 """This module provides hydrogen electrolysers."""
 
+
 import logging
 
 import numpy as np
-from oemof.solph import Flow, Transformer
+from oemof.solph import Flow
+from oemof.solph.components import Transformer
 
 from .._abstract_component import AbstractSolphComponent
 from ..carriers import Electricity, Heat, Hydrogen

@@ -1,6 +1,7 @@
 """This module provides hydrogen compressors."""
 
-from oemof.solph import Bus, Flow, Transformer
+from oemof.solph import Bus, Flow
+from oemof.solph.components import Transformer
 
 from .._abstract_component import AbstractSolphComponent
 from ..carriers import Electricity, Hydrogen

@@ -1,7 +1,8 @@
 """This module provides a class representing an air heat exchanger."""
 
 
-from oemof.solph import Bus, Flow, Source
+from oemof.solph import Bus, Flow
+from oemof.solph.components import Source
 
 from .._abstract_component import AbstractSolphComponent
 from ._abstract_technology import AbstractAnergySource, AbstractTechnology

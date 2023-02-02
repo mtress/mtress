@@ -10,7 +10,10 @@ SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
-from oemof import solph, thermal
+from oemof.solph import Flow
+from oemof.solph.components import GenericStorage
+from oemof.solph.constraints import shared_limit
+from oemof.thermal import stratified_thermal_storage
 
 from .._abstract_component import AbstractSolphComponent
 from ..carriers import Heat
@@ -81,7 +84,7 @@ class HeatStorage(AbstractTechnology, AbstractSolphComponent):
                     loss_rate,
                     fixed_losses_relative,
                     fixed_losses_absolute,
-                ) = thermal.stratified_thermal_storage.calculate_losses(
+                ) = stratified_thermal_storage.calculate_losses(
                     u_value=TC_INSULATION / self.insulation_thickness,
                     diameter=self.diameter,
                     temp_h=temperature,
@@ -100,9 +103,9 @@ class HeatStorage(AbstractTechnology, AbstractSolphComponent):
             storage = self._solph_model.add_solph_component(
                 mtress_component=self,
                 label=f"{temperature:.0f}",
-                solph_component=solph.GenericStorage,
-                inputs={bus: solph.Flow()},
-                outputs={bus: solph.Flow()},
+                solph_component=GenericStorage,
+                inputs={bus: Flow()},
+                outputs={bus: Flow()},
                 nominal_storage_capacity=capacity,
                 loss_rate=loss_rate,
                 fixed_losses_absolute=fixed_losses_absolute,
@@ -130,7 +133,7 @@ class HeatStorage(AbstractTechnology, AbstractSolphComponent):
             ]
         )
 
-        solph.constraints.shared_limit(
+        shared_limit(
             model=self._solph_model.model,
             quantity=self._solph_model.model.GenericStorageBlock.storage_content,
             limit_name=self._solph_model.get_label(self, "storage_limit"),
