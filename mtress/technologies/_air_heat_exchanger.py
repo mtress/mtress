@@ -5,6 +5,7 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import Source
 
 from .._abstract_component import AbstractSolphComponent
+from .._data_handler import TimeseriesSpecifier
 from ._abstract_technology import AbstractAnergySource, AbstractTechnology
 
 
@@ -28,7 +29,12 @@ class AirHeatExchanger(
 
     """
 
-    def __init__(self, name: str, air_temperatures, nominal_power: float = None):
+    def __init__(
+        self,
+        name: str,
+        air_temperatures: TimeseriesSpecifier,
+        nominal_power: float = None,
+    ):
         """
         Initialize air heat exchanger for e.g. heat pumps.
 

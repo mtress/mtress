@@ -2,6 +2,8 @@
 
 import pandas as pd
 
+TimeseriesSpecifier = str | pd.Series | list | float
+
 
 class DataHandler:
     """Handle data provided in auxiliary files."""
@@ -11,7 +13,7 @@ class DataHandler:
         self.timeindex = timeindex
         self._cache: dict[pd.DataFrame] = {}
 
-    def get_timeseries(self, specifier: str | pd.Series | list | float):
+    def get_timeseries(self, specifier: TimeseriesSpecifier):
         """
         Prepare a time series for the usage in MTRESS.
 
@@ -37,7 +39,7 @@ class DataHandler:
                     raise ValueError("Length of list differs from time index length")
 
                 return pd.Series(data=values, index=self.timeindex)
-            
+
             case float() as value:
                 return pd.Series(data=value, index=self.timeindex)
 

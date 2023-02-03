@@ -11,7 +11,7 @@ from ._air_heat_exchanger import AirHeatExchanger
 from ._h2_compressor import H2Compressor
 from ._h2_electrolyzer import PEMElectrolyzer
 from ._heat_pump import HeatPump
-from ._multi_layer_storage import HeatStorage
+from ._multi_layer_storage import LayeredHeatStorage
 
 # from ._photovoltaics import Photovoltaics
 
@@ -20,6 +20,6 @@ __all__ = [
     "H2Compressor",
     "PEMElectrolyzer",
     "HeatPump",
-    "HeatStorage",
+    "LayeredHeatStorage",
     # "Photovoltaics",
 ]

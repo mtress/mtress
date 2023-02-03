@@ -16,6 +16,7 @@ from oemof.solph.constraints import shared_limit
 from oemof.thermal import stratified_thermal_storage
 
 from .._abstract_component import AbstractSolphComponent
+from .._data_handler import TimeseriesSpecifier
 from ..carriers import Heat
 from ..physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
 from ._abstract_technology import AbstractTechnology
@@ -24,7 +25,7 @@ from ._abstract_technology import AbstractTechnology
 TC_INSULATION = 0.04  # W / (m * K)
 
 
-class HeatStorage(AbstractTechnology, AbstractSolphComponent):
+class LayeredHeatStorage(AbstractTechnology, AbstractSolphComponent):
     """
     Layered heat storage.
 
@@ -38,7 +39,7 @@ class HeatStorage(AbstractTechnology, AbstractSolphComponent):
         diameter: float,
         volume: float,
         insulation_thickness: float,
-        ambient_temperature,
+        ambient_temperature: TimeseriesSpecifier,
     ):
         """
         Create layered heat storage component.
@@ -141,3 +142,8 @@ class HeatStorage(AbstractTechnology, AbstractSolphComponent):
             weights=weights,
             upper_limit=self.volume,
         )
+
+
+class MixedHeatStorage(AbstractTechnology, AbstractSolphComponent):
+    def __init__(self, name: str):
+        super().__init__(name)
