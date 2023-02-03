@@ -42,7 +42,6 @@ class MetaModel:
         # TODO: Implement me!
         raise NotImplementedError("Not implemented yet")
 
-
     def add_location(self, location: Location):
         """Add a new location to the meta model."""
         location.assign_meta_model(self)
@@ -66,12 +65,6 @@ class MetaModel:
 class SolphModel:
     """Model adapter for MTRESS meta model."""
 
-    data: DataHandler
-
-    energy_system: EnergySystem
-    model: Model
-
-    _solph_components: Dict[Tuple[AbstractSolphComponent, str], object] = {}
 
     def __init__(
         self,
@@ -85,6 +78,7 @@ class SolphModel:
         :param locations: configuration dictionary for locations
         """
         self._meta_model = meta_model
+        self._solph_components: Dict[Tuple[AbstractSolphComponent, str], object] = {}
 
         match timeindex:
             case list() as values:
@@ -100,9 +94,10 @@ class SolphModel:
 
         # Registry of solph components
         self._solph_components = {}
-        self.energy_system = EnergySystem(
+        self.energy_system: EnergySystem = EnergySystem(
             timeindex=self.timeindex, infer_last_interval=False
         )
+        self.model : Model = None
 
         # Store a reference to the solph model
         for component in self._meta_model.components:
