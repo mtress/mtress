@@ -65,7 +65,6 @@ class MetaModel:
 class SolphModel:
     """Model adapter for MTRESS meta model."""
 
-
     def __init__(
         self,
         meta_model: MetaModel,
@@ -97,7 +96,7 @@ class SolphModel:
         self.energy_system: EnergySystem = EnergySystem(
             timeindex=self.timeindex, infer_last_interval=False
         )
-        self.model : Model = None
+        self.model: Model = None
 
         # Store a reference to the solph model
         for component in self._meta_model.components:
