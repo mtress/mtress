@@ -40,7 +40,7 @@ class DataHandler:
 
                 return pd.Series(data=values, index=self.timeindex)
 
-            case float() as value:
+            case float() | int() as value:
                 return pd.Series(data=value, index=self.timeindex)
 
             case _:
