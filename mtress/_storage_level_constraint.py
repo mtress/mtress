@@ -15,7 +15,7 @@ def storage_level_constraint(
     model: Model,
     name: str,
     storage_component: GenericStorage,
-    multiplexer_component: Bus,
+    multiplexer_bus: Bus,
     input_levels: dict[Node:float] = None,
     output_levels: dict[Node:float] = None,
 ):
@@ -30,7 +30,7 @@ def storage_level_constraint(
         Name of the multiplexer.
     storage_component : oemof.solph.components.GenericStorage
         Storage component whose content should mandate the possible inputs and outputs.
-    multiplexer_component : oemof.solph.Bus
+    multiplexer_bus : oemof.solph.Bus
         Bus which connects the input and output levels to the storage.
     input_levels : dictionary with oemof.solph.Bus as keys and float as values
         Dictionary of buses which act as inputs and corresponding levels
@@ -85,7 +85,7 @@ def storage_level_constraint(
 
         # Define constraints on the output flows
         def _constraint_output_rule(m, o, t):
-            return m.flow[multiplexer_component, o, t] <= active_output[o, t]
+            return m.flow[multiplexer_bus, o, t] <= active_output[o, t]
 
         setattr(
             model,
@@ -134,7 +134,7 @@ def storage_level_constraint(
 
         # Define constraints on the input flows
         def _constraint_input_rule(m, i, t):
-            return m.flow[i, multiplexer_component, t] <= 1 - inactive_input[i, t]
+            return m.flow[i, multiplexer_bus, t] <= 1 - inactive_input[i, t]
 
         setattr(
             model,
