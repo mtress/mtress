@@ -33,7 +33,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "oemof.solph >= 0.4.4",
-        "oemof.thermal >= 0.0.5",
+        "oemof.thermal >= 0.0.6.dev1",
         "pyyaml >= 6.0",
         "pvlib"
     ],
