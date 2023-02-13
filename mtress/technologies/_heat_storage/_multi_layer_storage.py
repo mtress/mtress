@@ -12,14 +12,14 @@ from oemof.solph.components import GenericStorage
 from oemof.solph.constraints import shared_limit
 from oemof.thermal import stratified_thermal_storage
 
-from .._abstract_component import AbstractSolphComponent
-from .._data_handler import TimeseriesSpecifier
-from ..carriers import Heat
-from ..physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
-from ._abstract_technology import AbstractTechnology
+from mtress._data_handler import TimeseriesSpecifier
+from mtress.carriers import Heat
+from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
+
+from ._abstract_heat_storage import AbstractHeatStorage
 
 
-class LayeredHeatStorage(AbstractTechnology, AbstractSolphComponent):
+class LayeredHeatStorage(AbstractHeatStorage):
     """
     Layered heat storage.
 
@@ -43,17 +43,14 @@ class LayeredHeatStorage(AbstractTechnology, AbstractSolphComponent):
         :param u_value: Thermal transmittance in W/m²/K
         :param ambient_temperature: Ambient temperature in deg C
         """
-        super().__init__(name)
-
-        # General parameters of the storage
-        self.diameter = diameter
-        self.volume = volume
-        self.ambient_temperature = ambient_temperature
-        if u_value is None or u_value > 0:
-            self.u_value = u_value
-        else:
-            raise ValueError("u_value needs to be positive.")
-
+        super().__init__(
+            name=name,
+            diameter=diameter,
+            volume=volume,
+            ambient_temperature=ambient_temperature,
+            u_value=u_value
+        )
+        
         # Solph specific params
         # Bookkeeping of oemof components
         self.storage_components = {}
