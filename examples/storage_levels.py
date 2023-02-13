@@ -1,32 +1,88 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
+from oemof.solph import Bus, EnergySystem, Flow, Model
+from oemof.solph.components import GenericStorage, Source, Sink
+from oemof.solph.processing import results
 
-time_index = range(0, 25, 3)
+import matplotlib.pyplot as plt
 
-df = pd.DataFrame(
-    index=time_index,
-    data={
-        "storage_level":
-            [0.46, 0.32, 0.05, 0.14, 0.69, 0.48, 0.92, 0.61, 0.53]
-    })
+from mtress._storage_level_constraint import storage_level_constraint
 
-df["Y_3"] = np.minimum(np.floor(df["storage_level"]/0.3), np.full(9, 0.3))
-df["Y_6"] = np.minimum(np.floor(df["storage_level"]/0.6), np.full(9, 0.6))
-df["Y_9"] = np.minimum(np.floor(df["storage_level"]/0.9), np.full(9, 0.9))
 
-plt.figure(tight_layout=True)
+es = EnergySystem(
+    timeindex=pd.date_range("2022-01-01", freq="60T", periods=16),
+    infer_last_interval=True,
+)
 
-plt.step(df.index, df["Y_3"], linestyle="dotted", label="0.3 level active", lw=2)
-plt.step(df.index, df["Y_6"], linestyle="dashed", label="0.6 level active", lw=2)
-plt.step(df.index, df["Y_9"], linestyle="dashdot", label="0.9 level active", lw=2)
-plt.plot(df["storage_level"], "k-", label="storage content", lw=2)
+multiplexer = Bus(
+    label="multiplexer",
+)
+
+storage = GenericStorage(
+    label="storage",
+    nominal_storage_capacity=3,
+    initial_storage_level=1,
+    balanced=False,
+    inputs={multiplexer: Flow()},
+    outputs={multiplexer: Flow()},
+)
+
+es.add(multiplexer, storage)
+
+in_1 = Source(
+    label="in_1",
+    outputs={multiplexer: Flow(nominal_value=0.1)}
+)
+es.add(in_1)
+
+out_0 = Sink(
+    label="out_0",
+    inputs={multiplexer: Flow(nominal_value=0.25, variable_costs=-0.1)}
+)
+es.add(out_0)
+
+out_1 = Sink(
+    label="out_1",
+    inputs={multiplexer: Flow(nominal_value=0.15, variable_costs=-0.1)}
+)
+es.add(out_1)
+
+
+model = Model(es)
+
+storage_level_constraint(
+    model=model,
+    name="multiplexer",
+    storage_component=storage,
+    multiplexer_component=multiplexer,
+    input_levels={in_1: 1/3},
+    output_levels={out_0: 0.1, out_1: 1/2},
+)
+model.solve()
+
+my_results = results(model)
+
+df = pd.DataFrame(my_results[(storage, None)]["sequences"])
+df["out_status"] = my_results[(out_1, None)]["sequences"]
+df["in_status"] = 1 - my_results[(in_1, None)]["sequences"]
+
+df["in1"] = my_results[(in_1, multiplexer)]["sequences"]
+df["out0"] = my_results[(multiplexer, out_0)]["sequences"]
+df["out1"] = my_results[(multiplexer, out_1)]["sequences"]
+
+plt.step(df.index, df["in1"], where="post", label="inflow (<1/3)")
+plt.step(df.index, df["out0"], where="post", label="outflow (>0.1)")
+plt.step(df.index, df["out1"], where="post", label="outflow (>0.5)")
 
 plt.grid()
-plt.xlim(0, 24)
-plt.xticks(time_index)
-plt.ylim(0, 1)
 plt.legend()
-plt.xlabel("Time")
-plt.ylabel("Storage content (normalised)\nor Level activity (if >0)")
+
+plt.twinx()
+
+plt.plot(df.index, df["storage_content"], "r-", label="storage content")
+plt.ylim(0, 3)
+plt.legend(loc="center right")
+
+print(df)
+
 plt.show()
+
