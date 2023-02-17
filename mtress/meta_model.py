@@ -230,9 +230,11 @@ class MetaModel:
                 investment=Investment(
                     ep_costs=self.energy_cost['electricity'][
                                  'demand_rate'] * self.time_range))},
-            outputs={b_eldist: Flow(nonconvex=NonConvex(),
-                                    nominal_value=1e5,
-                                    grid_connection=True)})
+            outputs={b_eldist: Flow(
+                nonconvex=NonConvex(),
+                nominal_value=1e5,
+                custom_attributes={"grid_connection": True}
+            )})
 
         self.electricity_import_flows.append((b_el_adjacent.label,
                                               b_grid_connection_in.label))
@@ -240,9 +242,11 @@ class MetaModel:
         # create external market to sell electricity to
         b_grid_connection_out = Bus(
             label="b_grid_connection_out",
-            inputs={b_elxprt: Flow(nonconvex=NonConvex(),
-                                   nominal_value=1e5,
-                                   grid_connection=True)})
+            inputs={b_elxprt: Flow(
+                nonconvex=NonConvex(),
+                nominal_value=1e5,
+                custom_attributes={"grid_connection": True}
+            )})
 
         energy_system.add(b_grid_connection_in, b_grid_connection_out)
 
