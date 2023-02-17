@@ -28,6 +28,7 @@ from oemof.solph import (
     NonConvex,
     views,
 )
+old_solph = False
 try:
     from oemof.solph.components import (
         Sink,
@@ -36,6 +37,7 @@ try:
         GenericStorage,
     )
 except ImportError:  # solph <= v0.4
+    old_solph = True
     from oemof.solph import (
         Sink,
         Source,
@@ -223,6 +225,19 @@ class MetaModel:
                 + self.spec_co2['el_in']
                 * self.spec_co2['price_el'])
 
+        if old_solph:
+            grid_in_flow = Flow(
+                nonconvex=NonConvex(),
+                nominal_value=1e5,
+                grid_connection=True,
+            )
+        else:
+            grid_in_flow = Flow(
+                nonconvex=NonConvex(),
+                nominal_value=1e5,
+                custom_attributes={"grid_connection": True}
+            )
+
         b_grid_connection_in = Bus(
             label="b_grid_connection_in",
             inputs={b_el_adjacent: Flow(
@@ -230,23 +245,29 @@ class MetaModel:
                 investment=Investment(
                     ep_costs=self.energy_cost['electricity'][
                                  'demand_rate'] * self.time_range))},
-            outputs={b_eldist: Flow(
-                nonconvex=NonConvex(),
-                nominal_value=1e5,
-                custom_attributes={"grid_connection": True}
-            )})
+            outputs={b_eldist: grid_in_flow}
+        )
 
         self.electricity_import_flows.append((b_el_adjacent.label,
                                               b_grid_connection_in.label))
 
-        # create external market to sell electricity to
-        b_grid_connection_out = Bus(
-            label="b_grid_connection_out",
-            inputs={b_elxprt: Flow(
+        if old_solph:
+            grid_out_flow = Flow(
+                nonconvex=NonConvex(),
+                nominal_value=1e5,
+                grid_connection=True,
+            )
+        else:
+            grid_out_flow = Flow(
                 nonconvex=NonConvex(),
                 nominal_value=1e5,
                 custom_attributes={"grid_connection": True}
-            )})
+            )
+        # create external market to sell electricity to
+        b_grid_connection_out = Bus(
+            label="b_grid_connection_out",
+            inputs={b_elxprt: grid_out_flow}
+        )
 
         energy_system.add(b_grid_connection_in, b_grid_connection_out)
 
