@@ -1,7 +1,7 @@
 """Locations in a meta model."""
 
 
-from typing import Dict, Iterable
+from typing import Dict, Iterable, List
 
 from ._abstract_component import AbstractComponent
 from ._meta_model import MetaModel
@@ -43,7 +43,7 @@ class Location:
         self._meta_model: MetaModel = None
 
         self._carriers: Dict[type, AbstractCarrier] = {}
-        self._demands: Dict[type, AbstractDemand] = {}
+        self._demands: List[type, AbstractDemand] = []
         self._technologies: Dict[str, AbstractComponent] = {}
 
     def assign_meta_model(self, meta_model: MetaModel):
@@ -58,7 +58,7 @@ class Location:
     def add_demand(self, demand: AbstractDemand):
         """Add a demand to the location."""
         demand.register_location(self)
-        self._demands[type(demand)] = demand
+        self._demands.append(demand)
 
     def add_technology(self, technology: AbstractComponent):
         """Add a demand to the location."""
@@ -109,7 +109,7 @@ class Location:
     @property
     def demands(self) -> Iterable[AbstractDemand]:
         """Get all demands of this location."""
-        return self._demands.values()
+        return self._demands
 
     @property
     def technologies(self) -> Iterable[AbstractComponent]:
