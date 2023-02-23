@@ -53,7 +53,7 @@ storage_level_constraint(
     model=model,
     name="multiplexer",
     storage_component=storage,
-    multiplexer_component=multiplexer,
+    multiplexer_bus=multiplexer,
     input_levels={in_1: 1/3},
     output_levels={out_0: 0.1, out_1: 1/2},
 )
