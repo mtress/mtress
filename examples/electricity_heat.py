@@ -66,6 +66,16 @@ house_1.add_technology(
     technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6, 13])
 )
 
+house_1.add_technology(
+    technologies.FullyMixedHeatStorage(
+        name="heat storage",
+        diameter=0.4,
+        volume=0.8,
+        ambient_temperature=15,
+        power_limit=10,
+    )
+)
+
 solph_representation = SolphModel(
     energy_system,
     timeindex={

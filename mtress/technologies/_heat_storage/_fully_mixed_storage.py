@@ -7,7 +7,7 @@ SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 
 SPDX-License-Identifier: MIT
 """
-from oemof.solph import Bus, Flow
+from oemof.solph import Bus, Flow, NonConvex
 from oemof.solph.components import GenericStorage
 
 from mtress._data_handler import TimeseriesSpecifier
@@ -31,6 +31,7 @@ class FullyMixedHeatStorage(AbstractHeatStorage):
         name: str,
         diameter: float,
         volume: float,
+        power_limit: float,
         ambient_temperature: TimeseriesSpecifier,
         u_value: float | None = None,
     ):
@@ -39,7 +40,7 @@ class FullyMixedHeatStorage(AbstractHeatStorage):
 
         :param diameter: Diameter of the storage in m
         :param volume: Volume of the storage in m³
-        :param insulation_thickness: Insulation thickness in m
+        :param power_limit: power limit in kW
         :param ambient_temperature: Ambient temperature in deg C
         """
         super().__init__(
@@ -47,8 +48,10 @@ class FullyMixedHeatStorage(AbstractHeatStorage):
             diameter=diameter,
             volume=volume,
             ambient_temperature=ambient_temperature,
-            u_value=u_value
+            u_value=u_value,
         )
+
+        self.power_limit = power_limit
 
         self.storage_component = None
         self.multiplexer_bus = None
@@ -59,10 +62,26 @@ class FullyMixedHeatStorage(AbstractHeatStorage):
         # by the heat carrier object
         heat_carrier = self.location.get_carrier(Heat)
 
+        temperature_levels = heat_carrier.temperature_levels
+
+        in_nodes = {}
+        out_nodes = {}
+        for temperature in temperature_levels:
+            in_nodes[heat_carrier.outputs[temperature]] = Flow(
+                nominal_value=self.power_limit,
+                nonconvex=NonConvex(),
+            )
+            out_nodes[heat_carrier.inputs[temperature]] = Flow(
+                nominal_value=self.power_limit,
+                nonconvex=NonConvex(),
+            )
+
         self.multiplexer_bus = self._solph_model.add_solph_component(
             mtress_component=self,
             label="multiplexer",
             solph_component=Bus,
+            inputs=in_nodes,
+            outputs=out_nodes,
         )
 
         capacity = self.volume * kJ_to_MWh(
@@ -103,7 +122,7 @@ class FullyMixedHeatStorage(AbstractHeatStorage):
             input_levels[heat_carrier.outputs[temperature]] = (
                 (temperature - reference_temperature)/highest_temperature
             )
-            output_levels = heat_carrier.inputs[temperature] = (
+            output_levels[heat_carrier.inputs[temperature]] = (
                 (temperature - reference_temperature)/highest_temperature
             )
 
