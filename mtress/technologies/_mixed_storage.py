@@ -8,58 +8,26 @@ SPDX-FileCopyrightText: Sunke Schlüters
 
 SPDX-License-Identifier: MIT
 """
-import logging
 
 from oemof.solph import Bus, Flow
 from oemof.solph.components import GenericStorage
-from oemof.thermal import stratified_thermal_storage
 
 from .._abstract_component import AbstractSolphComponent
-from .._data_handler import TimeseriesSpecifier
 from .._oemof_storage_multiplexer import storage_multiplexer_constraint
-from ..carriers import AbstractLayeredCarrier, Heat, Hydrogen
-from ..physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
-from ._abstract_technology import AbstractTechnology
-
-# Thermal conductivity of insulation material
-TC_INSULATION = 0.04  # W / (m * K)
-
-_LOGGER = logging.getLogger(__name__)
+from ..carriers import AbstractLayeredCarrier
 
 
-class AbstractMixedStorage(AbstractTechnology, AbstractSolphComponent):
+class AbstractMixedStorage(AbstractSolphComponent):
     """Abstract mixed storage."""
 
-    def __init__(
-        self,
-        name: str,
-        carrier: AbstractLayeredCarrier,
-        capacity_per_unit: float,
-        empty_level: float = 0,
-        solph_storage_arguments: dict = None,
-    ):
-        """Initialize abstract mixed storage."""
-        super().__init__(name)
+    carrier: AbstractLayeredCarrier
+    capacity_per_unit: float
+    empty_level: float = 0
+    solph_storage_arguments: dict = None
 
-        self.carrier = carrier
-        self.capacity_per_unit = capacity_per_unit
-        self.empty_level = empty_level
-
-        if solph_storage_arguments is None:
-            _LOGGER.warning(
-                "No arguments for the underlying GenericStorage provided. Using defaults."
-            )
-            solph_storage_arguments = {
-                "nominal_storage_capacity": (max(self.carrier.levels) - empty_level)
-                * capacity_per_unit,
-                "initial_storage_level": 0,
-            }
-
-        self.solph_storage_arguments = solph_storage_arguments
-
-        self.storage_multiplexer_interfaces = {}
-        self.multiplexer: Bus = None
-        self.storage: GenericStorage = None
+    multiplexer: Bus
+    storage: GenericStorage
+    storage_multiplexer_interfaces: dict = None
 
     def build_core(self):
         """Build core solph structure."""
@@ -88,4 +56,13 @@ class AbstractMixedStorage(AbstractTechnology, AbstractSolphComponent):
             outputs={self.multiplexer: Flow()},
             **self.solph_storage_arguments
         )
-        # self._storage = self._solph_model.add_solph_component()
+
+    def add_constraints(self):
+        """Add constraints."""
+        storage_multiplexer_constraint(
+            model=self._solph_model.model,
+            name="some_name",
+            storage_component=self.storage,
+            multiplexer_component=self.multiplexer,
+            interfaces=self.storage_multiplexer_interfaces,
+        )

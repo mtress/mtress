@@ -9,6 +9,8 @@ SPDX-License-Identifier: MIT
 """
 
 
+from typing import Dict, Tuple
+
 from oemof.solph import Bus, Model
 from oemof.solph.components import GenericStorage
 from pyomo import environ as po
@@ -19,9 +21,7 @@ def storage_multiplexer_constraint(
     name: str,
     storage_component: GenericStorage,
     multiplexer_component: Bus,
-    input_level_components: list[Bus],
-    output_level_components: list[Bus],
-    levels: list[float],
+    interfaces: Dict[float, Tuple[Bus, Bus]],
 ):
     r"""
     Add constraits to implement a storage content dependent multiplexer.
@@ -36,20 +36,17 @@ def storage_multiplexer_constraint(
         Storage component whose content should mandate the possible inputs and outputs.
     multiplexer_component : oemof.solph.Bus
         Bus which connects the input and output levels to the storage.
-    input_level_components : list of oemof.solph.Bus
-        List of buses which act as inputs (must be same length as levels parameter)
-    output_level_components : list of oemof.solph.Bus
-        List of buses which act as outputs (must be same length as levels parameter)
-    levels : list of float
-        List of storage content levels corresponding to the input and output components,
-        i.e. for a given value in this list, the corresponding input can be active if
-        the storage content is lower than this value.
-
+    interfaces : Dict[float, Tuple[oemof.solph.Bus, oemof.solph.Bus]]
+        Mapping of storage content levels to the corresponding input and output busses
+        components, e.g. for a given value in this list, the corresponding input can be
+        active if the storage content is lower than this value.
     """
     # TODO: Add example.
 
     # http://yetanothermathprogrammingconsultant.blogspot.com/2015/10/piecewise-linear-functions-in-mip-models.html
-    # Helper mapping
+    # Helper variables
+    levels = list(sorted(interfaces.keys()))
+
     intervals = {
         f"{name}_interval_{i:02d}": (left, right)
         for i, (left, right) in enumerate(zip(levels[:-1], levels[1:]))
@@ -155,7 +152,6 @@ def storage_multiplexer_constraint(
 
     # Now we can constrain the input and output flows
     # Helper mapping the levels to the input components
-    input_map = dict(zip(levels, input_level_components))
     input_energy = {upp: upp - low for low, upp in zip(levels[:-1], levels[1:])}
 
     # Define constraints on the input flows
@@ -167,8 +163,9 @@ def storage_multiplexer_constraint(
         expr *= input_energy.get(flow_level, 0)
 
         # Energy which is extracted in this timestep
+        input_component, _ = interfaces[flow_level]
         expr += (
-            model.flow[input_map[flow_level], multiplexer_component, timestep]
+            model.flow[input_component, multiplexer_component, timestep]
             * model.timeincrement[timestep]
         )
 
@@ -182,7 +179,6 @@ def storage_multiplexer_constraint(
     )
 
     # Helper mapping the levels to the output components
-    output_map = dict(zip(levels, output_level_components))
     output_energy = {low: upp - low for low, upp in zip(levels[:-1], levels[1:])}
 
     # Define constraints on the input flows
@@ -194,8 +190,9 @@ def storage_multiplexer_constraint(
         expr *= output_energy.get(flow_level, 0)
 
         # Energy which is extracted in this timestep
+        _, output_component = interfaces[flow_level]
         expr += (
-            model.flow[multiplexer_component, output_map[flow_level], timestep]
+            model.flow[multiplexer_component, output_component, timestep]
             * model.timeincrement[timestep]
         )
 
