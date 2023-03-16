@@ -7,18 +7,15 @@ SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 
 SPDX-License-Identifier: MIT
 """
-from oemof.solph import Bus, Flow, NonConvex
-from oemof.solph.components import GenericStorage
-
 from mtress._data_handler import TimeseriesSpecifier
-from mtress._storage_level_constraint import storage_level_constraint
 from mtress.carriers import Heat
 from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
 
+from .._mixed_storage import AbstractMixedStorage
 from ._abstract_heat_storage import AbstractHeatStorage
 
 
-class FullyMixedHeatStorage(AbstractHeatStorage):
+class FullyMixedHeatStorage(AbstractHeatStorage, AbstractMixedStorage):
     """
     Fully mixed heat storage.
 
@@ -26,7 +23,7 @@ class FullyMixedHeatStorage(AbstractHeatStorage):
     are suitably high or low. See https://arxiv.org/abs/2211.14080
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         name: str,
         diameter: float,
@@ -34,103 +31,50 @@ class FullyMixedHeatStorage(AbstractHeatStorage):
         power_limit: float,
         ambient_temperature: TimeseriesSpecifier,
         u_value: float | None = None,
+        allow_parallel_flows: bool = False,
     ):
         """
         Create fully mixed heat storage component.
 
+        :param name: Name of the component
         :param diameter: Diameter of the storage in m
         :param volume: Volume of the storage in m³
         :param power_limit: power limit in kW
         :param ambient_temperature: Ambient temperature in deg C
+        :param u_value: Thermal transmittance in W/m²/K
         """
-        super().__init__(
-            name=name,
-            diameter=diameter,
-            volume=volume,
-            ambient_temperature=ambient_temperature,
-            u_value=u_value,
+        AbstractHeatStorage.__init__(
+            self, name, diameter, volume, power_limit, ambient_temperature, u_value
         )
 
-        self.power_limit = power_limit
-
-        self.storage_component = None
-        self.multiplexer_bus = None
+        AbstractMixedStorage.__init__(self, allow_parallel_flows)
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        # Create storage components according to the temperature levels defined
-        # by the heat carrier object
-        heat_carrier = self.location.get_carrier(Heat)
+        carrier: Heat = self.location.get_carrier(Heat)
+        capacity_per_unit = self.volume * kJ_to_MWh(H2O_DENSITY * H2O_HEAT_CAPACITY)
+        empty_level = carrier.reference_temperature
 
-        temperature_levels = heat_carrier.temperature_levels
-
-        in_nodes = {}
-        out_nodes = {}
-        for temperature in temperature_levels:
-            in_nodes[heat_carrier.outputs[temperature]] = Flow(
-                nominal_value=self.power_limit,
-                nonconvex=NonConvex(),
+        solph_storage_arguments = {
+            "nominal_storage_capacity": (
+                max(carrier.temperature_levels) - carrier.reference_temperature
             )
-            out_nodes[heat_carrier.inputs[temperature]] = Flow(
-                nominal_value=self.power_limit,
-                nonconvex=NonConvex(),
-            )
-
-        self.multiplexer_bus = self._solph_model.add_solph_component(
-            mtress_component=self,
-            label="multiplexer",
-            solph_component=Bus,
-            inputs=in_nodes,
-            outputs=out_nodes,
-        )
-
-        capacity = self.volume * kJ_to_MWh(
-            (max(heat_carrier.temperature_levels) - heat_carrier.reference_temperature)
-            * H2O_DENSITY * H2O_HEAT_CAPACITY
-        )
+            * capacity_per_unit
+        }
 
         if self.u_value is None:
-            loss_rate = 0
-            fixed_losses_relative = 0
-            fixed_losses_absolute = 0
+            solph_storage_arguments.update(
+                {
+                    "loss_rate": 0,
+                    "fixed_losses_relative": 0,
+                    "fixed_losses_absolute": 0,
+                }
+            )
         else:
-            raise NotImplementedError("u_value is not implemented for this kond of storage")
-
-        self.storage_component = self._solph_model.add_solph_component(
-            mtress_component=self,
-            label="storage",
-            solph_component=GenericStorage,
-            inputs={self.multiplexer_bus: Flow()},
-            outputs={self.multiplexer_bus: Flow()},
-            nominal_storage_capacity=capacity,
-            loss_rate=loss_rate,
-            fixed_losses_absolute=fixed_losses_absolute,
-            fixed_losses_relative=fixed_losses_relative,
-        )
-
-
-    def add_constraints(self):
-        """Add constraints to the model."""
-        heat_carrier = self.location.get_carrier(Heat)
-        temperature_levels = heat_carrier.temperature_levels
-        reference_temperature = heat_carrier.reference_temperature
-        highest_temperature = max(temperature_levels)
-
-        input_levels = {}
-        output_levels = {}
-        for temperature in temperature_levels:
-            input_levels[heat_carrier.outputs[temperature]] = (
-                (temperature - reference_temperature)/highest_temperature
-            )
-            output_levels[heat_carrier.inputs[temperature]] = (
-                (temperature - reference_temperature)/highest_temperature
+            raise NotImplementedError(
+                "u_value is not implemented for this kond of storage"
             )
 
-        storage_level_constraint(
-            model=self._solph_model.model,
-            name=self._solph_model.get_label(self, "level_contraint"),
-            storage_component=self.storage_component,
-            multiplexer_bus=self.multiplexer_bus,
-            input_levels=input_levels,
-            output_levels=output_levels,
+        self.build_multiplexer_structure(
+            carrier, capacity_per_unit, empty_level, solph_storage_arguments
         )
