@@ -15,32 +15,36 @@ from .._abstract_technology import AbstractTechnology
 
 
 class AbstractHeatStorage(AbstractTechnology, AbstractSolphComponent):
-    """
-    Base class and interface for heat storage technologies.
-    """
+    """Base class and interface for heat storage technologies."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         name: str,
         diameter: float,
         volume: float,
+        power_limit: float,
         ambient_temperature: TimeseriesSpecifier,
         u_value: float | None = None,
     ):
         """
-        Create layered heat storage component.
+        Create heat storage component.
 
+        :param name: Name of the component
         :param diameter: Diameter of the storage in m
         :param volume: Volume of the storage in m³
-        :param u_value: Thermal transmittance in W/m²/K
+        :param power_limit: power limit in kW
         :param ambient_temperature: Ambient temperature in deg C
+        :param u_value: Thermal transmittance in W/m²/K
         """
         super().__init__(name)
 
         # General parameters of the storage
         self.diameter = diameter
         self.volume = volume
+        self.power_limit = power_limit
         self.ambient_temperature = ambient_temperature
+
+        # TODO: Why do we check the u_value but not the other parameters?
         if u_value is None or u_value > 0:
             self.u_value = u_value
         else:
