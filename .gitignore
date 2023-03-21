@@ -11,3 +11,4 @@ build/
 # Individual obsolete files
 mtress/_meta_model_bak.py
 example/meta_model_config.yaml
+*.ipynb
