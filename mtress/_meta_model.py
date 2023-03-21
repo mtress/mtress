@@ -102,33 +102,9 @@ class SolphModel:
         for component in self._meta_model.components:
             component.register_solph_model(self)
 
-    def add_solph_component(
-        self,
-        mtress_component: AbstractSolphComponent,
-        label: str,
-        solph_component: Callable,
-        **kwargs,
-    ):
-        """Add a solph component, e.g. a Bus, to the solph energy system."""
-        # Generate a unique label
-        _full_label = self.get_label(mtress_component, label)
-
-        if (mtress_component, label) in self._solph_components:
-            raise KeyError(f"Solph component named {_full_label} already exists")
-
-        _component = solph_component(label=_full_label, **kwargs)
-        self._solph_components[(mtress_component, label)] = _component
-        self.energy_system.add(_component)
-
-        return _component
-
-    def get_label(self, mtress_component, label):
+    def generate_label(self, mtress_component, label):
         """Generate a unique label for a component."""
         return ":".join([*mtress_component.identifier, label])
-
-    def get_solph_component(self, mtress_component: AbstractSolphComponent, label: str):
-        """Get a solph component by component and label."""
-        return self._solph_components[(mtress_component, label)]
 
     def build_solph_energy_system(self):
         """Build the `oemof.solph` representation of the energy system."""

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from ._meta_model import SolphModel
 
@@ -54,6 +54,7 @@ class AbstractComponent(ABC):
 class AbstractSolphComponent(ABC):
     """Interface for components which can be represented in `oemof.solph`."""
 
+    _solph_components: dict = {}
     _solph_model: SolphModel = None
 
     @property
@@ -61,20 +62,33 @@ class AbstractSolphComponent(ABC):
     def identifier(self) -> list:
         """Get identifier of component."""
 
-    def register_solph_model(self, solph_model: SolphModel):
+    def register_solph_model(self, solph_model: SolphModel) -> None:
         """Store a reference to the solph model."""
         if self._solph_model is not None:
             raise Exception("SolphModel already registered")
 
         self._solph_model = solph_model
 
-    def build_core(self):
+    def create_solph_component(self, label: str, component: Callable, **kwargs):
+        """Create a solph component and add it to the solph model."""
+        _full_label = self._solph_model.generate_label(self, label)
+
+        if label in self._solph_components:
+            raise KeyError(f"Solph component named {_full_label} already exists")
+
+        _component = component(label=_full_label, **kwargs)
+        self._solph_components[label] = _component
+        self._solph_model.energy_system.add(_component)
+
+        return _component
+
+    def build_core(self) -> None:
         """Build the core structure of the component."""
 
-    def establish_interconnections(self):
+    def establish_interconnections(self) -> None:
         """Build interconnections with other components."""
 
-    def add_constraints(self):
+    def add_constraints(self) -> None:
         """Add constraints to the model."""
 
     # TODO: Methods for result analysis
