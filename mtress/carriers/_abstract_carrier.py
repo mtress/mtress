@@ -11,7 +11,7 @@ class AbstractCarrier(AbstractComponent):
 
     def __init__(self):
         """Initialize carrier."""
-        super().__init__("c_" + self.__class__.__name__.lower())
+        super().__init__(self.__class__.__name__)
 
 
 class AbstractLayeredCarrier(AbstractCarrier):
