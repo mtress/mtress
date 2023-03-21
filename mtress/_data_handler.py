@@ -36,7 +36,12 @@ class DataHandler:
 
             case list() as values:
                 if not len(values) == len(self.timeindex):
-                    raise ValueError("Length of list differs from time index length")
+                    raise ValueError(
+                        (
+                            f"Length of list ({len(values)}) differs from"
+                            f"time index length ({len(self.timeindex)})"
+                        )
+                    )
 
                 return pd.Series(data=values, index=self.timeindex)
 
