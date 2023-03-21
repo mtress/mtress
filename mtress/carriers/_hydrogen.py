@@ -70,7 +70,12 @@ class Hydrogen(AbstractLayeredCarrier, AbstractSolphComponent):
 
     @property
     def inputs(self):
-        """Alias for outputs."""
+        """Alias for busses."""
+        return self.busses
+
+    @property
+    def outputs(self):
+        """Alias for busses."""
         return self.busses
 
     @property
