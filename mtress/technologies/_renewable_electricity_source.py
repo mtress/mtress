@@ -55,9 +55,8 @@ class RenewableElectricitySource(AbstractTechnology, AbstractSolphComponent):
             else Flow(nominal_value=self.nominal_power, max=self.specific_generation)
         )
 
-        self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.create_solph_component(
             label="source",
-            solph_component=Source,
+            component=Source,
             outputs={electricity_carrier.production: flow},
         )

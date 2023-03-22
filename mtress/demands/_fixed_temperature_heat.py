@@ -78,10 +78,9 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
         if self.return_temperature == carrier.reference_temperature:
             # If the return temperature is the reference temperature we just take the
             # energy from the appropriate level
-            output = self._solph_model.add_solph_component(
-                mtress_component=self,
+            output = self.create_solph_component(
                 label="output",
-                solph_component=Bus,
+                component=Bus,
                 inputs={carrier.outputs[self.flow_temperature]: Flow()},
             )
         else:
@@ -89,16 +88,14 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
                 self.return_temperature - carrier.reference_temperature
             ) / (self.flow_temperature - carrier.reference_temperature)
 
-            output = self._solph_model.add_solph_component(
-                mtress_component=self,
+            output = self.create_solph_component(
                 label="output",
-                solph_component=Bus,
+                component=Bus,
             )
 
-            self._solph_model.add_solph_component(
-                mtress_component=self,
+            self.create_solph_component(
                 label="heat_exchanger",
-                solph_component=Transformer,
+                component=Transformer,
                 inputs={
                     carrier.outputs[self.flow_temperature]: Flow(),
                 },
@@ -113,10 +110,9 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
                 },
             )
 
-        self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.create_solph_component(
             label="sink",
-            solph_component=Sink,
+            component=Sink,
             inputs={
                 output: Flow(
                     nominal_value=1,

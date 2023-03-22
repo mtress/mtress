@@ -99,24 +99,21 @@ class Heat(AbstractLayeredCarrier, AbstractSolphComponent):
         temp_low = None
         for temperature in self._levels:
             # Thermal buses
-            b_out = self._solph_model.add_solph_component(
-                mtress_component=self,
+            b_out = self.create_solph_component(
                 label=f"out_{temperature:.0f}",
-                solph_component=Bus,
+                component=Bus,
             )
 
             if temp_low is None:
-                bus_in = self._solph_model.add_solph_component(
-                    mtress_component=self,
+                bus_in = self.create_solph_component(
                     label=f"in_{temperature:.0f}",
-                    solph_component=Bus,
+                    component=Bus,
                     outputs={b_out: Flow()},
                 )
             else:
-                bus_in = self._solph_model.add_solph_component(
-                    mtress_component=self,
+                bus_in = self.create_solph_component(
                     label=f"in_{temperature:.0f}",
-                    solph_component=Bus,
+                    component=Bus,
                     outputs={
                         self.inputs[temp_low]: Flow(),
                         b_out: Flow(),
@@ -130,10 +127,9 @@ class Heat(AbstractLayeredCarrier, AbstractSolphComponent):
             if temp_low is not None:
                 ratio = (temp_low - self._reference) / (temperature - self._reference)
 
-                self._solph_model.add_solph_component(
-                    mtress_component=self,
+                self.create_solph_component(
                     label=f"rise_{temp_low:.0f}_{temperature:.0f}",
-                    solph_component=Transformer,
+                    component=Transformer,
                     inputs={
                         bus_in: Flow(),
                         self.outputs[temp_low]: Flow(),

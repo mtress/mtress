@@ -56,16 +56,14 @@ class AirHeatExchanger(
             self.air_temperatures
         )
 
-        self._bus = _bus = self._solph_model.add_solph_component(
-            mtress_component=self,
+        self._bus = _bus = self.create_solph_component(
             label="output",
-            solph_component=Bus,
+            component=Bus,
         )
 
-        self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.create_solph_component(
             label="source",
-            solph_component=Source,
+            component=Source,
             outputs={_bus: Flow(nominal_value=self.nominal_power)},
         )
 

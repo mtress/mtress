@@ -89,10 +89,9 @@ class PEMElectrolyzer(AbstractTechnology, AbstractSolphComponent):
         heat_bus = heat_carrier.inputs[temp_level]
 
         # TODO: Minimal power implementieren
-        self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.create_solph_component(
             label="transformer",
-            solph_component=Transformer,
+            component=Transformer,
             inputs={electrical_bus: Flow(nominal_value=self.nominal_power)},
             outputs={
                 h2_bus: Flow(),
