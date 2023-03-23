@@ -2,36 +2,31 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Callable
 
+from ._interfaces import NamedElement
 from ._meta_model import SolphModel
 
 if TYPE_CHECKING:
     from ._location import Location
 
 
-class AbstractComponent(ABC):
+class AbstractComponent(NamedElement):
     """Abstract MTRESS component."""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         """Initialize a generic MTRESS component."""
-        self._name = name
+        super().__init__(name)
         self._location = None
+
+    @property
+    def identifier(self) -> str:
+        """Return identifier of this component."""
+        return f"{self.location.identifier}-{self.slug}"
 
     def assign_location(self, location):
         """Assign component to a location."""
         self._location = location
-
-    @property
-    def identifier(self) -> list:
-        """Return identifier of this component."""
-        return [self.location.name, self.name]
-
-    @property
-    def name(self):
-        """Return name of MTRESS component."""
-        return self._name
 
     @property
     def location(self):
@@ -51,16 +46,15 @@ class AbstractComponent(ABC):
         return self.location.meta_model
 
 
-class AbstractSolphComponent(ABC):
+class AbstractSolphComponent(AbstractComponent):
     """Interface for components which can be represented in `oemof.solph`."""
 
-    _solph_components: dict = {}
-    _solph_model: SolphModel = None
+    def __init__(self, name: str) -> None:
+        """Initialize component."""
+        super().__init__(name)
 
-    @property
-    @abstractmethod
-    def identifier(self) -> list:
-        """Get identifier of component."""
+        self._solph_components: list = []
+        self._solph_model: SolphModel = None
 
     def register_solph_model(self, solph_model: SolphModel) -> None:
         """Store a reference to the solph model."""
@@ -71,16 +65,26 @@ class AbstractSolphComponent(ABC):
 
     def create_solph_component(self, label: str, component: Callable, **kwargs):
         """Create a solph component and add it to the solph model."""
-        _full_label = self._solph_model.generate_label(self, label)
+        _full_label = f"{self.identifier}-{label}"
 
         if label in self._solph_components:
             raise KeyError(f"Solph component named {_full_label} already exists")
 
         _component = component(label=_full_label, **kwargs)
-        self._solph_components[label] = _component
+
+        # Store a reference to the MTRESS component
+        setattr(_component, "mtress_component", self)
+        setattr(_component, "short_label", label)
+
+        self._solph_components.append(_component)
         self._solph_model.energy_system.add(_component)
 
         return _component
+
+    @property
+    def solph_components(self) -> list:
+        """Iterate over solph components."""
+        return self._solph_components
 
     def build_core(self) -> None:
         """Build the core structure of the component."""
@@ -91,10 +95,13 @@ class AbstractSolphComponent(ABC):
     def add_constraints(self) -> None:
         """Add constraints to the model."""
 
+    def graph(self):
+        """Generate Graphviz visualization of"""
+
     # TODO: Methods for result analysis
 
 
-class ModelicaInterface(ABC):  # pylint: disable=too-few-public-methods
+class ModelicaInterface(AbstractComponent):  # pylint: disable=too-few-public-methods
     """Interface for components which can be represented in open modelica."""
 
     # At the moment, this is just a memory aid
