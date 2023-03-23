@@ -3,16 +3,27 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Dict, Iterable, Tuple
+from typing import TYPE_CHECKING, Dict, Iterable, List, Tuple
 
+import graphviz
 import pandas as pd
-from oemof.solph import EnergySystem, Model
+from oemof.solph import Bus, EnergySystem, Model
+from oemof.solph.components import GenericStorage, Sink, Source, Transformer
 
 from ._data_handler import DataHandler
 
 if TYPE_CHECKING:
     from ._abstract_component import AbstractComponent, AbstractSolphComponent
     from ._location import Location
+
+
+SOLPH_SHAPES = {
+    Source: "trapezium",
+    Sink: "invtrapezium",
+    Bus: "ellipse",
+    Transformer: "octagon",
+    GenericStorage: "cylinder",
+}
 
 
 class MetaModel:
@@ -34,7 +45,7 @@ class MetaModel:
 
     def __init__(self):
         """Initialize the meta model."""
-        self.locations: Dict[str, Location] = {}
+        self._locations: List[Location] = []
 
     @classmethod
     def from_config(cls, config: dict):
@@ -45,20 +56,19 @@ class MetaModel:
     def add_location(self, location: Location):
         """Add a new location to the meta model."""
         location.assign_meta_model(self)
-        self.locations[location.name] = location
+        self._locations.append(location)
+
+    @property
+    def locations(self) -> Iterable[Location]:
+        """Iterate over all locations."""
+        for location in self._locations:
+            yield location
 
     @property
     def components(self) -> Iterable[AbstractComponent]:
-        """Return an iterator over all components of all locations."""
-        for _, location in self.locations.items():
-            component: AbstractComponent
-
-            # Iterate over carriers, demands and all technologies
-            for component in [
-                *location.carriers,
-                *location.demands,
-                *location.technologies,
-            ]:
+        """Iterate over all components of all locations."""
+        for location in self.locations:
+            for component in location.components:
                 yield component
 
 
@@ -102,10 +112,6 @@ class SolphModel:
         for component in self._meta_model.components:
             component.register_solph_model(self)
 
-    def generate_label(self, mtress_component, label):
-        """Generate a unique label for a component."""
-        return ":".join([*mtress_component.identifier, label])
-
     def build_solph_energy_system(self):
         """Build the `oemof.solph` representation of the energy system."""
         for component in self._meta_model.components:
@@ -122,6 +128,47 @@ class SolphModel:
 
         for component in self._meta_model.components:
             component.add_constraints()
+
+    def generate_graph(self, detail: bool = False) -> graphviz.Digraph:
+        """Generate a graph representation of the energy system."""
+        dot = graphviz.Digraph()
+
+        for location in self._meta_model.locations:
+            with dot.subgraph() as location_subgraph:
+                location_subgraph.attr(label=location.name)
+
+                for component in location.components:
+                    component: AbstractSolphComponent
+
+                    if detail:
+                        component_subgraph = graphviz.Digraph()
+
+                    for solph_component in component.solph_components:
+                        if detail:
+                            component_subgraph.node(
+                                solph_component.label,
+                                label=solph_component.short_label,
+                                shape=SOLPH_SHAPES.get(
+                                    type(solph_component), "rectangle"
+                                ),
+                            )
+
+                        for output in solph_component.outputs:
+                            if detail:
+                                dot.edge(solph_component.label, output.label)
+                            else:
+                                dot.edge(
+                                    solph_component.mtress_component.identifier,
+                                    output.mtress_component.identifier,
+                                )
+
+                    if detail:
+                        location_subgraph.subgraph(component_subgraph)
+                    else:
+                        location_subgraph.node(
+                            component.identifier, label=component.name
+                        )
+        return dot
 
     def solve(
         self,
