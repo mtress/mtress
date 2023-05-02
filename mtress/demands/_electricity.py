@@ -42,17 +42,15 @@ class Electricity(AbstractDemand, AbstractSolphComponent):
         """Build core structure of oemof.solph representation."""
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
-        bus = self._solph_model.add_solph_component(
-            mtress_component=self,
+        bus = self.create_solph_component(
             label="input",
-            solph_component=Bus,
+            component=Bus,
             inputs={electricity_carrier.distribution: Flow()},
         )
 
-        self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.create_solph_component(
             label="sink",
-            solph_component=Sink,
+            component=Sink,
             inputs={
                 bus: Flow(
                     nominal_value=1,

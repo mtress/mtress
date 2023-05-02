@@ -61,50 +61,44 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
 
     def build_core(self):
         """Build solph components."""
-        self.distribution = b_dist = self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.distribution = b_dist = self.create_solph_component(
             label="distribution",
-            solph_component=Bus,
+            component=Bus,
         )
 
-        self.production = b_prod = self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.production = b_prod = self.create_solph_component(
             label="production",
-            solph_component=Bus,
+            component=Bus,
             outputs={b_dist: Flow()},
         )
 
         if self.grid_connection:
-            b_grid_export = self._solph_model.add_solph_component(
-                mtress_component=self,
+            b_grid_export = self.create_solph_component(
                 label="grid_export",
-                solph_component=Bus,
+                component=Bus,
                 inputs={b_prod: Flow()},
             )
 
-            self._solph_model.add_solph_component(
-                mtress_component=self,
+            self.create_solph_component(
                 label="sink_export",
-                solph_component=Sink,
+                component=Sink,
                 inputs={b_grid_export: Flow()},
                 # TODO: Add revenues
                 # Is this the correct place for revenues? Or should they be an option
                 # for the generating technologies?
             )
 
-            b_grid_import = self._solph_model.add_solph_component(
-                mtress_component=self,
+            b_grid_import = self.create_solph_component(
                 label="grid_import",
-                solph_component=Bus,
+                component=Bus,
                 outputs={b_dist: Flow()},
             )
 
             # (unidirectional) grid connection
             # RLM customer for district and larger buildings
-            self._solph_model.add_solph_component(
-                mtress_component=self,
+            self.create_solph_component(
                 label="source_import",
-                solph_component=Source,
+                component=Source,
                 outputs={
                     b_grid_import: Flow(
                         variable_costs=self.working_rate,

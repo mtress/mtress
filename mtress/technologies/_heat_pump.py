@@ -84,25 +84,22 @@ class HeatPump(AbstractTechnology, AbstractSolphComponent):
         # Add electrical connection
         electricity_carrier = self.location.get_carrier(Electricity)
 
-        self.electricity_bus = self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.electricity_bus = self.create_solph_component(
             label="electricity",
-            solph_component=Bus,
+            component=Bus,
             inputs={electricity_carrier.distribution: Flow()},
         )
 
         # Create bus and source for a combined thermal power limit on all temperature
         # levels
-        self.heat_budget_bus = heat_budget_bus = self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.heat_budget_bus = heat_budget_bus = self.create_solph_component(
             label="heat_budget_bus",
-            solph_component=Bus,
+            component=Bus,
         )
 
-        self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.create_solph_component(
             label="heat_budget_source",
-            solph_component=Source,
+            component=Source,
             outputs={heat_budget_bus: Flow(nominal_value=self.thermal_power_limit)},
         )
 
@@ -120,10 +117,9 @@ class HeatPump(AbstractTechnology, AbstractSolphComponent):
                         cop_0_35=self.cop_0_35,
                     )
 
-                    self._solph_model.add_solph_component(
-                        mtress_component=self,
+                    self.create_solph_component(
                         label=f"{anergy_source.name}_{target_temperature:.0f}",
-                        solph_component=Transformer,
+                        component=Transformer,
                         inputs={
                             anergy_source.bus: Flow(),
                             self.electricity_bus: Flow(),

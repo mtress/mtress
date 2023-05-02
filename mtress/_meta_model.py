@@ -3,8 +3,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Dict, Iterable, Tuple
+from typing import TYPE_CHECKING, Dict, Iterable, List, Tuple
 
+from graphviz import Digraph
 import pandas as pd
 from oemof.solph import EnergySystem, Model
 
@@ -34,7 +35,7 @@ class MetaModel:
 
     def __init__(self):
         """Initialize the meta model."""
-        self.locations: Dict[str, Location] = {}
+        self._locations: List[Location] = []
 
     @classmethod
     def from_config(cls, config: dict):
@@ -45,20 +46,19 @@ class MetaModel:
     def add_location(self, location: Location):
         """Add a new location to the meta model."""
         location.assign_meta_model(self)
-        self.locations[location.name] = location
+        self._locations.append(location)
+
+    @property
+    def locations(self) -> Iterable[Location]:
+        """Iterate over all locations."""
+        for location in self._locations:
+            yield location
 
     @property
     def components(self) -> Iterable[AbstractComponent]:
-        """Return an iterator over all components of all locations."""
-        for _, location in self.locations.items():
-            component: AbstractComponent
-
-            # Iterate over carriers, demands and all technologies
-            for component in [
-                *location.carriers,
-                *location.demands,
-                *location.technologies,
-            ]:
+        """Iterate over all components of all locations."""
+        for location in self.locations:
+            for component in location.components:
                 yield component
 
 
@@ -102,34 +102,6 @@ class SolphModel:
         for component in self._meta_model.components:
             component.register_solph_model(self)
 
-    def add_solph_component(
-        self,
-        mtress_component: AbstractSolphComponent,
-        label: str,
-        solph_component: Callable,
-        **kwargs,
-    ):
-        """Add a solph component, e.g. a Bus, to the solph energy system."""
-        # Generate a unique label
-        _full_label = self.get_label(mtress_component, label)
-
-        if (mtress_component, label) in self._solph_components:
-            raise KeyError(f"Solph component named {_full_label} already exists")
-
-        _component = solph_component(label=_full_label, **kwargs)
-        self._solph_components[(mtress_component, label)] = _component
-        self.energy_system.add(_component)
-
-        return _component
-
-    def get_label(self, mtress_component, label):
-        """Generate a unique label for a component."""
-        return ":".join([*mtress_component.identifier, label])
-
-    def get_solph_component(self, mtress_component: AbstractSolphComponent, label: str):
-        """Get a solph component by component and label."""
-        return self._solph_components[(mtress_component, label)]
-
     def build_solph_energy_system(self):
         """Build the `oemof.solph` representation of the energy system."""
         for component in self._meta_model.components:
@@ -146,6 +118,20 @@ class SolphModel:
 
         for component in self._meta_model.components:
             component.add_constraints()
+
+    def graph(self, detail: bool = False) -> Digraph:
+        """Generate a graph representation of the energy system."""
+        graph = Digraph(name="MTRESS model")
+        all_edges = set()
+
+        for location in self._meta_model.locations:
+            subgraph, edges = location.graph(detail)
+
+            all_edges.update(edges)
+            graph.subgraph(subgraph)
+
+        graph.edges(all_edges)
+        return graph
 
     def solve(
         self,

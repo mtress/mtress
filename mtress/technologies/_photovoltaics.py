@@ -140,10 +140,8 @@ class Photovoltaics(RenewableElectricitySource):
                 _LOGGER.warning("{col} not provided, using pvlib defaults")
             else:
                 weather[col] = self._solph_model.data.get_timeseries(self.weather[col])
-        
+
         return weather
-
-
 
     def build_core(self):
         """Calculate generation time series and build solph structure."""

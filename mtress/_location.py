@@ -1,15 +1,18 @@
 """Locations in a meta model."""
 
 
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, Set, Tuple
+
+from graphviz import Digraph
 
 from ._abstract_component import AbstractComponent
+from ._interfaces import NamedElement
 from ._meta_model import MetaModel
 from .carriers._abstract_carrier import AbstractCarrier
 from .demands._abstract_demand import AbstractDemand
 
 
-class Location:
+class Location(NamedElement):
     """
     Location in a MTRESS meta model.
 
@@ -33,42 +36,47 @@ class Location:
     Further procedure is described in the carrier and demand classes.
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         """
         Create location instance.
 
         :param name: User friendly name of the location
         """
-        self._name: str = name
+        super().__init__(name)
         self._meta_model: MetaModel = None
 
         self._carriers: Dict[type, AbstractCarrier] = {}
-        self._demands: List[type, AbstractDemand] = []
-        self._technologies: Dict[str, AbstractComponent] = {}
+        self._components: Set[AbstractComponent] = set()
+
+    @property
+    def identifier(self) -> str:
+        """Return an slugified identifier."""
+        return self._slug
 
     def assign_meta_model(self, meta_model: MetaModel):
         """Store reference to meta model."""
         self._meta_model = meta_model
 
+    def add(self, component: AbstractComponent):
+        """Add a component to the location."""
+        component.register_location(self)
+
+        if isinstance(component, AbstractCarrier):
+            self._carriers[type(component)] = component
+        else:
+            self._components.add(component)
+
     def add_carrier(self, carrier: AbstractCarrier):
         """Add a carrier to the location."""
-        carrier.register_location(self)
-        self._carriers[type(carrier)] = carrier
+        self.add(carrier)
 
     def add_demand(self, demand: AbstractDemand):
         """Add a demand to the location."""
-        demand.register_location(self)
-        self._demands.append(demand)
+        self.add(demand)
 
     def add_technology(self, technology: AbstractComponent):
         """Add a demand to the location."""
-        technology.register_location(self)
-        self._technologies[technology.name] = technology
-
-    @property
-    def name(self) -> str:
-        """Return name of the location."""
-        return self._name
+        self.add(technology)
 
     @property
     def meta_model(self):
@@ -83,35 +91,38 @@ class Location:
         """
         return self._carriers[carrier]
 
-    def get_demands(self, demand: type) -> AbstractDemand:
-        """
-        Return demand object.
-
-        :param demand: Demand type
-        """
-        return [self._demands[demand]]
-
     def get_technology(self, technology: type) -> AbstractComponent:
         """
         Get components by technology.
 
         :param technology: Technology type
         """
-        return [
-            obj for _, obj in self._technologies.items() if isinstance(obj, technology)
-        ]
+        return [obj for obj in self._components if isinstance(obj, technology)]
 
     @property
-    def carriers(self) -> Iterable[AbstractCarrier]:
-        """Get all carriers of this location."""
-        return self._carriers.values()
+    def components(self) -> Iterable[AbstractComponent]:
+        """Iterate over all components."""
+        for carrier in self._carriers.values():
+            yield carrier
 
-    @property
-    def demands(self) -> Iterable[AbstractDemand]:
-        """Get all demands of this location."""
-        return self._demands
+        for component in self._components:
+            yield component
 
-    @property
-    def technologies(self) -> Iterable[AbstractComponent]:
-        """Get all technologies of this location."""
-        return self._technologies.values()
+    def graph(self, detail: bool = True) -> Tuple[Digraph, set]:
+        """
+        Generate graphviz visualization of the MTRESS location.
+
+        :param detail: Include solph components.
+        """
+        graph = Digraph(name=f"cluster_{self.identifier}")
+        graph.attr("graph", label=self.name)
+
+        all_edges = set()
+
+        for component in self.components:
+            subgraph, edges = component.graph(detail)
+
+            all_edges.update(edges)
+            graph.subgraph(subgraph)
+
+        return graph, all_edges

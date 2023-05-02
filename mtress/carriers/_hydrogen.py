@@ -50,16 +50,14 @@ class Hydrogen(AbstractLayeredCarrier, AbstractSolphComponent):
         pressure_low = None
         for pressure in self._levels:
             if pressure_low is None:
-                bus = self._solph_model.add_solph_component(
-                    mtress_component=self,
+                bus = self.create_solph_component(
                     label=f"out_{pressure:.0f}",
-                    solph_component=Bus,
+                    component=Bus,
                 )
             else:
-                bus = self._solph_model.add_solph_component(
-                    mtress_component=self,
+                bus = self.create_solph_component(
                     label=f"out_{pressure:.0f}",
-                    solph_component=Bus,
+                    component=Bus,
                     outputs={self.busses[pressure_low]: Flow()},
                 )
 

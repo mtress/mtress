@@ -2,7 +2,6 @@
 Basic working 'electricity' example.
 """
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
-from mtress._helpers._visualization import generate_graph
 
 energy_system = MetaModel()
 
@@ -48,9 +47,14 @@ solph_representation = SolphModel(
 solph_representation.build_solph_energy_system()
 solph_representation.build_solph_model()
 
+plot = solph_representation.graph(detail=True)
+plot.render(outfile="electricity_detail.png")
+
+plot = solph_representation.graph(detail=False)
+plot.render(outfile="electricity_simple.png")
+
+
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-plot = generate_graph(solved_model.es)
-plot.render(format="png", renderer="cairo", formatter="gdiplus")
 
 solved_model.write("electricity.lp", io_options={"symbolic_solver_labels": True})
