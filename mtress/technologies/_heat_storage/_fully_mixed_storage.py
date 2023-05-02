@@ -11,7 +11,7 @@ from mtress._data_handler import TimeseriesSpecifier
 from mtress.carriers import Heat
 from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
 
-from .._mixed_storage import AbstractMixedStorage
+from .._mixed_storage import AbstractMixedStorage, Implementation
 from ._abstract_heat_storage import AbstractHeatStorage
 
 
@@ -31,7 +31,7 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractMixedStorage):
         power_limit: float,
         ambient_temperature: TimeseriesSpecifier,
         u_value: float | None = None,
-        allow_parallel_flows: bool = False,
+        multiplexer_implementation: Implementation | str = Implementation.SINGLE_FLOW,
     ):
         """
         Create fully mixed heat storage component.
@@ -44,10 +44,21 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractMixedStorage):
         :param u_value: Thermal transmittance in W/m²/K
         """
         AbstractHeatStorage.__init__(
-            self, name, diameter, volume, power_limit, ambient_temperature, u_value
+            self,
+            name,
+            diameter,
+            volume,
+            power_limit,
+            ambient_temperature,
+            u_value,
         )
 
-        AbstractMixedStorage.__init__(self, allow_parallel_flows)
+        AbstractMixedStorage.__init__(
+            self,
+            multiplexer_implementation
+            if isinstance(Implementation)
+            else Implementation(multiplexer_implementation),
+        )
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
