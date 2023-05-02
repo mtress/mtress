@@ -1,7 +1,9 @@
 """Locations in a meta model."""
 
 
-from typing import Dict, Iterable, Set
+from typing import Dict, Iterable, Set, Tuple
+
+from graphviz import Digraph
 
 from ._abstract_component import AbstractComponent
 from ._interfaces import NamedElement
@@ -105,3 +107,22 @@ class Location(NamedElement):
 
         for component in self._components:
             yield component
+
+    def graph(self, detail: bool = True) -> Tuple[Digraph, set]:
+        """
+        Generate graphviz visualization of the MTRESS location.
+
+        :param detail: Include solph components.
+        """
+        graph = Digraph(name=f"cluster_{self.identifier}")
+        graph.attr("graph", label=self.name)
+
+        all_edges = set()
+
+        for component in self.components:
+            subgraph, edges = component.graph(detail)
+
+            all_edges.update(edges)
+            graph.subgraph(subgraph)
+
+        return graph, all_edges

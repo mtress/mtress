@@ -5,25 +5,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, Iterable, List, Tuple
 
-import graphviz
+from graphviz import Digraph
 import pandas as pd
-from oemof.solph import Bus, EnergySystem, Model
-from oemof.solph.components import GenericStorage, Sink, Source, Transformer
+from oemof.solph import EnergySystem, Model
 
 from ._data_handler import DataHandler
 
 if TYPE_CHECKING:
     from ._abstract_component import AbstractComponent, AbstractSolphComponent
     from ._location import Location
-
-
-SOLPH_SHAPES = {
-    Source: "trapezium",
-    Sink: "invtrapezium",
-    Bus: "ellipse",
-    Transformer: "octagon",
-    GenericStorage: "cylinder",
-}
 
 
 class MetaModel:
@@ -129,46 +119,19 @@ class SolphModel:
         for component in self._meta_model.components:
             component.add_constraints()
 
-    def generate_graph(self, detail: bool = False) -> graphviz.Digraph:
+    def graph(self, detail: bool = False) -> Digraph:
         """Generate a graph representation of the energy system."""
-        dot = graphviz.Digraph()
+        graph = Digraph(name="MTRESS model")
+        all_edges = set()
 
         for location in self._meta_model.locations:
-            with dot.subgraph() as location_subgraph:
-                location_subgraph.attr(label=location.name)
+            subgraph, edges = location.graph(detail)
 
-                for component in location.components:
-                    component: AbstractSolphComponent
+            all_edges.update(edges)
+            graph.subgraph(subgraph)
 
-                    if detail:
-                        component_subgraph = graphviz.Digraph()
-
-                    for solph_component in component.solph_components:
-                        if detail:
-                            component_subgraph.node(
-                                solph_component.label,
-                                label=solph_component.short_label,
-                                shape=SOLPH_SHAPES.get(
-                                    type(solph_component), "rectangle"
-                                ),
-                            )
-
-                        for output in solph_component.outputs:
-                            if detail:
-                                dot.edge(solph_component.label, output.label)
-                            else:
-                                dot.edge(
-                                    solph_component.mtress_component.identifier,
-                                    output.mtress_component.identifier,
-                                )
-
-                    if detail:
-                        location_subgraph.subgraph(component_subgraph)
-                    else:
-                        location_subgraph.node(
-                            component.identifier, label=component.name
-                        )
-        return dot
+        graph.edges(all_edges)
+        return graph
 
     def solve(
         self,
