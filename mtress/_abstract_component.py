@@ -1,14 +1,27 @@
 """Abstract MTRESS components."""
 
 from __future__ import annotations
+from abc import abstractmethod
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Tuple
+
+from graphviz import Digraph
+from oemof.solph import Bus
+from oemof.solph.components import Source, Sink, Transformer, GenericStorage
 
 from ._interfaces import NamedElement
 from ._meta_model import SolphModel
 
 if TYPE_CHECKING:
     from ._location import Location
+
+SOLPH_SHAPES = {
+    Source: "trapezium",
+    Sink: "invtrapezium",
+    Bus: "ellipse",
+    Transformer: "octagon",
+    GenericStorage: "cylinder",
+}
 
 
 class AbstractComponent(NamedElement):
@@ -36,7 +49,7 @@ class AbstractComponent(NamedElement):
     def register_location(self, location: Location):
         """Register this component to a location."""
         if self._location is not None:
-            raise Exception("Location already registered")
+            raise KeyError("Location already registered")
 
         self._location = location
 
@@ -44,6 +57,10 @@ class AbstractComponent(NamedElement):
     def meta_model(self):
         """Return meta model this component belongs to."""
         return self.location.meta_model
+
+    @abstractmethod
+    def graph(self, detail: bool = False) -> Tuple[Digraph, set]:
+        """Draw a graph representation of the component."""
 
 
 class AbstractSolphComponent(AbstractComponent):
@@ -59,7 +76,7 @@ class AbstractSolphComponent(AbstractComponent):
     def register_solph_model(self, solph_model: SolphModel) -> None:
         """Store a reference to the solph model."""
         if self._solph_model is not None:
-            raise Exception("SolphModel already registered")
+            raise KeyError("SolphModel already registered")
 
         self._solph_model = solph_model
 
@@ -95,8 +112,51 @@ class AbstractSolphComponent(AbstractComponent):
     def add_constraints(self) -> None:
         """Add constraints to the model."""
 
-    def graph(self):
-        """Generate Graphviz visualization of"""
+    def graph(self, detail: bool = False) -> Tuple[Digraph, set]:
+        """
+        Generate graphviz visualization of the MTRESS component.
+
+        :param detail: Include solph components.
+        """
+        external_edges = set()
+
+        graph = Digraph(name=f"cluster_{self.identifier}")
+        graph.attr(
+            "graph",
+            label=self.name,
+            # Draw border of cluster only for detail representation
+            style="dashed" if detail else "invis",
+        )
+
+        if not detail:
+            # TODO: Node shape?
+            graph.node(self.identifier, label=self.name)
+
+        for solph_component in self.solph_components:
+            if detail:
+                graph.node(
+                    name=solph_component.label,
+                    label=solph_component.short_label,
+                    shape=SOLPH_SHAPES.get(type(solph_component), "rectangle"),
+                )
+
+            for origin in solph_component.inputs:
+                if origin in self._solph_components:
+                    # This is an internal edge and thus only added if detail is True
+                    if detail:
+                        graph.edge(origin.label, solph_component.label)
+                else:
+                    # This is an external edge
+                    if detail:
+                        # Add edge from solph component to solph component
+                        external_edges.add((origin.label, solph_component.label))
+                    else:
+                        # Add edge from MTRESS component to MTRESS component
+                        external_edges.add(
+                            (origin.mtress_component.identifier, self.identifier)
+                        )
+
+        return graph, external_edges
 
     # TODO: Methods for result analysis
 
