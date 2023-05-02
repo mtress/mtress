@@ -34,10 +34,9 @@ class H2Compressor(AbstractTechnology, AbstractSolphComponent):
         h2_carrier = self.location.get_carrier(Hydrogen)
         electricity_carrier = self.location.get_carrier(Electricity)
 
-        electrical_bus = self._solph_model.add_solph_component(
-            mtress_component=self,
+        electrical_bus = self.create_solph_component(
             label="electrical_bus",
-            solph_component=Bus,
+            component=Bus,
             inputs={
                 electricity_carrier.distribution: Flow(nominal_value=self.nominal_power)
             },
@@ -46,10 +45,9 @@ class H2Compressor(AbstractTechnology, AbstractSolphComponent):
         pressure_low = None
         for pressure in h2_carrier.pressure_levels:
             if pressure_low is not None:
-                self._solph_model.add_solph_component(
-                    mtress_component=self,
+                self.create_solph_component(
                     label=f"compress_{pressure_low:.0f}_{pressure:.0f}",
-                    solph_component=Transformer,
+                    component=Transformer,
                     inputs={
                         electrical_bus: Flow(),
                         h2_carrier.outputs[pressure_low]: Flow(),

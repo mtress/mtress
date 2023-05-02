@@ -30,7 +30,12 @@ energy_system.add_location(house_1)
 
 house_1.add_carrier(carriers.Electricity(working_rate=35, demand_rate=0))
 
-house_1.add_demand(demands.Electricity(time_series=[9]))
+house_1.add_demand(
+    demands.Electricity(
+        name="electricity demand",
+        time_series=[9, 13, 12],
+    )
+)
 
 house_1.add_carrier(
     carriers.Heat(
@@ -43,7 +48,7 @@ house_1.add_demand(
         name="space heating",
         flow_temperature=30,
         return_temperature=20,
-        time_series=[50],
+        time_series=[50, 60, 20],
     )
 )
 house_1.add_demand(
@@ -51,19 +56,21 @@ house_1.add_demand(
         name="hot water",
         flow_temperature=55,
         return_temperature=10,
-        time_series=[3],
+        time_series=[3, 0, 4],
     )
 )
 
 house_1.add_technology(technologies.HeatPump(name="hp0", thermal_power_limit=None))
 
-house_1.add_technology(technologies.AirHeatExchanger(name="ahe", air_temperatures=[3]))
+house_1.add_technology(
+    technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6, 13])
+)
 
 solph_representation = SolphModel(
     energy_system,
     timeindex={
         "start": "2021-07-10 00:00:00",
-        "end": "2021-07-10 00:00:00",
+        "end": "2021-07-10 02:00:00",
         "freq": "60T",
     },
 )
@@ -71,9 +78,13 @@ solph_representation = SolphModel(
 solph_representation.build_solph_energy_system()
 solph_representation.build_solph_model()
 
+plot = solph_representation.graph(detail=True)
+plot.render(outfile="electricity_heat_detail.png")
+
+plot = solph_representation.graph(detail=False)
+plot.render(outfile="electricity_heat_simple.png")
+
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-plot = generate_graph(solved_model.es)
-plot.render(format="png", renderer="cairo", formatter="gdiplus")
 
 solved_model.write("electricity_heat.lp", io_options={"symbolic_solver_labels": True})

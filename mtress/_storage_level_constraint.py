@@ -62,9 +62,7 @@ def storage_level_constraint(
                 for o in output_levels:
                     getattr(m, constraint_name).add(
                         (o, t),
-                        m.GenericStorageBlock.storage_content[
-                            storage_component, t + 1
-                        ]
+                        m.GenericStorageBlock.storage_content[storage_component, t + 1]
                         >= active_output[o, t]
                         * output_levels[o]
                         * storage_component.nominal_storage_capacity,
@@ -92,9 +90,7 @@ def storage_level_constraint(
         setattr(
             model,
             f"{name}_output_constraint",
-            po.Constraint(
-                OUTPUTS, model.TIMESTEPS, rule=_constraint_output_rule
-            ),
+            po.Constraint(OUTPUTS, model.TIMESTEPS, rule=_constraint_output_rule),
         )
 
     _outputs()
@@ -115,9 +111,7 @@ def storage_level_constraint(
                 for o in input_levels:
                     getattr(m, constraint_name).add(
                         (o, t),
-                        m.GenericStorageBlock.storage_content[
-                            storage_component, t
-                        ]
+                        m.GenericStorageBlock.storage_content[storage_component, t]
                         / storage_component.nominal_storage_capacity
                         - input_levels[o]
                         <= inactive_input[o, t],
@@ -140,16 +134,12 @@ def storage_level_constraint(
 
         # Define constraints on the input flows
         def _constraint_input_rule(m, i, t):
-            return (
-                m.flow[i, multiplexer_component, t] <= 1 - inactive_input[i, t]
-            )
+            return m.flow[i, multiplexer_component, t] <= 1 - inactive_input[i, t]
 
         setattr(
             model,
             f"{name}_input_constraint",
-            po.Constraint(
-                INPUTS, model.TIMESTEPS, rule=_constraint_input_rule
-            ),
+            po.Constraint(INPUTS, model.TIMESTEPS, rule=_constraint_input_rule),
         )
 
     _inputs()
