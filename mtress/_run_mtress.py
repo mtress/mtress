@@ -54,9 +54,7 @@ def prepare_mtress_config(parameters, time_range=(0, -1)):
     _read_csv_files(parameters, dir_path, time_range=time_range)
 
     if "time_index" not in parameters:
-        parameters["time_index"] = parameters["demand"]["heating"][
-            "values"
-        ].index
+        parameters["time_index"] = parameters["demand"]["heating"]["values"].index
     return parameters
 
 
@@ -79,9 +77,7 @@ if __name__ == "__main__":
     script_path = os.path.realpath(__file__)
     if len(sys.argv) < 2:
         script_dir = os.path.dirname(script_path)
-        yaml_file_name = os.path.join(
-            script_dir, "../example/all_techs_example.yaml"
-        )
+        yaml_file_name = os.path.join(script_dir, "../example/all_techs_example.yaml")
     else:
         path = sys.argv[1]
         if os.path.exists(path):
