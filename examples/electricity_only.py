@@ -22,10 +22,12 @@ meta_model.add_location(house_1)
 
 house_1.add_carrier(carriers.Electricity(working_rate=35, demand_rate=0))
 
-house_1.add_demand(demands.Electricity(
+house_1.add_demand(
+    demands.Electricity(
         name="electricity demand",
         time_series=[0, 0.5, 9],
-))
+    )
+)
 
 solph_representation = SolphModel(
     meta_model,
@@ -38,6 +40,12 @@ solph_representation = SolphModel(
 
 solph_representation.build_solph_energy_system()
 solph_representation.build_solph_model()
+
+plot = solph_representation.graph(detail=True)
+plot.render(outfile="electricity_only_detail.png")
+
+plot = solph_representation.graph(detail=False)
+plot.render(outfile="electricity_only_simple.png")
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
