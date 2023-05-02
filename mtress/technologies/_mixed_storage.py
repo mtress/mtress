@@ -20,6 +20,18 @@ from .._storage_level_constraint import storage_level_constraint
 from ..carriers import AbstractLayeredCarrier
 
 
+class Implementation(Enum):
+    """
+    Possible multiplexer implementations.
+
+    SINGLE_FLOW: Allow only one flow to be active in each time step.
+    MULTIPLE_FLOWS: Allow multiple flows to be active in each time step.
+    """
+
+    SINGLE_FLOW = "single_flow"
+    MULTIPLE_FLOWS = "multiple_flows"
+
+
 class AbstractMixedStorage(AbstractSolphComponent):
     """Abstract mixed storage."""
 
@@ -27,9 +39,9 @@ class AbstractMixedStorage(AbstractSolphComponent):
     storage: GenericStorage
     storage_multiplexer_interfaces: dict = None
 
-    def __init__(self, allow_parallel_flows: bool = True) -> None:
+    def __init__(self, implementation: Implementation) -> None:
         """Initialize mixed storage."""
-        self.allow_parallel_flows = allow_parallel_flows
+        self.implementation = implementation
         super().__init__()
 
     def build_multiplexer_structure(  # pylint: disable=too-many-arguments
@@ -86,7 +98,7 @@ class AbstractMixedStorage(AbstractSolphComponent):
 
     def add_constraints(self):
         """Add constraints."""
-        if self.allow_parallel_flows:
+        if self.implementation == Implementation.MULTIPLE_FLOWS:
             storage_multiplexer_constraint(
                 model=self._solph_model.model,
                 name=self._solph_model.get_label(self, "level_constraint"),
@@ -94,7 +106,10 @@ class AbstractMixedStorage(AbstractSolphComponent):
                 multiplexer_component=self.multiplexer,
                 interfaces=self.storage_multiplexer_interfaces,
             )
-        else:
+
+            return
+
+        if self.implementation == Implementation.SINGLE_FLOW:
             input_levels = {}
             output_levels = {}
 
@@ -117,3 +132,5 @@ class AbstractMixedStorage(AbstractSolphComponent):
                 input_levels=input_levels,
                 output_levels=output_levels,
             )
+
+            return
