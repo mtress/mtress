@@ -82,7 +82,7 @@ class AbstractSolphComponent(AbstractComponent):
 
     def create_solph_component(self, label: str, component: Callable, **kwargs):
         """Create a solph component and add it to the solph model."""
-        _full_label = f"{self.identifier}-{label}"
+        _full_label = self.create_label(label)
 
         if label in self._solph_components:
             raise KeyError(f"Solph component named {_full_label} already exists")
