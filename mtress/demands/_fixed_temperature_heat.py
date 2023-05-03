@@ -50,7 +50,7 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
         :param flow_temperature: Flow temperature
         :param return_temperature: Return temperature
         """
-        super().__init__(name)
+        super().__init__(name=name)
 
         if not flow_temperature > return_temperature:
             raise ValueError("Flow must be higher than return temperature")

@@ -22,9 +22,9 @@ class FlowType(Enum):
 class AbstractTechnology(AbstractComponent):
     """Base class for MTRESS technologies."""
 
-    def __init__(self, name: str):
+    def __init__(self, **kwargs):
         """Initialize technology."""
-        super().__init__(name)
+        super().__init__(**kwargs)
         self._flows = {flow_type: set() for flow_type in FlowType}
 
     # TODO: The flow categorization logic should probably move to a solph specific class

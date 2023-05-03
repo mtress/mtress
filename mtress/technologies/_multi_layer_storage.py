@@ -49,7 +49,7 @@ class LayeredHeatStorage(AbstractTechnology, AbstractSolphComponent):
         :param insulation_thickness: Insulation thickness in m
         :param ambient_temperature: Ambient temperature in deg C
         """
-        super().__init__(name)
+        super().__init__(name=name)
 
         # General parameters of the storage
         self.diameter = diameter
