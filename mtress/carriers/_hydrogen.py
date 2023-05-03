@@ -34,13 +34,13 @@ class Hydrogen(AbstractLayeredCarrier, AbstractSolphComponent):
         finds application in that field.
     """
 
-    def __init__(self, pressure_levels: list, **kwargs):
+    def __init__(self, pressure_levels: list):
         """
         Initialize hydrogen energy carrier and add components.
 
         :param pressure_levels: Pressure levels
         """
-        super().__init__(levels=pressure_levels, **kwargs)
+        super().__init__(levels=pressure_levels)
 
         # Init solph interfaces
         self.busses = {}

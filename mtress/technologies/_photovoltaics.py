@@ -84,7 +84,7 @@ class Photovoltaics(RenewableElectricitySource):
         :param pv_system: PV system specification.
         """
         super().__init__(
-            name,
+            name=name,
             nominal_power=nominal_power,
             specific_generation=None,
             fixed=fixed,

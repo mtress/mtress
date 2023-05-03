@@ -48,9 +48,9 @@ class LayeredHeatStorage(AbstractHeatStorage):
             diameter=diameter,
             volume=volume,
             ambient_temperature=ambient_temperature,
-            u_value=u_value
+            u_value=u_value,
         )
-        
+
         # Solph specific params
         # Bookkeeping of oemof components
         self.storage_components = {}
