@@ -19,12 +19,13 @@ class AbstractHeatStorage(AbstractTechnology, AbstractSolphComponent):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        name: str,
+        *,
         diameter: float,
         volume: float,
         power_limit: float,
         ambient_temperature: TimeseriesSpecifier,
         u_value: float | None = None,
+        **kwargs,
     ):
         """
         Create heat storage component.
@@ -36,7 +37,7 @@ class AbstractHeatStorage(AbstractTechnology, AbstractSolphComponent):
         :param ambient_temperature: Ambient temperature in deg C
         :param u_value: Thermal transmittance in W/m²/K
         """
-        super().__init__(name)
+        super().__init__(**kwargs)
 
         # General parameters of the storage
         self.diameter = diameter

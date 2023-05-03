@@ -10,6 +10,7 @@ SPDX-License-Identifier: MIT
 """
 
 from enum import Enum
+from typing import Optional
 
 from oemof.solph import Bus, Flow
 from oemof.solph.components import GenericStorage
@@ -35,15 +36,15 @@ class Implementation(Enum):
 class AbstractMixedStorage(AbstractSolphComponent):
     """Abstract mixed storage."""
 
-    multiplexer: Bus
-    storage: GenericStorage
-    storage_multiplexer_interfaces: dict = None
-
-    def __init__(self, name: str, implementation: Implementation) -> None:
+    def __init__(self, *, implementation: Implementation, **kwargs) -> None:
         """Initialize mixed storage."""
-        super().__init__(name)
+        super().__init__(**kwargs)
 
         self.implementation = implementation
+
+        self.multiplexer: Optional[Bus] = None
+        self.storage: Optional[GenericStorage] = None
+        self.storage_multiplexer_interfaces: dict = {}
 
     def build_multiplexer_structure(  # pylint: disable=too-many-arguments
         self,
@@ -73,10 +74,9 @@ class AbstractMixedStorage(AbstractSolphComponent):
             for level in carrier.levels
         }
 
-        self.multiplexer = self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.multiplexer = self.create_solph_component(
             label="multiplexer",
-            solph_component=Bus,
+            component=Bus,
             inputs={
                 bus: Flow(nominal_value=power_limit) for bus in carrier.inputs.values()
             },
@@ -88,10 +88,9 @@ class AbstractMixedStorage(AbstractSolphComponent):
         if solph_storage_arguments is None:
             solph_storage_arguments = {}
 
-        self.storage = self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.storage = self.create_solph_component(
             label="storage",
-            solph_component=GenericStorage,
+            component=GenericStorage,
             inputs={self.multiplexer: Flow()},
             outputs={self.multiplexer: Flow()},
             **solph_storage_arguments,
@@ -102,7 +101,7 @@ class AbstractMixedStorage(AbstractSolphComponent):
         if self.implementation == Implementation.MULTIPLE_FLOWS:
             storage_multiplexer_constraint(
                 model=self._solph_model.model,
-                name=self._solph_model.get_label(self, "level_constraint"),
+                name=self.create_label("level_constraint"),
                 storage_component=self.storage,
                 multiplexer_component=self.multiplexer,
                 interfaces=self.storage_multiplexer_interfaces,
@@ -127,7 +126,7 @@ class AbstractMixedStorage(AbstractSolphComponent):
 
             storage_level_constraint(
                 model=self._solph_model.model,
-                name=self._solph_model.get_label(self, "level_constraint"),
+                name=self.create_label("level_constraint"),
                 storage_component=self.storage,
                 multiplexer_bus=self.multiplexer,
                 input_levels=input_levels,

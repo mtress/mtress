@@ -43,22 +43,17 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractMixedStorage):
         :param ambient_temperature: Ambient temperature in deg C
         :param u_value: Thermal transmittance in W/m²/K
         """
-        AbstractHeatStorage.__init__(
-            self,
-            name,
-            diameter,
-            volume,
-            power_limit,
-            ambient_temperature,
-            u_value,
-        )
+        if not isinstance(multiplexer_implementation, Implementation):
+            multiplexer_implementation = Implementation(multiplexer_implementation)
 
-        AbstractMixedStorage.__init__(
-            self,
-            name,
-            multiplexer_implementation
-            if isinstance(Implementation)
-            else Implementation(multiplexer_implementation),
+        super().__init__(
+            name=name,
+            diameter=diameter,
+            volume=volume,
+            power_limit=power_limit,
+            ambient_temperature=ambient_temperature,
+            u_value=u_value,
+            implementation=multiplexer_implementation,
         )
 
     def build_core(self):
