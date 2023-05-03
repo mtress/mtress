@@ -39,10 +39,11 @@ class AbstractMixedStorage(AbstractSolphComponent):
     storage: GenericStorage
     storage_multiplexer_interfaces: dict = None
 
-    def __init__(self, implementation: Implementation) -> None:
+    def __init__(self, name: str, implementation: Implementation) -> None:
         """Initialize mixed storage."""
+        super().__init__(name)
+
         self.implementation = implementation
-        super().__init__()
 
     def build_multiplexer_structure(  # pylint: disable=too-many-arguments
         self,
@@ -93,7 +94,7 @@ class AbstractMixedStorage(AbstractSolphComponent):
             solph_component=GenericStorage,
             inputs={self.multiplexer: Flow()},
             outputs={self.multiplexer: Flow()},
-            **solph_storage_arguments
+            **solph_storage_arguments,
         )
 
     def add_constraints(self):
@@ -134,3 +135,7 @@ class AbstractMixedStorage(AbstractSolphComponent):
             )
 
             return
+
+        raise NotImplementedError(
+            f"Storage constraint implementation {self.implementation} not implement"
+        )

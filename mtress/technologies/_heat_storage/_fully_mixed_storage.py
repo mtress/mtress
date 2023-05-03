@@ -55,6 +55,7 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractMixedStorage):
 
         AbstractMixedStorage.__init__(
             self,
+            name,
             multiplexer_implementation
             if isinstance(Implementation)
             else Implementation(multiplexer_implementation),
