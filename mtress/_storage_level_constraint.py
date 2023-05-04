@@ -16,8 +16,8 @@ def storage_level_constraint(
     name: str,
     storage_component: GenericStorage,
     multiplexer_bus: Bus,
-    inputs: dict[float, Node] = None,
-    outputs: dict[float, Node] = None,
+    inputs: dict[float, Node],
+    outputs: dict[float, Node],
 ):
     r"""
     Add constraints to implement storage content based access.
@@ -41,11 +41,6 @@ def storage_level_constraint(
 
     Verbose description can be found in https://arxiv.org/abs/2211.14080
     """
-    if inputs is None:
-        inputs = {}
-
-    if outputs is None:
-        outputs = {}
 
     def _outputs():
         OUTPUTS = po.Set(initialize=outputs.values())
