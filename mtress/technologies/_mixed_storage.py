@@ -13,6 +13,7 @@ from enum import Enum
 from typing import Optional
 
 from oemof.solph import Bus, Flow
+
 from oemof.solph.components import GenericStorage
 
 from .._abstract_component import AbstractSolphComponent
@@ -45,6 +46,8 @@ class AbstractMixedStorage(AbstractSolphComponent):
         self.multiplexer: Optional[Bus] = None
         self.storage: Optional[GenericStorage] = None
         self.storage_multiplexer_interfaces: dict = {}
+        self.storage_multiplexer_inputs: dict[float, Bus] = {}
+        self.storage_multiplexer_outputs: dict[float, Bus] = {}
 
     def build_multiplexer_structure(  # pylint: disable=too-many-arguments
         self,
@@ -65,6 +68,14 @@ class AbstractMixedStorage(AbstractSolphComponent):
         :param solph_storage_arguments: Additional arguments to be passed to the
             storage constructor, e.g. loss rates
         """
+        self.storage_multiplexer_inputs = {
+            (level - empty_level) * capacity_per_unit: carrier.outputs[level]
+            for level in carrier.levels
+        }
+        self.storage_multiplexer_outputs = {
+            (level - empty_level) * capacity_per_unit: carrier.inputs[level]
+            for level in carrier.levels
+        }
         self.storage_multiplexer_interfaces = {
             (level - empty_level)
             * capacity_per_unit: (
@@ -110,27 +121,13 @@ class AbstractMixedStorage(AbstractSolphComponent):
             return
 
         if self.implementation == Implementation.SINGLE_FLOW:
-            input_levels = {}
-            output_levels = {}
-
-            for level, (
-                input_component,
-                output_component,
-            ) in self.storage_multiplexer_interfaces.items():
-                input_levels[input_component] = (
-                    level / self.storage.nominal_storage_capacity
-                )
-                output_levels[output_component] = (
-                    level / self.storage.nominal_storage_capacity
-                )
-
             storage_level_constraint(
                 model=self._solph_model.model,
                 name=self.create_label("level_constraint"),
                 storage_component=self.storage,
                 multiplexer_bus=self.multiplexer,
-                input_levels=input_levels,
-                output_levels=output_levels,
+                inputs=self.storage_multiplexer_inputs,
+                outputs=self.storage_multiplexer_outputs,
             )
 
             return
