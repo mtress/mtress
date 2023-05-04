@@ -1,10 +1,10 @@
 """Hydrogen Demand"""
 
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Sink, Transformer
+from oemof.solph.components import Sink
 from .._data_handler import TimeseriesSpecifier
 from .._abstract_component import AbstractSolphComponent
-from ..carriers import Hydrogen
+from ..carriers import Hydrogen as HydrogenCarrier
 from ._abstract_demand import AbstractDemand
 
 class Hydrogen(AbstractDemand, AbstractSolphComponent):
@@ -38,29 +38,26 @@ class Hydrogen(AbstractDemand, AbstractSolphComponent):
         self._time_series = time_series
         self.pressure = pressure
 
-
     def build_core(self):
         """Build core structure of oemof.solph representation."""
 
-        hydrogen_carrier = self.location.get_carrier(Hydrogen)
+        hydrogen_carrier = self.location.get_carrier(HydrogenCarrier)
         _,pressure = hydrogen_carrier.get_surrounding_levels(self.pressure)
 
         if pressure not in hydrogen_carrier.pressure_levels:
             raise ValueError("Pressure must be a valid pressure level")
 
-        bus = self._solph_model.add_solph_component(
-            mtress_component=self,
+        h2_bus = self.create_solph_component(
             label="input",
-            solph_component=Bus,
-            inputs={hydrogen_carrier.outputs[self.pressure]: Flow()},
+            component=Bus,
+            inputs={hydrogen_carrier.outputs[pressure]: Flow()},
         )
 
-        self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.create_solph_component(
             label="sink",
-            solph_component=Sink,
+            component=Sink,
             inputs={
-                bus: Flow(
+                h2_bus: Flow(
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(self._time_series),
                 )
