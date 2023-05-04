@@ -109,26 +109,22 @@ class AbstractMixedStorage(AbstractSolphComponent):
 
     def add_constraints(self):
         """Add constraints."""
+        contraint_args = {
+            "model": self._solph_model.model,
+            "name": self.create_label("level_constraint"),
+            "storage_component": self.storage,
+            "multiplexer_bus": self.multiplexer,
+            "inputs": self.storage_multiplexer_inputs,
+            "outputs": self.storage_multiplexer_outputs,
+        }
+
         if self.implementation == Implementation.MULTIPLE_FLOWS:
-            storage_multiplexer_constraint(
-                model=self._solph_model.model,
-                name=self.create_label("level_constraint"),
-                storage_component=self.storage,
-                multiplexer_component=self.multiplexer,
-                interfaces=self.storage_multiplexer_interfaces,
-            )
+            storage_multiplexer_constraint(**contraint_args)
 
             return
 
         if self.implementation == Implementation.SINGLE_FLOW:
-            storage_level_constraint(
-                model=self._solph_model.model,
-                name=self.create_label("level_constraint"),
-                storage_component=self.storage,
-                multiplexer_bus=self.multiplexer,
-                inputs=self.storage_multiplexer_inputs,
-                outputs=self.storage_multiplexer_outputs,
-            )
+            storage_level_constraint(**contraint_args)
 
             return
 
