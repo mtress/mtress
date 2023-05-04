@@ -1,4 +1,4 @@
-"""Hydrogen Demand"""
+"""Hydrogen demand."""
 
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Sink
@@ -6,6 +6,7 @@ from .._data_handler import TimeseriesSpecifier
 from .._abstract_component import AbstractSolphComponent
 from ..carriers import Hydrogen as HydrogenCarrier
 from ._abstract_demand import AbstractDemand
+
 
 class Hydrogen(AbstractDemand, AbstractSolphComponent):
     """
@@ -17,7 +18,8 @@ class Hydrogen(AbstractDemand, AbstractSolphComponent):
     to be given that is unique for the location, because multiple
     demands of one type can exist for one location.
 
-    Procedure: Create a hydrogen demand with specified pressure level by doing the following:
+    Procedure: Create a hydrogen demand with specified pressure level by doing the
+    following:
 
             demands.Hydrogen(location= house_1, time_series=[0, 0.5, 9], pressure=30)
 
@@ -32,17 +34,15 @@ class Hydrogen(AbstractDemand, AbstractSolphComponent):
 
     def __init__(self, name: str, time_series: TimeseriesSpecifier, pressure: float):
         """Initialize hydrogen energy carrier and add components."""
-
-        super().__init__(name)
+        super().__init__(name=name)
 
         self._time_series = time_series
         self.pressure = pressure
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-
         hydrogen_carrier = self.location.get_carrier(HydrogenCarrier)
-        _,pressure = hydrogen_carrier.get_surrounding_levels(self.pressure)
+        _, pressure = hydrogen_carrier.get_surrounding_levels(self.pressure)
 
         if pressure not in hydrogen_carrier.pressure_levels:
             raise ValueError("Pressure must be a valid pressure level")
