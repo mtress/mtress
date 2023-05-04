@@ -1,5 +1,5 @@
 """Example to illustrate hydrogen production via Electrolyser and compression to meet
-   hydrogen demand of the Refueling Station"""
+   hydrogen demand"""
 
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 from mtress._helpers._visualization import generate_graph
