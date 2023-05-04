@@ -27,9 +27,9 @@ SOLPH_SHAPES = {
 class AbstractComponent(NamedElement):
     """Abstract MTRESS component."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, **kwargs) -> None:
         """Initialize a generic MTRESS component."""
-        super().__init__(name)
+        super().__init__(**kwargs)
         self._location = None
 
     @property
@@ -66,9 +66,9 @@ class AbstractComponent(NamedElement):
 class AbstractSolphComponent(AbstractComponent):
     """Interface for components which can be represented in `oemof.solph`."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, **kwargs) -> None:
         """Initialize component."""
-        super().__init__(name)
+        super().__init__(**kwargs)
 
         self._solph_components: list = []
         self._solph_model: SolphModel = None

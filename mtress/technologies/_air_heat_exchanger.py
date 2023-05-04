@@ -42,7 +42,7 @@ class AirHeatExchanger(
         :param nominal_power: Nominal power of the heat exchanger.
         :param air_temperatures: Reference to air temperature time series
         """
-        super().__init__(name)
+        super().__init__(name=name)
 
         self.nominal_power = nominal_power
         self.air_temperatures = air_temperatures

@@ -9,9 +9,9 @@ from .._abstract_component import AbstractComponent
 class AbstractCarrier(AbstractComponent):
     """Abstract carrier class to ensure a unified interface."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Initialize carrier."""
-        super().__init__(self.__class__.__name__)
+        super().__init__(name=self.__class__.__name__, **kwargs)
 
 
 class AbstractLayeredCarrier(AbstractCarrier):
@@ -22,9 +22,9 @@ class AbstractLayeredCarrier(AbstractCarrier):
     heat with multiple temperature levels or gases with multiple pressure levels.
     """
 
-    def __init__(self, levels):
+    def __init__(self, *, levels, **kwargs):
         """Initialize carrier."""
-        super().__init__()
+        super().__init__(**kwargs)
 
         self._levels = np.unique(levels)
 

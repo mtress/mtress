@@ -24,7 +24,7 @@ class H2Compressor(AbstractTechnology, AbstractSolphComponent):
         :param nominal_power: Nominal power
         :param isothermal_efficiency: Isothermal efficiency, defaults to .85
         """
-        super().__init__(name)
+        super().__init__(name=name)
 
         self.nominal_power = nominal_power
         self.isothermal_efficiency = isothermal_efficiency

@@ -38,7 +38,7 @@ class PEMElectrolyzer(AbstractTechnology, AbstractSolphComponent):
             i.e. ratio of thermal output and electrical input
         :param minimal_power: Minimal power relative to nominal power, defaults to 0.2
         """
-        super().__init__(name)
+        super().__init__(name=name)
 
         self.nominal_power = nominal_power
         self.hydrogen_efficiency = hydrogen_efficiency

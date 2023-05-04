@@ -38,7 +38,7 @@ class RenewableElectricitySource(AbstractTechnology, AbstractSolphComponent):
         :param fixed: Indicate if the generation is fixed to the values defined by
             nominal_power and specific_generation or bounded by these values.
         """
-        super().__init__(name)
+        super().__init__(name=name)
 
         self.nominal_power = nominal_power
         self.specific_generation = specific_generation
