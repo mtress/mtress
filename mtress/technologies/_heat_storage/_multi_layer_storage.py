@@ -1,35 +1,30 @@
 # -*- coding: utf-8 -*-
 
 """
-Basic heat layer functionality.
+Storage that has multiple heat layers that are all accessible at all times.
 
 SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
-SPDX-FileCopyrightText: kehag Energiehandel GMbH
-SPDX-FileCopyrightText: Patrik Schönfeldt
-SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
+from numpy import power
 from oemof.solph import Flow
 from oemof.solph.components import GenericStorage
 from oemof.solph.constraints import shared_limit
 from oemof.thermal import stratified_thermal_storage
 
-from .._abstract_component import AbstractSolphComponent
-from .._data_handler import TimeseriesSpecifier
-from ..carriers import Heat
-from ..physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
-from ._abstract_technology import AbstractTechnology
+from mtress._data_handler import TimeseriesSpecifier
+from mtress.carriers import Heat
+from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
 
-# Thermal conductivity of insulation material
-TC_INSULATION = 0.04  # W / (m * K)
+from ._abstract_heat_storage import AbstractHeatStorage
 
 
-class LayeredHeatStorage(AbstractTechnology, AbstractSolphComponent):
+class LayeredHeatStorage(AbstractHeatStorage):
     """
     Layered heat storage.
 
-    Matrjoschka storage, i.e.one storage per temperature levels with shared resources.
+    Matrjoschka storage, i.e. one storage per temperature level with shared resources.
     See https://arxiv.org/abs/2012.12664
     """
 
@@ -38,24 +33,26 @@ class LayeredHeatStorage(AbstractTechnology, AbstractSolphComponent):
         name: str,
         diameter: float,
         volume: float,
-        insulation_thickness: float,
+        power_limit: float,
         ambient_temperature: TimeseriesSpecifier,
+        u_value: float | None = None,
     ):
         """
         Create layered heat storage component.
 
         :param diameter: Diameter of the storage in m
         :param volume: Volume of the storage in m³
-        :param insulation_thickness: Insulation thickness in m
+        :param u_value: Thermal transmittance in W/m²/K
         :param ambient_temperature: Ambient temperature in deg C
         """
-        super().__init__(name=name)
-
-        # General parameters of the storage
-        self.diameter = diameter
-        self.volume = volume
-        self.insulation_thickness = insulation_thickness
-        self.ambient_temperature = ambient_temperature
+        super().__init__(
+            name=name,
+            diameter=diameter,
+            volume=volume,
+            power_limit=power_limit,
+            ambient_temperature=ambient_temperature,
+            u_value=u_value,
+        )
 
         # Solph specific params
         # Bookkeeping of oemof components
@@ -76,7 +73,7 @@ class LayeredHeatStorage(AbstractTechnology, AbstractSolphComponent):
                 (temperature - reference_temperature) * H2O_DENSITY * H2O_HEAT_CAPACITY
             )
 
-            if self.insulation_thickness <= 0:
+            if self.u_value is None:
                 loss_rate = 0
                 fixed_losses_relative = 0
                 fixed_losses_absolute = 0
@@ -86,7 +83,7 @@ class LayeredHeatStorage(AbstractTechnology, AbstractSolphComponent):
                     fixed_losses_relative,
                     fixed_losses_absolute,
                 ) = stratified_thermal_storage.calculate_losses(
-                    u_value=TC_INSULATION / self.insulation_thickness,
+                    u_value=self.u_value,
                     diameter=self.diameter,
                     temp_h=temperature,
                     temp_c=reference_temperature,
@@ -141,8 +138,3 @@ class LayeredHeatStorage(AbstractTechnology, AbstractSolphComponent):
             weights=weights,
             upper_limit=self.volume,
         )
-
-
-class MixedHeatStorage(AbstractTechnology, AbstractSolphComponent):
-    def __init__(self, name: str):
-        super().__init__(name)
