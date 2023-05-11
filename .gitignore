@@ -6,6 +6,8 @@ __pycache__
 doc/mtress.wmf
 dist/
 build/
+.vscode/
+
 .ipynb_checkpoints/
 
 # Individual obsolete files
