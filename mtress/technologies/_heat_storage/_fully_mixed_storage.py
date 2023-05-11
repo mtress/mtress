@@ -31,7 +31,7 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractMixedStorage):
         power_limit: float,
         ambient_temperature: TimeseriesSpecifier,
         u_value: float | None = None,
-        multiplexer_implementation: Implementation | str = Implementation.SINGLE_FLOW,
+        multiplexer_implementation: Implementation | str = Implementation.STRICT,
     ):
         """
         Create fully mixed heat storage component.

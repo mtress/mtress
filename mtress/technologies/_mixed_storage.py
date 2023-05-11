@@ -26,12 +26,12 @@ class Implementation(Enum):
     """
     Possible multiplexer implementations.
 
-    SINGLE_FLOW: Allow only one flow to be active in each time step.
-    MULTIPLE_FLOWS: Allow multiple flows to be active in each time step.
+    STRICT: Allow flows to be active only if storage content permits until the end of the time step.
+    FLEXIBLE: Allow flows to be active if storage content permits at any time.
     """
 
-    SINGLE_FLOW = "single_flow"
-    MULTIPLE_FLOWS = "multiple_flows"
+    STRICT = "strict"
+    FLEXIBLE = "flexible"
 
 
 class AbstractMixedStorage(AbstractSolphComponent):
@@ -45,9 +45,8 @@ class AbstractMixedStorage(AbstractSolphComponent):
 
         self.multiplexer: Optional[Bus] = None
         self.storage: Optional[GenericStorage] = None
-        self.storage_multiplexer_interfaces: dict = {}
-        self.storage_multiplexer_inputs: dict[float, Bus] = {}
-        self.storage_multiplexer_outputs: dict[float, Bus] = {}
+        self.storage_multiplexer_inputs: dict[Bus, float] = {}
+        self.storage_multiplexer_outputs: dict[Bus, float] = {}
 
     def build_multiplexer_structure(  # pylint: disable=too-many-arguments
         self,
@@ -69,19 +68,11 @@ class AbstractMixedStorage(AbstractSolphComponent):
             storage constructor, e.g. loss rates
         """
         self.storage_multiplexer_inputs = {
-            (level - empty_level) * capacity_per_unit: carrier.outputs[level]
+            carrier.outputs[level]: (level - empty_level) * capacity_per_unit
             for level in carrier.levels
         }
         self.storage_multiplexer_outputs = {
-            (level - empty_level) * capacity_per_unit: carrier.inputs[level]
-            for level in carrier.levels
-        }
-        self.storage_multiplexer_interfaces = {
-            (level - empty_level)
-            * capacity_per_unit: (
-                carrier.inputs[level],
-                carrier.outputs[level],
-            )
+            carrier.inputs[level]: (level - empty_level) * capacity_per_unit
             for level in carrier.levels
         }
 
@@ -89,10 +80,10 @@ class AbstractMixedStorage(AbstractSolphComponent):
             label="multiplexer",
             component=Bus,
             inputs={
-                bus: Flow(nominal_value=power_limit) for bus in carrier.inputs.values()
+                bus: Flow(nominal_value=power_limit) for bus in carrier.outputs.values()
             },
             outputs={
-                bus: Flow(nominal_value=power_limit) for bus in carrier.outputs.values()
+                bus: Flow(nominal_value=power_limit) for bus in carrier.inputs.values()
             },
         )
 
@@ -114,16 +105,16 @@ class AbstractMixedStorage(AbstractSolphComponent):
             "name": self.create_label("level_constraint"),
             "storage_component": self.storage,
             "multiplexer_bus": self.multiplexer,
-            "inputs": self.storage_multiplexer_inputs,
-            "outputs": self.storage_multiplexer_outputs,
+            "input_levels": self.storage_multiplexer_inputs,
+            "output_levels": self.storage_multiplexer_outputs,
         }
 
-        if self.implementation == Implementation.MULTIPLE_FLOWS:
+        if self.implementation == Implementation.FLEXIBLE:
             storage_multiplexer_constraint(**contraint_args)
 
             return
 
-        if self.implementation == Implementation.SINGLE_FLOW:
+        if self.implementation == Implementation.STRICT:
             storage_level_constraint(**contraint_args)
 
             return

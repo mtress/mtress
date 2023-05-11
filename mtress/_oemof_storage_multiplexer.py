@@ -22,8 +22,8 @@ def storage_multiplexer_constraint(
     name: str,
     storage_component: GenericStorage,
     multiplexer_bus: Bus,
-    inputs: dict[float, Node] = None,
-    outputs: dict[float, Node] = None,
+    input_levels: dict[Node, float] = None,
+    output_levels: dict[Node, float] = None,
 ):
     r"""
     Add constraits to implement a storage content dependent multiplexer.
@@ -36,25 +36,25 @@ def storage_multiplexer_constraint(
         Name of the multiplexer.
     storage_bus : oemof.solph.components.GenericStorage
         Storage component whose content should mandate the possible inputs and outputs.
-    multiplexer_component : oemof.solph.Bus
+    multiplexer_bus : oemof.solph.Bus
         Bus which connects the input and output levels to the storage.
-    inputs : dict[float, oemof.network.network.Node]
+    input_levels : dict[oemof.network.network.Node, float]
         Mapping of storage content levels to the corresponding input node, e.g. for a
         given value in this list, the corresponding input can be
         active if the storage content is lower than this value.
-    outputs : dict[float, oemof.network.network.Node]
+    output_levels : dict[oemof.network.network.Node, float]
         Mapping of storage content levels to the corresponding output node, e.g. for a
         given value in this list, the corresponding output can be
         active if the storage content is higher than this value.
     """
     # TODO: Add example.
 
-    if not inputs.keys() == outputs.keys():
+    if not input_levels.values() == output_levels.values():
         raise KeyError("Input and output levels must be identical")
 
     # http://yetanothermathprogrammingconsultant.blogspot.com/2015/10/piecewise-linear-functions-in-mip-models.html
     # Helper variables
-    levels = list(sorted(inputs.keys()))
+    levels = list(sorted(input_levels.values()))
 
     intervals = {
         f"{name}_interval_{i:02d}": (left, right)
@@ -173,7 +173,7 @@ def storage_multiplexer_constraint(
 
         # Energy which is extracted in this timestep
         expr += (
-            model.flow[inputs[flow_level], multiplexer_bus, timestep]
+            model.flow[input_levels[flow_level], multiplexer_bus, timestep]
             * model.timeincrement[timestep]
         )
 
@@ -199,7 +199,7 @@ def storage_multiplexer_constraint(
 
         # Energy which is extracted in this timestep
         expr += (
-            model.flow[multiplexer_bus, outputs[flow_level], timestep]
+            model.flow[multiplexer_bus, output_levels[flow_level], timestep]
             * model.timeincrement[timestep]
         )
 
