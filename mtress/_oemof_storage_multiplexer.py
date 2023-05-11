@@ -14,14 +14,16 @@ from typing import Dict, Tuple
 from oemof.solph import Bus, Model
 from oemof.solph.components import GenericStorage
 from pyomo import environ as po
+from oemof.network.network import Node
 
 
 def storage_multiplexer_constraint(
     model: Model,
     name: str,
     storage_component: GenericStorage,
-    multiplexer_component: Bus,
-    interfaces: Dict[float, Tuple[Bus, Bus]],
+    multiplexer_bus: Bus,
+    inputs: dict[float, Node] = None,
+    outputs: dict[float, Node] = None,
 ):
     r"""
     Add constraits to implement a storage content dependent multiplexer.
@@ -32,20 +34,27 @@ def storage_multiplexer_constraint(
         Model to which the constraint is added.
     name : string
         Name of the multiplexer.
-    storage_component : oemof.solph.components.GenericStorage
+    storage_bus : oemof.solph.components.GenericStorage
         Storage component whose content should mandate the possible inputs and outputs.
     multiplexer_component : oemof.solph.Bus
         Bus which connects the input and output levels to the storage.
-    interfaces : Dict[float, Tuple[oemof.solph.Bus, oemof.solph.Bus]]
-        Mapping of storage content levels to the corresponding input and output busses
-        components, e.g. for a given value in this list, the corresponding input can be
+    inputs : dict[float, oemof.network.network.Node]
+        Mapping of storage content levels to the corresponding input node, e.g. for a
+        given value in this list, the corresponding input can be
         active if the storage content is lower than this value.
+    outputs : dict[float, oemof.network.network.Node]
+        Mapping of storage content levels to the corresponding output node, e.g. for a
+        given value in this list, the corresponding output can be
+        active if the storage content is higher than this value.
     """
     # TODO: Add example.
 
+    if not inputs.keys() == outputs.keys():
+        raise KeyError("Input and output levels must be identical")
+
     # http://yetanothermathprogrammingconsultant.blogspot.com/2015/10/piecewise-linear-functions-in-mip-models.html
     # Helper variables
-    levels = list(sorted(interfaces.keys()))
+    levels = list(sorted(inputs.keys()))
 
     intervals = {
         f"{name}_interval_{i:02d}": (left, right)
@@ -163,9 +172,8 @@ def storage_multiplexer_constraint(
         expr *= input_energy.get(flow_level, 0)
 
         # Energy which is extracted in this timestep
-        input_component, _ = interfaces[flow_level]
         expr += (
-            model.flow[input_component, multiplexer_component, timestep]
+            model.flow[inputs[flow_level], multiplexer_bus, timestep]
             * model.timeincrement[timestep]
         )
 
@@ -190,9 +198,8 @@ def storage_multiplexer_constraint(
         expr *= output_energy.get(flow_level, 0)
 
         # Energy which is extracted in this timestep
-        _, output_component = interfaces[flow_level]
         expr += (
-            model.flow[multiplexer_component, output_component, timestep]
+            model.flow[multiplexer_bus, outputs[flow_level], timestep]
             * model.timeincrement[timestep]
         )
 

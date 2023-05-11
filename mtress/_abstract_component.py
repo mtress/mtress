@@ -27,9 +27,9 @@ SOLPH_SHAPES = {
 class AbstractComponent(NamedElement):
     """Abstract MTRESS component."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, **kwargs) -> None:
         """Initialize a generic MTRESS component."""
-        super().__init__(name)
+        super().__init__(**kwargs)
         self._location = None
 
     @property
@@ -66,9 +66,9 @@ class AbstractComponent(NamedElement):
 class AbstractSolphComponent(AbstractComponent):
     """Interface for components which can be represented in `oemof.solph`."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, **kwargs) -> None:
         """Initialize component."""
-        super().__init__(name)
+        super().__init__(**kwargs)
 
         self._solph_components: list = []
         self._solph_model: SolphModel = None
@@ -82,7 +82,7 @@ class AbstractSolphComponent(AbstractComponent):
 
     def create_solph_component(self, label: str, component: Callable, **kwargs):
         """Create a solph component and add it to the solph model."""
-        _full_label = f"{self.identifier}-{label}"
+        _full_label = self.create_label(label)
 
         if label in self._solph_components:
             raise KeyError(f"Solph component named {_full_label} already exists")

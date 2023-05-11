@@ -72,7 +72,9 @@ class Heat(AbstractLayeredCarrier, AbstractSolphComponent):
     """
 
     def __init__(
-        self, temperature_levels: list[float], reference_temperature: float = 0
+        self,
+        temperature_levels: list[float],
+        reference_temperature: float = 0,
     ):
         """
         Initialize heat energy carrier and add components.

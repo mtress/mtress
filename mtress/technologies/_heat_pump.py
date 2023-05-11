@@ -69,7 +69,7 @@ class HeatPump(AbstractTechnology, AbstractSolphComponent):
         :param cop_0_35: COP for the temperature rise 0°C to 35°C
         :param anergy_sources: Anergy sources (names) to connect to, defaults to all
         """
-        super().__init__(name)
+        super().__init__(name=name)
 
         self.thermal_power_limit = thermal_power_limit
         self.cop_0_35 = cop_0_35

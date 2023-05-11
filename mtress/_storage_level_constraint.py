@@ -16,8 +16,8 @@ def storage_level_constraint(
     name: str,
     storage_component: GenericStorage,
     multiplexer_bus: Bus,
-    input_levels: dict[Node:float] = None,
-    output_levels: dict[Node:float] = None,
+    inputs: dict[float, Node],
+    outputs: dict[float, Node],
 ):
     r"""
     Add constraints to implement storage content based access.
@@ -32,22 +32,18 @@ def storage_level_constraint(
         Storage component whose content should mandate the possible inputs and outputs.
     multiplexer_bus : oemof.solph.Bus
         Bus which connects the input and output levels to the storage.
-    input_levels : dictionary with oemof.solph.Bus as keys and float as values
+    inputs : dictionary with float as keys and oemof.solph.Bus as values
         Dictionary of buses which act as inputs and corresponding levels
-    output_levels : dictionary with oemof.solph.Bus as keys and float as values
+    outputs : dictionary with float as keys and oemof.solph.Bus as values
         Dictionary of buses which act as outputs and corresponding level
 
     Note that all flows effected by this constraint will be <= 1.
 
     Verbose description can be found in https://arxiv.org/abs/2211.14080
     """
-    if input_levels is None:
-        input_levels = {}
-    if output_levels is None:
-        output_levels = {}
 
     def _outputs():
-        OUTPUTS = po.Set(initialize=output_levels.keys())
+        OUTPUTS = po.Set(initialize=outputs.values())
         setattr(model, f"{name}_OUTPUTS", OUTPUTS)
 
         active_output = po.Var(
@@ -59,12 +55,12 @@ def storage_level_constraint(
 
         def _output_active_rule(m):
             for t in m.TIMESTEPS:
-                for o in output_levels:
+                for level, node in outputs.items():
                     getattr(m, constraint_name).add(
-                        (o, t),
+                        (node, t),
                         m.GenericStorageBlock.storage_content[storage_component, t + 1]
-                        >= active_output[o, t]
-                        * output_levels[o]
+                        >= active_output[node, t]
+                        * level
                         * storage_component.nominal_storage_capacity,
                     )
 
@@ -96,7 +92,7 @@ def storage_level_constraint(
     _outputs()
 
     def _inputs():
-        INPUTS = po.Set(initialize=input_levels.keys())
+        INPUTS = po.Set(initialize=inputs.values())
         setattr(model, f"{name}_INPUTS", INPUTS)
 
         inactive_input = po.Var(
@@ -108,13 +104,13 @@ def storage_level_constraint(
 
         def _input_active_rule(m):
             for t in m.TIMESTEPS:
-                for o in input_levels:
+                for level, node in inputs.items():
                     getattr(m, constraint_name).add(
-                        (o, t),
+                        (node, t),
                         m.GenericStorageBlock.storage_content[storage_component, t]
                         / storage_component.nominal_storage_capacity
-                        - input_levels[o]
-                        <= inactive_input[o, t],
+                        - level
+                        <= inactive_input[node, t],
                     )
 
         setattr(

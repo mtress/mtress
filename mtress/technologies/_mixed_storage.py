@@ -10,8 +10,10 @@ SPDX-License-Identifier: MIT
 """
 
 from enum import Enum
+from typing import Optional
 
 from oemof.solph import Bus, Flow
+
 from oemof.solph.components import GenericStorage
 
 from .._abstract_component import AbstractSolphComponent
@@ -35,14 +37,17 @@ class Implementation(Enum):
 class AbstractMixedStorage(AbstractSolphComponent):
     """Abstract mixed storage."""
 
-    multiplexer: Bus
-    storage: GenericStorage
-    storage_multiplexer_interfaces: dict = None
-
-    def __init__(self, implementation: Implementation) -> None:
+    def __init__(self, *, implementation: Implementation, **kwargs) -> None:
         """Initialize mixed storage."""
+        super().__init__(**kwargs)
+
         self.implementation = implementation
-        super().__init__()
+
+        self.multiplexer: Optional[Bus] = None
+        self.storage: Optional[GenericStorage] = None
+        self.storage_multiplexer_interfaces: dict = {}
+        self.storage_multiplexer_inputs: dict[float, Bus] = {}
+        self.storage_multiplexer_outputs: dict[float, Bus] = {}
 
     def build_multiplexer_structure(  # pylint: disable=too-many-arguments
         self,
@@ -63,6 +68,14 @@ class AbstractMixedStorage(AbstractSolphComponent):
         :param solph_storage_arguments: Additional arguments to be passed to the
             storage constructor, e.g. loss rates
         """
+        self.storage_multiplexer_inputs = {
+            (level - empty_level) * capacity_per_unit: carrier.outputs[level]
+            for level in carrier.levels
+        }
+        self.storage_multiplexer_outputs = {
+            (level - empty_level) * capacity_per_unit: carrier.inputs[level]
+            for level in carrier.levels
+        }
         self.storage_multiplexer_interfaces = {
             (level - empty_level)
             * capacity_per_unit: (
@@ -72,10 +85,9 @@ class AbstractMixedStorage(AbstractSolphComponent):
             for level in carrier.levels
         }
 
-        self.multiplexer = self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.multiplexer = self.create_solph_component(
             label="multiplexer",
-            solph_component=Bus,
+            component=Bus,
             inputs={
                 bus: Flow(nominal_value=power_limit) for bus in carrier.inputs.values()
             },
@@ -87,50 +99,35 @@ class AbstractMixedStorage(AbstractSolphComponent):
         if solph_storage_arguments is None:
             solph_storage_arguments = {}
 
-        self.storage = self._solph_model.add_solph_component(
-            mtress_component=self,
+        self.storage = self.create_solph_component(
             label="storage",
-            solph_component=GenericStorage,
+            component=GenericStorage,
             inputs={self.multiplexer: Flow()},
             outputs={self.multiplexer: Flow()},
-            **solph_storage_arguments
+            **solph_storage_arguments,
         )
 
     def add_constraints(self):
         """Add constraints."""
+        contraint_args = {
+            "model": self._solph_model.model,
+            "name": self.create_label("level_constraint"),
+            "storage_component": self.storage,
+            "multiplexer_bus": self.multiplexer,
+            "inputs": self.storage_multiplexer_inputs,
+            "outputs": self.storage_multiplexer_outputs,
+        }
+
         if self.implementation == Implementation.MULTIPLE_FLOWS:
-            storage_multiplexer_constraint(
-                model=self._solph_model.model,
-                name=self._solph_model.get_label(self, "level_constraint"),
-                storage_component=self.storage,
-                multiplexer_component=self.multiplexer,
-                interfaces=self.storage_multiplexer_interfaces,
-            )
+            storage_multiplexer_constraint(**contraint_args)
 
             return
 
         if self.implementation == Implementation.SINGLE_FLOW:
-            input_levels = {}
-            output_levels = {}
-
-            for level, (
-                input_component,
-                output_component,
-            ) in self.storage_multiplexer_interfaces.items():
-                input_levels[input_component] = (
-                    level / self.storage.nominal_storage_capacity
-                )
-                output_levels[output_component] = (
-                    level / self.storage.nominal_storage_capacity
-                )
-
-            storage_level_constraint(
-                model=self._solph_model.model,
-                name=self._solph_model.get_label(self, "level_constraint"),
-                storage_component=self.storage,
-                multiplexer_bus=self.multiplexer,
-                input_levels=input_levels,
-                output_levels=output_levels,
-            )
+            storage_level_constraint(**contraint_args)
 
             return
+
+        raise NotImplementedError(
+            f"Storage constraint implementation {self.implementation} not implement"
+        )

@@ -7,6 +7,7 @@ SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 
 SPDX-License-Identifier: MIT
 """
+from numpy import power
 from oemof.solph import Flow
 from oemof.solph.components import GenericStorage
 from oemof.solph.constraints import shared_limit
@@ -32,6 +33,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
         name: str,
         diameter: float,
         volume: float,
+        power_limit: float,
         ambient_temperature: TimeseriesSpecifier,
         u_value: float | None = None,
     ):
@@ -47,10 +49,11 @@ class LayeredHeatStorage(AbstractHeatStorage):
             name=name,
             diameter=diameter,
             volume=volume,
+            power_limit=power_limit,
             ambient_temperature=ambient_temperature,
-            u_value=u_value
+            u_value=u_value,
         )
-        
+
         # Solph specific params
         # Bookkeeping of oemof components
         self.storage_components = {}
