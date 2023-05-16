@@ -75,7 +75,7 @@ class Location(NamedElement):
         self.add(demand)
 
     def add_technology(self, technology: AbstractComponent):
-        """Add a demand to the location."""
+        """Add a technology to the location."""
         self.add(technology)
 
     @property
