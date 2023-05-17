@@ -32,7 +32,7 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
 
     Procedure: Create a simple heat demand by doing the following:
 
-            house_1.add_demand(demands.FixedTemperatureHeat(
+            house_1.add(demands.FixedTemperatureHeat(
                 flow_temperature=30,
                 return_temperature=20,
                 time_series=[50]))

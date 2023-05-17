@@ -61,7 +61,7 @@ class Heat(AbstractLayeredCarrier, AbstractSolphComponent):
 
     Procedure: Create a simple heat carrier by doing the following
 
-           house_1.add_carrier(carriers.Heat(temperature_levels=[30],
+           house_1.add(carriers.Heat(temperature_levels=[30],
                                              reference_temperature=20))
 
     Notice: Some temperatures, i.e. the ones of sources for heat pump, are not

@@ -32,7 +32,7 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
     Procedure: Create a simple electricity carrier by doing the following
         and adding costs to the grid supply.
 
-            house_1.add_carrier(
+            house_1.add(
                 carriers.Electricity(costs={"working_price": 35, "demand_rate": 0})
 
     Notice: Costs of the grid supply (working_price and demand_rate) need to
