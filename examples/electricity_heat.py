@@ -28,22 +28,22 @@ energy_system = MetaModel()
 house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
-house_1.add_carrier(carriers.Electricity(working_rate=35, demand_rate=0))
+house_1.add(carriers.Electricity(working_rate=35, demand_rate=0))
 
-house_1.add_demand(
+house_1.add(
     demands.Electricity(
         name="electricity demand",
         time_series=[9, 13, 12],
     )
 )
 
-house_1.add_carrier(
+house_1.add(
     carriers.Heat(
         temperature_levels=[20, 30, 55],
         reference_temperature=10,
     )
 )
-house_1.add_demand(
+house_1.add(
     demands.FixedTemperatureHeat(
         name="space heating",
         flow_temperature=30,
@@ -51,7 +51,7 @@ house_1.add_demand(
         time_series=[50, 60, 20],
     )
 )
-house_1.add_demand(
+house_1.add(
     demands.FixedTemperatureHeat(
         name="hot water",
         flow_temperature=55,
@@ -60,13 +60,13 @@ house_1.add_demand(
     )
 )
 
-house_1.add_technology(technologies.HeatPump(name="hp0", thermal_power_limit=None))
+house_1.add(technologies.HeatPump(name="hp0", thermal_power_limit=None))
 
-house_1.add_technology(
+house_1.add(
     technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6, 13])
 )
 
-house_1.add_technology(
+house_1.add(
     technologies.FullyMixedHeatStorage(
         name="heat storage",
         diameter=0.4,

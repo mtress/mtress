@@ -22,7 +22,7 @@ def test_add_carrier():
     carrier1 = carriers.Electricity(working_rate=0.5)
     carrier2 = carriers.Electricity(working_rate=0.4)
 
-    house_1.add_carrier(carrier1)
+    house_1.add(carrier1)
     assert house_1.get_carrier(carriers.Electricity) == carrier1
 
     # carrier2 replaces carrier1

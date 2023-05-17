@@ -8,9 +8,9 @@ energy_system = MetaModel()
 house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
-house_1.add_carrier(carriers.Electricity(working_rate=35, demand_rate=0))
+house_1.add(carriers.Electricity(working_rate=35, demand_rate=0))
 
-house_1.add_demand(demands.Electricity(name="demand0", time_series=10))
+house_1.add(demands.Electricity(name="demand0", time_series=10))
 
 weather = {
     "ghi": "FILE:mtress/examples/weather.csv:ghi",
@@ -22,7 +22,7 @@ weather = {
 }
 
 
-house_1.add_technology(
+house_1.add(
     technologies.Photovoltaics(
         "pv0",
         (52.729, 8.181),

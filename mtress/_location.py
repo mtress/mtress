@@ -66,18 +66,6 @@ class Location(NamedElement):
         else:
             self._components.add(component)
 
-    def add_carrier(self, carrier: AbstractCarrier):
-        """Add a carrier to the location."""
-        self.add(carrier)
-
-    def add_demand(self, demand: AbstractDemand):
-        """Add a demand to the location."""
-        self.add(demand)
-
-    def add_technology(self, technology: AbstractComponent):
-        """Add a technology to the location."""
-        self.add(technology)
-
     @property
     def meta_model(self):
         """Return meta model this location belongs to."""
