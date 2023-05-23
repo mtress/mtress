@@ -7,5 +7,6 @@ from ._hydrogen import Hydrogen
 __all__ = [
     "Electricity",
     "FixedTemperatureHeat",
-    "Hydrogen"
+    "Hydrogen",
+    "HydrogenInjection"
 ]
