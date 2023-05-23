@@ -13,7 +13,6 @@ from enum import Enum
 from typing import Optional
 
 from oemof.solph import Bus, Flow
-
 from oemof.solph.components import GenericStorage
 
 from .._abstract_component import AbstractSolphComponent
@@ -67,23 +66,38 @@ class AbstractMixedStorage(AbstractSolphComponent):
         :param solph_storage_arguments: Additional arguments to be passed to the
             storage constructor, e.g. loss rates
         """
-        self.storage_multiplexer_inputs = {
-            carrier.outputs[level]: (level - empty_level) * capacity_per_unit
-            for level in carrier.levels
-        }
-        self.storage_multiplexer_outputs = {
-            carrier.inputs[level]: (level - empty_level) * capacity_per_unit
-            for level in carrier.levels
-        }
+        self.storage_multiplexer_inputs = {}
+        self.storage_multiplexer_outputs = {}
+
+        for level in carrier.levels:
+            storage_level = (level - empty_level) * capacity_per_unit
+
+            in_bus = self.create_solph_component(
+                label=f"in_{level:d}",
+                component=Bus,
+                inputs={carrier.outputs[level]: Flow()},
+            )
+
+            self.storage_multiplexer_inputs[in_bus] = storage_level
+
+            out_bus = self.create_solph_component(
+                label=f"out_{level:d}",
+                component=Bus,
+                outputs={carrier.inputs[level]: Flow()},
+            )
+
+            self.storage_multiplexer_outputs[out_bus] = storage_level
 
         self.multiplexer = self.create_solph_component(
             label="multiplexer",
             component=Bus,
             inputs={
-                bus: Flow(nominal_value=power_limit) for bus in carrier.outputs.values()
+                bus: Flow(nominal_value=power_limit)
+                for bus in self.storage_multiplexer_inputs
             },
             outputs={
-                bus: Flow(nominal_value=power_limit) for bus in carrier.inputs.values()
+                bus: Flow(nominal_value=power_limit)
+                for bus in self.storage_multiplexer_outputs
             },
         )
 
