@@ -24,18 +24,32 @@ house_1.add(
     technologies.Photovoltaics(
         "pv0",
         (52.729, 8.181),
-        nominal_power=1000,
+        nominal_power=1500,
         weather=weather,
         surface_azimuth=180,
         surface_tilt=35,
-        fixed=False,
+        fixed=True,
     )
 )
+
+house_1.add(
+    demands.Electricity(
+        name="electricity demand",
+        time_series=[90, 30, 50, 34],
+    )
+)
+
+house_1.add(
+    carriers.Hydrogen(
+        pressure_levels=[30, 70, 250],
+    )
+)
+
 house_1.add(
     demands.Hydrogen(
         name="H2_demand",
-        time_series=[2, 1, 1, 10],
-        pressure=100,
+        time_series=[3, 2, 5, 10],
+        pressure=250,
     )
 )
 
@@ -43,30 +57,18 @@ house_1.add(
     demands.HydrogenInjection(
         name="H2_Injection",
         pressure=30,
-        time_series=[50, 55, 45, 76],
-        volume_limit=20,
+        ng_vol_flow=[15, 15, 10, 13],
+        h2_vol_limit=10,
+        revenue=5,
     )
 )
 
 house_1.add(
-    demands.HydrogenInjection(
+    demands.HydrogenPipeline(
         name="H2_Pipeline",
-        pressure=30,
-        time_series=[15, 15, 15, 16],
-        volume_limit=100,
-        h2_pipeline=True,
-    )
-)
-house_1.add(
-    demands.Electricity(
-        name="electricity demand",
-        time_series=[32, 12, 12, 34],
-    )
-)
-
-house_1.add(
-    carriers.Hydrogen(
-        pressure_levels=[30, 100],
+        pressure=70,
+        h2_vol_flow=[55, 45, 45, 56],
+        revenue=5,
     )
 )
 
@@ -88,7 +90,7 @@ house_1.add(
 
 house_1.add(technologies.PEMElectrolyzer(name="Ely", nominal_power=500))
 house_1.add(technologies.HeatPump(name="hp0", thermal_power_limit=None))
-house_1.add(technologies.H2Compressor(name="H2Compr", nominal_power=500))
+house_1.add(technologies.H2Compressor(name="H2Compr", nominal_power=50))
 
 house_1.add(
     technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6, 13, 12])
