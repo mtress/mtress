@@ -14,7 +14,7 @@ in the project ENaQ (project number 03SBE111).
 ## Installation
 
 MTRESS depends on solph, which is automatically instaled using pip
-if you `pip-install mtress`. However, pip will not install a solver,
+if you `pip install mtress`. However, pip will not install a solver,
 to perform the actual optimisation. Please refer to the
 [documentation of solph](https://oemof-solph.readthedocs.io/en/v0.4.4/readme.html#installing-a-solver)
 to learn how to install a solver.
