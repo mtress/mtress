@@ -2,10 +2,11 @@
 
 import logging
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Flow
 from oemof.solph.components import Sink
-from .._data_handler import TimeseriesSpecifier
+
 from .._abstract_component import AbstractSolphComponent
+from .._data_handler import TimeseriesSpecifier
 from ..carriers import Hydrogen as HydrogenCarrier
 from ._abstract_demand import AbstractDemand
 
@@ -26,22 +27,29 @@ class HydrogenInjection(AbstractDemand, AbstractSolphComponent):
 
     Note: It's important to note that this simplified approach does not account for the
     complexities of the gas grid, such as pressure variations, pipeline capacities, gas
-    composition (h2 presence already due to injection at other site within the network?),
+    composition (H2 presence due to injection at other site within the network?),
     detailed safety considerations and engineering constraints, etc. It provides a rough
     estimation of the maximum allowable hydrogen volume based on the h2 injection volume
     limit and the volumetric flow rate of natural gas at the injection point.
-
-
-   Procedure: Create a HydrogenInjection instance with the required parameters:
-    - name: Name.
-    - ng_vol_flow: The time series of the natural gas flow rate (in kg/h).
-    - pressure: Pressure level of the hydrogen injection into natural gas grid.
-    - revenue: Revenue that can be earned per kg H2 injection (€/kg H2).
-    - h2_vol_limit: Volume limit of the hydrogen injection into NG grid.
     """
 
-    def __init__(self, name: str, ng_vol_flow: TimeseriesSpecifier, pressure: float,
-                 revenue: float, h2_vol_limit: float):
+    def __init__(
+        self,
+        name: str,
+        ng_vol_flow: TimeseriesSpecifier,
+        pressure: float,
+        revenue: float,
+        h2_vol_limit: float,
+    ):
+        """
+        Create a HydrogenInjection instance.
+
+        :param name: Name of the component.
+        :param ng_vol_flow: The time series of the natural gas flow rate (in kg/h).
+        :param pressure: Pressure level of the natural gas grid.
+        :param revenue: Revenue that can be earned per kg H2 injection (€/kg H2).
+        :param h2_vol_limit: Percentual volume limit of the injection into NG grid.
+        """
 
         super().__init__(name=name)
 
@@ -59,10 +67,11 @@ class HydrogenInjection(AbstractDemand, AbstractSolphComponent):
             raise ValueError("Pressure must be a valid pressure level")
 
         if self.h2_vol_limit > 20:
-            LOGGER.warning("Provided H2 vol. limit is more than 20 %. "
-                           "Please make sure it is applicable for your use case,"
-                           " since as per current german regulation it is limited to 20% vol."
-                           )
+            LOGGER.warning(
+                "Provided H2 vol. limit is more than 20 %. "
+                "Please make sure it is applicable for your use case,"
+                " since as per current german regulation it is limited to 20% vol."
+            )
 
         natural_gas_flow = self._solph_model.data.get_timeseries(self._ng_vol_flow)
         max_hydrogen_flow = natural_gas_flow * (self.h2_vol_limit / 100)
@@ -78,6 +87,3 @@ class HydrogenInjection(AbstractDemand, AbstractSolphComponent):
                 )
             },
         )
-
-
-

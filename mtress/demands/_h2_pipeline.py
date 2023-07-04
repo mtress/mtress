@@ -2,10 +2,11 @@
 
 import logging
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Flow
 from oemof.solph.components import Sink
-from .._data_handler import TimeseriesSpecifier
+
 from .._abstract_component import AbstractSolphComponent
+from .._data_handler import TimeseriesSpecifier
 from ..carriers import Hydrogen as HydrogenCarrier
 from ._abstract_demand import AbstractDemand
 
@@ -21,20 +22,26 @@ class HydrogenPipeline(AbstractDemand, AbstractSolphComponent):
     government initiatives in several developed countries, including Germany, where
     efforts are being made to establish pipelines dedicated to transporting 100%
     hydrogen. In Germany, there are already existing/in plan pipelines that have been
-    repurposed or newly constructed to transport hydrogen exclusively. This functionality
-    can be enabled in MTRESS,allowing for the modeling of hydrogen injection into such pipelines.
-
-   Procedure: Create a HydrogenInjection instance with the required parameters:
-    - name: Name.
-    - h2_vol_flow: The time series of the hydrogen flow limit (in kg/h) based on capacity
-                   of injection at that injection point or max hydrogen demand in that network
-                   or overall capacity of that H2 Pipeline.
-    - pressure: Pressure level of the hydrogen injection in the H2 Pipeline.
-    - revenue: Revenue that can be earned per kg H2 injection (€/kg H2).
+    repurposed or newly constructed to transport hydrogen exclusively. This
+    functionality can be enabled in MTRESS,allowing for the modeling of hydrogen
+    injection into such pipelines.
     """
 
-    def __init__(self, name: str, h2_vol_flow: TimeseriesSpecifier, revenue: float, pressure: float):
+    def __init__(
+        self,
+        name: str,
+        h2_vol_flow: TimeseriesSpecifier,
+        revenue: float,
+        pressure: float,
+    ):
+        """
+        Create a HydrogenInjection instance.
 
+        :param name: Name of the component.
+        :param h2_vol_flow: Time series of the hydrogen flow limit (in kg/h).
+        :param pressure: Pressure level of the hydrogen injection in the H2 Pipeline.
+        :param revenue: Revenue that can be earned per kg H2 injection (€/kg H2).
+        """
         super().__init__(name=name)
 
         self._h2_vol_flow = h2_vol_flow
@@ -60,4 +67,3 @@ class HydrogenPipeline(AbstractDemand, AbstractSolphComponent):
                 )
             },
         )
-
