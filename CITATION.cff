@@ -9,12 +9,14 @@ authors:
     given-names: Patrik
     orcid: "https://orcid.org/0000-0002-4311-2753"
   -
-    affiliation: "kehag Energiehandel GmbH"
-    family-names: Schmeling
-    given-names: Lucas
-    orcid: "https://orcid.org/0000-0002-8379-7718"
+    affiliation: "Deutsches Zentrum für Luft- und Raumfart (DLR)"
+    family-names: "Schlüters"
+    given-names: Sunke
   -
-    affiliation: "OFFIS - Institut für Informatik"
-    family-names: Wehkamp
-    given-names: Steffen
-    orcid: "https://orcid.org/0000-0001-6397-4062"
+    affiliation: "Deutsches Zentrum für Luft- und Raumfart (DLR)"
+    family-names: Upadhaya
+    given-names: Ajay
+  -
+    affiliation: "Deutsches Zentrum für Luft- und Raumfart (DLR)"
+    family-names: Oltmanns
+    given-names: Keno
