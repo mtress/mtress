@@ -18,14 +18,14 @@ class AbstractPressureStorage(AbstractTechnology, AbstractSolphComponent):
     """Base class and interface for heat storage technologies."""
 
     def __init__(  # pylint: disable=too-many-arguments
-            self,
-            *,
-            diameter: float,
-            volume: float,
-            power_limit: float,
-            u_value: float | None = None,
-            compressibility_factor: float = 1,
-            **kwargs,
+        self,
+        *,
+        diameter: float,
+        volume: float,
+        power_limit: float,
+        u_value: float | None = None,
+        compressibility_factor: float = 1,
+        **kwargs,
     ):
         """
         Create heat storage component.

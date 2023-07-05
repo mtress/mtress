@@ -14,27 +14,32 @@ LOGGER = logging.getLogger(__file__)
 
 class HydrogenPipeline(AbstractDemand, AbstractSolphComponent):
     """
-    Class representing a hydrogen injection into Hydrogen Pipeline.
+     Class representing a hydrogen injection into Hydrogen Pipeline.
 
-    Functionality: This models the hydrogen injection into a 100% Hydrogen Pipeline.
-    The inclusion of this feature in MTRESS is based on the recognition of various
-    government initiatives in several developed countries, including Germany, where
-    efforts are being made to establish pipelines dedicated to transporting 100%
-    hydrogen. In Germany, there are already existing/in plan pipelines that have been
-    repurposed or newly constructed to transport hydrogen exclusively. This functionality
-    can be enabled in MTRESS,allowing for the modeling of hydrogen injection into such pipelines.
+     Functionality: This models the hydrogen injection into a 100% Hydrogen Pipeline.
+     The inclusion of this feature in MTRESS is based on the recognition of various
+     government initiatives in several developed countries, including Germany, where
+     efforts are being made to establish pipelines dedicated to transporting 100%
+     hydrogen. In Germany, there are already existing/in plan pipelines that have been
+     repurposed or newly constructed to transport hydrogen exclusively. This functionality
+     can be enabled in MTRESS,allowing for the modeling of hydrogen injection into such pipelines.
 
-   Procedure: Create a HydrogenInjection instance with the required parameters:
-    - name: Name.
-    - h2_vol_flow: The time series of the hydrogen flow limit (in kg/h) based on capacity
-                   of injection at that injection point or max hydrogen demand in that network
-                   or overall capacity of that H2 Pipeline.
-    - pressure: Pressure level of the hydrogen injection in the H2 Pipeline.
-    - revenue: Revenue that can be earned per kg H2 injection (€/kg H2).
+    Procedure: Create a HydrogenInjection instance with the required parameters:
+     - name: Name.
+     - h2_vol_flow: The time series of the hydrogen flow limit (in kg/h) based on capacity
+                    of injection at that injection point or max hydrogen demand in that network
+                    or overall capacity of that H2 Pipeline.
+     - pressure: Pressure level of the hydrogen injection in the H2 Pipeline.
+     - revenue: Revenue that can be earned per kg H2 injection (€/kg H2).
     """
 
-    def __init__(self, name: str, h2_vol_flow: TimeseriesSpecifier, revenue: float, pressure: float):
-
+    def __init__(
+        self,
+        name: str,
+        h2_vol_flow: TimeseriesSpecifier,
+        revenue: float,
+        pressure: float,
+    ):
         super().__init__(name=name)
 
         self._h2_vol_flow = h2_vol_flow
@@ -60,4 +65,3 @@ class HydrogenPipeline(AbstractDemand, AbstractSolphComponent):
                 )
             },
         )
-

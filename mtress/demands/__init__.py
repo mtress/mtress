@@ -11,5 +11,5 @@ __all__ = [
     "FixedTemperatureHeat",
     "Hydrogen",
     "HydrogenInjection",
-    "HydrogenPipeline"
+    "HydrogenPipeline",
 ]
