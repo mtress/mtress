@@ -44,6 +44,13 @@ def kJ_to_MWh(arg):  # pylint: disable=C0103
     return kilo_to_mega(arg / SECONDS_PER_HOUR)
 
 
+def bar_to_pascal(arg):
+    """
+    convert gas pressure from bar to pascals
+    """
+    return arg*100000
+
+
 def mean_logarithmic_temperature(t_high, t_low):
     """
     Logarithmic mean temperature as used by the

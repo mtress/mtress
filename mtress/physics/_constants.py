@@ -30,6 +30,8 @@ H2O_DENSITY = 1000  # kg/m^3
 # Hydrogen
 H2_LHV = 33.33  # kWh/kg
 H2_HHV = 39.41  # kWh/kg
+HYDROGEN_MOLAR_MASS = 0.00201588 # kg/mol
+IDEAL_GAS_CONSTANT = 8.314  # J/(mol·K)
 
 # Thermal conductivity
 TC_CONCRETE = 0.8  # W / (m * K)

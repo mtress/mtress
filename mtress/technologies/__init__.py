@@ -13,13 +13,14 @@ from ._h2_electrolyzer import PEMElectrolyzer
 from ._heat_pump import HeatPump
 from ._heat_storage import FullyMixedHeatStorage, LayeredHeatStorage
 from ._photovoltaics import Photovoltaics
-
+from ._pressure_storage import FullyMixedH2Storage
 __all__ = [
     "AirHeatExchanger",
     "FullyMixedHeatStorage",
     "H2Compressor",
     "PEMElectrolyzer",
     "HeatPump",
+    "FullyMixedH2Storage",
     "LayeredHeatStorage",
     "Photovoltaics",
 ]
