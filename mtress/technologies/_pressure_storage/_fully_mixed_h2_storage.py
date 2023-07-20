@@ -19,13 +19,11 @@ def get_hydrogen_density(pressure: float = 1, temperature: float = 25) -> float:
     :param pressure: Pressure of hydrogen gas (in bar)
     :return: Density of hydrogen gas (in kilograms per cubic meter)
     """
-    # Conversion factors
-    pressure_pascal = pressure * 100000
 
-    gas_temperature = 273 + temperature
+    gas_temperature = 273.15 + temperature
 
     # Calculate density (kg/Nm3/bar) using ideal gas equation under 1 bar pressure
-    density = (pressure_pascal * HYDROGEN_MOLAR_MASS) / (
+    density = (bar_to_pascal(pressure) * HYDROGEN_MOLAR_MASS) / (
         IDEAL_GAS_CONSTANT * gas_temperature
     )
 
