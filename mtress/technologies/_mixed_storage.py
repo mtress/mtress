@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 """
 
 from enum import Enum
-from typing import Optional
+from typing import Callable, Optional
 
 from oemof.solph import Bus, Flow
 from oemof.solph.components import GenericStorage
@@ -50,7 +50,7 @@ class AbstractMixedStorage(AbstractSolphComponent):
     def build_multiplexer_structure(  # pylint: disable=too-many-arguments
         self,
         carrier: AbstractLayeredCarrier,
-        capacity_per_unit: float,
+        capacity_per_unit: float | Callable,
         power_limit: float,
         empty_level: float = 0,
         solph_storage_arguments: dict = None,
@@ -70,7 +70,11 @@ class AbstractMixedStorage(AbstractSolphComponent):
         self.storage_multiplexer_outputs = {}
 
         for level in carrier.levels:
-            storage_level = (level - empty_level) * capacity_per_unit
+            if isinstance(capacity_per_unit, float):
+                storage_level = (level - empty_level) * capacity_per_unit
+            else:
+                # Use user defined function calculating the storage content at level
+                storage_level = capacity_per_unit(level)
 
             in_bus = self.create_solph_component(
                 label=f"in_{level:d}",
