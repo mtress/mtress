@@ -13,7 +13,12 @@ SPDX-License-Identifier: MIT
 
 import numpy as np
 
-from ._constants import SECONDS_PER_HOUR, ZERO_CELSIUS
+from ._constants import (
+    H2_MOLAR_MASS,
+    IDEAL_GAS_CONSTANT,
+    SECONDS_PER_HOUR,
+    ZERO_CELSIUS,
+)
 
 
 def kilo_to_mega(arg):
@@ -117,3 +122,21 @@ def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2):
     """
     T += 273.15  # Convert temperature to Kelvin
     return R * T * np.log(p_out / p_in) / (3600 * 1000)
+
+
+def calc_hydrogen_density(pressure: float = 1, temperature: float = 25) -> float:
+    """
+    Calculate the density of hydrogen gas.
+    :param temperature: H2 gas temperature in the storage tank
+    :param pressure: Pressure of hydrogen gas (in bar)
+    :return: Density of hydrogen gas (in kilograms per cubic meter)
+    """
+
+    gas_temperature = 273.15 + temperature
+
+    # Calculate density (kg/Nm3/bar) using ideal gas equation under 1 bar pressure
+    density = (bar_to_pascal(pressure) * H2_MOLAR_MASS) / (
+        IDEAL_GAS_CONSTANT * gas_temperature
+    )
+
+    return density
