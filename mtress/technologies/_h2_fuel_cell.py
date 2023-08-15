@@ -97,7 +97,7 @@ class PEMFuelCell(AbstractTechnology, AbstractSolphComponent):
         # Hydrogen connection as an input to Fuel Cell
         h2_carrier = self.location.get_carrier(Hydrogen)
 
-        pressure, _ = h2_carrier.get_surrounding_levels(self.hydrogen_input_pressure)
+        _, pressure = h2_carrier.get_surrounding_levels(self.hydrogen_input_pressure)
 
         if np.isinf(pressure):
             raise ValueError("No suitable pressure level available")
