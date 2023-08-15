@@ -81,7 +81,6 @@ class PEMFuelCell(AbstractTechnology, AbstractSolphComponent):
         :param waste_heat_temperature: Temperature at which heat could be extracted
             from FC.
         :param hydrogen_input_pressure: Pressure at which hydrogen is injected to FC.
-        :param minimal_power: Minimal power relative to nominal power, defaults to 0.2
         """
         super().__init__(name=name)
 
