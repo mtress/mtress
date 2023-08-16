@@ -33,9 +33,14 @@ class MetaModel:
     Further procedure is described in the location class.
     """
 
-    def __init__(self):
+    def __init__(
+            self,
+            locations: List[Location] = None,
+        ):
         """Initialize the meta model."""
-        self._locations: List[Location] = []
+        if locations is None:
+            locations = []
+        self._locations = locations
 
     @classmethod
     def from_config(cls, config: dict):
