@@ -10,7 +10,7 @@ from oemof.solph import Bus
 from oemof.solph.components import Source, Sink, Transformer, GenericStorage
 
 from ._interfaces import NamedElement
-from ._meta_model import SolphModel
+from ._solph_model import SolphModel
 
 if TYPE_CHECKING:
     from ._location import Location

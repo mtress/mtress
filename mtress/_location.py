@@ -9,7 +9,6 @@ from ._abstract_component import AbstractComponent
 from ._interfaces import NamedElement
 from ._meta_model import MetaModel
 from .carriers._abstract_carrier import AbstractCarrier
-from .demands._abstract_demand import AbstractDemand
 
 
 class Location(NamedElement):
