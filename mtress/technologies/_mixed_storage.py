@@ -14,10 +14,10 @@ from typing import Optional
 
 from oemof.solph import Bus, Flow
 from oemof.solph.components import GenericStorage
+from oemof.solph.constraints import storage_level_constraint
 
 from .._abstract_component import AbstractSolphComponent
 from .._oemof_storage_multiplexer import storage_multiplexer_constraint
-from .._storage_level_constraint import storage_level_constraint
 from ..carriers import AbstractLayeredCarrier
 
 
