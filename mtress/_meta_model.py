@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Iterable, List
 
 if TYPE_CHECKING:
     from ._abstract_component import AbstractComponent
+    from .carriers._abstract_carrier import AbstractCarrier
     from ._location import Location
 
 
@@ -30,10 +31,15 @@ class MetaModel:
     def __init__(
             self,
             locations: List[Location] = None,
+            connections: List[(Location, Location, AbstractCarrier)] = None,
         ):
         """Initialize the meta model."""
+        if connections is None:
+            connections = []
         if locations is None:
             locations = []
+
+        self._connections = connections
         self._locations = locations
 
     @classmethod
@@ -42,10 +48,30 @@ class MetaModel:
         # TODO: Implement me!
         raise NotImplementedError("Not implemented yet")
 
+    def add_connection(
+            self,
+            source: Location,
+            destination: Location,
+            carrier: type,
+    ):
+        """Add a connection from source to destination"""
+        if source in self._locations and destination in self._locations:
+            self._connections.append(tuple((source, destination, carrier)))
+        else:
+            raise ValueError(
+                "At least one loacation to be connected is not added to the model."
+            )
+
     def add_location(self, location: Location):
         """Add a new location to the meta model."""
         location.assign_meta_model(self)
         self._locations.append(location)
+
+    @property
+    def connections(self) -> Iterable[(Location, Location, type)]:
+        """Iterate over all connections."""
+        for connection in self._connections:
+            yield connection
 
     @property
     def locations(self) -> Iterable[Location]:
