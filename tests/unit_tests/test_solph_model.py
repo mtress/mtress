@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tests for the bare MTRESS meta model.
+Tests for the MTRESS solph model.
 """
 
 import datetime
