@@ -50,8 +50,9 @@ class AbstractMixedStorage(AbstractSolphComponent):
     def build_multiplexer_structure(  # pylint: disable=too-many-arguments
         self,
         carrier: AbstractLayeredCarrier,
-        capacity_per_unit: float | Callable,
         power_limit: float,
+        capacity_at_level: Optional[Callable] = None,
+        capacity_per_unit: Optional[float] = None,
         empty_level: float = 0,
         solph_storage_arguments: dict = None,
     ):
@@ -59,22 +60,33 @@ class AbstractMixedStorage(AbstractSolphComponent):
         Build core solph structure.
 
         :param carrier: Carrier to connect to.
+        :param power_limit: Power limit of the storage.
+        :param capacity_at_level: Function to calculate the storage content for a given
+            level, e.g. energy content at a given pressure level. Exactly one of
+            capacity_at_level and capacity_per_unit must be given.
         :param capacity_per_unit: Storage capacity corresponding to one unit of the
-            carrier, e.g. energy needed to heat the storage by 1K.
+            carrier, e.g. energy needed to heat the storage by 1K. Exactly one of
+            capacity_at_level and capacity_per_unit must be given.
         :param empty_level: Level which corresponds to an empty storage, e.g. the
-            reference temperature of the heat carrier
+            reference temperature of the heat carrier. This argument is only used in
+            conjunction with capacity_per_unit.
         :param solph_storage_arguments: Additional arguments to be passed to the
             storage constructor, e.g. loss rates
         """
+        if (capacity_at_level is None) == (capacity_per_unit is None):
+            raise ValueError(
+                "Exactly one of capacity_at_level and capacity_per_unit must be given"
+            )
+
         self.storage_multiplexer_inputs = {}
         self.storage_multiplexer_outputs = {}
 
         for level in carrier.levels:
-            if isinstance(capacity_per_unit, float):
+            if capacity_per_unit is not None:
                 storage_level = (level - empty_level) * capacity_per_unit
             else:
                 # Use user defined function calculating the storage content at level
-                storage_level = capacity_per_unit(level)
+                storage_level = capacity_at_level(level)
 
             in_bus = self.create_solph_component(
                 label=f"in_{level:d}",

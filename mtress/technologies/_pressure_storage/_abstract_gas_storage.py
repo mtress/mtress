@@ -53,8 +53,6 @@ class AbstractGasStorage(AbstractMixedStorage, AbstractTechnology):
 
     def build_storage(self, carrier: AbstractLayeredCarrier):
         """Build the core structure of mtress representation."""
-        empty_level = 0
-
         solph_storage_arguments = {
             "nominal_storage_capacity": self.calculate_storage_content(
                 max(carrier.levels)
@@ -65,9 +63,9 @@ class AbstractGasStorage(AbstractMixedStorage, AbstractTechnology):
         }
 
         self.build_multiplexer_structure(
-            carrier,
-            self.calculate_storage_content,
-            self.power_limit,
-            empty_level,
-            solph_storage_arguments,
+            carrier=carrier,
+            power_limit=self.power_limit,
+            capacity_at_level=self.calculate_storage_content,
+            empty_level=None,
+            solph_storage_arguments=solph_storage_arguments,
         )
