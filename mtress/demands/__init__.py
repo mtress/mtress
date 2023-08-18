@@ -5,6 +5,7 @@ from ._fixed_temperature_heat import FixedTemperatureHeat
 from ._hydrogen import Hydrogen
 from ._hydrogen_injection import HydrogenInjection
 from ._h2_pipeline import HydrogenPipeline
+from ._heat_sink import HeatSink
 
 __all__ = [
     "Electricity",
@@ -12,4 +13,5 @@ __all__ = [
     "Hydrogen",
     "HydrogenInjection",
     "HydrogenPipeline",
+    "HeatSink",
 ]
