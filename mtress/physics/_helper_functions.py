@@ -16,6 +16,8 @@ import numpy as np
 from ._constants import (
     H2_MOLAR_MASS,
     IDEAL_GAS_CONSTANT,
+    rk_a,
+    rk_b,
     SECONDS_PER_HOUR,
     ZERO_CELSIUS,
 )
@@ -123,20 +125,25 @@ def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2):
     T += 273.15  # Convert temperature to Kelvin
     return R * T * np.log(p_out / p_in) / (3600 * 1000)
 
-
-def calc_hydrogen_density(pressure: float = 1, temperature: float = 25) -> float:
+def calc_hydrogen_density(pressure, temperature: float = 25) -> float:
     """
     Calculate the density of hydrogen gas.
     :param temperature: H2 gas temperature in the storage tank
     :param pressure: Pressure of hydrogen gas (in bar)
     :return: Density of hydrogen gas (in kilograms per cubic meter)
     """
-
+    pressure = bar_to_pascal(pressure)
     gas_temperature = 273.15 + temperature
+    a = rk_a  # Redlich-Kwong parameter 'a' for H2
+    b = rk_b  # Redlich-Kwong parameter 'b' for H2
+    v_spec = 10  # predefined initial value for specific volume [m³/mol]
 
-    # Calculate density (kg/Nm3/bar) using ideal gas equation under 1 bar pressure
-    density = (bar_to_pascal(pressure) * H2_MOLAR_MASS) / (
-        IDEAL_GAS_CONSTANT * gas_temperature
-    )
+    for i in range(10):
+        v_spec = (
+            IDEAL_GAS_CONSTANT * gas_temperature / (pressure
+            + (a / (gas_temperature**0.5 * v_spec * (v_spec + b))))
+        ) + b
+
+    density = H2_MOLAR_MASS / v_spec
 
     return density
