@@ -95,6 +95,11 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
                 # for the generating technologies?
             )
 
+            if self.demand_rate:
+                demand_rate = Investment(ep_costs=self.demand_rate)
+            else:
+                demand_rate = None
+
             # (unidirectional) grid connection
             # RLM customer for district and larger buildings
             self.create_solph_component(
@@ -103,7 +108,7 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
                 outputs={
                     b_grid_import: Flow(
                         variable_costs=self.working_rate,
-                        investment=Investment(ep_costs=self.demand_rate),
+                        investment=demand_rate,
                     )
                 },
             )

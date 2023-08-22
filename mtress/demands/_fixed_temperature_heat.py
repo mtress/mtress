@@ -100,6 +100,8 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
                     carrier.outputs[self.flow_temperature]: Flow(),
                 },
                 outputs={
+                    # Return needs to connect to the output, otherwise
+                    # optimiser was able to lower return temperature.
                     carrier.outputs[self.return_temperature]: Flow(),
                     output: Flow(),
                 },
