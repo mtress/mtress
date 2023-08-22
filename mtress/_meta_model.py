@@ -29,10 +29,10 @@ class MetaModel:
     """
 
     def __init__(
-            self,
-            locations: List[Location] = None,
-            connections: List[(Location, Location, AbstractCarrier)] = None,
-        ):
+        self,
+        locations: List[Location] = None,
+        connections: List[(Location, Location, AbstractCarrier)] = None,
+    ):
         """Initialize the meta model."""
         if connections is None:
             connections = []
@@ -49,17 +49,17 @@ class MetaModel:
         raise NotImplementedError("Not implemented yet")
 
     def add_connection(
-            self,
-            source: Location,
-            destination: Location,
-            carrier: type,
+        self,
+        source: Location,
+        destination: Location,
+        carrier: type,
     ):
         """Add a connection from source to destination"""
         if source in self._locations and destination in self._locations:
             self._connections.append(tuple((source, destination, carrier)))
         else:
             raise ValueError(
-                "At least one loacation to be connected is not added to the model."
+                "At least one loacation to be connected" + "is not known to the model."
             )
 
     def add_location(self, location: Location):

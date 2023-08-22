@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from ._abstract_component import AbstractSolphComponent
     from ._meta_model import MetaModel
 
+
 class SolphModel:
     """Model adapter for MTRESS meta model."""
 

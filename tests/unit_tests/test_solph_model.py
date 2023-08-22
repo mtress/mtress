@@ -40,7 +40,7 @@ def test_minimal_initialisation_with_time_index_dict():
             "start": first_index,
             "end": last_index,
             "freq": frequency,
-        }
+        },
     )
     assert solph_model.energy_system.timeindex.freq == frequency
     assert (
