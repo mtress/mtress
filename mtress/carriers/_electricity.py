@@ -1,5 +1,6 @@
 """Electricity energy carrier."""
 
+from __future__ import annotations
 
 from typing import Optional
 
@@ -72,13 +73,19 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
             outputs={b_dist: Flow()},
         )
 
-        if self.grid_connection:
-            b_grid_export = self.create_solph_component(
-                label="grid_export",
-                component=Bus,
-                inputs={b_prod: Flow()},
-            )
+        self.grid_export = b_grid_export = self.create_solph_component(
+            label="grid_export",
+            component=Bus,
+            inputs={b_prod: Flow()},
+        )
 
+        self.grid_import = b_grid_import = self.create_solph_component(
+            label="grid_import",
+            component=Bus,
+            outputs={b_dist: Flow()},
+        )
+
+        if self.grid_connection:
             self.create_solph_component(
                 label="sink_export",
                 component=Sink,
@@ -86,12 +93,6 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
                 # TODO: Add revenues
                 # Is this the correct place for revenues? Or should they be an option
                 # for the generating technologies?
-            )
-
-            b_grid_import = self.create_solph_component(
-                label="grid_import",
-                component=Bus,
-                outputs={b_dist: Flow()},
             )
 
             # (unidirectional) grid connection
@@ -108,3 +109,15 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
             )
 
         # TODO: Categorize flows
+
+
+    def connect(
+        self,
+        other: Electricity,
+    ):
+        self.location_link = self.create_solph_component(
+            label="location_link",
+            component=Bus,
+            inputs={self.grid_export: Flow()},
+            outputs={other.grid_import: Flow()},
+        )

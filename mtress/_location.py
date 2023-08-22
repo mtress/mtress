@@ -1,5 +1,6 @@
 """Locations in a meta model."""
 
+from __future__ import annotations
 
 from typing import Dict, Iterable, Set, Tuple
 
@@ -64,6 +65,13 @@ class Location(NamedElement):
             self._carriers[type(component)] = component
         else:
             self._components.add(component)
+
+    def connect(
+        self,
+        carrier: type,
+        destination: Location,
+    ):
+        self._carriers[carrier].connect(destination._carriers[carrier])
 
     @property
     def meta_model(self):

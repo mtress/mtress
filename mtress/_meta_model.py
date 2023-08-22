@@ -1,7 +1,8 @@
 """The MTRESS meta model itself."""
 
-
 from __future__ import annotations
+
+from dataclasses import dataclass
 
 from typing import TYPE_CHECKING, Iterable, List
 
@@ -48,6 +49,13 @@ class MetaModel:
         # TODO: Implement me!
         raise NotImplementedError("Not implemented yet")
 
+    @dataclass
+    class ConnectionDescriptor:
+        """Class for keeping track of an item in inventory."""
+        source: Location
+        destination: Location
+        carrier: type
+
     def add_connection(
         self,
         source: Location,
@@ -56,7 +64,7 @@ class MetaModel:
     ):
         """Add a connection from source to destination"""
         if source in self._locations and destination in self._locations:
-            self._connections.append(tuple((source, destination, carrier)))
+            self._connections.append(MetaModel.ConnectionDescriptor(source, destination, carrier))
         else:
             raise ValueError(
                 "At least one loacation to be connected" + "is not known to the model."

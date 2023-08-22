@@ -56,11 +56,11 @@ def test_adding_connections():
 
     connections = list(meta_model.connections)
     assert len(connections) == 1
-    assert (house_1, house_2, Electricity) in meta_model.connections
+    assert MetaModel.ConnectionDescriptor(house_1, house_2, Electricity) in meta_model.connections
 
     meta_model.add_location(house_3)
     meta_model.add_connection(house_2, house_3, Heat)
     connections = list(meta_model.connections)
     assert len(connections) == 2
-    assert (house_1, house_2, Electricity) in meta_model.connections
-    assert (house_2, house_3, Heat) in meta_model.connections
+    assert MetaModel.ConnectionDescriptor(house_1, house_2, Electricity) in meta_model.connections
+    assert MetaModel.ConnectionDescriptor(house_2, house_3, Heat) in meta_model.connections
