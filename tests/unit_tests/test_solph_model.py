@@ -57,7 +57,7 @@ def test_build_model_with_connected_electricity():
     house_1 = Location(name="house_1")
     house_1.add(carriers.Electricity())
 
-    house_2 = Location(name="house_1")
+    house_2 = Location(name="house_2")
     house_2.add(carriers.Electricity())
 
     meta_model = MetaModel(locations=[house_1, house_2])
