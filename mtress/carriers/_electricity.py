@@ -115,7 +115,6 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
 
         # TODO: Categorize flows
 
-
     def connect(
         self,
         other: Electricity,
