@@ -12,6 +12,15 @@ if TYPE_CHECKING:
     from ._location import Location
 
 
+@dataclass
+class Connection:
+    """Class for keeping track of an item in inventory."""
+
+    source: Location
+    destination: Location
+    carrier: type
+
+
 class MetaModel:
     """
     Meta model of the energy system.
@@ -49,22 +58,13 @@ class MetaModel:
         # TODO: Implement me!
         raise NotImplementedError("Not implemented yet")
 
-    @dataclass
-    class ConnectionDescriptor:
-        """Class for keeping track of an item in inventory."""
-        source: Location
-        destination: Location
-        carrier: type
-
-    def add_connection(
-        self,
-        source: Location,
-        destination: Location,
-        carrier: type,
-    ):
-        """Add a connection from source to destination"""
-        if source in self._locations and destination in self._locations:
-            self._connections.append(MetaModel.ConnectionDescriptor(source, destination, carrier))
+    def add_connection(self, connection: Connection):
+        """Connect two locations in the meta model."""
+        if (
+            connection.source in self._locations
+            and connection.destination in self._locations
+        ):
+            self._connections.append(connection)
         else:
             raise ValueError(
                 "At least one loacation to be connected" + "is not known to the model."
@@ -75,8 +75,15 @@ class MetaModel:
         location.assign_meta_model(self)
         self._locations.append(location)
 
+    def add(self, entity):
+        """Convenience function to add something."""
+        if isinstance(entity, Connection):
+            self.add_connection(entity)
+        elif isinstance(entity, Location):
+            self.add_location(entity)
+
     @property
-    def connections(self) -> Iterable[(Location, Location, type)]:
+    def connections(self) -> Iterable[Connection]:
         """Iterate over all connections."""
         for connection in self._connections:
             yield connection

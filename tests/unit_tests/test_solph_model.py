@@ -6,7 +6,7 @@ Tests for the MTRESS solph model.
 import datetime
 import pandas as pd
 
-from mtress import carriers, Location, MetaModel, SolphModel
+from mtress import carriers, Connection, Location, MetaModel, SolphModel
 
 
 def test_minimal_initialisation_with_date_range():
@@ -61,7 +61,7 @@ def test_build_model_with_connected_electricity():
     house_2.add(carriers.Electricity())
 
     meta_model = MetaModel(locations=[house_1, house_2])
-    meta_model.add_connection(house_1, house_2, carriers.Electricity)
+    meta_model.add(Connection(house_1, house_2, carriers.Electricity))
     solph_model = SolphModel(
         meta_model=meta_model,
         timeindex={
