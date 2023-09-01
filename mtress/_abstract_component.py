@@ -53,11 +53,6 @@ class AbstractComponent(NamedElement):
 
         self._location = location
 
-    @property
-    def meta_model(self):
-        """Return meta model this component belongs to."""
-        return self.location.meta_model
-
     @abstractmethod
     def graph(self, detail: bool = False) -> Tuple[Digraph, set]:
         """Draw a graph representation of the component."""

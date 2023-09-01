@@ -58,8 +58,7 @@ def test_adding_connections():
     assert len(connections) == 1
     assert Connection(house_1, house_2, Electricity) in meta_model.connections
 
-    meta_model.add_location(house_3)
-    # meta_model.add(house_3) should also work but doess not
+    meta_model.add(house_3)
     meta_model.add(Connection(house_2, house_3, Heat))
     connections = list(meta_model.connections)
     assert len(connections) == 2

@@ -8,7 +8,6 @@ from graphviz import Digraph
 
 from ._abstract_component import AbstractComponent
 from ._interfaces import NamedElement
-from ._meta_model import MetaModel
 from .carriers._abstract_carrier import AbstractCarrier
 
 
@@ -43,7 +42,6 @@ class Location(NamedElement):
         :param name: User friendly name of the location
         """
         super().__init__(name)
-        self._meta_model: MetaModel = None
 
         self._carriers: Dict[type, AbstractCarrier] = {}
         self._components: Set[AbstractComponent] = set()
@@ -52,10 +50,6 @@ class Location(NamedElement):
     def identifier(self) -> str:
         """Return an slugified identifier."""
         return self._slug
-
-    def assign_meta_model(self, meta_model: MetaModel):
-        """Store reference to meta model."""
-        self._meta_model = meta_model
 
     def add(self, component: AbstractComponent):
         """Add a component to the location."""
@@ -72,11 +66,6 @@ class Location(NamedElement):
         destination: Location,
     ):
         self._carriers[carrier].connect(destination._carriers[carrier])
-
-    @property
-    def meta_model(self):
-        """Return meta model this location belongs to."""
-        return self._meta_model
 
     def get_carrier(self, carrier: type) -> AbstractCarrier:
         """

@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING, Iterable, List
 if TYPE_CHECKING:
     from ._abstract_component import AbstractComponent
     from .carriers._abstract_carrier import AbstractCarrier
-    from ._location import Location
+
+from ._location import Location
 
 
 @dataclass
@@ -67,20 +68,24 @@ class MetaModel:
             self._connections.append(connection)
         else:
             raise ValueError(
-                "At least one loacation to be connected" + "is not known to the model."
+                "At least one loacation to be connected is not known to the model."
             )
 
     def add_location(self, location: Location):
         """Add a new location to the meta model."""
-        location.assign_meta_model(self)
         self._locations.append(location)
 
-    def add(self, entity):
+    def add(self, entity: Connection | Location) -> None:
         """Convenience function to add something."""
-        if isinstance(entity, Connection):
-            self.add_connection(entity)
-        elif isinstance(entity, Location):
-            self.add_location(entity)
+        match entity:
+            case Connection():
+                self.add_connection(entity)
+            case Location():
+                self.add_location(entity)
+            case _:
+                raise ValueError(
+                    "Object to be added is of type that cannot be handled."
+                )
 
     @property
     def connections(self) -> Iterable[Connection]:
