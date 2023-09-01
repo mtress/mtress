@@ -60,7 +60,9 @@ class SolphModel:
         for component in self._meta_model.components:
             component.register_solph_model(self)
 
-    def build_solph_energy_system(self):
+        self._build_solph_energy_system()
+
+    def _build_solph_energy_system(self):
         """Build the `oemof.solph` representation of the energy system."""
         for component in self._meta_model.components:
             component.build_core()

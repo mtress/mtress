@@ -105,7 +105,6 @@ solph_representation = SolphModel(
     },
 )
 
-solph_representation.build_solph_energy_system()
 solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
