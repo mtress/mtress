@@ -4,12 +4,12 @@
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Sink, Transformer
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Heat
 from ._abstract_demand import AbstractDemand
 
 
-class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
+class FixedTemperatureHeat(AbstractDemand, AbstractSolphRepresentation):
     """
     Space heating with a fixed flow and return temperature.
 
@@ -78,9 +78,9 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
         if self.return_temperature == carrier.reference_temperature:
             # If the return temperature is the reference temperature we just take the
             # energy from the appropriate level
-            output = self.create_solph_component(
+            output = self.create_solph_node(
                 label="output",
-                component=Bus,
+                node_type=Bus,
                 inputs={carrier.outputs[self.flow_temperature]: Flow()},
             )
         else:
@@ -88,14 +88,14 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
                 self.return_temperature - carrier.reference_temperature
             ) / (self.flow_temperature - carrier.reference_temperature)
 
-            output = self.create_solph_component(
+            output = self.create_solph_node(
                 label="output",
-                component=Bus,
+                node_type=Bus,
             )
 
-            self.create_solph_component(
+            self.create_solph_node(
                 label="heat_exchanger",
-                component=Transformer,
+                node_type=Transformer,
                 inputs={
                     carrier.outputs[self.flow_temperature]: Flow(),
                 },
@@ -112,9 +112,9 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphComponent):
                 },
             )
 
-        self.create_solph_component(
+        self.create_solph_node(
             label="sink",
-            component=Sink,
+            node_type=Sink,
             inputs={
                 output: Flow(
                     nominal_value=1,

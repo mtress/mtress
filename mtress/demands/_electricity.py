@@ -4,13 +4,13 @@
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Sink
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier
 from ..carriers import Electricity as ElectricityCarrier
 from ._abstract_demand import AbstractDemand
 
 
-class Electricity(AbstractDemand, AbstractSolphComponent):
+class Electricity(AbstractDemand, AbstractSolphRepresentation):
     """
     Class representing an electricity demand.
 
@@ -42,15 +42,15 @@ class Electricity(AbstractDemand, AbstractSolphComponent):
         """Build core structure of oemof.solph representation."""
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
-        bus = self.create_solph_component(
+        bus = self.create_solph_node(
             label="input",
-            component=Bus,
+            node_type=Bus,
             inputs={electricity_carrier.distribution: Flow()},
         )
 
-        self.create_solph_component(
+        self.create_solph_node(
             label="sink",
-            component=Sink,
+            node_type=Sink,
             inputs={
                 bus: Flow(
                     nominal_value=1,

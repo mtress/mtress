@@ -14,13 +14,13 @@ SPDX-License-Identifier: MIT
 from oemof.solph import Flow
 from oemof.solph.components import Source
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier
 from ..carriers import Electricity
 from ._abstract_technology import AbstractTechnology
 
 
-class RenewableElectricitySource(AbstractTechnology, AbstractSolphComponent):
+class RenewableElectricitySource(AbstractTechnology, AbstractSolphRepresentation):
     """A generic electricity source."""
 
     def __init__(
@@ -55,8 +55,8 @@ class RenewableElectricitySource(AbstractTechnology, AbstractSolphComponent):
             else Flow(nominal_value=self.nominal_power, max=self.specific_generation)
         )
 
-        self.create_solph_component(
+        self.create_solph_node(
             label="source",
-            component=Source,
+            node_type=Source,
             outputs={electricity_carrier.production: flow},
         )

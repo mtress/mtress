@@ -7,7 +7,7 @@ import numpy as np
 from oemof.solph import Flow
 from oemof.solph.components import Transformer
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Electricity, Heat, Hydrogen
 from ..physics import H2_HHV
 from ._abstract_technology import AbstractTechnology
@@ -15,7 +15,7 @@ from ._abstract_technology import AbstractTechnology
 LOGGER = logging.getLogger(__file__)
 
 
-class PEMElectrolyzer(AbstractTechnology, AbstractSolphComponent):
+class PEMElectrolyzer(AbstractTechnology, AbstractSolphRepresentation):
     """PEM electrolyzer."""
 
     def __init__(
@@ -89,9 +89,9 @@ class PEMElectrolyzer(AbstractTechnology, AbstractSolphComponent):
         heat_bus = heat_carrier.inputs[temp_level]
 
         # TODO: Minimal power implementieren
-        self.create_solph_component(
+        self.create_solph_node(
             label="transformer",
-            component=Transformer,
+            node_type=Transformer,
             inputs={electrical_bus: Flow(nominal_value=self.nominal_power)},
             outputs={
                 h2_bus: Flow(),

@@ -16,7 +16,7 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import GenericStorage
 from oemof.solph.constraints import storage_level_constraint
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from .._oemof_storage_multiplexer import storage_multiplexer_constraint
 from ..carriers import AbstractLayeredCarrier
 
@@ -33,7 +33,7 @@ class Implementation(Enum):
     FLEXIBLE = "flexible"
 
 
-class AbstractMixedStorage(AbstractSolphComponent):
+class AbstractMixedStorage(AbstractSolphRepresentation):
     """Abstract mixed storage."""
 
     def __init__(self, *, implementation: Implementation, **kwargs) -> None:
@@ -72,25 +72,25 @@ class AbstractMixedStorage(AbstractSolphComponent):
         for level in carrier.levels:
             storage_level = (level - empty_level) * capacity_per_unit
 
-            in_bus = self.create_solph_component(
+            in_bus = self.create_solph_node(
                 label=f"in_{level:d}",
-                component=Bus,
+                node_type=Bus,
                 inputs={carrier.outputs[level]: Flow()},
             )
 
             self.storage_multiplexer_inputs[in_bus] = storage_level
 
-            out_bus = self.create_solph_component(
+            out_bus = self.create_solph_node(
                 label=f"out_{level:d}",
-                component=Bus,
+                node_type=Bus,
                 outputs={carrier.inputs[level]: Flow()},
             )
 
             self.storage_multiplexer_outputs[out_bus] = storage_level
 
-        self.multiplexer = self.create_solph_component(
+        self.multiplexer = self.create_solph_node(
             label="multiplexer",
-            component=Bus,
+            node_type=Bus,
             inputs={
                 bus: Flow(nominal_value=power_limit)
                 for bus in self.storage_multiplexer_inputs
@@ -104,9 +104,9 @@ class AbstractMixedStorage(AbstractSolphComponent):
         if solph_storage_arguments is None:
             solph_storage_arguments = {}
 
-        self.storage = self.create_solph_component(
+        self.storage = self.create_solph_node(
             label="storage",
-            component=GenericStorage,
+            node_type=GenericStorage,
             inputs={self.multiplexer: Flow()},
             outputs={self.multiplexer: Flow()},
             **solph_storage_arguments,

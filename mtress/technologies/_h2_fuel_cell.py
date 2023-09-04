@@ -6,7 +6,7 @@ import numpy as np
 from oemof.solph import Flow
 from oemof.solph.components import Transformer
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Electricity, Heat, Hydrogen
 from ..physics import H2_LHV
 from ._abstract_technology import AbstractTechnology
@@ -14,7 +14,7 @@ from ._abstract_technology import AbstractTechnology
 LOGGER = logging.getLogger(__file__)
 
 
-class PEMFuelCell(AbstractTechnology, AbstractSolphComponent):
+class PEMFuelCell(AbstractTechnology, AbstractSolphRepresentation):
     """
     Polymer Exchange Membrane Fuel Cell (PEMFC)
 
@@ -151,9 +151,9 @@ class PEMFuelCell(AbstractTechnology, AbstractSolphComponent):
         heat_output = self.thermal_efficiency * H2_LHV
         heat_bus = heat_carrier.inputs[temp_level]
 
-        self.create_solph_component(
+        self.create_solph_node(
             label="transformer",
-            component=Transformer,
+            node_type=Transformer,
             inputs={h2_bus: Flow(nominal_value=nominal_h2_consumption)},
             outputs={
                 electrical_bus: Flow(),

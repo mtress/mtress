@@ -17,8 +17,9 @@ from oemof.solph import EnergySystem, Model
 from ._data_handler import DataHandler
 
 if TYPE_CHECKING:
-    from ._abstract_component import AbstractSolphComponent
+    from ._abstract_component import AbstractSolphRepresentation
     from ._meta_model import MetaModel
+
 
 class SolphModel:
     """Model adapter for MTRESS meta model."""
@@ -35,7 +36,9 @@ class SolphModel:
         :param locations: configuration dictionary for locations
         """
         self._meta_model = meta_model
-        self._solph_components: Dict[Tuple[AbstractSolphComponent, str], object] = {}
+        self._solph_representations: Dict[
+            Tuple[AbstractSolphRepresentation, str], object
+        ] = {}
 
         match timeindex:
             case list() as values:
@@ -49,8 +52,8 @@ class SolphModel:
 
         self.data = DataHandler(self.timeindex)
 
-        # Registry of solph components
-        self._solph_components = {}
+        # Registry of solph representations
+        self._solph_representations = {}
         self.energy_system: EnergySystem = EnergySystem(
             timeindex=self.timeindex, infer_last_interval=False
         )
