@@ -38,7 +38,6 @@ solph_representation = SolphModel(
     },
 )
 
-solph_representation.build_solph_energy_system()
 solph_representation.build_solph_model()
 
 plot = solph_representation.graph(detail=True)
