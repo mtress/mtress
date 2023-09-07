@@ -3,12 +3,12 @@
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Sink
 from .._data_handler import TimeseriesSpecifier
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Hydrogen as HydrogenCarrier
 from ._abstract_demand import AbstractDemand
 
 
-class Hydrogen(AbstractDemand, AbstractSolphComponent):
+class Hydrogen(AbstractDemand, AbstractSolphRepresentation):
     """
     Class representing a hydrogen demand
 
@@ -47,15 +47,15 @@ class Hydrogen(AbstractDemand, AbstractSolphComponent):
         if pressure not in hydrogen_carrier.pressure_levels:
             raise ValueError("Pressure must be a valid pressure level")
 
-        h2_bus = self.create_solph_component(
+        h2_bus = self.create_solph_node(
             label="input",
-            component=Bus,
+            node_type=Bus,
             inputs={hydrogen_carrier.outputs[pressure]: Flow()},
         )
 
-        self.create_solph_component(
+        self.create_solph_node(
             label="sink",
-            component=Sink,
+            node_type=Sink,
             inputs={
                 h2_bus: Flow(
                     nominal_value=1,

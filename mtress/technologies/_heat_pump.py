@@ -13,13 +13,13 @@ from typing import Optional
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Source, Transformer
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Electricity, Heat
 from ..physics import calc_cop, celsius_to_kelvin
 from ._abstract_technology import AbstractAnergySource, AbstractTechnology
 
 
-class HeatPump(AbstractTechnology, AbstractSolphComponent):
+class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
     """
     Clustered heat pump for modeling power flows with variable temperature levels.
 
@@ -84,22 +84,22 @@ class HeatPump(AbstractTechnology, AbstractSolphComponent):
         # Add electrical connection
         electricity_carrier = self.location.get_carrier(Electricity)
 
-        self.electricity_bus = self.create_solph_component(
+        self.electricity_bus = self.create_solph_node(
             label="electricity",
-            component=Bus,
+            node_type=Bus,
             inputs={electricity_carrier.distribution: Flow()},
         )
 
         # Create bus and source for a combined thermal power limit on all temperature
         # levels
-        self.heat_budget_bus = heat_budget_bus = self.create_solph_component(
+        self.heat_budget_bus = heat_budget_bus = self.create_solph_node(
             label="heat_budget_bus",
-            component=Bus,
+            node_type=Bus,
         )
 
-        self.create_solph_component(
+        self.create_solph_node(
             label="heat_budget_source",
-            component=Source,
+            node_type=Source,
             outputs={heat_budget_bus: Flow(nominal_value=self.thermal_power_limit)},
         )
 
@@ -117,9 +117,9 @@ class HeatPump(AbstractTechnology, AbstractSolphComponent):
                         cop_0_35=self.cop_0_35,
                     )
 
-                    self.create_solph_component(
+                    self.create_solph_node(
                         label=f"{anergy_source.name}_{target_temperature:.0f}",
-                        component=Transformer,
+                        node_type=Transformer,
                         inputs={
                             anergy_source.bus: Flow(),
                             self.electricity_bus: Flow(),

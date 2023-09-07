@@ -99,7 +99,7 @@ class Location(NamedElement):
         """
         Generate graphviz visualization of the MTRESS location.
 
-        :param detail: Include solph components.
+        :param detail: Include solph nodes.
         """
         graph = Digraph(name=f"cluster_{self.identifier}")
         graph.attr("graph", label=self.name)

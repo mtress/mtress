@@ -98,9 +98,9 @@ class LayeredHeatStorage(AbstractHeatStorage):
             if temperature != max(temperature_levels):
                 fixed_losses_relative = fixed_losses_absolute = 0
 
-            storage = self.create_solph_component(
+            storage = self.create_solph_node(
                 label=f"{temperature:.0f}",
-                component=GenericStorage,
+                node_type=GenericStorage,
                 inputs={bus: Flow()},
                 outputs={bus: Flow()},
                 nominal_storage_capacity=capacity,

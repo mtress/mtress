@@ -4,13 +4,13 @@
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Source
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier
 from ._abstract_technology import AbstractAnergySource, AbstractTechnology
 
 
 class AirHeatExchanger(
-    AbstractTechnology, AbstractAnergySource, AbstractSolphComponent
+    AbstractTechnology, AbstractAnergySource, AbstractSolphRepresentation
 ):
     """
     Air heat exchanger for e.g. heat pumps.
@@ -56,14 +56,14 @@ class AirHeatExchanger(
             self.air_temperatures
         )
 
-        self._bus = _bus = self.create_solph_component(
+        self._bus = _bus = self.create_solph_node(
             label="output",
-            component=Bus,
+            node_type=Bus,
         )
 
-        self.create_solph_component(
+        self.create_solph_node(
             label="source",
-            component=Source,
+            node_type=Source,
             outputs={_bus: Flow(nominal_value=self.nominal_power)},
         )
 

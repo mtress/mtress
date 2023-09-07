@@ -28,9 +28,9 @@ class MetaModel:
     """
 
     def __init__(
-            self,
-            locations: List[Location] = None,
-        ):
+        self,
+        locations: List[Location] = None,
+    ):
         """Initialize the meta model."""
         if locations is None:
             locations = []
