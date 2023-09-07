@@ -72,9 +72,8 @@ def test_build_model_with_connected_electricity():
             "freq": "15T",
         },
     )
-
-    solph_model.build_solph_energy_system()
     solph_model.build_solph_model()
+
 
 def test_build_model_with_connected_electricity_missing_carrier():
 
@@ -85,16 +84,12 @@ def test_build_model_with_connected_electricity_missing_carrier():
     meta_model = MetaModel(locations=[house_1, house_2])
     meta_model.add(Connection(house_1, house_2, carriers.Electricity))
 
-    # Creation of the solph model is still possible,
-    # as the constructor will just initialise an empty model.
-    solph_model = SolphModel(
-        meta_model=meta_model,
-        timeindex={
-            "start": "2021-07-10 00:00:00",
-            "end": "2021-07-10 15:15:00",
-            "freq": "15T",
-        },
-    )
-
     with pytest.raises(KeyError):
-        solph_model.build_solph_energy_system()
+        SolphModel(
+            meta_model=meta_model,
+            timeindex={
+                "start": "2021-07-10 00:00:00",
+                "end": "2021-07-10 15:15:00",
+                "freq": "15T",
+            },
+        )

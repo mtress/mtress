@@ -7,11 +7,11 @@ from typing import Optional
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Sink, Source
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractCarrier
 
 
-class Electricity(AbstractCarrier, AbstractSolphComponent):
+class Electricity(AbstractCarrier, AbstractSolphRepresentation):
     """
     Electricity energy carrier.
 
@@ -61,34 +61,34 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
         self.production = None
 
     def build_core(self):
-        """Build solph components."""
-        self.distribution = b_dist = self.create_solph_component(
+        """Build solph nodes."""
+        self.distribution = b_dist = self.create_solph_node(
             label="distribution",
-            component=Bus,
+            node_type=Bus,
         )
 
-        self.production = b_prod = self.create_solph_component(
+        self.production = b_prod = self.create_solph_node(
             label="production",
-            component=Bus,
+            node_type=Bus,
             outputs={b_dist: Flow()},
         )
 
-        self.grid_export = b_grid_export = self.create_solph_component(
+        self.grid_export = b_grid_export = self.create_solph_node(
             label="grid_export",
-            component=Bus,
+            node_type=Bus,
             inputs={b_prod: Flow()},
         )
 
-        self.grid_import = b_grid_import = self.create_solph_component(
+        self.grid_import = b_grid_import = self.create_solph_node(
             label="grid_import",
-            component=Bus,
+            node_type=Bus,
             outputs={b_dist: Flow()},
         )
 
         if self.grid_connection:
-            self.create_solph_component(
+            self.create_solph_node(
                 label="sink_export",
-                component=Sink,
+                node_type=Sink,
                 inputs={b_grid_export: Flow()},
                 # TODO: Add revenues
                 # Is this the correct place for revenues? Or should they be an option
@@ -102,9 +102,9 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
 
             # (unidirectional) grid connection
             # RLM customer for district and larger buildings
-            self.create_solph_component(
+            self.create_solph_node(
                 label="source_import",
-                component=Source,
+                node_type=Source,
                 outputs={
                     b_grid_import: Flow(
                         variable_costs=self.working_rate,
@@ -119,9 +119,9 @@ class Electricity(AbstractCarrier, AbstractSolphComponent):
         self,
         other: Electricity,
     ):
-        self.location_link = self.create_solph_component(
+        self.location_link = self.create_solph_node(
             label="location_link",
-            component=Bus,
+            node_type=Bus,
             inputs={self.grid_export: Flow()},
             outputs={other.grid_import: Flow()},
         )

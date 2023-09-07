@@ -3,13 +3,13 @@
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Transformer
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Electricity, Hydrogen
 from ..physics import calc_isothermal_compression_energy
 from ._abstract_technology import AbstractTechnology
 
 
-class H2Compressor(AbstractTechnology, AbstractSolphComponent):
+class H2Compressor(AbstractTechnology, AbstractSolphRepresentation):
     """Ideal gas compressor."""
 
     def __init__(
@@ -34,9 +34,9 @@ class H2Compressor(AbstractTechnology, AbstractSolphComponent):
         h2_carrier = self.location.get_carrier(Hydrogen)
         electricity_carrier = self.location.get_carrier(Electricity)
 
-        electrical_bus = self.create_solph_component(
+        electrical_bus = self.create_solph_node(
             label="electrical_bus",
-            component=Bus,
+            node_type=Bus,
             inputs={
                 electricity_carrier.distribution: Flow(nominal_value=self.nominal_power)
             },
@@ -45,9 +45,9 @@ class H2Compressor(AbstractTechnology, AbstractSolphComponent):
         pressure_low = None
         for pressure in h2_carrier.pressure_levels:
             if pressure_low is not None:
-                self.create_solph_component(
+                self.create_solph_node(
                     label=f"compress_{pressure_low:.0f}_{pressure:.0f}",
-                    component=Transformer,
+                    node_type=Transformer,
                     inputs={
                         electrical_bus: Flow(),
                         h2_carrier.outputs[pressure_low]: Flow(),

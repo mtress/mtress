@@ -8,13 +8,13 @@ SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 SPDX-License-Identifier: MIT
 """
 
-from mtress._abstract_component import AbstractSolphComponent
+from mtress._abstract_component import AbstractSolphRepresentation
 from mtress._data_handler import TimeseriesSpecifier
 
 from .._abstract_technology import AbstractTechnology
 
 
-class AbstractHeatStorage(AbstractTechnology, AbstractSolphComponent):
+class AbstractHeatStorage(AbstractTechnology, AbstractSolphRepresentation):
     """Base class and interface for heat storage technologies."""
 
     def __init__(  # pylint: disable=too-many-arguments

@@ -5,7 +5,7 @@ import logging
 from oemof.solph import Flow
 from oemof.solph.components import Sink
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier
 from ..carriers import Hydrogen as HydrogenCarrier
 from ._abstract_demand import AbstractDemand
@@ -13,7 +13,7 @@ from ._abstract_demand import AbstractDemand
 LOGGER = logging.getLogger(__file__)
 
 
-class HydrogenPipeline(AbstractDemand, AbstractSolphComponent):
+class HydrogenPipeline(AbstractDemand, AbstractSolphRepresentation):
     """
     Class representing a hydrogen injection into Hydrogen Pipeline.
 
@@ -56,9 +56,9 @@ class HydrogenPipeline(AbstractDemand, AbstractSolphComponent):
         if pressure not in hydrogen_carrier.pressure_levels:
             raise ValueError("Pressure must be a valid pressure level")
 
-        self.create_solph_component(
+        self.create_solph_node(
             label="sink",
-            component=Sink,
+            node_type=Sink,
             inputs={
                 hydrogen_carrier.outputs[self.pressure]: Flow(
                     variable_costs=-self.revenue,

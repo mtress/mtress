@@ -5,7 +5,7 @@ import logging
 from oemof.solph import Flow
 from oemof.solph.components import Sink
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier
 from ..carriers import Hydrogen as HydrogenCarrier
 from ._abstract_demand import AbstractDemand
@@ -13,7 +13,7 @@ from ._abstract_demand import AbstractDemand
 LOGGER = logging.getLogger(__file__)
 
 
-class HydrogenInjection(AbstractDemand, AbstractSolphComponent):
+class HydrogenInjection(AbstractDemand, AbstractSolphRepresentation):
     """
     Class representing a hydrogen injection into Natural gas grid
 
@@ -76,9 +76,9 @@ class HydrogenInjection(AbstractDemand, AbstractSolphComponent):
         natural_gas_flow = self._solph_model.data.get_timeseries(self._ng_vol_flow)
         max_hydrogen_flow = natural_gas_flow * (self.h2_vol_limit / 100)
 
-        self.create_solph_component(
+        self.create_solph_node(
             label="sink",
-            component=Sink,
+            node_type=Sink,
             inputs={
                 hydrogen_carrier.outputs[self.pressure]: Flow(
                     variable_costs=-self.revenue,
