@@ -1,4 +1,4 @@
-# Model Template for Residential Energy Supply Systems (MTRESS)
+# Model Template for Renewable Energy Supply Systems (MTRESS)
 
 This is a generic model for [oemof.solph](https://github.com/oemof/oemof-solph/)
 that provides a variety of possible technology combinations for energy supply systems.
