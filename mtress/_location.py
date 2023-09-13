@@ -9,7 +9,6 @@ from ._abstract_component import AbstractComponent
 from ._interfaces import NamedElement
 from ._meta_model import MetaModel
 from .carriers._abstract_carrier import AbstractCarrier
-from .demands._abstract_demand import AbstractDemand
 
 
 class Location(NamedElement):
@@ -100,7 +99,7 @@ class Location(NamedElement):
         """
         Generate graphviz visualization of the MTRESS location.
 
-        :param detail: Include solph components.
+        :param detail: Include solph nodes.
         """
         graph = Digraph(name=f"cluster_{self.identifier}")
         graph.attr("graph", label=self.name)

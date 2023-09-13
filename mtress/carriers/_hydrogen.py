@@ -4,11 +4,11 @@
 
 from oemof.solph import Bus, Flow
 
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractLayeredCarrier
 
 
-class Hydrogen(AbstractLayeredCarrier, AbstractSolphComponent):
+class Hydrogen(AbstractLayeredCarrier, AbstractSolphRepresentation):
     """
     Connector class for modelling hydrogen flows with variable pressure levels.
 
@@ -50,14 +50,14 @@ class Hydrogen(AbstractLayeredCarrier, AbstractSolphComponent):
         pressure_low = None
         for pressure in self._levels:
             if pressure_low is None:
-                bus = self.create_solph_component(
+                bus = self.create_solph_node(
                     label=f"out_{pressure:.0f}",
-                    component=Bus,
+                    node_type=Bus,
                 )
             else:
-                bus = self.create_solph_component(
+                bus = self.create_solph_node(
                     label=f"out_{pressure:.0f}",
-                    component=Bus,
+                    node_type=Bus,
                     outputs={self.busses[pressure_low]: Flow()},
                 )
 

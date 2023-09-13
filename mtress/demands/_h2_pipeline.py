@@ -2,35 +2,29 @@
 
 import logging
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Flow
 from oemof.solph.components import Sink
+
+from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier
-from .._abstract_component import AbstractSolphComponent
 from ..carriers import Hydrogen as HydrogenCarrier
 from ._abstract_demand import AbstractDemand
 
 LOGGER = logging.getLogger(__file__)
 
 
-class HydrogenPipeline(AbstractDemand, AbstractSolphComponent):
+class HydrogenPipeline(AbstractDemand, AbstractSolphRepresentation):
     """
      Class representing a hydrogen injection into Hydrogen Pipeline.
 
-     Functionality: This models the hydrogen injection into a 100% Hydrogen Pipeline.
-     The inclusion of this feature in MTRESS is based on the recognition of various
-     government initiatives in several developed countries, including Germany, where
-     efforts are being made to establish pipelines dedicated to transporting 100%
-     hydrogen. In Germany, there are already existing/in plan pipelines that have been
-     repurposed or newly constructed to transport hydrogen exclusively. This functionality
-     can be enabled in MTRESS,allowing for the modeling of hydrogen injection into such pipelines.
-
-    Procedure: Create a HydrogenInjection instance with the required parameters:
-     - name: Name.
-     - h2_vol_flow: The time series of the hydrogen flow limit (in kg/h) based on capacity
-                    of injection at that injection point or max hydrogen demand in that network
-                    or overall capacity of that H2 Pipeline.
-     - pressure: Pressure level of the hydrogen injection in the H2 Pipeline.
-     - revenue: Revenue that can be earned per kg H2 injection (€/kg H2).
+    Functionality: This models the hydrogen injection into a 100% Hydrogen Pipeline.
+    The inclusion of this feature in MTRESS is based on the recognition of various
+    government initiatives in several developed countries, including Germany, where
+    efforts are being made to establish pipelines dedicated to transporting 100%
+    hydrogen. In Germany, there are already existing/in plan pipelines that have been
+    repurposed or newly constructed to transport hydrogen exclusively. This
+    functionality can be enabled in MTRESS,allowing for the modeling of hydrogen
+    injection into such pipelines.
     """
 
     def __init__(
@@ -40,6 +34,14 @@ class HydrogenPipeline(AbstractDemand, AbstractSolphComponent):
         revenue: float,
         pressure: float,
     ):
+        """
+        Create a HydrogenInjection instance.
+
+        :param name: Name of the component.
+        :param h2_vol_flow: Time series of the hydrogen flow limit (in kg/h).
+        :param pressure: Pressure level of the hydrogen injection in the H2 Pipeline.
+        :param revenue: Revenue that can be earned per kg H2 injection (€/kg H2).
+        """
         super().__init__(name=name)
 
         self._h2_vol_flow = h2_vol_flow
@@ -54,9 +56,9 @@ class HydrogenPipeline(AbstractDemand, AbstractSolphComponent):
         if pressure not in hydrogen_carrier.pressure_levels:
             raise ValueError("Pressure must be a valid pressure level")
 
-        self.create_solph_component(
+        self.create_solph_node(
             label="sink",
-            component=Sink,
+            node_type=Sink,
             inputs={
                 hydrogen_carrier.outputs[self.pressure]: Flow(
                     variable_costs=-self.revenue,

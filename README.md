@@ -1,4 +1,4 @@
-# Model Template for Residential Energy Supply Systems (MTRESS)
+# Model Template for Renewable Energy Supply Systems (MTRESS)
 
 This is a generic model for [oemof.solph](https://github.com/oemof/oemof-solph/)
 that provides a variety of possible technology combinations for energy supply systems.
@@ -14,7 +14,22 @@ in the project ENaQ (project number 03SBE111).
 ## Installation
 
 MTRESS depends on solph, which is automatically instaled using pip
-if you `pip-install mtress`. However, pip will not install a solver,
+if you `pip install mtress`. However, pip will not install a solver,
 to perform the actual optimisation. Please refer to the
 [documentation of solph](https://oemof-solph.readthedocs.io/en/v0.4.4/readme.html#installing-a-solver)
 to learn how to install a solver.
+
+
+## Contributing
+
+You are welcome to contribute to MTRESS. We use [Black code style](https://black.readthedocs.io/),
+and put our code under [MIT license](LICENSE). When contributing, you need to do the same.
+For smaller changes, you can just open a merge request. If you plan something bigger,
+please open an issue first, so that we can discuss beforehand and avoid double work.
+
+
+## Contact
+
+The software development is administrated by [Patrik Schönfeldt](mailto:patrik.schoenfeldt@dlr.de),
+for general questions please contact him. Individual authors may leave their contact information
+in the [citation.cff](CITATION.cff).

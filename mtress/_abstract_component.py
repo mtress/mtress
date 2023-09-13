@@ -10,7 +10,7 @@ from oemof.solph import Bus
 from oemof.solph.components import Source, Sink, Transformer, GenericStorage
 
 from ._interfaces import NamedElement
-from ._meta_model import SolphModel
+from ._solph_model import SolphModel
 
 if TYPE_CHECKING:
     from ._location import Location
@@ -63,14 +63,14 @@ class AbstractComponent(NamedElement):
         """Draw a graph representation of the component."""
 
 
-class AbstractSolphComponent(AbstractComponent):
+class AbstractSolphRepresentation(AbstractComponent):
     """Interface for components which can be represented in `oemof.solph`."""
 
     def __init__(self, **kwargs) -> None:
         """Initialize component."""
         super().__init__(**kwargs)
 
-        self._solph_components: list = []
+        self._solph_nodes: list = []
         self._solph_model: SolphModel = None
 
     def register_solph_model(self, solph_model: SolphModel) -> None:
@@ -80,34 +80,34 @@ class AbstractSolphComponent(AbstractComponent):
 
         self._solph_model = solph_model
 
-    def create_solph_component(self, label: str, component: Callable, **kwargs):
-        """Create a solph component and add it to the solph model."""
+    def create_solph_node(self, label: str, node_type: Callable, **kwargs):
+        """Create a solph node and add it to the solph model."""
         _full_label = self.create_label(label)
 
-        if label in self._solph_components:
+        if label in self._solph_nodes:
             raise KeyError(f"Solph component named {_full_label} already exists")
 
-        _component = component(label=_full_label, **kwargs)
+        _node = node_type(label=_full_label, **kwargs)
 
         # Store a reference to the MTRESS component
-        setattr(_component, "mtress_component", self)
-        setattr(_component, "short_label", label)
+        setattr(_node, "mtress_component", self)
+        setattr(_node, "short_label", label)
 
-        self._solph_components.append(_component)
-        self._solph_model.energy_system.add(_component)
+        self._solph_nodes.append(_node)
+        self._solph_model.energy_system.add(_node)
 
-        return _component
+        return _node
 
     @property
-    def solph_components(self) -> list:
-        """Iterate over solph components."""
-        return self._solph_components
+    def solph_nodes(self) -> list:
+        """Iterate over solph nodes."""
+        return self._solph_nodes
 
     def build_core(self) -> None:
         """Build the core structure of the component."""
 
     def establish_interconnections(self) -> None:
-        """Build interconnections with other components."""
+        """Build interconnections with other nodes."""
 
     def add_constraints(self) -> None:
         """Add constraints to the model."""
@@ -116,7 +116,7 @@ class AbstractSolphComponent(AbstractComponent):
         """
         Generate graphviz visualization of the MTRESS component.
 
-        :param detail: Include solph components.
+        :param detail: Include solph nodes.
         """
         external_edges = set()
 
@@ -132,24 +132,24 @@ class AbstractSolphComponent(AbstractComponent):
             # TODO: Node shape?
             graph.node(self.identifier, label=self.name)
 
-        for solph_component in self.solph_components:
+        for solph_node in self.solph_nodes:
             if detail:
                 graph.node(
-                    name=solph_component.label,
-                    label=solph_component.short_label,
-                    shape=SOLPH_SHAPES.get(type(solph_component), "rectangle"),
+                    name=solph_node.label,
+                    label=solph_node.short_label,
+                    shape=SOLPH_SHAPES.get(type(solph_node), "rectangle"),
                 )
 
-            for origin in solph_component.inputs:
-                if origin in self._solph_components:
+            for origin in solph_node.inputs:
+                if origin in self._solph_nodes:
                     # This is an internal edge and thus only added if detail is True
                     if detail:
-                        graph.edge(origin.label, solph_component.label)
+                        graph.edge(origin.label, solph_node.label)
                 else:
                     # This is an external edge
                     if detail:
                         # Add edge from solph component to solph component
-                        external_edges.add((origin.label, solph_component.label))
+                        external_edges.add((origin.label, solph_node.label))
                     else:
                         # Add edge from MTRESS component to MTRESS component
                         external_edges.add(
