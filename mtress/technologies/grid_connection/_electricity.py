@@ -30,7 +30,7 @@ class ElectricityGridConnection(AbstractSolphRepresentation):
         b_grid_export = self.create_solph_node(
             label="grid_export",
             node_type=Bus,
-            inputs={electricity_carrier.production: Flow()},
+            inputs={electricity_carrier.feed_in: Flow()},
         )
 
         self.create_solph_node(

@@ -44,7 +44,7 @@ class Electricity(AbstractCarrier, AbstractSolphRepresentation):
 
         # Properties for connection oemof.solph busses
         self.distribution = None
-        self.production = None
+        self.feed_in = None
 
     def build_core(self):
         self.distribution = b_dist = self.create_solph_node(
@@ -52,8 +52,7 @@ class Electricity(AbstractCarrier, AbstractSolphRepresentation):
             node_type=Bus,
         )
 
-        self.production = self.create_solph_node(
-            label="production",
+        self.feed_in = self.create_solph_node(
+            label="feed in",
             node_type=Bus,
-            outputs={b_dist: Flow()},
         )
