@@ -13,13 +13,10 @@ class ElectricityGridConnection(AbstractSolphRepresentation):
     def __init__(
         self,
         name: str,
-        balanced: bool = False,
         working_rate: Optional[float] = None,
         demand_rate: Optional[float] = 0,
     ) -> None:
         super().__init__(name=name)
-
-        self.balanced = balanced
 
         self.working_rate = working_rate
         self.demand_rate = demand_rate
@@ -33,30 +30,32 @@ class ElectricityGridConnection(AbstractSolphRepresentation):
             inputs={electricity_carrier.feed_in: Flow()},
         )
 
-        self.create_solph_node(
-            label="sink_export",
-            node_type=Sink,
-            inputs={b_grid_export: Flow()},
-        )
-
         b_grid_import = self.create_solph_node(
             label="grid_import",
             node_type=Bus,
             outputs={electricity_carrier.distribution: Flow()},
         )
 
-        if self.demand_rate:
-            demand_rate = Investment(ep_costs=self.demand_rate)
-        else:
-            demand_rate = None
 
-        self.create_solph_node(
-            label="source_import",
-            node_type=Source,
-            outputs={
-                b_grid_import: Flow(
-                    variable_costs=self.working_rate,
-                    investment=demand_rate,
-                )
-            },
-        )
+        if self.working_rate is not None:
+            self.create_solph_node(
+                label="sink_export",
+                node_type=Sink,
+                inputs={b_grid_export: Flow()},
+            )
+
+            if self.demand_rate:
+                demand_rate = Investment(ep_costs=self.demand_rate)
+            else:
+                demand_rate = None
+
+            self.create_solph_node(
+                label="source_import",
+                node_type=Source,
+                outputs={
+                    b_grid_import: Flow(
+                        variable_costs=self.working_rate,
+                        investment=demand_rate,
+                    )
+                },
+            )
