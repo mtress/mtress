@@ -36,14 +36,13 @@ class ElectricityGridConnection(AbstractSolphRepresentation):
             outputs={electricity_carrier.distribution: Flow()},
         )
 
+        self.create_solph_node(
+            label="sink_export",
+            node_type=Sink,
+            inputs={b_grid_export: Flow()},
+        )
 
         if self.working_rate is not None:
-            self.create_solph_node(
-                label="sink_export",
-                node_type=Sink,
-                inputs={b_grid_export: Flow()},
-            )
-
             if self.demand_rate:
                 demand_rate = Investment(ep_costs=self.demand_rate)
             else:
