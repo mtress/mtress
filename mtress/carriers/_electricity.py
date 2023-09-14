@@ -53,6 +53,6 @@ class Electricity(AbstractCarrier, AbstractSolphRepresentation):
         )
 
         self.feed_in = self.create_solph_node(
-            label="feed in",
+            label="feed_in",
             node_type=Bus,
         )
