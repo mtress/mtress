@@ -8,6 +8,7 @@ SPDX-License-Identifier: MIT
 """
 
 from ._air_heat_exchanger import AirHeatExchanger
+from .grid_connection import ElectricityGridConnection
 from ._h2_compressor import H2Compressor
 from ._h2_electrolyzer import PEMElectrolyzer
 from ._heat_pump import HeatPump
@@ -17,6 +18,7 @@ from ._h2_fuel_cell import PEMFuelCell
 
 __all__ = [
     "AirHeatExchanger",
+    "ElectricityGridConnection",
     "FullyMixedHeatStorage",
     "H2Compressor",
     "PEMElectrolyzer",

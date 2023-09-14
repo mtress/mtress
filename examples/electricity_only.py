@@ -13,14 +13,15 @@ Finally, the energy system is optimised/solved via meta_model.solve and the
 solver output is written to an .lp file.   
 """
 
-from mtress import Location, MetaModel, SolphModel, carriers, demands
+from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 
 meta_model = MetaModel()
 
 house_1 = Location(name="house_1")
 meta_model.add_location(house_1)
 
-house_1.add(carriers.Electricity(working_rate=35, demand_rate=0))
+house_1.add(carriers.Electricity())
+house_1.add(technologies.ElectricityGridConnection(name="grid connection",working_rate=35))
 
 house_1.add(
     demands.Electricity(
