@@ -7,16 +7,16 @@ from oemof.solph.components import Sink, Source
 
 from mtress.carriers import Electricity
 from mtress._abstract_component import AbstractSolphRepresentation
+from ._abstract_grid_connection import AbstractGridConnection
 
 
-class ElectricityGridConnection(AbstractSolphRepresentation):
+class ElectricityGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
     def __init__(
         self,
-        name: str,
         working_rate: Optional[float] = None,
         demand_rate: Optional[float] = 0,
     ) -> None:
-        super().__init__(name=name)
+        super().__init__()
 
         self.working_rate = working_rate
         self.demand_rate = demand_rate

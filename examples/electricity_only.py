@@ -21,7 +21,7 @@ house_1 = Location(name="house_1")
 meta_model.add_location(house_1)
 
 house_1.add(carriers.Electricity())
-house_1.add(technologies.ElectricityGridConnection(name="grid connection",working_rate=35))
+house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 house_1.add(
     demands.Electricity(
