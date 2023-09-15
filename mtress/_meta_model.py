@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Iterable, List
 
 if TYPE_CHECKING:
     from ._abstract_component import AbstractComponent
-    from .carriers._abstract_carrier import AbstractCarrier
+    from mtress.technologies.grid_connection._abstract_grid_connection import AbstractGridConnection
 
 from ._location import Location
 
@@ -42,7 +42,7 @@ class MetaModel:
     def __init__(
         self,
         locations: List[Location] = None,
-        connections: List[(Location, Location, AbstractCarrier)] = None,
+        connections: List[(Location, Location, AbstractGridConnection)] = None,
     ):
         """Initialize the meta model."""
         if connections is None:

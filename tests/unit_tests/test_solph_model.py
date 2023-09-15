@@ -8,7 +8,8 @@ import pytest
 import datetime
 import pandas as pd
 
-from mtress import carriers, Connection, Location, MetaModel, SolphModel
+from mtress import carriers, Connection, Location, MetaModel, SolphModel, technologies
+from mtress.technologies.grid_connection import ElectricityGridConnection
 
 
 def test_minimal_initialisation_with_date_range():
@@ -58,12 +59,14 @@ def test_build_model_with_connected_electricity():
 
     house_1 = Location(name="house_1")
     house_1.add(carriers.Electricity())
+    house_1.add(ElectricityGridConnection())
 
     house_2 = Location(name="house_2")
     house_2.add(carriers.Electricity())
+    house_2.add(ElectricityGridConnection())
 
     meta_model = MetaModel(locations=[house_1, house_2])
-    meta_model.add(Connection(house_1, house_2, carriers.Electricity))
+    meta_model.add(Connection(house_1, house_2, ElectricityGridConnection))
     solph_model = SolphModel(
         meta_model=meta_model,
         timeindex={
@@ -75,14 +78,13 @@ def test_build_model_with_connected_electricity():
     solph_model.build_solph_model()
 
 
-def test_build_model_with_connected_electricity_missing_carrier():
+def test_build_model_with_connected_electricity_missing_connection():
 
     house_1 = Location(name="house_1")
-    house_1.add(carriers.Electricity())
     house_2 = Location(name="house_2")
 
     meta_model = MetaModel(locations=[house_1, house_2])
-    meta_model.add(Connection(house_1, house_2, carriers.Electricity))
+    meta_model.add(Connection(house_1, house_2, ElectricityGridConnection))
 
     with pytest.raises(KeyError):
         SolphModel(

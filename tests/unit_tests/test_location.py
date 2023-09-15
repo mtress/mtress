@@ -20,8 +20,8 @@ def test_add_carrier():
     name = "house_1"
     house_1 = Location(name=name)
 
-    carrier1 = carriers.Electricity(working_rate=0.5)
-    carrier2 = carriers.Electricity(working_rate=0.4)
+    carrier1 = carriers.Electricity()
+    carrier2 = carriers.Electricity()
 
     house_1.add(carrier1)
     assert house_1.get_carrier(carriers.Electricity) == carrier1

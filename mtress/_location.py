@@ -9,6 +9,7 @@ from graphviz import Digraph
 from ._abstract_component import AbstractComponent
 from ._interfaces import NamedElement
 from .carriers._abstract_carrier import AbstractCarrier
+from .technologies.grid_connection._abstract_grid_connection import AbstractGridConnection
 
 
 class Location(NamedElement):
@@ -45,6 +46,7 @@ class Location(NamedElement):
 
         self._carriers: Dict[type, AbstractCarrier] = {}
         self._components: Set[AbstractComponent] = set()
+        self._grid_connections: Dict[type, AbstractGridConnection] = {}
 
     @property
     def identifier(self) -> str:
@@ -55,17 +57,22 @@ class Location(NamedElement):
         """Add a component to the location."""
         component.register_location(self)
 
-        if isinstance(component, AbstractCarrier):
-            self._carriers[type(component)] = component
-        else:
-            self._components.add(component)
+        match component:
+            case AbstractCarrier():
+                self._carriers[type(component)] = component
+            case AbstractGridConnection():
+                self._grid_connections[type(component)] = component
+            case _:
+                self._components.add(component)
 
     def connect(
         self,
-        carrier: type,
+        connection: type,
         destination: Location,
     ):
-        self._carriers[carrier].connect(destination._carriers[carrier])
+        self._grid_connections[connection].connect(
+            destination._grid_connections[connection]
+        )
 
     def get_carrier(self, carrier: type) -> AbstractCarrier:
         """
@@ -88,6 +95,9 @@ class Location(NamedElement):
         """Iterate over all components."""
         for carrier in self._carriers.values():
             yield carrier
+
+        for grid_connection in self._grid_connections.values():
+            yield grid_connection
 
         for component in self._components:
             yield component
