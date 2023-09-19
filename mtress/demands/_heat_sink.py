@@ -1,11 +1,11 @@
 from oemof.solph import Flow
 from oemof.solph.components import Sink
-from .._abstract_component import AbstractSolphComponent
+from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Heat
 from ._abstract_demand import AbstractDemand
 
 
-class HeatSink(AbstractDemand, AbstractSolphComponent):
+class HeatSink(AbstractDemand, AbstractSolphRepresentation):
     """
     Heat Sink is a demand component to dump any excess heat from Electrolyser or Fuel Cell CHP that are not
     utilized in heat network. This will avoid infeasibility in optimization caused due to excess heat production
@@ -42,8 +42,8 @@ class HeatSink(AbstractDemand, AbstractSolphComponent):
         if temperature_levels not in heat_carrier.temperature_levels:
             raise ValueError("Temperature must be a valid Temperature level")
 
-        self.create_solph_component(
+        self.create_solph_node(
             label="Sink",
-            component=Sink,
+            node_type=Sink,
             inputs={heat_carrier.outputs[temperature_levels]: Flow()},
         )

@@ -96,17 +96,18 @@ solph_representation = SolphModel(
     },
 )
 
-solph_representation.build_solph_energy_system()
 solph_representation.build_solph_model()
+
+plot = solph_representation.graph(detail=True)
+plot.render(outfile="hydrogen_plant_detail.png")
+
+plot = solph_representation.graph(detail=False)
+plot.render(outfile="hydrogen_plant_simple.png")
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="hydrogen_production_neww.png")
 logging.info("Optimise the energy system")
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-solved_model.write(
-    "hydrogen_production2.lp", io_options={"symbolic_solver_labels": True}
-)
+solved_model.write("hydrogen_plant.lp", io_options={"symbolic_solver_labels": True})
