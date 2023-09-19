@@ -16,6 +16,12 @@ ZERO_CELSIUS = 273.15  # K
 
 # Natural gas
 HS_PER_HI_GAS = 1.11  # according to DIN V 18599
+NG_LHV = 11  # kWh/Nm3
+NG_HHV = 12  # kWh/Nm3
+
+# Biogas
+BG_LHV = 6.00  # kWh/Nm3
+BG_HHV = 9.20  # kWh/Nm3
 
 # Wood pellets
 HS_PER_HI_WP = 1.08  # according to DIN V 18599
