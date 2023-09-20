@@ -901,7 +901,7 @@ class MetaModel:
         res = np.zeros(self.number_of_time_steps)
         for flow in flows_to_aggregate:
             res += self.energy_system.results['main'][flow][
-                'sequences']['flow'].to_numpy()
+                'sequences']['flow'][:self.number_of_time_steps].to_numpy()
 
         return res
 

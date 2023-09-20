@@ -1,4 +1,4 @@
-oemof.solph>0.4.2
+oemof.solph>0.5.0,<0.6
 oemof.thermal>0.0.5
 pandas
 pyyaml
