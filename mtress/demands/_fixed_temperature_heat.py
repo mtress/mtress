@@ -2,7 +2,7 @@
 
 
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Sink, Transformer
+from oemof.solph.components import Sink, Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Heat
@@ -95,7 +95,7 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphRepresentation):
 
             self.create_solph_node(
                 label="heat_exchanger",
-                node_type=Transformer,
+                node_type=Converter,
                 inputs={
                     carrier.outputs[self.flow_temperature]: Flow(),
                 },

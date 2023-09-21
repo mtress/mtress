@@ -33,7 +33,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "graphviz",
-        "oemof.solph >= 0.5.0, <0.6",
+        "oemof.solph >= 0.5.1, <0.6",
         "oemof.thermal >= 0.0.6.dev1",
         "pyyaml >= 6.0",
         "pvlib",

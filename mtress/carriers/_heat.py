@@ -12,7 +12,7 @@ SPDX-License-Identifier: MIT
 """
 
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Transformer
+from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractLayeredCarrier
@@ -131,7 +131,7 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
 
                 self.create_solph_node(
                     label=f"rise_{temp_low:.0f}_{temperature:.0f}",
-                    node_type=Transformer,
+                    node_type=Converter,
                     inputs={
                         bus_in: Flow(),
                         self.outputs[temp_low]: Flow(),
