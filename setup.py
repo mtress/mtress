@@ -31,12 +31,5 @@ setup(
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     zip_safe=False,
-    install_requires=[
-        "graphviz",
-        "oemof.solph >= 0.5.1, <0.6",
-        "oemof.thermal >= 0.0.6.dev1",
-        "pyyaml >= 6.0",
-        "pvlib",
-    ],
-
+    install_requires=read("requirements.txt"),
 )
