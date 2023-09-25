@@ -15,14 +15,17 @@ class GeothermalHeatExchanger(
     """
     Geothermal heat exchanger for e.g. heat pumps.
 
-    Functionality: Geothermal heat exchanger for e.g. heat pumps. Holds a time
-        series of both the ground temperature and the power limit that can be
-        drawn from the source.
+    Functionality: Geothermal heat exchanger for e.g. heat pumps.
+                   Holds a time series of both the ground temper
+                   -ature and the power limit that can be drawn
+                   from the source.
 
-    Procedure: Create a simple geothermal heat exchanger by doing the following:
+    Procedure: Create a simple geothermal heat exchanger by
+               doing the following:
 
         house_1.add(
-            technologies.GeothermalHeatExchanger(name="ghe", ground_temperatures=[3])
+            technologies.GeothermalHeatExchanger(
+            name="ghe",  ground_temperatures=[3])
         )
 
 
@@ -42,7 +45,8 @@ class GeothermalHeatExchanger(
 
         :param name: Name of the component.
         :param nominal_power: Nominal power of the heat exchanger.
-        :param ground_temperatures: Reference to ground temperature time series
+        :param ground_temperatures: Reference to ground temperature
+                                    time series
         """
         super().__init__(name=name)
 
