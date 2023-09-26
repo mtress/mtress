@@ -63,7 +63,7 @@ house_1.add(
         name="H2_Storage",
         volume=0.59,
         power_limit=10,
-        multiplexer_implementation= Implementation.FLEXIBLE
+        multiplexer_implementation= Implementation.STRICT
     )
 )
 
