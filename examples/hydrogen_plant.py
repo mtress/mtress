@@ -16,12 +16,12 @@ energy_system.add_location(house_1)
 house_1.add(carriers.Electricity(working_rate=1, demand_rate=0))
 
 weather = {
-    "ghi": "FILE:mtress/examples/elec_heat_h2_weather.csv:ghi",
-    "dhi": "FILE:mtress/examples/elec_heat_h2_weather.csv:dhi",
-    "wind_speed": "FILE:mtress/examples/elec_heat_h2_weather.csv:wind_speed",
-    "temp_air": "FILE:mtress/examples/elec_heat_h2_weather.csv:temp_air",
-    "temp_dew": "FILE:mtress/examples/elec_heat_h2_weather.csv:temp_dew",
-    "pressure": "FILE:mtress/examples/elec_heat_h2_weather.csv:pressure",
+    "ghi": "FILE:mtress/examples/input_file.csv:ghi",
+    "dhi": "FILE:mtress/examples/input_file.csv:dhi",
+    "wind_speed": "FILE:mtress/examples/input_file.csv:wind_speed",
+    "temp_air": "FILE:mtress/examples/input_file.csv:temp_air",
+    "temp_dew": "FILE:mtress/examples/input_file.csv:temp_dew",
+    "pressure": "FILE:mtress/examples/input_file.csv:pressure",
 }
 
 house_1.add(
@@ -39,7 +39,7 @@ house_1.add(
 house_1.add(
     demands.Electricity(
         name="electricity_demand",
-        time_series="FILE:mtress/examples/elec_heat_h2_weather.csv:electricity",
+        time_series="FILE:mtress/examples/input_file.csv:electricity",
     )
 )
 
@@ -52,7 +52,7 @@ house_1.add(
 house_1.add(
     demands.Hydrogen(
         name="H2_demand",
-        time_series="FILE:mtress/examples/elec_heat_h2_weather.csv:h2_demand",
+        time_series="FILE:mtress/examples/input_file.csv:h2_demand",
         pressure=350,
     )
 )
@@ -82,7 +82,7 @@ house_1.add(
     )
 )
 
-house_1.add(technologies.PEMElectrolyzer(name="Ely", nominal_power=220))
+house_1.add(technologies.PEMElectrolyzer(name="Ely", nominal_power=200))
 house_1.add(technologies.PEMFuelCell(name="Fuel_Cell", nominal_power=100))
 house_1.add(technologies.H2Compressor(name="H2Compr", nominal_power=100))
 
