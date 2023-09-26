@@ -1,4 +1,4 @@
-"""This module provides a class representing an air heat exchanger."""
+"""This module provides a class representing an ground heat exchanger."""
 
 
 from oemof.solph import Bus, Flow
@@ -23,10 +23,10 @@ class GeothermalHeatExchanger(
     Procedure: Create a simple geothermal heat exchanger by
                doing the following:
 
-        house_1.add(
-            technologies.GeothermalHeatExchanger(
-            name="ghe",  ground_temperatures=[3])
-        )
+                house_1.add(
+                technologies.GeothermalHeatExchanger(
+                name="ghe",  ground_temperatures=[3])
+                )
 
 
     Further documentation regarding anergy found in the class
@@ -46,7 +46,7 @@ class GeothermalHeatExchanger(
         :param name: Name of the component.
         :param nominal_power: Nominal power of the heat exchanger.
         :param ground_temperature: Reference to ground temperature
-                                    time series
+                                   time series
         """
         super().__init__(name=name)
 
