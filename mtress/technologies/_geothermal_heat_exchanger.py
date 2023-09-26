@@ -8,7 +8,7 @@ from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier
 from ._abstract_technology import AbstractAnergySource, AbstractTechnology
 
-
+from typing import Optional
 class GeothermalHeatExchanger(
     AbstractTechnology, AbstractAnergySource, AbstractSolphRepresentation
 ):
@@ -37,29 +37,29 @@ class GeothermalHeatExchanger(
     def __init__(
         self,
         name: str,
-        ground_temperatures: TimeseriesSpecifier,
-        nominal_power: float = None,
+        ground_temperature: TimeseriesSpecifier = 10,
+        nominal_power: Optional[float] = None,
     ):
         """
         Initialize geothermal heat exchanger for e.g. heat pumps.
 
         :param name: Name of the component.
         :param nominal_power: Nominal power of the heat exchanger.
-        :param ground_temperatures: Reference to ground temperature
+        :param ground_temperature: Reference to ground temperature
                                     time series
         """
         super().__init__(name=name)
 
         self.nominal_power = nominal_power
-        self.ground_temperatures = ground_temperatures
+        self.ground_temperature = ground_temperature
 
         # Solph model interfaces
         self._bus = None
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        self.ground_temperatures = self._solph_model.data.get_timeseries(
-            self.ground_temperatures
+        self.ground_temperature = self._solph_model.data.get_timeseries(
+            self.ground_temperature
         )
 
         self._bus = _bus = self.create_solph_node(
@@ -76,7 +76,7 @@ class GeothermalHeatExchanger(
     @property
     def temperature(self):
         """Return temperature level of anergy source."""
-        return self.ground_temperatures
+        return self.ground_temperature
 
     @property
     def bus(self):

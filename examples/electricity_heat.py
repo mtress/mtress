@@ -61,12 +61,20 @@ house_1.add(
     )
 )
 
-house_1.add(technologies.HeatPump(name="hp0", thermal_power_limit=None))
+house_1.add(
+    technologies.HeatPump(name="hp0", thermal_power_limit=None, anergy_sources=["ghe"])
+)
+house_1.add(
+    technologies.HeatPump(name="hp1", thermal_power_limit=None, anergy_sources=["ahe"])
+)
+
 
 house_1.add(
     technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6, 13])
 )
-
+house_1.add(
+    technologies.GeothermalHeatExchanger(name="ghe", ground_temperature=[3, 6, 13])
+)
 house_1.add(
     technologies.FullyMixedHeatStorage(
         name="heat storage",
