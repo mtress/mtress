@@ -1,7 +1,7 @@
 """This module provides hydrogen compressors."""
 
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Transformer
+from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Electricity, Hydrogen
@@ -47,7 +47,7 @@ class H2Compressor(AbstractTechnology, AbstractSolphRepresentation):
             if pressure_low is not None:
                 self.create_solph_node(
                     label=f"compress_{pressure_low:.0f}_{pressure:.0f}",
-                    node_type=Transformer,
+                    node_type=Converter,
                     inputs={
                         electrical_bus: Flow(),
                         h2_carrier.outputs[pressure_low]: Flow(),

@@ -11,7 +11,7 @@ SPDX-License-Identifier: MIT
 from typing import Optional
 
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Source, Transformer
+from oemof.solph.components import Source, Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Electricity, Heat
@@ -23,7 +23,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
     """
     Clustered heat pump for modeling power flows with variable temperature levels.
 
-    Connects any input to any output using Transformer
+    Connects any input to any output using Converter
     with shared resources, see https://arxiv.org/abs/2012.12664
 
     Flows:
@@ -119,7 +119,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
 
                     self.create_solph_node(
                         label=f"{anergy_source.name}_{target_temperature:.0f}",
-                        node_type=Transformer,
+                        node_type=Converter,
                         inputs={
                             anergy_source.bus: Flow(),
                             self.electricity_bus: Flow(),
