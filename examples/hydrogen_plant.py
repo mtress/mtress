@@ -13,7 +13,8 @@ house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
 
-house_1.add(carriers.Electricity(working_rate=1, demand_rate=0))
+house_1.add(carriers.Electricity())
+house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 weather = {
     "ghi": "FILE:mtress/examples/input_file.csv:ghi",
@@ -61,7 +62,7 @@ house_1.add(
 house_1.add(
     technologies.H2Storage(
         name="H2_Storage",
-        volume=0.59,
+        volume=8.5,
         power_limit=10,
         multiplexer_implementation= Implementation.STRICT
     )
@@ -82,15 +83,15 @@ house_1.add(
     )
 )
 
-house_1.add(technologies.PEMElectrolyzer(name="Ely", nominal_power=200))
-house_1.add(technologies.PEMFuelCell(name="Fuel_Cell", nominal_power=100))
+house_1.add(technologies.PEMElectrolyzer(name="Ely", nominal_power=600))
+house_1.add(technologies.PEMFuelCell(name="Fuel_Cell", nominal_power=50))
 house_1.add(technologies.H2Compressor(name="H2Compr", nominal_power=100))
 
 solph_representation = SolphModel(
     energy_system,
     timeindex={
         "start": "2022-06-01 08:00:00",
-        "end": "2022-06-03 18:00:00",
+        "end": "2022-06-06 18:00:00",
         "freq": "15T",
         "tz": "Europe/Berlin",
     },
