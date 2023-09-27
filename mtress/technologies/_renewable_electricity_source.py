@@ -66,5 +66,5 @@ class RenewableElectricitySource(AbstractTechnology, AbstractSolphRepresentation
         self.create_solph_node(
             label="source",
             node_type=Source,
-            outputs={local_bus.distribution: flow},
+            outputs={local_bus: flow},
         )
