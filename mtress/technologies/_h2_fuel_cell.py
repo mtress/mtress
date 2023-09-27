@@ -119,7 +119,6 @@ class PEMFuelCell(AbstractTechnology, AbstractSolphRepresentation):
 
         # Electrical connection for FC electrical output
         electricity_carrier = self.location.get_carrier(Electricity)
-        electrical_bus = electricity_carrier.production
 
         # Electrical efficiency with conversion from H2 kg to KW electricity, also
         # includes inverter efficiency.
@@ -156,12 +155,12 @@ class PEMFuelCell(AbstractTechnology, AbstractSolphRepresentation):
             node_type=Transformer,
             inputs={h2_bus: Flow(nominal_value=nominal_h2_consumption)},
             outputs={
-                electrical_bus: Flow(),
+                electricity_carrier.distribution: Flow(),
                 heat_bus: Flow(),
             },
             conversion_factors={
                 h2_bus: 1,
-                electrical_bus: electrical_output,
+                electricity_carrier.distribution: electrical_output,
                 heat_bus: heat_output,
             },
         )
