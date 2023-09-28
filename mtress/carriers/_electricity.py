@@ -1,10 +1,6 @@
 """Electricity energy carrier."""
 
-
-from typing import Optional
-
-from oemof.solph import Bus, Flow, Investment
-from oemof.solph.components import Sink, Source
+from oemof.solph import Bus, Flow
 
 from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractCarrier
@@ -40,76 +36,23 @@ class Electricity(AbstractCarrier, AbstractSolphRepresentation):
 
     """
 
-    # TODO: the term demand_rate feels unintuitive; better variable_name for that?
     def __init__(
         self,
-        grid_connection: bool = True,
-        working_rate: Optional[float] = None,
-        demand_rate: Optional[float] = None,
     ):
         """Initialize electricity carrier."""
         super().__init__()
 
-        self.grid_connection = grid_connection
-
-        self.working_rate = working_rate
-        self.demand_rate = demand_rate
-
         # Properties for connection oemof.solph busses
         self.distribution = None
-        self.production = None
+        self.feed_in = None
 
     def build_core(self):
-        """Build solph nodes."""
         self.distribution = b_dist = self.create_solph_node(
             label="distribution",
             node_type=Bus,
         )
 
-        self.production = b_prod = self.create_solph_node(
-            label="production",
+        self.feed_in = self.create_solph_node(
+            label="feed_in",
             node_type=Bus,
-            outputs={b_dist: Flow()},
         )
-
-        if self.grid_connection:
-            b_grid_export = self.create_solph_node(
-                label="grid_export",
-                node_type=Bus,
-                inputs={b_prod: Flow()},
-            )
-
-            self.create_solph_node(
-                label="sink_export",
-                node_type=Sink,
-                inputs={b_grid_export: Flow()},
-                # TODO: Add revenues
-                # Is this the correct place for revenues? Or should they be an option
-                # for the generating technologies?
-            )
-
-            b_grid_import = self.create_solph_node(
-                label="grid_import",
-                node_type=Bus,
-                outputs={b_dist: Flow()},
-            )
-
-            if self.demand_rate:
-                demand_rate = Investment(ep_costs=self.demand_rate)
-            else:
-                demand_rate = None
-
-            # (unidirectional) grid connection
-            # RLM customer for district and larger buildings
-            self.create_solph_node(
-                label="source_import",
-                node_type=Source,
-                outputs={
-                    b_grid_import: Flow(
-                        variable_costs=self.working_rate,
-                        investment=demand_rate,
-                    )
-                },
-            )
-
-        # TODO: Categorize flows

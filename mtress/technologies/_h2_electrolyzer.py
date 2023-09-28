@@ -5,7 +5,7 @@ import logging
 
 import numpy as np
 from oemof.solph import Flow
-from oemof.solph.components import Transformer
+from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Electricity, Heat, Hydrogen
@@ -90,8 +90,8 @@ class PEMElectrolyzer(AbstractTechnology, AbstractSolphRepresentation):
 
         # TODO: Minimal power implementieren
         self.create_solph_node(
-            label="transformer",
-            node_type=Transformer,
+            label="converter",
+            node_type=Converter,
             inputs={electrical_bus: Flow(nominal_value=self.nominal_power)},
             outputs={
                 h2_bus: Flow(),

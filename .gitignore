@@ -7,6 +7,7 @@ doc/mtress.wmf
 dist/
 build/
 .vscode/
+venv/
 
 .ipynb_checkpoints/
 

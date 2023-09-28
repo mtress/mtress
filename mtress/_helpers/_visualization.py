@@ -3,7 +3,7 @@ import re
 
 import graphviz
 from oemof.solph import Bus
-from oemof.solph.components import GenericStorage, Sink, Source, Transformer
+from oemof.solph.components import GenericStorage, Sink, Source, Converter
 
 from ._util import update_in_dict
 
@@ -12,7 +12,7 @@ SHAPES = {
     Source: "trapezium",
     Sink: "invtrapezium",
     Bus: "ellipse",
-    Transformer: "octagon",
+    Converter: "octagon",
     GenericStorage: "cylinder",
 }
 

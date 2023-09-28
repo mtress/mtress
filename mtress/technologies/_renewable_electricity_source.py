@@ -11,7 +11,7 @@ SPDX-FileCopyrightText: Sunke Schlüters
 SPDX-License-Identifier: MIT
 """
 
-from oemof.solph import Flow
+from oemof.solph import Bus, Flow
 from oemof.solph.components import Source
 
 from .._abstract_component import AbstractSolphRepresentation
@@ -49,14 +49,22 @@ class RenewableElectricitySource(AbstractTechnology, AbstractSolphRepresentation
         """Build oemof solph core structure."""
         electricity_carrier = self.location.get_carrier(Electricity)
 
-        flow = (
-            Flow(nominal_value=self.nominal_power, fix=self.specific_generation)
-            if self.fixed
-            else Flow(nominal_value=self.nominal_power, max=self.specific_generation)
+        if self.fixed:
+            flow = Flow(nominal_value=self.nominal_power, fix=self.specific_generation)
+        else:
+            flow = Flow(nominal_value=self.nominal_power, max=self.specific_generation)
+
+        local_bus = self.create_solph_node(
+            label="connection",
+            node_type=Bus,
+            outputs={
+                electricity_carrier.feed_in: Flow(),
+                electricity_carrier.distribution: Flow(),
+            },
         )
 
         self.create_solph_node(
             label="source",
             node_type=Source,
-            outputs={electricity_carrier.production: flow},
+            outputs={local_bus: flow},
         )
