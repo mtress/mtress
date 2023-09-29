@@ -1,4 +1,4 @@
-"""Electricity grid connection."""
+"""Heat grid connection."""
 
 from typing import Optional
 
