@@ -29,10 +29,12 @@ class DataHandler:
                 return self.get_timeseries(series)
 
             case pd.Series() as series:
-                if not self.timeindex.isin(series.index).all():
-                    raise KeyError("Provided series doesn't cover time index")
-
-                return series.reindex(self.timeindex)
+                if isinstance(series.index, pd.DatetimeIndex):
+                    if not self.timeindex.isin(series.index).all():
+                        raise KeyError("Provided series doesn't cover time index")
+                    return series.reindex(self.timeindex)
+                else:
+                    return pd.Series(data=series.values, index=self.timeindex)
 
             case list() as values:
                 if not len(values) == len(self.timeindex):
