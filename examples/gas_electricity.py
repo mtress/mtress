@@ -53,7 +53,7 @@ house_1.add(
 
 house_1.add(
     carriers.Heat(
-        temperature_levels=[500, 20],
+        temperature_levels=[80, 20],
         reference_temperature=10,
     )
 )
@@ -62,11 +62,11 @@ house_1.add(
 house_1.add(
     demands.HeatSink(
         name="Excess Heat",
-        temperature_levels=500,
+        temperature_levels=80,
     )
 )
 
-house_1.add(technologies.CHP(name="CHP", nominal_power=100, pressure=50))
+house_1.add(technologies.CHP(name="CHP", thermal_temperature=80, nominal_power=100, pressure=50))
 house_1.add(technologies.GasCompressor(name="NG_Compressor", nominal_power=50, gas_const=518.28,
                                        unit_conversion=11.2))
 

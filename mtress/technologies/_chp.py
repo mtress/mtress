@@ -22,29 +22,30 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
     def __init__(
             self,
             name: str,
+            thermal_temperature: float,
             nominal_power: float = None,
             pressure: float = 15,
             electric_efficiency: float = 0.32,
             thermal_efficiency: float = 0.43,
-            thermal_temperature: float = 500,
     ):
         """
         Initialize CHP component.
 
+        :parma thermal_temperature: Temperature level (°C) of the heat output
+                                    from CHP that is recoverable.
         :param name: Set the name of the component
         :param nominal_power: Nominal electric output capacity of the CHP
         :param electric_efficiency: Electric conversion efficiency of the CHP
         :param thermal_efficiency: Thermal conversion efficiency of the CHP
-        :parma thermal_temperature: Temperature level (°C) of the heat output
-                                    from CHP that is recoverable.
+
         """
         super().__init__(name=name)
 
+        self.thermal_temperature = thermal_temperature
         self.nominal_power = nominal_power
         self.pressure = pressure
         self.electric_efficiency = electric_efficiency
         self.thermal_efficiency = thermal_efficiency
-        self.thermal_temperature = thermal_temperature
 
         # Solph specific parameters
         self.electricity_bus = None
