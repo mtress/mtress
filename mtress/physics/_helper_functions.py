@@ -101,7 +101,7 @@ def calc_cop(temp_input, temp_output, cop_0_35=4.6):
     return cop
 
 
-def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2):
+def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2, unit_conversion=1):
     r"""
     Calculate the energy demand to compress an ideal gas at constant temperature.
 
@@ -120,10 +120,11 @@ def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2):
     :param p_out: Outlet pressure in bar
     :param T: Temperature in deg C, defaults to 20
     :param R: Gas constant in  J / (kg * K), defaults to 4124.2
+    :param unit_conversion: If the gas flows is given in other unit for ex- KWh.
     :return: Energy required for compression in kWh
     """
     T += 273.15  # Convert temperature to Kelvin
-    return R * T * np.log(p_out / p_in) / (3600 * 1000)
+    return (R * T * np.log(p_out / p_in) / (3600 * 1000)) / unit_conversion
 
 def calc_hydrogen_density(pressure, temperature: float = 25) -> float:
     """
