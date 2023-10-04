@@ -31,10 +31,10 @@ class DataHandler:
             case pd.Series() as series:
                 if isinstance(series.index, pd.DatetimeIndex):
                     matching_index = self.timeindex.isin(series.index)
-                    if not machtching_index.all():
+                    if not matching_index.all():
                         raise KeyError(
                             "Provided series doesn't cover time index: "
-                            + f"{list(self.timeindex[machtching_index == False])}"
+                            + f"{list(self.timeindex[matching_index == False])}"
                         )
                     return series.reindex(self.timeindex)
                 else:
