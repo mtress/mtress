@@ -73,7 +73,7 @@ class HydrogenInjection(AbstractDemand, AbstractSolphRepresentation):
                 " since as per current german regulation it is limited to 20% vol."
             )
 
-        natural_gas_flow = self._solph_model.data.get_timeseries(self._ng_vol_flow)
+        natural_gas_flow = self._solph_model.data.get_timeseries(self._ng_vol_flow, kind="interval")
         max_hydrogen_flow = natural_gas_flow * (self.h2_vol_limit / 100)
 
         self.create_solph_node(

@@ -13,46 +13,56 @@ class DataHandler:
         self.timeindex = timeindex
         self._cache: dict[pd.DataFrame] = {}
 
-    def get_timeseries(self, specifier: TimeseriesSpecifier):
+    def get_timeseries(self, specifier: TimeseriesSpecifier, kind: str):
         """
         Prepare a time series for the usage in MTRESS.
 
         This method takes a time series specifier and reads a
         time series from a file or checks a provided series for completeness.
         """
+        last_index = {
+            "point": len(self.timeindex),
+            "interval": len(self.timeindex) - 1,
+        }
+
+        last_index = last_index[kind]
+
         match specifier:
             case str() if specifier.startswith("FILE:"):
                 _, file, column = specifier.split(":", maxsplit=2)
                 series = self._read_from_file(file, column)
 
                 # Call function again to check series for consistency
-                return self.get_timeseries(series)
+                return self.get_timeseries(series, kind=kind)
 
             case pd.Series() as series:
                 if isinstance(series.index, pd.DatetimeIndex):
-                    matching_index = self.timeindex.isin(series.index)
+                    matching_index = self.timeindex.isin(series.index)[:last_index]
                     if not matching_index.all():
                         raise KeyError(
                             "Provided series doesn't cover time index: "
                             + f"{list(self.timeindex[matching_index == False])}"
                         )
-                    return series.reindex(self.timeindex)
+                    return series.reindex(self.timeindex[:last_index])
                 else:
-                    return pd.Series(data=series.values, index=self.timeindex)
+                    return pd.Series(
+                        data=series.values,
+                        index=self.timeindex[:last_index],
+                    )
 
             case list() as values:
-                if not len(values) == len(self.timeindex):
+                if not len(values) == last_index:
                     raise ValueError(
                         (
-                            f"Length of list ({len(values)}) differs from"
-                            f"time index length ({len(self.timeindex)})"
+                            f"Length of list ({len(values)}) needs to be"
+                            f" {last_index}."
                         )
                     )
 
-                return pd.Series(data=values, index=self.timeindex)
+                return pd.Series(data=values, index=self.timeindex[:last_index])
 
             case float() | int() as value:
-                return pd.Series(data=value, index=self.timeindex)
+                return pd.Series(data=value, index=self.timeindex[:last_index])
 
             case _:
                 raise ValueError(f"Time series specifier {specifier} not supported")
