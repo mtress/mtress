@@ -51,7 +51,7 @@ class TestDataHandler:
         data_series = pd.Series(data=data_list, index=date_range)
         data = data_handler.get_timeseries(data_series)
 
-        assert (data == data_series).all()
+        assert (data == data_list).all()
 
         longer_date_range = pd.date_range(
             start=date_range[0] - 2 * date_range.freq,
@@ -59,6 +59,19 @@ class TestDataHandler:
             freq=date_range.freq,
         )
 
+        # handler selects matching data from longer series
         longer_data_list = [8, 9] + data_list + [6, 7]
         data_series = pd.Series(data=longer_data_list, index=longer_date_range)
         data = data_handler.get_timeseries(data_series)
+
+        assert (data == data_list).all()
+
+        shorter_date_range = pd.date_range(
+            start=date_range[1],
+            end=date_range[-1],
+            freq=date_range.freq,
+        )
+
+        data_series = pd.Series(data=data_list[1:], index=shorter_date_range)
+        with pytest.raises(KeyError):
+            data = data_handler.get_timeseries(data_series)

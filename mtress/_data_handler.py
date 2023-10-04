@@ -30,8 +30,12 @@ class DataHandler:
 
             case pd.Series() as series:
                 if isinstance(series.index, pd.DatetimeIndex):
-                    if not self.timeindex.isin(series.index).all():
-                        raise KeyError("Provided series doesn't cover time index")
+                    machtching_index = self.timeindex.isin(series.index)
+                    if not machtching_index.all():
+                        raise KeyError(
+                            "Provided series doesn't cover time index: "
+                            + f"{list(self.timeindex[machtching_index == False])}"
+                        )
                     return series.reindex(self.timeindex)
                 else:
                     return pd.Series(data=series.values, index=self.timeindex)
