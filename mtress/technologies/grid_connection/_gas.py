@@ -45,7 +45,7 @@ class GasGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
 
         gas_carrier = self.location.get_carrier(Gas)
 
-        _, pressure = gas_carrier.get_surrounding_levels(self.grid_pressure)
+        pressure,_ = gas_carrier.get_surrounding_levels(self.grid_pressure)
 
         if pressure not in gas_carrier.pressure_levels:
             raise ValueError("Pressure must be a valid pressure level")
