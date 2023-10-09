@@ -2,7 +2,7 @@
 
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Sink
-from .._data_handler import TimeseriesSpecifier
+from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Hydrogen as HydrogenCarrier
 from ._abstract_demand import AbstractDemand

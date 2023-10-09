@@ -26,7 +26,7 @@ house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 house_1.add(
     demands.Electricity(
         name="electricity demand",
-        time_series=[0, 0.5, 9],
+        time_series=[0, 0.5],
     )
 )
 

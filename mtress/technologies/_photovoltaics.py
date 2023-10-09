@@ -17,7 +17,7 @@ from typing import Dict, Tuple
 import pandas as pd
 import pvlib
 
-from .._data_handler import TimeseriesSpecifier
+from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ._renewable_electricity_source import RenewableElectricitySource
 
 _LOGGER = logging.getLogger(__name__)

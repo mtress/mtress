@@ -5,6 +5,7 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import Sink, Converter
 
 from .._abstract_component import AbstractSolphRepresentation
+from .._data_handler import TimeseriesType
 from ..carriers import Heat
 from ._abstract_demand import AbstractDemand
 

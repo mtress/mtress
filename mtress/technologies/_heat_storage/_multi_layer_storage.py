@@ -13,7 +13,7 @@ from oemof.solph.components import GenericStorage
 from oemof.solph.constraints import shared_limit
 from oemof.thermal import stratified_thermal_storage
 
-from mtress._data_handler import TimeseriesSpecifier
+from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import Heat
 from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
 
