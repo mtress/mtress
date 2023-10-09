@@ -93,6 +93,5 @@ class TestDataHandler:
         )
 
         data_series = pd.Series(data=data_list[1:], index=shorter_date_range)
-        with pytest.raises(KeyError):
-            # '2021-07-10 00:00:00' not covered
+        with pytest.raises(KeyError, match="2021-07-10 00:00:00"):
             data_handler.get_timeseries(data_series, kind=TimeseriesType.POINT)
