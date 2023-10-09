@@ -8,6 +8,8 @@ SPDX-License-Identifier: MIT
 
 from __future__ import annotations
 
+import logging
+
 from typing import TYPE_CHECKING, Dict, Tuple
 
 from graphviz import Digraph
@@ -19,6 +21,8 @@ from ._data_handler import DataHandler
 if TYPE_CHECKING:
     from ._abstract_component import AbstractSolphRepresentation
     from ._meta_model import MetaModel
+
+LOGGER = logging.getLogger(__file__)
 
 
 class SolphModel:
@@ -103,6 +107,13 @@ class SolphModel:
         cmdline_options: dict = None,
     ):
         """Solve generated energy system model."""
+
+        if self.model is None:
+            LOGGER.info("Building solph model.")
+            self.build_solph_model()
+        else:
+            LOGGER.info("Using solph model built before.")
+
         kwargs = {"solver": solver}
         if solve_kwargs is not None:
             kwargs["solve_kwargs"] = solve_kwargs
@@ -110,6 +121,7 @@ class SolphModel:
         if cmdline_options is not None:
             kwargs["cmdline_options"] = cmdline_options
 
+        LOGGER.info("Solving the optimisation model.")
         self.model.solve(**kwargs)
 
         return self.model
