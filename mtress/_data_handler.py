@@ -1,8 +1,14 @@
 """Handle data."""
 
+from enum import IntEnum
+
 import pandas as pd
 
 TimeseriesSpecifier = str | pd.Series | list | float
+
+class TimeseriesType(IntEnum):
+    POINT = 0
+    INTERVAL = 1
 
 
 class DataHandler:
@@ -13,17 +19,21 @@ class DataHandler:
         self.timeindex = timeindex
         self._cache: dict[pd.DataFrame] = {}
 
-    def get_timeseries(self, specifier: TimeseriesSpecifier, kind: str):
+    def get_timeseries(
+            self,
+            specifier: TimeseriesSpecifier,
+            kind: TimeseriesType
+        ):
         """
         Prepare a time series for the usage in MTRESS.
 
         This method takes a time series specifier and reads a
         time series from a file or checks a provided series for completeness.
         """
-        last_index = {
-            "point": len(self.timeindex),
-            "interval": len(self.timeindex) - 1,
-        }
+        last_index = [
+            len(self.timeindex),
+            len(self.timeindex) - 1,
+        ]
 
         last_index = last_index[kind]
 
