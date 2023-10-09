@@ -63,7 +63,7 @@ class HydrogenPipeline(AbstractDemand, AbstractSolphRepresentation):
                 hydrogen_carrier.outputs[self.pressure]: Flow(
                     variable_costs=-self.revenue,
                     nominal_value=1,
-                    max=self._solph_model.data.get_timeseries(self._h2_vol_flow),
+                    max=self._solph_model.data.get_timeseries(self._h2_vol_flow, kind=TimeseriesType.INTERVAL),
                 )
             },
         )

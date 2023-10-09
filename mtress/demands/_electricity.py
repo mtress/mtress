@@ -54,7 +54,7 @@ class Electricity(AbstractDemand, AbstractSolphRepresentation):
             inputs={
                 bus: Flow(
                     nominal_value=1,
-                    fix=self._solph_model.data.get_timeseries(self._time_series),
+                    fix=self._solph_model.data.get_timeseries(self._time_series, kind=TimeseriesType.INTERVAL),
                 )
             },
         )
