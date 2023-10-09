@@ -30,12 +30,10 @@ class DataHandler:
         This method takes a time series specifier and reads a
         time series from a file or checks a provided series for completeness.
         """
-        last_index = [
-            len(self.timeindex),
-            len(self.timeindex) - 1,
-        ]
-
-        last_index = last_index[kind]
+        if kind == TimeseriesType.INTERVAL:
+            target_index = self.timeindex[:-1]
+        else:
+            target_index = self.timeindex
 
         match specifier:
             case str() if specifier.startswith("FILE:"):
@@ -47,24 +45,24 @@ class DataHandler:
 
             case pd.Series() as series:
                 if isinstance(series.index, pd.DatetimeIndex):
-                    matching_index = self.timeindex.isin(series.index)[:last_index]
+                    matching_index = target_index.isin(series.index)
                     if not matching_index.all():
                         raise KeyError(
                             "Provided series doesn't cover time index: "
                             + f"{list(self.timeindex[matching_index == False])}"
                         )
-                    return series.reindex(self.timeindex[:last_index])
+                    return series.reindex(target_index)
                 else:
                     return pd.Series(
                         data=series.values,
-                        index=self.timeindex[:last_index],
+                        index=target_index,
                     )
 
             case list() as values:
-                return pd.Series(data=values, index=self.timeindex[:last_index])
+                return pd.Series(data=values, index=target_index)
 
             case float() | int() as value:
-                return pd.Series(data=value, index=self.timeindex[:last_index])
+                return pd.Series(data=value, index=target_index)
 
             case _:
                 raise ValueError(f"Time series specifier {specifier} not supported")
