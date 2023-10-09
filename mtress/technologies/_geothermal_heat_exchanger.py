@@ -60,7 +60,7 @@ class GeothermalHeatExchanger(
         """Build core structure of oemof.solph representation."""
         self.ground_temperature = self._solph_model.data.get_timeseries(
             self.ground_temperature,
-            kind="interval",
+            kind=TimeseriesType.INTERVAL,
         )
 
         self._bus = _bus = self.create_solph_node(

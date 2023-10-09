@@ -89,7 +89,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                     temp_c=reference_temperature,
                     temp_env=self._solph_model.data.get_timeseries(
                         self.ambient_temperature,
-                        kind="interval",
+                        kind=TimeseriesType.INTERVAL,
                     ),
                 )
 

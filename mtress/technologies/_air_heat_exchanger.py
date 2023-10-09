@@ -54,7 +54,7 @@ class AirHeatExchanger(
         """Build core structure of oemof.solph representation."""
         self.air_temperatures = self._solph_model.data.get_timeseries(
             self.air_temperatures,
-            kind="interval",
+            kind=TimeseriesType.INTERVAL,
         )
 
         self._bus = _bus = self.create_solph_node(
