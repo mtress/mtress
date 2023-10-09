@@ -51,14 +51,6 @@ class DataHandler:
                     )
 
             case list() as values:
-                if not len(values) == last_index:
-                    raise ValueError(
-                        (
-                            f"Length of list ({len(values)}) needs to be"
-                            f" {last_index}."
-                        )
-                    )
-
                 return pd.Series(data=values, index=self.timeindex[:last_index])
 
             case float() | int() as value:
