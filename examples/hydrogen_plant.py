@@ -17,12 +17,12 @@ house_1.add(carriers.Electricity())
 house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 weather = {
-    "ghi": "FILE:mtress/examples/input_file.csv:ghi",
-    "dhi": "FILE:mtress/examples/input_file.csv:dhi",
-    "wind_speed": "FILE:mtress/examples/input_file.csv:wind_speed",
-    "temp_air": "FILE:mtress/examples/input_file.csv:temp_air",
-    "temp_dew": "FILE:mtress/examples/input_file.csv:temp_dew",
-    "pressure": "FILE:mtress/examples/input_file.csv:pressure",
+    "ghi": "FILE:./input_file.csv:ghi",
+    "dhi": "FILE:./input_file.csv:dhi",
+    "wind_speed": "FILE:./input_file.csv:wind_speed",
+    "temp_air": "FILE:./input_file.csv:temp_air",
+    "temp_dew": "FILE:./input_file.csv:temp_dew",
+    "pressure": "FILE:./input_file.csv:pressure",
 }
 
 house_1.add(
@@ -40,7 +40,7 @@ house_1.add(
 house_1.add(
     demands.Electricity(
         name="electricity_demand",
-        time_series="FILE:mtress/examples/input_file.csv:electricity",
+        time_series="FILE:./input_file.csv:electricity",
     )
 )
 
@@ -53,7 +53,7 @@ house_1.add(
 house_1.add(
     demands.Hydrogen(
         name="H2_demand",
-        time_series="FILE:mtress/examples/input_file.csv:h2_demand",
+        time_series="FILE:./input_file.csv:h2_demand",
         pressure=350,
     )
 )
