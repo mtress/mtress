@@ -13,8 +13,8 @@ class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
         self,
         name: str,
         nominal_capacity: float,
-        power_max_in: float,
-        power_max_out: float,
+        charging_C_Rate: float = 1,
+        discharging_C_Rate: float = 1,
         charging_efficiency: float = 0.98,
         discharging_efficiency: float = 0.95,
         loss_rate: float = 0.0,
@@ -25,9 +25,9 @@ class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
         Initialize Battery Storage.
 
         :param name: Name of the component
-        :param nominal_capacity: Nominal capacity of the battery,
-        :param power_max_in: Maximum charging power input
-        :param power_max_out: Maximum discharging power output
+        :param nominal_capacity: Nominal capacity of the battery
+        :param charging_C_Rate: Charging C-rate, default to 1
+        :param discharging_C_Rate: Discharging C-rate, default to 1
         :param charging_efficiency: Efficiency during battery charging,
                                     default to 0.98.
         :param discharging_efficiency: Efficiency during battery discharging,
@@ -55,8 +55,12 @@ class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
         self.create_solph_node(
             label="Battery_Storage",
             node_type=GenericStorage,
-            inputs={electricity.distribution: Flow(nominal_value=self.power_max_in)},
-            outputs={electricity.distribution: Flow(nominal_value=self.power_max_out)},
+            inputs={electricity.distribution: Flow(
+                    nominal_value=self.nominal_capacity * self.charging_C_Rate)
+                    },
+            outputs={electricity.distribution: Flow(
+                    nominal_value=self.nominal_capacity * self.discharging_C_Rate)
+                    },
             nominal_storage_capacity=self.nominal_capacity,
             loss_rate=self.loss_rate,
             min_storage_level=self.min_soc,
