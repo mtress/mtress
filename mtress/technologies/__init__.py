@@ -17,6 +17,7 @@ from ._heat_pump import HeatPump
 from ._heat_storage import FullyMixedHeatStorage, LayeredHeatStorage
 from ._photovoltaics import Photovoltaics
 from ._pressure_storage import H2Storage
+from ._battery_storage import BatteryStorage
 
 __all__ = [
     "AirHeatExchanger",
@@ -26,6 +27,7 @@ __all__ = [
     "H2Compressor",
     "PEMElectrolyzer",
     "PEMFuelCell",
+    "BatteryStorage",
     "HeatPump",
     "H2Storage",
     "PEMFuelCell",
