@@ -77,7 +77,8 @@ class SolphModel:
         for component in self._meta_model.components:
             component.establish_interconnections()
 
-        # TODO: Add inter-location connections
+        for connection in self._meta_model.connections:
+            connection.source.connect(connection.carrier, connection.destination)
 
     def build_solph_model(self):
         """Build the `oemof.solph` representation of the model."""

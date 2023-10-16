@@ -1,6 +1,6 @@
 """Electricity energy carrier."""
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Bus
 
 from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractCarrier
@@ -28,12 +28,6 @@ class Electricity(AbstractCarrier, AbstractSolphRepresentation):
     Procedure: Create a simple electricity carrier by doing the following
         and adding costs to the grid supply.
 
-            house_1.add(
-                carriers.Electricity(costs={"working_price": 35, "demand_rate": 0})
-
-    Notice: Costs of the grid supply (working_price and demand_rate) need to
-        be specified.
-
     """
 
     def __init__(
@@ -47,7 +41,7 @@ class Electricity(AbstractCarrier, AbstractSolphRepresentation):
         self.feed_in = None
 
     def build_core(self):
-        self.distribution = b_dist = self.create_solph_node(
+        self.distribution = self.create_solph_node(
             label="distribution",
             node_type=Bus,
         )

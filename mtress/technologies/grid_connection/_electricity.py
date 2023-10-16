@@ -1,5 +1,7 @@
 """Electricity grid connection."""
 
+from __future__ import annotations
+
 from typing import Optional
 
 from oemof.solph import Bus, Flow, Investment
@@ -21,16 +23,19 @@ class ElectricityGridConnection(AbstractGridConnection, AbstractSolphRepresentat
         self.working_rate = working_rate
         self.demand_rate = demand_rate
 
+        self.grid_export = None
+        self.grid_import = None
+
     def build_core(self):
         electricity_carrier = self.location.get_carrier(Electricity)
 
-        b_grid_export = self.create_solph_node(
+        self.grid_export = b_grid_export = self.create_solph_node(
             label="grid_export",
             node_type=Bus,
             inputs={electricity_carrier.feed_in: Flow()},
         )
 
-        b_grid_import = self.create_solph_node(
+        self.grid_import = b_grid_import = self.create_solph_node(
             label="grid_import",
             node_type=Bus,
             outputs={electricity_carrier.distribution: Flow()},
@@ -58,3 +63,8 @@ class ElectricityGridConnection(AbstractGridConnection, AbstractSolphRepresentat
                     )
                 },
             )
+    def connect(
+        self,
+        other: ElectricityGridConnection,
+    ):
+        self.grid_export.outputs[other.grid_import] = Flow()
