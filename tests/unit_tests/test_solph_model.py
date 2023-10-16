@@ -8,7 +8,7 @@ import pytest
 import datetime
 import pandas as pd
 
-from mtress import carriers, Connection, Location, MetaModel, SolphModel, technologies
+from mtress import carriers, Connection, Location, MetaModel, SolphModel
 from mtress.technologies.grid_connection import ElectricityGridConnection
 
 
