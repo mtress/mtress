@@ -2,7 +2,7 @@
 
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Sink
-from .._data_handler import TimeseriesSpecifier
+from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Hydrogen as HydrogenCarrier
 from ._abstract_demand import AbstractDemand
@@ -59,7 +59,7 @@ class Hydrogen(AbstractDemand, AbstractSolphRepresentation):
             inputs={
                 h2_bus: Flow(
                     nominal_value=1,
-                    fix=self._solph_model.data.get_timeseries(self._time_series),
+                    fix=self._solph_model.data.get_timeseries(self._time_series, kind=TimeseriesType.INTERVAL),
                 )
             },
         )

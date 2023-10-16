@@ -6,7 +6,7 @@ from oemof.solph import Flow
 from oemof.solph.components import Sink
 
 from .._abstract_component import AbstractSolphRepresentation
-from .._data_handler import TimeseriesSpecifier
+from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import Hydrogen as HydrogenCarrier
 from ._abstract_demand import AbstractDemand
 
@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__file__)
 
 class HydrogenPipeline(AbstractDemand, AbstractSolphRepresentation):
     """
-    Class representing a hydrogen injection into Hydrogen Pipeline.
+     Class representing a hydrogen injection into Hydrogen Pipeline.
 
     Functionality: This models the hydrogen injection into a 100% Hydrogen Pipeline.
     The inclusion of this feature in MTRESS is based on the recognition of various
@@ -63,7 +63,7 @@ class HydrogenPipeline(AbstractDemand, AbstractSolphRepresentation):
                 hydrogen_carrier.outputs[self.pressure]: Flow(
                     variable_costs=-self.revenue,
                     nominal_value=1,
-                    max=self._solph_model.data.get_timeseries(self._h2_vol_flow),
+                    max=self._solph_model.data.get_timeseries(self._h2_vol_flow, kind=TimeseriesType.INTERVAL),
                 )
             },
         )

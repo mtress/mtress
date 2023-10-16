@@ -8,17 +8,18 @@ energy_system = MetaModel()
 house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
-house_1.add(carriers.Electricity(working_rate=35, demand_rate=0))
+house_1.add(carriers.Electricity())
+house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 house_1.add(demands.Electricity(name="demand0", time_series=10))
 
 weather = {
-    "ghi": "FILE:mtress/examples/weather.csv:ghi",
-    "dhi": "FILE:mtress/examples/weather.csv:dhi",
-    "wind_speed": "FILE:mtress/examples/weather.csv:wind_speed",
-    "temp_air": "FILE:mtress/examples/weather.csv:temp_air",
-    "temp_dew": "FILE:mtress/examples/weather.csv:temp_dew",
-    "pressure": "FILE:mtress/examples/weather.csv:pressure",
+    "ghi": "FILE:./weather.csv:ghi",
+    "dhi": "FILE:./weather.csv:dhi",
+    "wind_speed": "FILE:./weather.csv:wind_speed",
+    "temp_air": "FILE:./weather.csv:temp_air",
+    "temp_dew": "FILE:./weather.csv:temp_dew",
+    "pressure": "FILE:./weather.csv:pressure",
 }
 
 

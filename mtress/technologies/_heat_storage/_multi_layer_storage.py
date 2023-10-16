@@ -13,7 +13,7 @@ from oemof.solph.components import GenericStorage
 from oemof.solph.constraints import shared_limit
 from oemof.thermal import stratified_thermal_storage
 
-from mtress._data_handler import TimeseriesSpecifier
+from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import Heat
 from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
 
@@ -88,7 +88,8 @@ class LayeredHeatStorage(AbstractHeatStorage):
                     temp_h=temperature,
                     temp_c=reference_temperature,
                     temp_env=self._solph_model.data.get_timeseries(
-                        self.ambient_temperature
+                        self.ambient_temperature,
+                        kind=TimeseriesType.INTERVAL,
                     ),
                 )
 

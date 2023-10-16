@@ -34,7 +34,7 @@ house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 house_1.add(
     demands.Electricity(
         name="electricity demand",
-        time_series=[9, 13, 12],
+        time_series=[9, 13],
     )
 )
 
@@ -49,7 +49,7 @@ house_1.add(
         name="space heating",
         flow_temperature=30,
         return_temperature=20,
-        time_series=[50, 60, 20],
+        time_series=[50, 60],
     )
 )
 house_1.add(
@@ -57,16 +57,24 @@ house_1.add(
         name="hot water",
         flow_temperature=55,
         return_temperature=10,
-        time_series=[3, 0, 4],
+        time_series=[3, 0],
     )
 )
 
-house_1.add(technologies.HeatPump(name="hp0", thermal_power_limit=None))
-
 house_1.add(
-    technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6, 13])
+    technologies.HeatPump(name="hp0", thermal_power_limit=None, anergy_sources=["ghe"])
+)
+house_1.add(
+    technologies.HeatPump(name="hp1", thermal_power_limit=None, anergy_sources=["ahe"])
 )
 
+
+house_1.add(
+    technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6])
+)
+house_1.add(
+    technologies.GeothermalHeatExchanger(name="ghe", ground_temperature=8)
+)
 house_1.add(
     technologies.FullyMixedHeatStorage(
         name="heat storage",

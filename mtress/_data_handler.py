@@ -1,8 +1,14 @@
 """Handle data."""
 
+from enum import IntEnum
+
 import pandas as pd
 
 TimeseriesSpecifier = str | pd.Series | list | float
+
+class TimeseriesType(IntEnum):
+    POINT = 0
+    INTERVAL = 1
 
 
 class DataHandler:
@@ -13,40 +19,50 @@ class DataHandler:
         self.timeindex = timeindex
         self._cache: dict[pd.DataFrame] = {}
 
-    def get_timeseries(self, specifier: TimeseriesSpecifier):
+    def get_timeseries(
+            self,
+            specifier: TimeseriesSpecifier,
+            kind: TimeseriesType
+        ):
         """
         Prepare a time series for the usage in MTRESS.
 
         This method takes a time series specifier and reads a
         time series from a file or checks a provided series for completeness.
         """
+        if kind == TimeseriesType.INTERVAL:
+            target_index = self.timeindex[:-1]
+        else:
+            target_index = self.timeindex
+
         match specifier:
             case str() if specifier.startswith("FILE:"):
                 _, file, column = specifier.split(":", maxsplit=2)
                 series = self._read_from_file(file, column)
 
                 # Call function again to check series for consistency
-                return self.get_timeseries(series)
+                return self.get_timeseries(series, kind=kind)
 
             case pd.Series() as series:
-                if not self.timeindex.isin(series.index).all():
-                    raise KeyError("Provided series doesn't cover time index")
-
-                return series.reindex(self.timeindex)
-
-            case list() as values:
-                if not len(values) == len(self.timeindex):
-                    raise ValueError(
-                        (
-                            f"Length of list ({len(values)}) differs from"
-                            f"time index length ({len(self.timeindex)})"
+                if isinstance(series.index, pd.DatetimeIndex):
+                    matching_index = target_index.isin(series.index)
+                    if not matching_index.all():
+                        raise KeyError(
+                            "Provided series doesn't cover time index: "
+                            + f"{list(self.timeindex[matching_index == False])}"
                         )
+                    return series.reindex(target_index)
+                else:
+                    return pd.Series(
+                        data=series.values,
+                        index=target_index,
                     )
 
-                return pd.Series(data=values, index=self.timeindex)
+            case list() as values:
+                return pd.Series(data=values, index=target_index)
 
             case float() | int() as value:
-                return pd.Series(data=value, index=self.timeindex)
+                return pd.Series(data=value, index=target_index)
 
             case _:
                 raise ValueError(f"Time series specifier {specifier} not supported")

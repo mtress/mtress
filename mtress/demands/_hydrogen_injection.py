@@ -6,7 +6,7 @@ from oemof.solph import Flow
 from oemof.solph.components import Sink
 
 from .._abstract_component import AbstractSolphRepresentation
-from .._data_handler import TimeseriesSpecifier
+from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import Hydrogen as HydrogenCarrier
 from ._abstract_demand import AbstractDemand
 
@@ -15,15 +15,15 @@ LOGGER = logging.getLogger(__file__)
 
 class HydrogenInjection(AbstractDemand, AbstractSolphRepresentation):
     """
-    Class representing a hydrogen injection into Natural gas grid
+     Class representing a hydrogen injection into Natural gas grid
 
-    Functionality:
-    Models the injection of hydrogen into the natural gas grid with the upper limit
-    given by volume limit  multiplied by the natural gas flow time series. Due to
-    current german regulation, upper % vol limit to the h2 injection is restricted
-    with 20%, and therefore it will raise a warning in case higher than 20 % vol limit
-    is provided by the user. One can still input higher than 20%  vol H2 injection
-    depending on the use case.
+     Functionality:
+     Models the injection of hydrogen into the natural gas grid with the upper limit
+     given by volume limit  multiplied by the natural gas flow time series. Due to
+     current german regulation, upper % vol limit to the h2 injection is restricted
+     with 20%, and therefore it will raise a warning in case higher than 20 % vol limit
+     is provided by the user. One can still input higher than 20%  vol H2 injection
+     depending on the use case.
 
     Note: It's important to note that this simplified approach does not account for the
     complexities of the gas grid, such as pressure variations, pipeline capacities, gas
@@ -73,7 +73,7 @@ class HydrogenInjection(AbstractDemand, AbstractSolphRepresentation):
                 " since as per current german regulation it is limited to 20% vol."
             )
 
-        natural_gas_flow = self._solph_model.data.get_timeseries(self._ng_vol_flow)
+        natural_gas_flow = self._solph_model.data.get_timeseries(self._ng_vol_flow, kind=TimeseriesType.INTERVAL)
         max_hydrogen_flow = natural_gas_flow * (self.h2_vol_limit / 100)
 
         self.create_solph_node(

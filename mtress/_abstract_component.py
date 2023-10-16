@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Callable, Tuple
 
 from graphviz import Digraph
 from oemof.solph import Bus
-from oemof.solph.components import Source, Sink, Transformer, GenericStorage
+from oemof.solph.components import Source, Sink, Converter, GenericStorage
 
 from ._interfaces import NamedElement
 from ._solph_model import SolphModel
@@ -19,7 +19,7 @@ SOLPH_SHAPES = {
     Source: "trapezium",
     Sink: "invtrapezium",
     Bus: "ellipse",
-    Transformer: "octagon",
+    Converter: "octagon",
     GenericStorage: "cylinder",
 }
 
