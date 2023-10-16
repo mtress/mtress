@@ -67,9 +67,4 @@ class ElectricityGridConnection(AbstractGridConnection, AbstractSolphRepresentat
         self,
         other: ElectricityGridConnection,
     ):
-        self.location_link = self.create_solph_node(
-            label="location_link",
-            node_type=Bus,
-            inputs={self.grid_export: Flow()},
-            outputs={other.grid_import: Flow()},
-        )
+        self.grid_export.outputs[other.grid_import] = Flow()
