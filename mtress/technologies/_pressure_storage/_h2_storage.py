@@ -5,10 +5,10 @@ SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 
 SPDX-License-Identifier: MIT
 """
-from mtress.carriers import Hydrogen
+from mtress.carriers import HYDROGEN
 from mtress.physics import calc_hydrogen_density
 
-from .._mixed_storage import Implementation
+from .._mixed_gas_storage import Implementation
 from ._abstract_gas_storage import AbstractGasStorage
 
 
@@ -16,7 +16,7 @@ class H2Storage(AbstractGasStorage):
     """
     Fully mixed hydrogen storage.
 
-    Fully mixed hydrogen storage that ensures access only when suitable pressure levels
+    Fully mixed hydrogen storage that ensures access only when suitable input_pressure levels
     are reached.
     """
 
@@ -47,4 +47,4 @@ class H2Storage(AbstractGasStorage):
 
     def build_core(self) -> None:
         """Build the core structure of mtress representation."""
-        self.build_storage(self.location.get_carrier(Hydrogen))
+        self.build_storage(gas_type=HYDROGEN)

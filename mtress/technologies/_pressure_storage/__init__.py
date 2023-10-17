@@ -1,5 +1,5 @@
 """
-MTRESS pressure storage technologies.
+MTRESS input_pressure storage technologies.
 """
 
 from ._abstract_gas_storage import AbstractGasStorage
