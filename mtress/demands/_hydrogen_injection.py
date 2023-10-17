@@ -7,7 +7,7 @@ from oemof.solph.components import Sink
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier
-from ..carriers import Hydrogen as HydrogenCarrier
+from ..carriers import GasCarrier, HYDROGEN
 from ._abstract_demand import AbstractDemand
 
 LOGGER = logging.getLogger(__file__)
@@ -26,7 +26,7 @@ class HydrogenInjection(AbstractDemand, AbstractSolphRepresentation):
      depending on the use case.
 
     Note: It's important to note that this simplified approach does not account for the
-    complexities of the gas grid, such as pressure variations, pipeline capacities, gas
+    complexities of the gas grid, such as input_pressure variations, pipeline capacities, gas
     composition (H2 presence due to injection at other site within the network?),
     detailed safety considerations and engineering constraints, etc. It provides a rough
     estimation of the maximum allowable hydrogen volume based on the h2 injection volume
@@ -60,11 +60,11 @@ class HydrogenInjection(AbstractDemand, AbstractSolphRepresentation):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        hydrogen_carrier = self.location.get_carrier(HydrogenCarrier)
-        _, pressure = hydrogen_carrier.get_surrounding_levels(self.pressure)
-
-        if pressure not in hydrogen_carrier.pressure_levels:
-            raise ValueError("Pressure must be a valid pressure level")
+        hydrogen_carrier = self.location.get_carrier(GasCarrier)
+        surrounding_levels = hydrogen_carrier.get_surrounding_levels(self.pressure)
+        _, pressure = surrounding_levels[HYDROGEN]
+        if pressure not in hydrogen_carrier.pressures[HYDROGEN]:
+            raise ValueError("Pressure must be a valid input_pressure level")
 
         if self.h2_vol_limit > 20:
             LOGGER.warning(

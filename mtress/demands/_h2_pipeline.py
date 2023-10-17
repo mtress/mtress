@@ -7,7 +7,7 @@ from oemof.solph.components import Sink
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier
-from ..carriers import Hydrogen as HydrogenCarrier
+from ..carriers import GasCarrier, HYDROGEN
 from ._abstract_demand import AbstractDemand
 
 LOGGER = logging.getLogger(__file__)
@@ -50,11 +50,12 @@ class HydrogenPipeline(AbstractDemand, AbstractSolphRepresentation):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        hydrogen_carrier = self.location.get_carrier(HydrogenCarrier)
-        _, pressure = hydrogen_carrier.get_surrounding_levels(self.pressure)
+        hydrogen_carrier = self.location.get_carrier(GasCarrier)
+        surrounding_levels = hydrogen_carrier.get_surrounding_levels(self.pressure)
+        _, pressure = surrounding_levels[HYDROGEN]
 
-        if pressure not in hydrogen_carrier.pressure_levels:
-            raise ValueError("Pressure must be a valid pressure level")
+        if pressure not in hydrogen_carrier.pressures[HYDROGEN]:
+            raise ValueError("Pressure must be a valid input_pressure level")
 
         self.create_solph_node(
             label="sink",
