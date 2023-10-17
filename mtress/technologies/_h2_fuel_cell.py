@@ -7,7 +7,7 @@ from oemof.solph import Flow
 from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, Heat, Hydrogen
+from ..carriers import Electricity, Heat, Hydrogen, GasCarrier, HYDROGEN
 from ..physics import H2_LHV
 from ._abstract_technology import AbstractTechnology
 
@@ -95,14 +95,17 @@ class PEMFuelCell(AbstractTechnology, AbstractSolphRepresentation):
         """Build core structure of oemof.solph representation."""
 
         # Hydrogen connection as an input to Fuel Cell
-        h2_carrier = self.location.get_carrier(Hydrogen)
+        h2_carrier = self.location.get_carrier(GasCarrier)
 
-        _, pressure = h2_carrier.get_surrounding_levels(self.hydrogen_input_pressure)
+        surrounding_levels = h2_carrier.get_surrounding_levels(self.hydrogen_input_pressure)
 
-        if np.isinf(pressure):
-            raise ValueError("No suitable pressure level available")
+        # Now, you can access the smaller and bigger levels specifically for HYDROGEN
+        _, pressure = surrounding_levels[HYDROGEN]
 
-        h2_bus = h2_carrier.inputs[pressure]
+        if pressure not in h2_carrier.pressures[HYDROGEN]:
+            raise ValueError("No suitable input_pressure level available")
+
+        h2_bus = h2_carrier.inputs[HYDROGEN][pressure]
 
         # Convert Nominal Power Capacity of Fuel Cell (kW) to Nominal H2 Consumption
         # Capacity (kg)

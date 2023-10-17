@@ -8,7 +8,7 @@ from oemof.solph import Flow
 from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, Heat, Hydrogen
+from ..carriers import Electricity, Heat, GasCarrier, HYDROGEN
 from ..physics import H2_HHV
 from ._abstract_technology import AbstractTechnology
 
@@ -31,6 +31,7 @@ class PEMElectrolyzer(AbstractTechnology, AbstractSolphRepresentation):
         """
         Initialize PEM electrolyser.
 
+        :param name: Name of the Component
         :param nominal_power: Nominal electrical power of the component
         :param hydrogen_efficiency: Electrical efficiency of the electrolyzer,
             i.e. ratio of heat output and electrical input
@@ -54,17 +55,19 @@ class PEMElectrolyzer(AbstractTechnology, AbstractSolphRepresentation):
         electrical_bus = electricity_carrier.distribution
 
         # Hydrogen connection
-        h2_carrier = self.location.get_carrier(Hydrogen)
+        h2_carrier = self.location.get_carrier(GasCarrier)
 
-        # PEM electrolyzers produce hydrogen at a pressure of around 30 bar, see e.g.
+        # PEM electrolyzers produce hydrogen at a input_pressure of around 30 bar, see e.g.
         # https://en.wikipedia.org/wiki/Polymer_electrolyte_membrane_electrolysis
         # or https://www.h-tec.com/produkte/detail/h-tec-pem-elektrolyseur-me450/me450/
-        pressure, _ = h2_carrier.get_surrounding_levels(self.hydrogen_output_pressure)
 
-        if np.isinf(pressure):
-            raise ValueError("No suitable pressure level available")
+        surrounding_levels = h2_carrier.get_surrounding_levels(self.hydrogen_output_pressure)
+        pressure, _ = surrounding_levels[HYDROGEN]
 
-        h2_bus = h2_carrier.inputs[pressure]
+        if pressure not in h2_carrier.pressures[HYDROGEN]:
+            raise ValueError("No suitable input_pressure level available")
+
+        h2_bus = h2_carrier.inputs[HYDROGEN][pressure]
 
         # H2 output in kg
         h2_output = self.hydrogen_efficiency / H2_HHV

@@ -4,34 +4,38 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, Hydrogen
-from ..physics import calc_isothermal_compression_energy
+from ..carriers import Electricity, GasCarrier, AbstractLayeredGasCarrier
+from ..physics import calc_isothermal_compression_energy, IDEAL_GAS_CONSTANT
 from ._abstract_technology import AbstractTechnology
 
 
-class H2Compressor(AbstractTechnology, AbstractSolphRepresentation):
+class GasCompressor(AbstractTechnology, AbstractSolphRepresentation):
     """Ideal gas compressor."""
 
     def __init__(
         self,
         name: str,
         nominal_power: float,
+        gas_type: AbstractLayeredGasCarrier,
         isothermal_efficiency: float = 0.85,
     ):
         """
-        Initialize H2 compressor.
+        Initialize gas compressor.
 
+        :param name: Name of the compressor component
         :param nominal_power: Nominal power
+        :param gas_type: Type of gas, for ex. HYDROGEN, NATURAL_GAS, etc.
         :param isothermal_efficiency: Isothermal efficiency, defaults to .85
         """
         super().__init__(name=name)
 
         self.nominal_power = nominal_power
         self.isothermal_efficiency = isothermal_efficiency
+        self.gas_type = gas_type
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        h2_carrier = self.location.get_carrier(Hydrogen)
+        h2_carrier = self.location.get_carrier(GasCarrier)
         electricity_carrier = self.location.get_carrier(Electricity)
 
         electrical_input = self.create_solph_node(
@@ -43,21 +47,23 @@ class H2Compressor(AbstractTechnology, AbstractSolphRepresentation):
         )
 
         pressure_low = None
-        for pressure in h2_carrier.pressure_levels:
+        for pressure in h2_carrier.pressures[self.gas_type]:
             if pressure_low is not None:
                 self.create_solph_node(
-                    label=f"compress_{pressure_low:.0f}_{pressure:.0f}",
+                    label=f"compress_{pressure_low}_{pressure}",
                     node_type=Converter,
                     inputs={
                         electrical_input: Flow(),
-                        h2_carrier.outputs[pressure_low]: Flow(),
+                        h2_carrier.outputs[self.gas_type][pressure_low]: Flow(),
                     },
-                    outputs={h2_carrier.outputs[pressure]: Flow()},
+                    outputs={h2_carrier.outputs[self.gas_type][pressure]: Flow()},
                     conversion_factors={
-                        h2_carrier.outputs[pressure_low]: 1,
-                        h2_carrier.outputs[pressure]: 1,
+                        h2_carrier.outputs[self.gas_type][pressure_low]: 1,
+                        h2_carrier.outputs[self.gas_type][pressure]: 1,
                         electrical_input: (
-                            calc_isothermal_compression_energy(pressure_low, pressure)
+                            calc_isothermal_compression_energy(
+                                pressure_low, pressure, R=IDEAL_GAS_CONSTANT/self.gas_type.molar_mass
+                            )
                             / self.isothermal_efficiency
                         ),
                     },
