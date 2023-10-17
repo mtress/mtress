@@ -3,8 +3,16 @@
 from oemof.solph import Bus, Flow
 
 from .._abstract_component import AbstractSolphRepresentation
-from ._abstract_carrier import AbstractLayeredCarrier, AbstractLayeredGasCarrier
+from ._abstract_carrier import AbstractLayeredGasCarrier
 from dataclasses import dataclass
+from ..physics import (
+    calc_biogas_heating_value,
+    CH4_LHV,
+    CH4_HHV,
+    H2_MOLAR_MASS,
+    calc_biogas_molar_mass,
+    calc_natural_gas_molar_mass,
+)
 
 
 @dataclass
@@ -15,34 +23,60 @@ class Gas:
     can define its own gas by creating an object of the gas
     via this dataclass.
     """
-    # Energy per kg
-    name: str
-    energy: float
 
-    # Gas constant in  J / (kg * K), for Hydrogen its 4124.2
-    gas_constant: float
+    name: str
+    # Heating value Kwh/kg
+    LHV: float
+    HHV: float
+    # molar mass of gas, given in kg/mol
+    molar_mass: float
 
     def __hash__(self):
-        # You can define a custom hash based on the attributes you want
-        return hash((self.name, self.energy, self.gas_constant))
+        return hash((self.name, self.LHV, self.HHV, self.molar_mass))
 
 
-HYDROGEN = Gas(name="Hydrogen", energy=33.3, gas_constant=4124.2)
-NATURAL_GAS = Gas(name="NaturalGas", energy=11, gas_constant=518.28)
-BIOGAS = Gas(name="Biogas", energy=6.6, gas_constant=518.28)
+# Object of different predefined gases
+
+HYDROGEN = Gas(
+    name="Hydrogen",
+    LHV=33.3,
+    HHV=39.4,
+    molar_mass=H2_MOLAR_MASS,
+)
+
+# By default natural gas contains methane(90%), ethane(5%),
+# propane(3%), butane (2%), other impurities are ignored
+NATURAL_GAS = Gas(
+    name="NaturalGas",
+    LHV=13,
+    HHV=14.5,
+    molar_mass=calc_natural_gas_molar_mass(CH4_share=0.9, C2H6_share=0.5,
+                                           C3H8_share=0.3, C4H10_share=0.2),
+)
+
+# Biogas in default has 75% CH4 and 25% CO2, other impurity gases
+# are ignored.
+BIOGAS = Gas(
+    name="Biogas",
+    LHV=calc_biogas_heating_value(heating_value=CH4_LHV),
+    HHV=calc_biogas_heating_value(heating_value=CH4_HHV),
+    molar_mass=calc_biogas_molar_mass(CH4_share=0.75, C0_2_share=0.25),
+)
 
 
 class GasCarrier(AbstractLayeredGasCarrier, AbstractSolphRepresentation):
     """
     GasCarrier is the container for different types of gases, which
-    considers the gas properties from dataclass Gas.
+    considers the gas properties from dataclass Gas. All gas flows
+    be it Hydrogen, Natural gas or Biogas are considered to be in kg
+    to maintain resilence in the modelling.
     """
 
     def __init__(
-            self,
-            gases: dict,
+        self,
+        gases: dict,
     ):
-        super().__init__(gas_type=[*gases.keys()], pressures=[*gases.values()])
+        super().__init__(gas_type=gases.keys(), pressures=gases.values())
         self.gases = gases
         self.distribution = {}
 

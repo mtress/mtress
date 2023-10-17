@@ -18,10 +18,15 @@ ZERO_CELSIUS = 273.15  # K
 HS_PER_HI_GAS = 1.11  # according to DIN V 18599
 NG_LHV = 11  # kWh/Nm3
 NG_HHV = 12  # kWh/Nm3
+C2H6_MOLAR_MASS = 0.03007  # kg/mol
+C3H8_MOLAR_MASS = 0.0441   # kg/mol
+C4H10_MOLAR_MASS = 0.0582  # kg/mol
 
 # Biogas
-BG_LHV = 6.00  # kWh/Nm3
-BG_HHV = 9.20  # kWh/Nm3
+CH4_MOLAR_MASS = 0.01604  # kg/mol
+CO2_MOLAR_MASS = 0.04401  # kg/mol
+CH4_HHV = 15.4  # Kwh/kg
+CH4_LHV = 13.9  # Kwh/kg
 
 # Wood pellets
 HS_PER_HI_WP = 1.08  # according to DIN V 18599

@@ -48,7 +48,7 @@ class AbstractLayeredGasCarrier(AbstractCarrier):
     Abstract layered gas carrier with multiple levels.
 
     This acts as a base class for gas carriers, i.e.
-    gases with multiple pressure levels.
+    gases with multiple input_pressure levels.wh
     """
 
     def __init__(self, *, gas_type, pressures, **kwargs):
@@ -64,9 +64,8 @@ class AbstractLayeredGasCarrier(AbstractCarrier):
             if pressure_level in levels:
                 surrounding_levels[gas] = (pressure_level, pressure_level)
             else:
-                all_levels = np.concatenate([levels for levels in self._pressures.values()])
-                all_levels = np.unique(all_levels)
-                _pressure_levels = np.concatenate(([np.NINF], all_levels, [np.PINF]))
+                _levels = np.unique(levels)
+                _pressure_levels = np.concatenate(([np.NINF], _levels, [np.PINF]))
                 i = np.searchsorted(_pressure_levels, pressure_level)
                 surrounding_levels[gas] = (_pressure_levels[i - 1], _pressure_levels[i])
 
@@ -74,7 +73,7 @@ class AbstractLayeredGasCarrier(AbstractCarrier):
 
     @property
     def pressure_levels(self):
-        """Return pressure level of gas carrier"""
+        """Return input_pressure level of gas carrier"""
         return self._pressures
 
     @property

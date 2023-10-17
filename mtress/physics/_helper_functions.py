@@ -20,6 +20,13 @@ from ._constants import (
     rk_b,
     SECONDS_PER_HOUR,
     ZERO_CELSIUS,
+    CH4_LHV,
+    CH4_HHV,
+    CH4_MOLAR_MASS,
+    CO2_MOLAR_MASS,
+    C2H6_MOLAR_MASS,
+    C3H8_MOLAR_MASS,
+    C4H10_MOLAR_MASS,
 )
 
 
@@ -53,7 +60,7 @@ def kJ_to_MWh(arg):  # pylint: disable=C0103
 
 def bar_to_pascal(arg):
     """
-    convert gas pressure from bar to pascals
+    convert gas input_pressure from bar to pascals
     """
     return arg * 100000
 
@@ -101,30 +108,30 @@ def calc_cop(temp_input, temp_output, cop_0_35=4.6):
     return cop
 
 
-def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2, unit_conversion=1):
+def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2):
     r"""
     Calculate the energy demand to compress an ideal gas at constant temperature.
 
     This function calculates the energy demand for an isothermal compression
-    of 1 kg of an ideal gas with gas constant R from pressure p_in to pressure
+    of 1 kg of an ideal gas with gas constant R from input_pressure p_in to input_pressure
     p_out.
 
-    The work required for isothermal compression from pressure level
+    The work required for isothermal compression from input_pressure level
     :math:`p_\mathrm{in}` to :math:`p_\mathrm{out}` at the temperature
     :math:`T` in Kelvin is given by
     .. math:: W = R \cdot T \cdot \ln \frac{p_\mathrm{out}}{p_\mathrm{in}} \,,
 
     where :math:`R` denotes the gas constant of the gas in question.
 
-    :param p_in: Inlet pressure in bar
-    :param p_out: Outlet pressure in bar
+    :param p_in: Inlet input_pressure in bar
+    :param p_out: Outlet input_pressure in bar
     :param T: Temperature in deg C, defaults to 20
     :param R: Gas constant in  J / (kg * K), defaults to 4124.2
-    :param unit_conversion: If the gas flows is given in other unit for ex- KWh.
     :return: Energy required for compression in kWh
     """
     T += 273.15  # Convert temperature to Kelvin
-    return (R * T * np.log(p_out / p_in) / (3600 * 1000)) / unit_conversion
+    return R * T * np.log(p_out / p_in) / (3600 * 1000)
+
 
 def calc_hydrogen_density(pressure, temperature: float = 25) -> float:
     """
@@ -141,10 +148,54 @@ def calc_hydrogen_density(pressure, temperature: float = 25) -> float:
 
     for i in range(10):
         v_spec = (
-            IDEAL_GAS_CONSTANT * gas_temperature / (pressure
-            + (a / (gas_temperature**0.5 * v_spec * (v_spec + b))))
+            IDEAL_GAS_CONSTANT
+            * gas_temperature
+            / (pressure + (a / (gas_temperature**0.5 * v_spec * (v_spec + b))))
         ) + b
 
     density = H2_MOLAR_MASS / v_spec
 
     return density
+
+
+def calc_biogas_heating_value(CH4_share=0.75, CO2_share=0.25, heating_value=CH4_LHV):
+    """
+    Calculate the heating value of biogas based on methane proportion.
+    Heating value either LHV or HHV are calculated based on per kg
+    i.e. KWh/kg
+
+    :param CH4_share: Share proportion of methane in biogas
+    :param CO2_share: Share proportion content of carbon-dioxide in biogas
+    :param heating_value of methane, default LHV.
+    """
+    return (
+        (CH4_share * CH4_MOLAR_MASS)
+        / (CH4_share * CH4_MOLAR_MASS + CO2_share * CO2_MOLAR_MASS)
+    ) * heating_value
+
+
+def calc_biogas_molar_mass(CH4_share=0.75, C0_2_share=0.25):
+    """
+    This function calculates the molar mass of biogas depending on the
+    gas proportion and its molar mass (kg/mol). Only methane and carbon-dioxide
+    gas are considered and other impurities are ignored for this calculation.
+    :param CH4_share: Share proportion of methane in biogas
+    :param C0_2_share: Share proportion content of carbon-dioxide in biogas
+    """
+    return (CH4_share * CH4_MOLAR_MASS) + (C0_2_share * CO2_MOLAR_MASS)
+
+def calc_natural_gas_molar_mass(
+    CH4_share=0.9, C2H6_share=0.5, C3H8_share=0.3, C4H10_share=0.2
+):
+    """
+    Calculate the molar mass of the natural gas depending on different
+    gases present and its proportions. In most cases following gas exists:
+    Methane, ethane, propane, butane, and  other impurities. Other impurity
+    gases are ignored for this calculation.
+    """
+    return (
+        (CH4_share * CH4_MOLAR_MASS)
+        + (C2H6_share * C2H6_share)
+        + (C3H8_share * C3H8_MOLAR_MASS)
+        + (C4H10_share * CH4_MOLAR_MASS)
+    )
