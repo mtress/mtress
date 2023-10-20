@@ -5,7 +5,7 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import Source
 
 from .._abstract_component import AbstractSolphRepresentation
-from .._data_handler import TimeseriesSpecifier
+from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ._abstract_technology import AbstractAnergySource, AbstractTechnology
 
 
@@ -53,7 +53,8 @@ class AirHeatExchanger(
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         self.air_temperatures = self._solph_model.data.get_timeseries(
-            self.air_temperatures
+            self.air_temperatures,
+            kind=TimeseriesType.INTERVAL,
         )
 
         self._bus = _bus = self.create_solph_node(

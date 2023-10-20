@@ -5,6 +5,7 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import Sink, Converter
 
 from .._abstract_component import AbstractSolphRepresentation
+from .._data_handler import TimeseriesType
 from ..carriers import Heat
 from ._abstract_demand import AbstractDemand
 
@@ -118,7 +119,7 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphRepresentation):
             inputs={
                 output: Flow(
                     nominal_value=1,
-                    fix=self._solph_model.data.get_timeseries(self._time_series),
+                    fix=self._solph_model.data.get_timeseries(self._time_series, kind=TimeseriesType.INTERVAL),
                 )
             },
         )

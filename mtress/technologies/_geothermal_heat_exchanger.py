@@ -5,7 +5,7 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import Source
 
 from .._abstract_component import AbstractSolphRepresentation
-from .._data_handler import TimeseriesSpecifier
+from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ._abstract_technology import AbstractAnergySource, AbstractTechnology
 
 from typing import Optional
@@ -59,7 +59,8 @@ class GeothermalHeatExchanger(
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         self.ground_temperature = self._solph_model.data.get_timeseries(
-            self.ground_temperature
+            self.ground_temperature,
+            kind=TimeseriesType.INTERVAL,
         )
 
         self._bus = _bus = self.create_solph_node(

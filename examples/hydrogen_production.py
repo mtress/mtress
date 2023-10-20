@@ -16,7 +16,7 @@ weather = {
     "ghi": "FILE:./weather.csv:ghi",
     "dhi": "FILE:./weather.csv:dhi",
     "wind_speed": "FILE:./weather.csv:wind_speed",
-    "temp_air": "FILE:.weather.csv:temp_air",
+    "temp_air": "FILE:./weather.csv:temp_air",
     "temp_dew": "FILE:./weather.csv:temp_dew",
     "pressure": "FILE:./weather.csv:pressure",
 }
