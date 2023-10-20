@@ -5,7 +5,7 @@ from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Sink, Source
 from mtress.carriers import GasCarrier, HYDROGEN
 from mtress._abstract_component import AbstractSolphRepresentation
-from ._abstract_gas_grid_connection import  AbstractGasGridConnection
+from ._abstract_gas_grid_connection import AbstractGasGridConnection
 from ..._data_handler import TimeseriesSpecifier
 
 class HydrogenGridConnection(AbstractGasGridConnection, AbstractSolphRepresentation):
@@ -14,6 +14,8 @@ class HydrogenGridConnection(AbstractGasGridConnection, AbstractSolphRepresentat
     pressure level. Export to the grid is possible with restriction based on max
     injection flow rate allowable at the given time step.
 
+    Note: Working_rate must be defined to enable hydrogen gas import for your
+          energy system.
     """
 
     def __init__(
@@ -48,6 +50,8 @@ class HydrogenGridConnection(AbstractGasGridConnection, AbstractSolphRepresentat
     def build_core(self):
 
         gas_carrier = self.location.get_carrier(GasCarrier)
+        if HYDROGEN not in gas_carrier.gas_type:
+            raise ValueError("HYDROGEN must be listed in GasCarrier")
         surrounding_levels = gas_carrier.get_surrounding_levels(self.grid_pressure)
 
         _,pressure = surrounding_levels[HYDROGEN]
@@ -66,14 +70,6 @@ class HydrogenGridConnection(AbstractGasGridConnection, AbstractSolphRepresentat
             )},
         )
 
-        import_pressure, _ = surrounding_levels[HYDROGEN]
-
-        b_grid_import = self.create_solph_node(
-            label=f"grid_import_{import_pressure:.0f}",
-            node_type=Bus,
-            outputs={gas_carrier.inputs[HYDROGEN][import_pressure]: Flow()},
-        )
-
         self.create_solph_node(
             label="sink_export",
             node_type=Sink,
@@ -85,6 +81,16 @@ class HydrogenGridConnection(AbstractGasGridConnection, AbstractSolphRepresentat
                 demand_rate = Investment(ep_costs=self.demand_rate)
             else:
                 demand_rate = None
+
+            import_pressure, _ = surrounding_levels[HYDROGEN]
+            if import_pressure not in gas_carrier.pressures[HYDROGEN]:
+                raise ValueError("Pressure must be a valid input_pressure level")
+
+            b_grid_import = self.create_solph_node(
+                label=f"grid_import_{import_pressure:.0f}",
+                node_type=Bus,
+                outputs={gas_carrier.inputs[HYDROGEN][import_pressure]: Flow()},
+            )
 
             self.create_solph_node(
                 label="source_import",

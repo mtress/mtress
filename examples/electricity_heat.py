@@ -21,7 +21,6 @@ Finally, the energy system is optimised/solved via meta_model.solve, a plot is
 created and the solver output is written to an .lp file.
 """
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
-from mtress._helpers._visualization import generate_graph
 
 energy_system = MetaModel()
 

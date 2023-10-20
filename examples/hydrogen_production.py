@@ -2,21 +2,23 @@
 
 from oemof.solph.processing import results
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
+from mtress.carriers import HYDROGEN
 
 energy_system = MetaModel()
 
 house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
-house_1.add(carriers.Electricity(working_rate=35, demand_rate=0))
+house_1.add(carriers.Electricity())
+house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 weather = {
-    "ghi": "FILE:mtress/examples/weather.csv:ghi",
-    "dhi": "FILE:mtress/examples/weather.csv:dhi",
-    "wind_speed": "FILE:mtress/examples/weather.csv:wind_speed",
-    "temp_air": "FILE:mtress/examples/weather.csv:temp_air",
-    "temp_dew": "FILE:mtress/examples/weather.csv:temp_dew",
-    "pressure": "FILE:mtress/examples/weather.csv:pressure",
+    "ghi": "FILE:./weather.csv:ghi",
+    "dhi": "FILE:./weather.csv:dhi",
+    "wind_speed": "FILE:./weather.csv:wind_speed",
+    "temp_air": "FILE:.weather.csv:temp_air",
+    "temp_dew": "FILE:./weather.csv:temp_dew",
+    "pressure": "FILE:./weather.csv:pressure",
 }
 
 
@@ -40,8 +42,8 @@ house_1.add(
 )
 
 house_1.add(
-    carriers.Hydrogen(
-        pressure_levels=[30, 70, 250],
+    carriers.GasCarrier(
+        gases={HYDROGEN: [30, 70, 250]}
     )
 )
 
@@ -54,21 +56,22 @@ house_1.add(
 )
 
 house_1.add(
-    demands.HydrogenInjection(
-        name="H2_Injection",
-        pressure=30,
-        ng_vol_flow=[15, 15, 10, 13],
-        h2_vol_limit=10,
-        revenue=5,
+    technologies.NaturalGasGridConnection(
+        grid_pressure=30,
+        biomethane_injection=False,
+        h2_injection=True,
+        ng_flow=[15, 15, 10, 13],
+        h2_injection_limit=3.5,
+        h2_revenue=5,
     )
 )
 
 house_1.add(
-    demands.HydrogenPipeline(
-        name="H2_Pipeline",
-        pressure=70,
-        h2_vol_flow=[55, 45, 45, 56],
-        revenue=5,
+    technologies.HydrogenGridConnection(
+        grid_pressure=70,
+        h2_flow_limit=[55, 45, 45, 56],
+        revenue=7,
+        working_rate=15,
     )
 )
 
@@ -90,7 +93,7 @@ house_1.add(
 
 house_1.add(technologies.PEMElectrolyzer(name="Ely", nominal_power=500))
 house_1.add(technologies.HeatPump(name="hp0", thermal_power_limit=None))
-house_1.add(technologies.H2Compressor(name="H2Compr", nominal_power=50))
+house_1.add(technologies.GasCompressor(name="H2Compr", nominal_power=50, gas_type=HYDROGEN))
 
 house_1.add(
     technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6, 13, 12])
@@ -107,12 +110,14 @@ solph_representation = SolphModel(
 
 solph_representation.build_solph_model()
 
+plot = solph_representation.graph(detail=True)
+plot.render(outfile="hydrogen_production_detail.png")
+
+plot = solph_representation.graph(detail=False)
+plot.render(outfile="hydrogen_production_simple.png")
+
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="hydrogen_heat_simple.png")
-
 myresults = results(solved_model)
-solved_model.write(
-    "hydrogen_production.lp", io_options={"symbolic_solver_labels": True}
-)
+
+solved_model.write("hydrogen_production.lp", io_options={"symbolic_solver_labels": True})
