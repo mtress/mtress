@@ -7,6 +7,7 @@ from typing import Iterable
 
 from mtress import Location, carriers, demands
 
+
 def test_basic_initialisation():
     name = "house_1"
     house_1 = Location(name=name)
@@ -36,8 +37,8 @@ def test_add_component():
 
     carrier0 = carriers.Electricity()
     carrier1 = carriers.Electricity()
-    demand1 = demands.Electricity(name="demand1", time_series=[0,1,2])
-    demand2 = demands.Electricity(name="demand2", time_series=[1,2,3])
+    demand1 = demands.Electricity(name="demand1", time_series=[0, 1, 2])
+    demand2 = demands.Electricity(name="demand2", time_series=[1, 2, 3])
 
     house_1.add(carrier0)
     house_1.add(carrier1)
