@@ -9,6 +9,7 @@ from ..physics import (
     calc_biogas_heating_value,
     CH4_LHV,
     CH4_HHV,
+    CH4_MOLAR_MASS,
     H2_MOLAR_MASS,
     calc_biogas_molar_mass,
     calc_natural_gas_molar_mass,
@@ -19,9 +20,9 @@ from ..physics import (
 class Gas:
     """
     Here we provide the gas properties for some predefined
-    gases such as Hydrogen, Natural Gas, Biogas, etc. User
-    can define its own gas by creating an object of the gas
-    via this dataclass.
+    gases such as Hydrogen, Natural Gas, Biogas, and Bio-methane.
+    User can define its own gas by creating an object of the
+    specific gas via this dataclass.
     """
 
     name: str
@@ -63,13 +64,25 @@ BIOGAS = Gas(
     molar_mass=calc_biogas_molar_mass(CH4_share=0.75, C0_2_share=0.25),
 )
 
+# Bio-methane is primarily considered to have methane and other impurities
+# are ignored for calculation here. However, it's important to note that
+# the exact composition of bio-methane can vary depending on the feedstock
+# and the specific production process, and it may contain trace impurities
+# and other gases. To get a more precise value for a specific bio-methane
+# source, you would need to know its exact composition.
+BIO_METHANE = Gas(
+    name="BioMethane",
+    LHV=CH4_LHV,
+    HHV=CH4_HHV,
+    molar_mass=CH4_MOLAR_MASS,
+)
 
 class GasCarrier(AbstractLayeredGasCarrier, AbstractSolphRepresentation):
     """
     GasCarrier is the container for different types of gases, which
     considers the gas properties from dataclass Gas. All gas flows
-    be it Hydrogen, Natural gas or Biogas are considered to be in kg
-    to maintain resilence in the modelling.
+    be it Hydrogen, Natural gas, Biogas or Bio-Methane are considered
+    to be in kg to maintain resiliency in the modelling.
     """
 
     def __init__(

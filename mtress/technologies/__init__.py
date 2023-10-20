@@ -9,7 +9,8 @@ SPDX-License-Identifier: MIT
 
 from ._air_heat_exchanger import AirHeatExchanger
 from ._geothermal_heat_exchanger import GeothermalHeatExchanger
-from .grid_connection import ElectricityGridConnection, GasGridConnection
+from .grid_connection import ElectricityGridConnection
+from .grid_connection import NaturalGasGridConnection, HydrogenGridConnection
 from ._compressor import GasCompressor
 from ._h2_electrolyzer import PEMElectrolyzer
 from ._h2_fuel_cell import PEMFuelCell
@@ -23,7 +24,8 @@ __all__ = [
     "AirHeatExchanger",
     "GeothermalHeatExchanger",
     "ElectricityGridConnection",
-    "GasGridConnection",
+    "NaturalGasGridConnection",
+    "HydrogenGridConnection",
     "FullyMixedHeatStorage",
     "PEMElectrolyzer",
     "PEMFuelCell",

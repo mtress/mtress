@@ -7,7 +7,7 @@ from oemof.solph import Flow
 from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, Heat, Hydrogen, GasCarrier, HYDROGEN
+from ..carriers import Electricity, Heat, GasCarrier, HYDROGEN
 from ..physics import H2_LHV
 from ._abstract_technology import AbstractTechnology
 
