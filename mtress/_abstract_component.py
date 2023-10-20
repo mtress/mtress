@@ -33,7 +33,7 @@ class AbstractComponent(NamedElement):
         self._location = None
 
     @property
-    def identifier(self) -> str:
+    def identifier(self) -> list[str]:
         """Return identifier of this component."""
         return self.location.identifier + [self.slug]
 
@@ -131,12 +131,12 @@ class AbstractSolphRepresentation(AbstractComponent):
 
         if not detail:
             # TODO: Node shape?
-            graph.node(self.identifier, label=self.name)
+            graph.node(str(self.identifier), label=self.name)
 
         for solph_node in self.solph_nodes:
             if detail:
                 graph.node(
-                    name=solph_node.label,
+                    name=str(solph_node.label),
                     label=solph_node.short_label,
                     shape=SOLPH_SHAPES.get(type(solph_node), "rectangle"),
                 )
@@ -145,17 +145,18 @@ class AbstractSolphRepresentation(AbstractComponent):
                 if origin in self._solph_nodes:
                     # This is an internal edge and thus only added if detail is True
                     if detail:
-                        graph.edge(origin.label, solph_node.label)
+                        graph.edge(str(origin.label), str(solph_node.label))
                 else:
                     # This is an external edge
                     if detail:
                         # Add edge from solph component to solph component
-                        external_edges.add((origin.label, solph_node.label))
+                        external_edges.add((str(origin.label), str(solph_node.label)))
                     else:
                         # Add edge from MTRESS component to MTRESS component
-                        external_edges.add(
-                            (origin.mtress_component.identifier, self.identifier)
-                        )
+                        external_edges.add((
+                            str(origin.mtress_component.identifier),
+                            str(self.identifier)
+                        ))
 
         return graph, external_edges
 
