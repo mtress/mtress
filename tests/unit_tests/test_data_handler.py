@@ -52,21 +52,24 @@ class TestDataHandler:
             data_handler.get_timeseries(data_series, kind=TimeseriesType.POINT)
             data_handler.get_timeseries(data_series, kind=TimeseriesType.INTERVAL)
 
-
         data_list = [1, 2, 3, 4]
         data_series = pd.Series(data=data_list)
         with pytest.raises(ValueError):
             # Series is too short for points
             data_handler.get_timeseries(data_series, kind=TimeseriesType.POINT)
 
-        interval_data = data_handler.get_timeseries(data_series, kind=TimeseriesType.INTERVAL)
+        interval_data = data_handler.get_timeseries(
+            data_series, kind=TimeseriesType.INTERVAL
+        )
         assert (interval_data.values == data_list).all()
 
     def test_series_with_timeindex(self, date_range, data_handler):
         data_list = [1, 2, 3, 4, 5]
         data_series = pd.Series(data=data_list, index=date_range)
         point_data = data_handler.get_timeseries(data_series, kind=TimeseriesType.POINT)
-        interval_data = data_handler.get_timeseries(data_series, kind=TimeseriesType.INTERVAL)
+        interval_data = data_handler.get_timeseries(
+            data_series, kind=TimeseriesType.INTERVAL
+        )
 
         assert (point_data == data_list).all()
         assert (interval_data == data_list[:-1]).all()
@@ -81,7 +84,9 @@ class TestDataHandler:
         longer_data_list = [8, 9] + data_list + [6, 7]
         data_series = pd.Series(data=longer_data_list, index=longer_date_range)
         point_data = data_handler.get_timeseries(data_series, kind=TimeseriesType.POINT)
-        interval_data = data_handler.get_timeseries(data_series, kind=TimeseriesType.INTERVAL)
+        interval_data = data_handler.get_timeseries(
+            data_series, kind=TimeseriesType.INTERVAL
+        )
 
         assert (point_data == data_list).all()
         assert (interval_data == data_list[:-1]).all()

@@ -55,8 +55,8 @@ def test_minimal_initialisation_with_time_index_dict():
         == solph_model.energy_system.timeindex[-1]
     )
 
-def test_build_model_with_connected_electricity():
 
+def test_build_model_with_connected_electricity():
     house_1 = Location(name="house_1")
     house_1.add(carriers.Electricity())
     gc1 = ElectricityGridConnection()
@@ -83,7 +83,6 @@ def test_build_model_with_connected_electricity():
 
 
 def test_build_model_with_connected_electricity_missing_connection():
-
     house_1 = Location(name="house_1")
     house_2 = Location(name="house_2")
 
