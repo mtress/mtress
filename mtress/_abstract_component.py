@@ -3,7 +3,7 @@
 from __future__ import annotations
 from abc import abstractmethod
 
-from typing import TYPE_CHECKING, Callable, Tuple
+from typing import TYPE_CHECKING, Callable, NamedTuple, Tuple
 
 from graphviz import Digraph
 from oemof.solph import Bus
@@ -33,9 +33,9 @@ class AbstractComponent(NamedElement):
         self._location = None
 
     @property
-    def identifier(self) -> str:
+    def identifier(self) -> list[str]:
         """Return identifier of this component."""
-        return f"{self.location.identifier}-{self.slug}"
+        return self.location.identifier + [self.slug]
 
     def assign_location(self, location):
         """Assign component to a location."""
@@ -58,6 +58,12 @@ class AbstractComponent(NamedElement):
         """Draw a graph representation of the component."""
 
 
+class SolphLabel(NamedTuple):
+    location: str
+    mtress_component: str
+    solph_node: str
+
+
 class AbstractSolphRepresentation(AbstractComponent):
     """Interface for components which can be represented in `oemof.solph`."""
 
@@ -77,7 +83,7 @@ class AbstractSolphRepresentation(AbstractComponent):
 
     def create_solph_node(self, label: str, node_type: Callable, **kwargs):
         """Create a solph node and add it to the solph model."""
-        _full_label = self.create_label(label)
+        _full_label = SolphLabel(*self.create_label(label))
 
         if label in self._solph_nodes:
             raise KeyError(f"Solph component named {_full_label} already exists")
@@ -125,7 +131,7 @@ class AbstractSolphRepresentation(AbstractComponent):
 
         if not detail:
             # TODO: Node shape?
-            graph.node(self.identifier, label=self.name)
+            graph.node(str(self.identifier), label=self.name)
 
         for solph_node in self.solph_nodes:
             if detail:
@@ -144,12 +150,13 @@ class AbstractSolphRepresentation(AbstractComponent):
                     # This is an external edge
                     if detail:
                         # Add edge from solph component to solph component
-                        external_edges.add((origin.label, solph_node.label))
+                        external_edges.add((str(origin.label), str(solph_node.label)))
                     else:
                         # Add edge from MTRESS component to MTRESS component
-                        external_edges.add(
-                            (origin.mtress_component.identifier, self.identifier)
-                        )
+                        external_edges.add((
+                            str(origin.mtress_component.identifier),
+                            str(self.identifier)
+                        ))
 
         return graph, external_edges
 
