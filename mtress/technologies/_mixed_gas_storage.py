@@ -70,7 +70,7 @@ class AbstractMixedGasStorage(AbstractSolphRepresentation):
         self.storage_multiplexer_outputs = {}
 
         gas_carrier = self.location.get_carrier(GasCarrier)
-        for level in gas_carrier.pressures[gas_type]:
+        for level in gas_carrier.pressure_levels[gas_type]:
 
             # Use user defined function calculating the storage content at level
             storage_level = capacity_at_level(level)

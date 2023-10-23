@@ -54,8 +54,9 @@ house_1.add(
 )
 
 house_1.add(
-    demands.Hydrogen(
+    demands.GasDemand(
         name="H2_demand",
+        gas_type=HYDROGEN,
         time_series="FILE:../input_file.csv:h2_demand",
         pressure=350,
     )

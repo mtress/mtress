@@ -55,19 +55,15 @@ class PEMElectrolyzer(AbstractTechnology, AbstractSolphRepresentation):
         electrical_bus = electricity_carrier.distribution
 
         # Hydrogen connection
-        h2_carrier = self.location.get_carrier(GasCarrier)
+        gas_carrier = self.location.get_carrier(GasCarrier)
 
         # PEM electrolyzers produce hydrogen at a input_pressure of around 30 bar, see e.g.
         # https://en.wikipedia.org/wiki/Polymer_electrolyte_membrane_electrolysis
         # or https://www.h-tec.com/produkte/detail/h-tec-pem-elektrolyseur-me450/me450/
 
-        surrounding_levels = h2_carrier.get_surrounding_levels(self.hydrogen_output_pressure)
-        pressure, _ = surrounding_levels[HYDROGEN]
+        pressure, _ = gas_carrier.get_surrounding_levels(HYDROGEN, self.hydrogen_output_pressure)
 
-        if pressure not in h2_carrier.pressures[HYDROGEN]:
-            raise ValueError("No suitable input_pressure level available")
-
-        h2_bus = h2_carrier.inputs[HYDROGEN][pressure]
+        h2_bus = gas_carrier.inputs[HYDROGEN][pressure]
 
         # H2 output in kg
         h2_output = self.hydrogen_efficiency / H2_HHV

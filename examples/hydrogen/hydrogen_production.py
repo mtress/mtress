@@ -51,8 +51,9 @@ house_1.add(
 )
 
 house_1.add(
-    demands.Hydrogen(
+    demands.GasDemand(
         name="H2_demand",
+        gas_type=HYDROGEN,
         time_series=[3, 2, 5, 10],
         pressure=250,
     )
@@ -60,20 +61,17 @@ house_1.add(
 
 house_1.add(
     technologies.GasGridConnection(
-        gas_type=N
+        name="low_pressure",
+        gas_type=HYDROGEN,
         grid_pressure=30,
-        biomethane_injection=False,
-        h2_injection=True,
-        ng_flow=[15, 15, 10, 13],
-        h2_injection_limit=3.5,
-        h2_revenue=5,
     )
 )
 
 house_1.add(
-    technologies.HydrogenGridConnection(
+    technologies.GasGridConnection(
+        name="high_pressure",
+        gas_type=HYDROGEN,
         grid_pressure=70,
-        h2_flow_limit=[55, 45, 45, 56],
         revenue=7,
         working_rate=15,
     )
@@ -106,7 +104,7 @@ solph_representation = SolphModel(
     energy_system,
     timeindex={
         "start": "2021-07-10 12:00:00",
-        "end": "2021-07-10 15:00:00",
+        "end": "2021-07-10 16:00:00",
         "freq": "60T",
         "tz": "Europe/Berlin",
     },
