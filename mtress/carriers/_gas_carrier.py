@@ -1,10 +1,12 @@
 """This module provide gas carrier in MTRESS"""
 
+import numpy as np
+
 from oemof.solph import Bus, Flow
+from dataclasses import dataclass
 
 from .._abstract_component import AbstractSolphRepresentation
-from ._abstract_carrier import AbstractLayeredGasCarrier
-from dataclasses import dataclass
+from ._abstract_carrier import AbstractLayeredCarrier
 from ..physics import (
     calc_biogas_heating_value,
     CH4_LHV,
@@ -24,7 +26,6 @@ class Gas:
     User can define its own gas by creating an object of the
     specific gas via this dataclass.
     """
-
     name: str
     # Heating value Kwh/kg
     LHV: float
@@ -77,7 +78,8 @@ BIO_METHANE = Gas(
     molar_mass=CH4_MOLAR_MASS,
 )
 
-class GasCarrier(AbstractLayeredGasCarrier, AbstractSolphRepresentation):
+
+class GasCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
     """
     GasCarrier is the container for different types of gases, which
     considers the gas properties from dataclass Gas. All gas flows
@@ -85,13 +87,20 @@ class GasCarrier(AbstractLayeredGasCarrier, AbstractSolphRepresentation):
     to be in kg to maintain resiliency in the modelling.
     """
 
-    def __init__(
-        self,
-        gases: dict,
-    ):
-        super().__init__(gas_type=gases.keys(), pressures=gases.values())
-        self.gases = gases
-        self.distribution = {}
+    def __init__(self, *, gases, **kwargs):
+        """Initialize carrier."""
+        super().__init__(levels=gases, **kwargs)
+
+    def get_surrounding_levels(self, gas, pressure_level):
+        """Get the next bigger and smaller level for the specified gas."""
+        return AbstractLayeredCarrier._get_surrounding_levels(
+            pressure_level, self._levels[gas]
+        )
+
+    @property
+    def pressure_levels(self, gas):
+        """Return input_pressure level of gas carrier"""
+        return self._levels[gas]
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
