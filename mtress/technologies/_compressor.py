@@ -35,7 +35,7 @@ class GasCompressor(AbstractTechnology, AbstractSolphRepresentation):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        h2_carrier = self.location.get_carrier(GasCarrier)
+        gas_carrier = self.location.get_carrier(GasCarrier)
         electricity_carrier = self.location.get_carrier(Electricity)
 
         electrical_input = self.create_solph_node(
@@ -47,19 +47,19 @@ class GasCompressor(AbstractTechnology, AbstractSolphRepresentation):
         )
 
         pressure_low = None
-        for pressure in h2_carrier.pressures[self.gas_type]:
+        for pressure in gas_carrier.pressure_levels[self.gas_type]:
             if pressure_low is not None:
                 self.create_solph_node(
                     label=f"compress_{pressure_low}_{pressure}",
                     node_type=Converter,
                     inputs={
                         electrical_input: Flow(),
-                        h2_carrier.outputs[self.gas_type][pressure_low]: Flow(),
+                        gas_carrier.outputs[self.gas_type][pressure_low]: Flow(),
                     },
-                    outputs={h2_carrier.outputs[self.gas_type][pressure]: Flow()},
+                    outputs={gas_carrier.outputs[self.gas_type][pressure]: Flow()},
                     conversion_factors={
-                        h2_carrier.outputs[self.gas_type][pressure_low]: 1,
-                        h2_carrier.outputs[self.gas_type][pressure]: 1,
+                        gas_carrier.outputs[self.gas_type][pressure_low]: 1,
+                        gas_carrier.outputs[self.gas_type][pressure]: 1,
                         electrical_input: (
                             calc_isothermal_compression_energy(
                                 pressure_low, pressure, R=IDEAL_GAS_CONSTANT/self.gas_type.molar_mass

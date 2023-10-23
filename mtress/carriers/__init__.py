@@ -3,7 +3,7 @@
 from ._abstract_carrier import AbstractCarrier, AbstractLayeredCarrier
 from ._electricity import Electricity
 from ._heat import Heat
-from ._gas_carrier import GasCarrier, HYDROGEN, NATURAL_GAS, BIOGAS, BIO_METHANE, Gas
+from ._gas import GasCarrier, HYDROGEN, NATURAL_GAS, BIOGAS, BIO_METHANE, Gas
 
 __all__ = [
     "AbstractCarrier",

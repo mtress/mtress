@@ -91,6 +91,8 @@ class GasCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
         """Initialize carrier."""
         super().__init__(levels=gases, **kwargs)
 
+        self.distribution = {}
+
     def get_surrounding_levels(self, gas, pressure_level):
         """Get the next bigger and smaller level for the specified gas."""
         return AbstractLayeredCarrier._get_surrounding_levels(
@@ -98,16 +100,16 @@ class GasCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
         )
 
     @property
-    def pressure_levels(self, gas):
+    def pressure_levels(self):
         """Return input_pressure level of gas carrier"""
-        return self._levels[gas]
+        return self._levels
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        for gas, pressure_levels in self.gases.items():
+        for gas, pressures in self.levels.items():
             pressure_low = None
             self.distribution[gas] = {}
-            for pressure in pressure_levels:
+            for pressure in pressures:
                 # Check if this is the first bus for this gas
                 if not self.distribution[gas]:
                     bus = self.create_solph_node(
@@ -132,11 +134,3 @@ class GasCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
     @property
     def outputs(self):
         return self.distribution
-
-    @property
-    def pressures(self):
-        return self.pressure_levels
-
-    @property
-    def gas(self):
-        return self.gas_type

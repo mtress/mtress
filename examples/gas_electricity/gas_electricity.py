@@ -2,6 +2,7 @@
 Example to illustrate use of gas carrier and gas grid connection along with
 CHP implementation for heat and power generation.
 """
+import os
 
 from oemof.solph.processing import results
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
@@ -10,6 +11,7 @@ import logging
 LOGGER = logging.getLogger(__file__)
 from mtress._helpers import get_flows
 
+os.chdir(os.path.dirname (__file__))
 
 energy_system = MetaModel()
 
@@ -21,11 +23,11 @@ energy_system.add_location(house_1)
 house_1.add(carriers.Electricity())
 house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 house_1.add(
-    technologies.NaturalGasGridConnection(
+    technologies.GasGridConnection(
+        name="gas_grid_connection",
+        gas_type=NATURAL_GAS,
         grid_pressure=20,
         working_rate=15,
-        biomethane_injection=False,
-        h2_injection=False,
     )
 )
 
@@ -35,12 +37,12 @@ house_1.add(carriers.GasCarrier(gases={
 ))
 
 weather = {
-    "ghi": "FILE:./input_file.csv:ghi",
-    "dhi": "FILE:./input_file.csv:dhi",
-    "wind_speed": "FILE:./input_file.csv:wind_speed",
-    "temp_air": "FILE:./input_file.csv:temp_air",
-    "temp_dew": "FILE:./input_file.csv:temp_dew",
-    "pressure": "FILE:./input_file.csv:pressure",
+    "ghi": "FILE:../input_file.csv:ghi",
+    "dhi": "FILE:../input_file.csv:dhi",
+    "wind_speed": "FILE:../input_file.csv:wind_speed",
+    "temp_air": "FILE:../input_file.csv:temp_air",
+    "temp_dew": "FILE:../input_file.csv:temp_dew",
+    "pressure": "FILE:../input_file.csv:pressure",
 }
 
 house_1.add(
@@ -58,7 +60,7 @@ house_1.add(
 house_1.add(
     demands.Electricity(
         name="electricity_demand",
-        time_series="FILE:./input_file.csv:electricity",
+        time_series="FILE:../input_file.csv:electricity",
     )
 )
 

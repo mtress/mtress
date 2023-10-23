@@ -6,7 +6,7 @@ Tests for the MTRESS gas carrier.
 import pytest
 
 from mtress.carriers import GasCarrier
-from mtress.carriers._gas_carrier import HYDROGEN, NATURAL_GAS
+from mtress.carriers._gas import HYDROGEN, NATURAL_GAS
 
 
 def test_gas_carrier_levels():

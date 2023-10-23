@@ -62,13 +62,8 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
 
         # Add natural gas carrier for import
         gas_carrier = self.location.get_carrier(GasCarrier)
-        surrounding_levels = gas_carrier.get_surrounding_levels(self.input_pressure)
-        _, pressure = surrounding_levels[self.gas_type]
-
-        if pressure not in gas_carrier.pressures[self.gas_type]:
-            raise ValueError("Pressure must be a valid input_pressure level")
-
-        gas_bus = gas_carrier.distribution[self.gas_type][pressure]
+        _, pressure_level = gas_carrier.get_surrounding_levels(self.gas_type, self.input_pressure)
+        gas_bus = gas_carrier.distribution[self.gas_type][pressure_level]
 
         # Convert Nominal Power Capacity of Fuel Cell (kW) to Nominal NG Consumption
         # Capacity (kg)

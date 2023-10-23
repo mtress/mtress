@@ -59,7 +59,8 @@ house_1.add(
 )
 
 house_1.add(
-    technologies.NaturalGasGridConnection(
+    technologies.GasGridConnection(
+        gas_type=N
         grid_pressure=30,
         biomethane_injection=False,
         h2_injection=True,
