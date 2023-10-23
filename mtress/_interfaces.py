@@ -26,9 +26,9 @@ class NamedElement(ABC):
 
     def create_label(self, label: str) -> str:
         """Return a unique label based on the identifier."""
-        return f"{self.identifier}-{label}"
+        return self.identifier + [label]
 
     @property
     @abstractmethod
-    def identifier(self) -> str:
+    def identifier(self) -> list[str]:
         """Return identifier."""

@@ -49,9 +49,9 @@ class Location(NamedElement):
         self._grid_connections: Dict[type, AbstractGridConnection] = {}
 
     @property
-    def identifier(self) -> str:
+    def identifier(self) -> list[str]:
         """Return an slugified identifier."""
-        return self._slug
+        return [self._slug]
 
     def add(self, component: AbstractComponent):
         """Add a component to the location."""

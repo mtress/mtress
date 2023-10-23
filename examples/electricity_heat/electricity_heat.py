@@ -20,7 +20,11 @@ temperature are added to the energy system.
 Finally, the energy system is optimised/solved via meta_model.solve, a plot is
 created and the solver output is written to an .lp file.
 """
+import os
+
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
+
+os.chdir(os.path.dirname (__file__))
 
 energy_system = MetaModel()
 

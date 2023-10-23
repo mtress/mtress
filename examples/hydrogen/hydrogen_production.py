@@ -1,8 +1,11 @@
 """Example to illustrate hydrogen production to meet hydrogen demand."""
+import os
 
 from oemof.solph.processing import results
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 from mtress.carriers import HYDROGEN
+
+os.chdir(os.path.dirname (__file__))
 
 energy_system = MetaModel()
 
@@ -13,12 +16,12 @@ house_1.add(carriers.Electricity())
 house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 weather = {
-    "ghi": "FILE:./weather.csv:ghi",
-    "dhi": "FILE:./weather.csv:dhi",
-    "wind_speed": "FILE:./weather.csv:wind_speed",
-    "temp_air": "FILE:./weather.csv:temp_air",
-    "temp_dew": "FILE:./weather.csv:temp_dew",
-    "pressure": "FILE:./weather.csv:pressure",
+    "ghi": "FILE:../weather.csv:ghi",
+    "dhi": "FILE:../weather.csv:dhi",
+    "wind_speed": "FILE:../weather.csv:wind_speed",
+    "temp_air": "FILE:../weather.csv:temp_air",
+    "temp_dew": "FILE:../weather.csv:temp_dew",
+    "pressure": "FILE:../weather.csv:pressure",
 }
 
 
