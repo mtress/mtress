@@ -1,5 +1,5 @@
 """Example to illustrate hydrogen production to meet hydrogen demand."""
-
+import os
 from oemof.solph.processing import results
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 import logging
@@ -7,6 +7,8 @@ LOGGER = logging.getLogger(__file__)
 from mtress._helpers import get_flows
 energy_system = MetaModel()
 from mtress.technologies._mixed_storage import Implementation
+
+os.chdir(os.path.dirname (__file__))
 
 house_1 = Location(name="house_1")
 
@@ -17,12 +19,12 @@ house_1.add(carriers.Electricity())
 house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 weather = {
-    "ghi": "FILE:./input_file.csv:ghi",
-    "dhi": "FILE:./input_file.csv:dhi",
-    "wind_speed": "FILE:./input_file.csv:wind_speed",
-    "temp_air": "FILE:./input_file.csv:temp_air",
-    "temp_dew": "FILE:./input_file.csv:temp_dew",
-    "pressure": "FILE:./input_file.csv:pressure",
+    "ghi": "FILE:../input_file.csv:ghi",
+    "dhi": "FILE:../input_file.csv:dhi",
+    "wind_speed": "FILE:../input_file.csv:wind_speed",
+    "temp_air": "FILE:../input_file.csv:temp_air",
+    "temp_dew": "FILE:../input_file.csv:temp_dew",
+    "pressure": "FILE:../input_file.csv:pressure",
 }
 
 house_1.add(
@@ -40,7 +42,7 @@ house_1.add(
 house_1.add(
     demands.Electricity(
         name="electricity_demand",
-        time_series="FILE:./input_file.csv:electricity",
+        time_series="FILE:../input_file.csv:electricity",
     )
 )
 
@@ -53,7 +55,7 @@ house_1.add(
 house_1.add(
     demands.Hydrogen(
         name="H2_demand",
-        time_series="FILE:./input_file.csv:h2_demand",
+        time_series="FILE:../input_file.csv:h2_demand",
         pressure=350,
     )
 )

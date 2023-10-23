@@ -12,9 +12,11 @@ electricity carrier and demand (time series) are added to the energysystem.
 Finally, the energy system is optimised/solved via meta_model.solve and the 
 solver output is written to an .lp file.   
 """
+import os
 
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 
+os.chdir(os.path.dirname (__file__))
 meta_model = MetaModel()
 
 house_1 = Location(name="house_1")

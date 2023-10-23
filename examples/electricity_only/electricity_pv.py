@@ -1,7 +1,11 @@
 """
 Basic working 'electricity' example.
 """
+import os
+
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
+
+os.chdir(os.path.dirname (__file__))
 
 energy_system = MetaModel()
 
@@ -14,12 +18,12 @@ house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 house_1.add(demands.Electricity(name="demand0", time_series=10))
 
 weather = {
-    "ghi": "FILE:./weather.csv:ghi",
-    "dhi": "FILE:./weather.csv:dhi",
-    "wind_speed": "FILE:./weather.csv:wind_speed",
-    "temp_air": "FILE:./weather.csv:temp_air",
-    "temp_dew": "FILE:./weather.csv:temp_dew",
-    "pressure": "FILE:./weather.csv:pressure",
+    "ghi": "FILE:../weather.csv:ghi",
+    "dhi": "FILE:../weather.csv:dhi",
+    "wind_speed": "FILE:../weather.csv:wind_speed",
+    "temp_air": "FILE:../weather.csv:temp_air",
+    "temp_dew": "FILE:../weather.csv:temp_dew",
+    "pressure": "FILE:../weather.csv:pressure",
 }
 
 
@@ -48,13 +52,13 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 plot = solph_representation.graph(detail=True)
-plot.render(outfile="electricity_detail.png")
+plot.render(outfile="electricity_pv_detail.png")
 
 plot = solph_representation.graph(detail=False)
-plot.render(outfile="electricity_simple.png")
+plot.render(outfile="electricity_pv_simple.png")
 
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
 
-solved_model.write("electricity.lp", io_options={"symbolic_solver_labels": True})
+solved_model.write("electricity_pv.lp", io_options={"symbolic_solver_labels": True})

@@ -10,8 +10,14 @@ build/
 venv/
 
 .ipynb_checkpoints/
+*.ipynb
 
 # Individual obsolete files
 mtress/_meta_model_bak.py
 example/meta_model_config.yaml
-*.ipynb
+
+# results of examples
+examples/*/*.lp
+examples/*/*.png
+examples/*/*.gv
+
