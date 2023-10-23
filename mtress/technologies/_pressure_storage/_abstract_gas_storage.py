@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 
 from typing import Callable
 
-from mtress.carriers import AbstractLayeredGasCarrier, GasCarrier
+from mtress.carriers import Gas, GasCarrier
 
 from .._abstract_technology import AbstractTechnology
 from .._mixed_gas_storage import AbstractMixedGasStorage
@@ -51,7 +51,7 @@ class AbstractGasStorage(AbstractMixedGasStorage, AbstractTechnology):
         """
         return self.calc_density(pressure) * self.volume
 
-    def build_storage(self, gas_type: AbstractLayeredGasCarrier):
+    def build_storage(self, gas_type: Gas):
         """Build the core structure of mtress representation."""
         gas_carrier = self.location.get_carrier(GasCarrier)
         solph_storage_arguments = {

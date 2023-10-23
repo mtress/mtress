@@ -18,7 +18,7 @@ from oemof.solph.constraints import storage_level_constraint
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._oemof_storage_multiplexer import storage_multiplexer_constraint
-from ..carriers import AbstractLayeredGasCarrier, GasCarrier
+from ..carriers import Gas, GasCarrier
 
 
 class Implementation(Enum):
@@ -49,7 +49,7 @@ class AbstractMixedGasStorage(AbstractSolphRepresentation):
 
     def build_multiplexer_structure(  # pylint: disable=too-many-arguments
         self,
-        gas_type: AbstractLayeredGasCarrier,
+        gas_type: Gas,
         power_limit: float,
         capacity_at_level: Optional[Callable] = None,
         solph_storage_arguments: dict = None,

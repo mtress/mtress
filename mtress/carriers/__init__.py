@@ -1,6 +1,6 @@
 """Energy carriers."""
 
-from ._abstract_carrier import AbstractCarrier, AbstractLayeredCarrier, AbstractLayeredGasCarrier
+from ._abstract_carrier import AbstractCarrier, AbstractLayeredCarrier
 from ._electricity import Electricity
 from ._heat import Heat
 from ._gas_carrier import GasCarrier, HYDROGEN, NATURAL_GAS, BIOGAS, BIO_METHANE, Gas
@@ -8,7 +8,6 @@ from ._gas_carrier import GasCarrier, HYDROGEN, NATURAL_GAS, BIOGAS, BIO_METHANE
 __all__ = [
     "AbstractCarrier",
     "AbstractLayeredCarrier",
-    "AbstractLayeredGasCarrier",
     "Electricity",
     "Heat",
     "Gas",

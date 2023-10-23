@@ -6,7 +6,7 @@ from oemof.solph import Flow
 from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, Heat, GasCarrier, AbstractLayeredGasCarrier
+from ..carriers import Electricity, Heat, GasCarrier, Gas
 from ._abstract_technology import AbstractTechnology
 
 LOGGER = logging.getLogger(__file__)
@@ -24,7 +24,7 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
     def __init__(
         self,
         name: str,
-        gas_type: AbstractLayeredGasCarrier,
+        gas_type: Gas,
         thermal_temperature: float,
         nominal_power: float = None,
         input_pressure: float = 15,

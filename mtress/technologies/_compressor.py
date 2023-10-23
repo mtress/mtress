@@ -4,7 +4,7 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, GasCarrier, AbstractLayeredGasCarrier
+from ..carriers import Electricity, GasCarrier, Gas
 from ..physics import calc_isothermal_compression_energy, IDEAL_GAS_CONSTANT
 from ._abstract_technology import AbstractTechnology
 
@@ -16,7 +16,7 @@ class GasCompressor(AbstractTechnology, AbstractSolphRepresentation):
         self,
         name: str,
         nominal_power: float,
-        gas_type: AbstractLayeredGasCarrier,
+        gas_type: Gas,
         isothermal_efficiency: float = 0.85,
     ):
         """
