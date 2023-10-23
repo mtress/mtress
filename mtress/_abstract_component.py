@@ -130,8 +130,8 @@ class AbstractSolphRepresentation(AbstractComponent):
         for solph_node in self.solph_nodes:
             if detail:
                 graph.node(
-                    name=solph_node.label,
-                    label=solph_node.short_label,
+                    name=str(solph_node.label),
+                    label=str(solph_node.short_label),
                     shape=SOLPH_SHAPES.get(type(solph_node), "rectangle"),
                 )
 
@@ -139,7 +139,7 @@ class AbstractSolphRepresentation(AbstractComponent):
                 if origin in self._solph_nodes:
                     # This is an internal edge and thus only added if detail is True
                     if detail:
-                        graph.edge(origin.label, solph_node.label)
+                        graph.edge(str(origin.label), str(solph_node.label))
                 else:
                     # This is an external edge
                     if detail:
