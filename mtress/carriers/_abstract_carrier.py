@@ -26,7 +26,7 @@ class AbstractLayeredCarrier(AbstractCarrier):
         """Initialize carrier."""
         super().__init__(**kwargs)
 
-        self._levels = np.unique(levels)
+        self._levels = levels
 
     def get_surrounding_levels(self, level):
         """Get the next bigger and smaller level."""
