@@ -27,23 +27,27 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
     represent flow and return of a room heating system or various tapping
     temperatures.
 
-      Layer Inputs        Layers Outputs
+    Layer Inputs        Layers Outputs
 
-      (Qin(T3))           (Q(T3))
-          │   ↘           ↗
-          │    [rise 2, 3]
-          ↓               ↖
-      (Qin(T2))           (Q(T2))
-          │    ↘          ↗
-          │    [rise 1, 2]
-          ↓               ↖
-      (Qin(T1))---------->(Q(T1))
-          ↓
-      (Qin(T-1))--------->(Q(T-1))
-              ↘          ↗   │
-               [rise-2,-1]   │
-                         ↖   ↓
-                          (Q(T-2))
+    (Qin(T3))          (Q(T3))
+        │   ↘           ↗
+        │   [riser 2, 3]
+        ↓               ↖
+    (Qin(T2))          (Q(T2))
+        │   ↘           ↗
+        │   [riser 2, 3]
+        ↓               ↖
+    (Qin(T1))--------->(Q(T1))
+        ↓
+    (Qin(T0))          (Q(T0))
+        │   ↘
+        │    ----------
+        ↓               ↘
+    (Qin(T-1))         (Q(T-1))
+        │   ↘           ↙
+        │   [riser-2,-1]
+        ↓               ↘
+    (Qin(T-2))         (Q(T-2))
 
 
     Heat sources connect to the Qin for the corresponding temperatures.
@@ -101,6 +105,32 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
         """Return index or key of reference level"""
         return self._reference_level
 
+    def _create_temperature_riser(self, temp_low, temp_high):
+            bus_in_pri = self.inputs[temp_high]
+            ratio = (temp_low - self.reference) / (temp_high - self.reference)
+            if temp_low > self.reference:
+                bus_out = self.outputs[temp_high]
+                bus_in_sec = self.outputs[temp_low]
+            else:
+                bus_out = self.outputs[temp_low]
+                bus_in_sec = self.outputs[temp_high]
+
+            # Temperature riser
+            self.create_solph_node(
+                label=f"rise_{temp_low:.0f}_{temp_high:.0f}",
+                node_type=Converter,
+                inputs={
+                    bus_in_pri: Flow(),
+                    bus_in_sec: Flow(),
+                },
+                outputs={bus_out: Flow()},
+                conversion_factors={
+                    bus_in_pri: 1 - ratio,
+                    bus_in_sec: ratio,
+                    bus_out: 1,
+                },
+            )
+
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         bus_in = None
@@ -133,8 +163,8 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
             ] = Flow()
         
         if self.reference > self._levels[0]:
-            bus_out.inputs[self.reference].outputs[
-                self._levels[self.reference_level-1]
+            self.inputs[self.reference].outputs[
+                self.outputs[self._levels[self.reference_level-1]]
             ] = Flow()
 
         # rise above reference temperature
@@ -142,24 +172,11 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
             self._levels[self.reference_level+1:],
             self._levels[self.reference_level+2:]
         ):
-            bus_out_high = self.outputs[temp_high]
-            bus_out_low = self.outputs[temp_low]
-            bus_in_high = self.inputs[temp_high]
+            self._create_temperature_riser(temp_low, temp_high)
 
-            ratio = (temp_low - self.reference) / (temp_high - self.reference)
-            
-            # Temperature riser
-            self.create_solph_node(
-                label=f"rise_{temp_low:.0f}_{temp_high:.0f}",
-                node_type=Converter,
-                inputs={
-                    bus_in_high: Flow(),
-                    bus_out_low: Flow(),
-                },
-                outputs={bus_out_high: Flow()},
-                conversion_factors={
-                    bus_in_high: 1 - ratio,
-                    bus_out_low: ratio,
-                    bus_out_high: 1,
-                },
-            )
+        # rise below reference temperature
+        for temp_low, temp_high in zip(
+            self._levels[0:self.reference_level],
+            self._levels[1:self.reference_level]
+        ):
+            self._create_temperature_riser(temp_low, temp_high)
