@@ -60,11 +60,11 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractMixedStorage):
         """Build core structure of oemof.solph representation."""
         carrier: Heat = self.location.get_carrier(Heat)
         capacity_per_unit = self.volume * kJ_to_MWh(H2O_DENSITY * H2O_HEAT_CAPACITY)
-        empty_level = carrier.reference_temperature
+        empty_level = carrier.reference
 
         solph_storage_arguments = {
             "nominal_storage_capacity": (
-                max(carrier.temperature_levels) - carrier.reference_temperature
+                max(carrier.levels) - carrier.reference_level
             )
             * capacity_per_unit
         }

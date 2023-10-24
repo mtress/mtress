@@ -40,7 +40,7 @@ class Hydrogen(AbstractLayeredCarrier, AbstractSolphRepresentation):
 
         :param pressure_levels: Pressure levels
         """
-        super().__init__(levels=pressure_levels)
+        super().__init__(levels=pressure_levels, reference=0)
 
         # Init solph interfaces
         self.busses = {}

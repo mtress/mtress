@@ -31,13 +31,20 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
 
       (Qin(T3))           (Q(T3))
           │   ↘           ↗
-          │    [heater2,3]
+          │    [rise 2, 3]
           ↓               ↖
       (Qin(T2))           (Q(T2))
           │    ↘          ↗
-          │    [heater1,2]
+          │    [rise 1, 2]
           ↓               ↖
       (Qin(T1))---------->(Q(T1))
+          ↓
+      (Qin(T-1))--------->(Q(T-1))
+              ↘          ↗   │
+               [rise-2,-1]   │
+                         ↖   ↓
+                          (Q(T-2))
+
 
     Heat sources connect to the Qin for the corresponding temperatures.
     If efficiency increases with lower temperature,
@@ -63,12 +70,6 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
 
            house_1.add(carriers.Heat(temperature_levels=[30],
                                              reference_temperature=20))
-
-    Notice: Some temperatures, i.e. the ones of sources for heat pump, are not
-        considered by the energy carrier. To emphasise that fact, these
-        sources are defined as anergy sources, which are not connected to the
-        energy carrier but only to the heat pump.
-
     """
 
     def __init__(
@@ -82,77 +83,83 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
         :param temperature_levels: Temperature levels
         :param reference_temperature: Reference temperature
         """
-        super().__init__(levels=temperature_levels)
-
-        # Defining temperatures
-        # If no reference temperature is given, we use 0°C
-        self._reference = reference_temperature
-
-        assert self._reference < self._levels[0], (
-            "Reference temperature should be lower than the lowest temperature" " level"
+        if reference_temperature not in temperature_levels:
+            temperature_levels = temperature_levels + [reference_temperature]
+        super().__init__(
+            levels=temperature_levels,
+            reference=reference_temperature,
         )
+
+        self._reference_level = self._levels.index(reference_temperature)
 
         # Properties for solph interfaces
         self.outputs = {}
         self.inputs = {}
+ 
+    @property
+    def reference_level(self):
+        """Return index or key of reference level"""
+        return self._reference_level
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        temp_low = None
-        for temperature in self._levels:
-            # Thermal buses
-            b_out = self.create_solph_node(
+        bus_in = None
+        bus_out = None
+        bus_in_inputs = {}
+
+        # Thermal layers
+        for temperature in reversed(self._levels):
+            bus_in = self.create_solph_node(
+                label=f"in_{temperature:.0f}",
+                node_type=Bus,
+                inputs=bus_in_inputs,
+            )
+
+            self.inputs[temperature] = bus_in
+            bus_in_inputs = {bus_in: Flow()}
+
+            bus_out = self.create_solph_node(
                 label=f"out_{temperature:.0f}",
                 node_type=Bus,
             )
 
-            if temp_low is None:
-                bus_in = self.create_solph_node(
-                    label=f"in_{temperature:.0f}",
-                    node_type=Bus,
-                    outputs={b_out: Flow()},
-                )
-            else:
-                bus_in = self.create_solph_node(
-                    label=f"in_{temperature:.0f}",
-                    node_type=Bus,
-                    outputs={
-                        self.inputs[temp_low]: Flow(),
-                        b_out: Flow(),
-                    },
-                )
+            self.outputs[temperature] = bus_out
+        
+        # add direct flows for the levels close to reference
+        if self.reference < self._levels[-1]:
+            temperature_above_reference = self._levels[self.reference_level+1]
+            self.outputs[temperature_above_reference].inputs[
+                self.inputs[temperature_above_reference]
+            ] = Flow()
+        
+        if self.reference > self._levels[0]:
+            bus_out.inputs[self.reference].outputs[
+                self._levels[self.reference_level-1]
+            ] = Flow()
 
-            self.outputs[temperature] = b_out
-            self.inputs[temperature] = bus_in
+        # rise above reference temperature
+        for temp_low, temp_high in zip(
+            self._levels[self.reference_level+1:],
+            self._levels[self.reference_level+2:]
+        ):
+            bus_out_high = self.outputs[temp_high]
+            bus_out_low = self.outputs[temp_low]
+            bus_in_high = self.inputs[temp_high]
 
-            # Temperature risers
-            if temp_low is not None:
-                ratio = (temp_low - self._reference) / (temperature - self._reference)
-
-                self.create_solph_node(
-                    label=f"rise_{temp_low:.0f}_{temperature:.0f}",
-                    node_type=Converter,
-                    inputs={
-                        bus_in: Flow(),
-                        self.outputs[temp_low]: Flow(),
-                    },
-                    outputs={b_out: Flow()},
-                    conversion_factors={
-                        bus_in: 1 - ratio,
-                        self.outputs[temp_low]: ratio,
-                        b_out: 1,
-                    },
-                )
-
-            # prepare for next iteration of the loop
-            temp_low = temperature
-
-    @property
-    def temperature_levels(self):
-        """Return the list of temperature levels."""
-        return self.levels
-
-    @property
-    def reference_temperature(self):
-        """Return the reference temperature."""
-        return self._reference
+            ratio = (temp_low - self.reference) / (temp_high - self.reference)
+            
+            # Temperature riser
+            self.create_solph_node(
+                label=f"rise_{temp_low:.0f}_{temp_high:.0f}",
+                node_type=Converter,
+                inputs={
+                    bus_in_high: Flow(),
+                    bus_out_low: Flow(),
+                },
+                outputs={bus_out_high: Flow()},
+                conversion_factors={
+                    bus_in_high: 1 - ratio,
+                    bus_out_low: ratio,
+                    bus_out_high: 1,
+                },
+            )

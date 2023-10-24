@@ -65,18 +65,18 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphRepresentation):
         """Build core structure of oemof.solph representation."""
         carrier = self.location.get_carrier(Heat)
 
-        if self.flow_temperature not in carrier.temperature_levels:
+        if self.flow_temperature not in carrier.levels:
             raise ValueError("Flow temperature must be a temperature level")
 
         if (
-            self.return_temperature not in carrier.temperature_levels
-            and self.return_temperature != carrier.reference_temperature
+            self.return_temperature not in carrier.levels
+            and self.return_temperature != carrier.reference
         ):
             raise ValueError(
                 "Return must be a temperature level or the reference temperature"
             )
 
-        if self.return_temperature == carrier.reference_temperature:
+        if self.return_temperature == carrier.reference:
             # If the return temperature is the reference temperature we just take the
             # energy from the appropriate level
             output = self.create_solph_node(
@@ -86,8 +86,8 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphRepresentation):
             )
         else:
             temperature_ratio = (
-                self.return_temperature - carrier.reference_temperature
-            ) / (self.flow_temperature - carrier.reference_temperature)
+                self.return_temperature - carrier.reference
+            ) / (self.flow_temperature - carrier.reference)
 
             output = self.create_solph_node(
                 label="output",

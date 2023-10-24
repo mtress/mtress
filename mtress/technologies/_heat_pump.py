@@ -110,7 +110,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         for anergy_source in self.location.get_technology(AbstractAnergySource):
             if self.anergy_sources is None or anergy_source.name in self.anergy_sources:
                 # Add tranformers for each heat source.
-                for target_temperature in heat_carrier.temperature_levels:
+                for target_temperature in heat_carrier.input_levels:
                     cop = calc_cop(
                         temp_input=celsius_to_kelvin(anergy_source.temperature),
                         temp_output=celsius_to_kelvin(target_temperature),
