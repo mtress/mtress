@@ -107,11 +107,12 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
 
     def _create_temperature_riser(self, temp_low, temp_high):
             bus_in_pri = self.inputs[temp_high]
-            ratio = (temp_low - self.reference) / (temp_high - self.reference)
             if temp_low > self.reference:
+                ratio = (temp_low - self.reference) / (temp_high - self.reference)
                 bus_out = self.outputs[temp_high]
                 bus_in_sec = self.outputs[temp_low]
             else:
+                ratio = (temp_high - self.reference) / (temp_low - self.reference)
                 bus_out = self.outputs[temp_low]
                 bus_in_sec = self.outputs[temp_high]
 
