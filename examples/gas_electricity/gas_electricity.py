@@ -6,7 +6,7 @@ import os
 
 from oemof.solph.processing import results
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
-from mtress.carriers import NATURAL_GAS
+from mtress.physics import NATURAL_GAS
 import logging
 LOGGER = logging.getLogger(__file__)
 from mtress._helpers import get_flows

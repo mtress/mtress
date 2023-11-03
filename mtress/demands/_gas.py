@@ -4,7 +4,8 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import Sink
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Gas, GasCarrier
+from ..carriers import GasCarrier
+from ..physics import Gas
 from ._abstract_demand import AbstractDemand
 
 

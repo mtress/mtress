@@ -4,7 +4,7 @@ from oemof.solph.processing import results
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 import logging
 
-from mtress.carriers import HYDROGEN
+from mtress.physics import HYDROGEN
 
 LOGGER = logging.getLogger(__file__)
 from mtress._helpers import get_flows

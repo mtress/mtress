@@ -5,7 +5,7 @@ SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 
 SPDX-License-Identifier: MIT
 """
-from mtress.carriers import HYDROGEN
+from mtress.physics import HYDROGEN
 from mtress.physics import calc_hydrogen_density
 
 from .._mixed_gas_storage import Implementation

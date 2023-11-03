@@ -7,8 +7,8 @@ from oemof.solph import Flow
 from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, Heat, GasCarrier, HYDROGEN
-from ..physics import H2_LHV
+from ..carriers import Electricity, Heat, GasCarrier
+from ..physics import H2_LHV, HYDROGEN
 from ._abstract_technology import AbstractTechnology
 
 LOGGER = logging.getLogger(__file__)

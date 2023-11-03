@@ -177,8 +177,9 @@ def calc_biogas_heating_value(CH4_share=0.75, CO2_share=0.25, heating_value=CH4_
 def calc_biogas_molar_mass(CH4_share=0.75, C0_2_share=0.25):
     """
     This function calculates the molar mass of biogas depending on the
-    gas proportion and its molar mass (kg/mol). Only methane and carbon-dioxide
-    gas are considered and other impurities are ignored for this calculation.
+    gas proportion and its molar mass (kg/mol). Only methane (75%) and
+    carbon-dioxide gas (25%) are considered and other impurities are
+    ignored for this calculation.
     :param CH4_share: Share proportion of methane in biogas
     :param C0_2_share: Share proportion content of carbon-dioxide in biogas
     """
@@ -191,7 +192,8 @@ def calc_natural_gas_molar_mass(
     Calculate the molar mass of the natural gas depending on different
     gases present and its proportions. In most cases following gas exists:
     Methane, ethane, propane, butane, and  other impurities. Other impurity
-    gases are ignored for this calculation.
+    gases are ignored for this calculation. By default, natural gas proportions
+    are methane(90%), ethane(5%), propane(3%), butane (2%).
     """
     return (
         (CH4_share * CH4_MOLAR_MASS)

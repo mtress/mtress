@@ -3,7 +3,7 @@ import os
 
 from oemof.solph.processing import results
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
-from mtress.carriers import HYDROGEN
+from mtress.physics import HYDROGEN
 
 os.chdir(os.path.dirname (__file__))
 

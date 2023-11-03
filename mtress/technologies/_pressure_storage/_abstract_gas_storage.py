@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Abstract input_pressure storage with undefined internal reperesentation.
+Abstract pressure storage with undefined internal representation.
 
 SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 
@@ -10,8 +10,8 @@ SPDX-License-Identifier: MIT
 
 from typing import Callable
 
-from mtress.carriers import Gas, GasCarrier
-
+from mtress.carriers import GasCarrier
+from ...physics import Gas
 from .._abstract_technology import AbstractTechnology
 from .._mixed_gas_storage import AbstractMixedGasStorage
 

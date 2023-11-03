@@ -52,6 +52,14 @@ from ._helper_functions import (
     mean_logarithmic_temperature,
 )
 
+from ._gas_defination import (
+    Gas,
+    HYDROGEN,
+    NATURAL_GAS,
+    BIO_METHANE,
+    BIOGAS,
+)
+
 __all__ = [
     "kilo_to_mega",
     "celsius_to_kelvin",
@@ -90,4 +98,9 @@ __all__ = [
     "calc_isothermal_compression_energy",
     "calc_hydrogen_density",
     "calc_biogas_heating_value",
+    "Gas",
+    "HYDROGEN",
+    "NATURAL_GAS",
+    "BIO_METHANE",
+    "BIOGAS",
 ]

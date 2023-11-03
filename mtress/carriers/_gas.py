@@ -1,82 +1,10 @@
 """This module provide gas carrier in MTRESS"""
 
-import numpy as np
 
 from oemof.solph import Bus, Flow
-from dataclasses import dataclass
 
 from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractLayeredCarrier
-from ..physics import (
-    calc_biogas_heating_value,
-    CH4_LHV,
-    CH4_HHV,
-    CH4_MOLAR_MASS,
-    H2_MOLAR_MASS,
-    calc_biogas_molar_mass,
-    calc_natural_gas_molar_mass,
-)
-
-
-@dataclass
-class Gas:
-    """
-    Here we provide the gas properties for some predefined
-    gases such as Hydrogen, Natural Gas, Biogas, and Bio-methane.
-    User can define its own gas by creating an object of the
-    specific gas via this dataclass.
-    """
-    name: str
-    # Heating value Kwh/kg
-    LHV: float
-    HHV: float
-    # molar mass of gas, given in kg/mol
-    molar_mass: float
-
-    def __hash__(self):
-        return hash((self.name, self.LHV, self.HHV, self.molar_mass))
-
-
-# Object of different predefined gases
-
-HYDROGEN = Gas(
-    name="Hydrogen",
-    LHV=33.3,
-    HHV=39.4,
-    molar_mass=H2_MOLAR_MASS,
-)
-
-# By default natural gas contains methane(90%), ethane(5%),
-# propane(3%), butane (2%), other impurities are ignored
-NATURAL_GAS = Gas(
-    name="NaturalGas",
-    LHV=13,
-    HHV=14.5,
-    molar_mass=calc_natural_gas_molar_mass(CH4_share=0.9, C2H6_share=0.5,
-                                           C3H8_share=0.3, C4H10_share=0.2),
-)
-
-# Biogas in default has 75% CH4 and 25% CO2, other impurity gases
-# are ignored.
-BIOGAS = Gas(
-    name="Biogas",
-    LHV=calc_biogas_heating_value(heating_value=CH4_LHV),
-    HHV=calc_biogas_heating_value(heating_value=CH4_HHV),
-    molar_mass=calc_biogas_molar_mass(CH4_share=0.75, C0_2_share=0.25),
-)
-
-# Bio-methane is primarily considered to have methane and other impurities
-# are ignored for calculation here. However, it's important to note that
-# the exact composition of bio-methane can vary depending on the feedstock
-# and the specific production process, and it may contain trace impurities
-# and other gases. To get a more precise value for a specific bio-methane
-# source, you would need to know its exact composition.
-BIO_METHANE = Gas(
-    name="BioMethane",
-    LHV=CH4_LHV,
-    HHV=CH4_HHV,
-    molar_mass=CH4_MOLAR_MASS,
-)
 
 
 class GasCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):

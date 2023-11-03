@@ -16,8 +16,8 @@ ZERO_CELSIUS = 273.15  # K
 
 # Natural gas
 HS_PER_HI_GAS = 1.11  # according to DIN V 18599
-NG_LHV = 11  # kWh/Nm3
-NG_HHV = 12  # kWh/Nm3
+NG_LHV = 13  # kWh/kg
+NG_HHV = 14.5  # kWh/kg
 C2H6_MOLAR_MASS = 0.03007  # kg/mol
 C3H8_MOLAR_MASS = 0.0441   # kg/mol
 C4H10_MOLAR_MASS = 0.0582  # kg/mol
