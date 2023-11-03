@@ -42,8 +42,8 @@ class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
         self.nominal_capacity = nominal_capacity
         self.charging_efficiency = charging_efficiency
         self.discharging_efficiency = discharging_efficiency
-        self.power_max_in = power_max_in
-        self.power_max_out = power_max_out
+        self.charging_C_Rate = charging_C_Rate
+        self.discharging_C_Rate = discharging_C_Rate
         self.loss_rate = loss_rate
         self.initial_soc = initial_soc
         self.min_soc = min_soc
