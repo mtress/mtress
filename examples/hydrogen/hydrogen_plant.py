@@ -9,7 +9,6 @@ from mtress.physics import HYDROGEN
 LOGGER = logging.getLogger(__file__)
 from mtress._helpers import get_flows
 energy_system = MetaModel()
-from mtress.technologies._mixed_gas_storage import Implementation
 
 os.chdir(os.path.dirname (__file__))
 
@@ -68,7 +67,6 @@ house_1.add(
         name="H2_Storage",
         volume=8.5,
         power_limit=10,
-        multiplexer_implementation=Implementation.STRICT,
     )
 )
 

@@ -13,11 +13,11 @@ from typing import Callable
 from mtress.carriers import GasCarrier
 from ...physics import Gas
 from .._abstract_technology import AbstractTechnology
-from .._abstract_gas_storage import AbstractGasStorage
-from .._abstract_gas_storage import Implementation
+from .._abstract_homogenous_storage import AbstractHomogenousStorage
+from .._abstract_homogenous_storage import Implementation
 
 
-class GasStorage(AbstractGasStorage, AbstractTechnology):
+class GasStorage(AbstractHomogenousStorage, AbstractTechnology):
     """Base class and interface for heat storage technologies."""
 
     def __init__(  # pylint: disable=too-many-arguments
@@ -69,7 +69,9 @@ class GasStorage(AbstractGasStorage, AbstractTechnology):
         }
 
         self.build_multiplexer_structure(
-            gas_type=self.gas_type,
+            levels=gas_carrier.pressure_levels[self.gas_type],
+            inputs=gas_carrier.inputs[self.gas_type],
+            outputs=gas_carrier.outputs[self.gas_type],
             power_limit=self.power_limit,
             capacity_at_level=self._storage_content,
             solph_storage_arguments=solph_storage_arguments,

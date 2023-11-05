@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT
 from mtress.physics import HYDROGEN
 from mtress.physics import calc_hydrogen_density
 
-from .._abstract_gas_storage import Implementation
+from .._abstract_homogenous_storage import Implementation
 from ._gas_storage import GasStorage
 
 
