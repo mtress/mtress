@@ -33,7 +33,7 @@ class Implementation(Enum):
     FLEXIBLE = "flexible"
 
 
-class AbstractMixedGasStorage(AbstractSolphRepresentation):
+class AbstractGasStorage(AbstractSolphRepresentation):
     """Abstract mixed storage."""
 
     def __init__(self, *, implementation: Implementation, **kwargs) -> None:

@@ -8,11 +8,11 @@ SPDX-License-Identifier: MIT
 from mtress.physics import HYDROGEN
 from mtress.physics import calc_hydrogen_density
 
-from .._mixed_gas_storage import Implementation
-from ._abstract_gas_storage import AbstractGasStorage
+from .._abstract_gas_storage import Implementation
+from ._gas_storage import GasStorage
 
 
-class H2Storage(AbstractGasStorage):
+class H2Storage(GasStorage):
     """
     Fully mixed hydrogen storage.
 
@@ -34,17 +34,13 @@ class H2Storage(AbstractGasStorage):
         :param volume: Volume of the storage in m³
         :param power_limit: Power limit in kW
         """
-        if not isinstance(multiplexer_implementation, Implementation):
-            multiplexer_implementation = Implementation(multiplexer_implementation)
-
         super().__init__(
             name=name,
+            gas_type=HYDROGEN,
             volume=volume,
             power_limit=power_limit,
             implementation=multiplexer_implementation,
             calc_density=calc_hydrogen_density,
         )
 
-    def build_core(self) -> None:
-        """Build the core structure of mtress representation."""
-        self.build_storage(gas_type=HYDROGEN)
+

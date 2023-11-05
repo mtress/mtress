@@ -13,19 +13,21 @@ from typing import Callable
 from mtress.carriers import GasCarrier
 from ...physics import Gas
 from .._abstract_technology import AbstractTechnology
-from .._mixed_gas_storage import AbstractMixedGasStorage
+from .._abstract_gas_storage import AbstractGasStorage
+from .._abstract_gas_storage import Implementation
 
 
-class AbstractGasStorage(AbstractMixedGasStorage, AbstractTechnology):
+class GasStorage(AbstractGasStorage, AbstractTechnology):
     """Base class and interface for heat storage technologies."""
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        *,
+        name,
+        gas_type: Gas,
         volume: float,
         power_limit: float,
         calc_density: Callable,
-        **kwargs,
+        implementation: Implementation | str = Implementation.STRICT,
     ):
         """
         Create heat storage component.
@@ -36,27 +38,30 @@ class AbstractGasStorage(AbstractMixedGasStorage, AbstractTechnology):
         :param calc_density: Function to calculate the densitiy of the gas at a certain
             input_pressure level
         """
-        super().__init__(**kwargs)
+        if not isinstance(implementation, Implementation):
+            implementation = Implementation(implementation)
+        super().__init__(name=name, implementation=implementation)
 
         # General parameters of the storage
+        self.gas_type = gas_type
         self.volume = volume
         self.power_limit = power_limit
         self.calc_density = calc_density
 
-    def calculate_storage_content(self, pressure: float):
+    def _storage_content(self, pressure: float):
         """
         Calculate the storage content for a given input_pressure.
 
         :param pressure: Pressure in bar
         """
         return self.calc_density(pressure) * self.volume
-
-    def build_storage(self, gas_type: Gas):
+    
+    def build_core(self) -> None:
         """Build the core structure of mtress representation."""
         gas_carrier = self.location.get_carrier(GasCarrier)
         solph_storage_arguments = {
-            "nominal_storage_capacity": self.calculate_storage_content(
-                max(gas_carrier.pressure_levels[gas_type])
+            "nominal_storage_capacity": self._storage_content(
+                max(gas_carrier.pressure_levels[self.gas_type])
             ),
             "loss_rate": 0,
             "fixed_losses_relative": 0,
@@ -64,8 +69,8 @@ class AbstractGasStorage(AbstractMixedGasStorage, AbstractTechnology):
         }
 
         self.build_multiplexer_structure(
-            gas_type=gas_type,
+            gas_type=self.gas_type,
             power_limit=self.power_limit,
-            capacity_at_level=self.calculate_storage_content,
+            capacity_at_level=self._storage_content,
             solph_storage_arguments=solph_storage_arguments,
         )

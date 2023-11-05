@@ -2,10 +2,10 @@
 MTRESS pressure storage technologies.
 """
 
-from ._abstract_gas_storage import AbstractGasStorage
+from ._gas_storage import GasStorage
 from ._h2_storage import H2Storage
 
 __all__ = [
-    "AbstractGasStorage",
+    "GasStorage",
     "H2Storage",
 ]
