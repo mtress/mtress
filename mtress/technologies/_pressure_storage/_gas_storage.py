@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Abstract pressure storage with undefined internal representation.
+Abstract gas pressure storage with undefined internal representation.
 
 SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 
@@ -18,9 +18,9 @@ from .._abstract_homogenous_storage import Implementation
 
 
 class GasStorage(AbstractHomogenousStorage, AbstractTechnology):
-    """Base class and interface for heat storage technologies."""
+    """Base class and interface for gas storage technologies."""
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         name,
         gas_type: Gas,
@@ -30,13 +30,16 @@ class GasStorage(AbstractHomogenousStorage, AbstractTechnology):
         implementation: Implementation | str = Implementation.STRICT,
     ):
         """
-        Create heat storage component.
+        Create gas pressure storage component.
 
         :param name: Name of the component
+        :param gas_type: Type of gas (HYDROGEN, NATURAL GAS, BIO-METHANE
+                         BIOGAS, etc.)
         :param volume: Volume of the storage in m³
-        :param power_limit: power limit in kW
-        :param calc_density: Function to calculate the densitiy of the gas at a certain
-            input_pressure level
+        :param power_limit: power limit in kg
+        :param calc_density: Function to calculate the density of the gas
+                             at a certain pressure level
+
         """
         if not isinstance(implementation, Implementation):
             implementation = Implementation(implementation)
@@ -50,9 +53,9 @@ class GasStorage(AbstractHomogenousStorage, AbstractTechnology):
 
     def _storage_content(self, pressure: float):
         """
-        Calculate the storage content for a given input_pressure.
+        Calculate the storage content at a given pressure.
 
-        :param pressure: Pressure in bar
+        :param pressure: Pressure inside the storage tank given in bar
         """
         return self.calc_density(pressure) * self.volume
     

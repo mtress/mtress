@@ -66,8 +66,8 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         _, pressure_level = gas_carrier.get_surrounding_levels(self.gas_type, self.input_pressure)
         gas_bus = gas_carrier.distribution[self.gas_type][pressure_level]
 
-        # Convert Nominal Power Capacity of Fuel Cell (kW) to Nominal NG Consumption
-        # Capacity (kg)
+        # Convert Nominal Power Capacity of CHP in kW to Nominal Gas Consumption
+        # Capacity in kg
         nominal_gas_consumption = self.nominal_power / (
             self.electric_efficiency * self.gas_type.LHV
         )

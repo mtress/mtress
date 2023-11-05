@@ -10,13 +10,14 @@ LOGGER = logging.getLogger(__file__)
 
 class GasGridConnection(AbstractSolphRepresentation):
     """
-    Gas grid connection depicts the natural gas distribution pipelines at
-    specific pressure level. Injection or export of hydrogen, and bio-methane are
-    possible. Hydrogen injection usually restricted by the allowable injection
-    limit (at certain percentage of natural gas flow in the pipeline).
-    Bio-methane injection currently have no restriction.
+    The gas grid connection represents the distribution pipelines for
+    a specific gas type, identified by the `gas_type` parameter. It
+    allows gas import at a specific pressure level, making it essential
+    to provide the `grid_pressure` parameter for connecting to the
+    GasCarrier bus associated with the specified gas type at the given
+    pressure level.
 
-    Note: Working_rate must be defined to enable natural gas import for your
+    Note: Working_rate must be defined to enable gas import for your
           energy system.
     """
     def __init__(
@@ -29,9 +30,7 @@ class GasGridConnection(AbstractSolphRepresentation):
         revenue: float = 0,
         **kwargs,
     ):
-        """
 
-        """
         super().__init__(**kwargs)
         self.gas_type = gas_type
         self.grid_pressure = grid_pressure

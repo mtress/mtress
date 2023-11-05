@@ -3,7 +3,6 @@ from typing import Optional
 from mtress._abstract_component import AbstractComponent
 
 
-
 class AbstractGasGridConnection(AbstractComponent):
     """Abstract class to ensure a unified interface."""
 
@@ -17,9 +16,6 @@ class AbstractGasGridConnection(AbstractComponent):
         **kwargs,
 
     ):
-        """
-
-        """
         super().__init__(name=self.__class__.__name__, **kwargs)
 
         self.grid_pressure = grid_pressure

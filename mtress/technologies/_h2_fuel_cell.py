@@ -101,8 +101,8 @@ class PEMFuelCell(AbstractTechnology, AbstractSolphRepresentation):
 
         h2_bus = gas_carrier.inputs[HYDROGEN][pressure]
 
-        # Convert Nominal Power Capacity of Fuel Cell (kW) to Nominal H2 Consumption
-        # Capacity (kg)
+        # Convert Nominal Power Capacity of Fuel Cell in kW to Nominal H2 Consumption
+        # Capacity in kg
         nominal_h2_consumption = self.nominal_power / (
             self.electrical_efficiency * H2_LHV
         )
