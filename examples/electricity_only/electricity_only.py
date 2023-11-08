@@ -13,8 +13,11 @@ Finally, the energy system is optimised/solved via meta_model.solve and the
 solver output is written to an .lp file.   
 """
 import os
+from oemof import solph
+
 
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
+from mtress._helpers import get_flows
 
 os.chdir(os.path.dirname (__file__))
 meta_model = MetaModel()
@@ -52,3 +55,11 @@ plot.render(outfile="electricity_only_simple.png")
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
 solved_model.write("electricity_only.lp", io_options={"symbolic_solver_labels": True})
+
+myresults = solph.processing.results(solved_model)
+flows = get_flows(myresults)
+
+print(flows[
+    ('house_1', 'electricity demand', 'input'),
+    ('house_1', 'electricity demand', 'sink')
+])
