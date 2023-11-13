@@ -50,8 +50,10 @@ class Location(NamedElement):
 
     @property
     def identifier(self) -> list[str]:
-        """Return an slugified identifier."""
-        return [self._slug]
+        """As Location is at the highest level, it's name directly identifies it.
+        The list is created for consistency.
+        """
+        return [self.name]
 
     def add(self, component: AbstractComponent):
         """Add a component to the location."""

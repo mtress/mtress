@@ -35,7 +35,7 @@ class AbstractComponent(NamedElement):
     @property
     def identifier(self) -> list[str]:
         """Return identifier of this component."""
-        return self.location.identifier + [self.slug]
+        return self.location.identifier + [self.name]
 
     def assign_location(self, location):
         """Assign component to a location."""
