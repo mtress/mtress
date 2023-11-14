@@ -76,11 +76,11 @@ locations:
           return_temperature: 35.
 
       compressor0:
-        technology: H2Compressor
+        technology: GasCompressor
         parameters:
           nominal_power: 100.
-      electrolyzer0:
-        technology: PEMElectrolyzer
+      electrolyser0:
+        technology: Electrolyser
         parameters:
           nominal_power: 100.
           

@@ -11,11 +11,11 @@ from mtress._data_handler import TimeseriesSpecifier
 from mtress.carriers import Heat
 from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
 
-from .._mixed_storage import AbstractMixedStorage, Implementation
+from .._abstract_homogenous_storage import AbstractHomogenousStorage, Implementation
 from ._abstract_heat_storage import AbstractHeatStorage
 
 
-class FullyMixedHeatStorage(AbstractHeatStorage, AbstractMixedStorage):
+class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
     """
     Fully mixed heat storage.
 
@@ -83,7 +83,9 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractMixedStorage):
             )
 
         self.build_multiplexer_structure(
-            carrier=carrier,
+            levels=carrier.levels,
+            inputs=carrier.inputs,
+            outputs=carrier.outputs,
             power_limit=self.power_limit,
             capacity_per_unit=capacity_per_unit,
             empty_level=empty_level,

@@ -15,7 +15,7 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import Source
 
 from .._abstract_component import AbstractSolphRepresentation
-from .._data_handler import TimeseriesSpecifier
+from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import Electricity
 from ._abstract_technology import AbstractTechnology
 
@@ -50,9 +50,11 @@ class RenewableElectricitySource(AbstractTechnology, AbstractSolphRepresentation
         electricity_carrier = self.location.get_carrier(Electricity)
 
         if self.fixed:
-            flow = Flow(nominal_value=self.nominal_power, fix=self.specific_generation)
+            flow = Flow(nominal_value=self.nominal_power, fix=self._solph_model.data.get_timeseries(
+                self.specific_generation, kind=TimeseriesType.INTERVAL))
         else:
-            flow = Flow(nominal_value=self.nominal_power, max=self.specific_generation)
+            flow = Flow(nominal_value=self.nominal_power, max=self._solph_model.data.get_timeseries(
+                self.specific_generation, kind=TimeseriesType.INTERVAL))
 
         local_bus = self.create_solph_node(
             label="connection",

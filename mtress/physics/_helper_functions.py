@@ -13,14 +13,7 @@ SPDX-License-Identifier: MIT
 
 import numpy as np
 
-from ._constants import (
-    H2_MOLAR_MASS,
-    IDEAL_GAS_CONSTANT,
-    rk_a,
-    rk_b,
-    SECONDS_PER_HOUR,
-    ZERO_CELSIUS,
-)
+from ._constants import SECONDS_PER_HOUR, ZERO_CELSIUS
 
 
 def kilo_to_mega(arg):
@@ -53,7 +46,7 @@ def kJ_to_MWh(arg):  # pylint: disable=C0103
 
 def bar_to_pascal(arg):
     """
-    convert gas pressure from bar to pascals
+    convert gas input_pressure from bar to pascals
     """
     return arg * 100000
 
@@ -106,18 +99,18 @@ def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2):
     Calculate the energy demand to compress an ideal gas at constant temperature.
 
     This function calculates the energy demand for an isothermal compression
-    of 1 kg of an ideal gas with gas constant R from pressure p_in to pressure
+    of 1 kg of an ideal gas with gas constant R from input_pressure p_in to input_pressure
     p_out.
 
-    The work required for isothermal compression from pressure level
+    The work required for isothermal compression from input_pressure level
     :math:`p_\mathrm{in}` to :math:`p_\mathrm{out}` at the temperature
     :math:`T` in Kelvin is given by
     .. math:: W = R \cdot T \cdot \ln \frac{p_\mathrm{out}}{p_\mathrm{in}} \,,
 
     where :math:`R` denotes the gas constant of the gas in question.
 
-    :param p_in: Inlet pressure in bar
-    :param p_out: Outlet pressure in bar
+    :param p_in: Inlet input_pressure in bar
+    :param p_out: Outlet input_pressure in bar
     :param T: Temperature in deg C, defaults to 20
     :param R: Gas constant in  J / (kg * K), defaults to 4124.2
     :return: Energy required for compression in kWh
@@ -125,25 +118,5 @@ def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2):
     T += 273.15  # Convert temperature to Kelvin
     return R * T * np.log(p_out / p_in) / (3600 * 1000)
 
-def calc_hydrogen_density(pressure, temperature: float = 25) -> float:
-    """
-    Calculate the density of hydrogen gas.
-    :param temperature: H2 gas temperature in the storage tank
-    :param pressure: Pressure of hydrogen gas (in bar)
-    :return: Density of hydrogen gas (in kilograms per cubic meter)
-    """
-    pressure = bar_to_pascal(pressure)
-    gas_temperature = 273.15 + temperature
-    a = rk_a  # Redlich-Kwong parameter 'a' for H2
-    b = rk_b  # Redlich-Kwong parameter 'b' for H2
-    v_spec = 10  # predefined initial value for specific volume [m³/mol]
 
-    for i in range(10):
-        v_spec = (
-            IDEAL_GAS_CONSTANT * gas_temperature / (pressure
-            + (a / (gas_temperature**0.5 * v_spec * (v_spec + b))))
-        ) + b
 
-    density = H2_MOLAR_MASS / v_spec
-
-    return density
