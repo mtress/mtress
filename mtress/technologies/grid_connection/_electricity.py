@@ -6,7 +6,7 @@ from typing import Optional
 
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Sink, Source
-
+from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import Electricity
 from mtress._abstract_component import AbstractSolphRepresentation
 from ._abstract_grid_connection import AbstractGridConnection
@@ -15,7 +15,8 @@ from ._abstract_grid_connection import AbstractGridConnection
 class ElectricityGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
     def __init__(
         self,
-        working_rate: Optional[float] = None,
+        working_rate: Optional[TimeseriesSpecifier] = None,
+        revenue: Optional[TimeseriesSpecifier] = None,
         demand_rate: Optional[float] = 0,
     ) -> None:
         super().__init__()
@@ -58,7 +59,9 @@ class ElectricityGridConnection(AbstractGridConnection, AbstractSolphRepresentat
                 node_type=Source,
                 outputs={
                     b_grid_import: Flow(
-                        variable_costs=self.working_rate,
+                        variable_costs=self._solph_model.data.get_timeseries(
+                            self.working_rate,
+                            kind=TimeseriesType.INTERVAL),
                         investment=demand_rate,
                     )
                 },
