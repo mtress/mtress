@@ -29,7 +29,7 @@ class GasDemand(AbstractDemand, AbstractSolphRepresentation):
     """
 
     def __init__(self, name: str, gas_type: Gas, time_series: TimeseriesSpecifier, pressure: float):
-        """Initialize hydrogen energy carrier and add components."""
+        """Initialize gas demand."""
         super().__init__(name=name)
 
         self._time_series = time_series
@@ -38,13 +38,13 @@ class GasDemand(AbstractDemand, AbstractSolphRepresentation):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        hydrogen_carrier = self.location.get_carrier(GasCarrier)
-        _, pressure = hydrogen_carrier.get_surrounding_levels(self.gas_type, self.pressure)
+        gas_carrier = self.location.get_carrier(GasCarrier)
+        _, pressure = gas_carrier.get_surrounding_levels(self.gas_type, self.pressure)
 
         gas_bus = self.create_solph_node(
             label="input",
             node_type=Bus,
-            inputs={hydrogen_carrier.outputs[self.gas_type][pressure]: Flow()},
+            inputs={gas_carrier.outputs[self.gas_type][pressure]: Flow()},
         )
 
         self.create_solph_node(

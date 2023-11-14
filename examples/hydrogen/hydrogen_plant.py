@@ -85,8 +85,8 @@ house_1.add(
     )
 )
 
-house_1.add(technologies.PEMElectrolyzer(name="Ely", nominal_power=600))
-house_1.add(technologies.PEMFuelCell(name="Fuel_Cell", nominal_power=50))
+house_1.add(technologies.Electrolyser(name="Ely", nominal_power=600))
+house_1.add(technologies.FuelCell(name="Fuel_Cell", nominal_power=50))
 house_1.add(technologies.GasCompressor(name="H2Compr", nominal_power=100, gas_type=HYDROGEN))
 
 solph_representation = SolphModel(

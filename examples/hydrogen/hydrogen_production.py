@@ -93,7 +93,7 @@ house_1.add(
     )
 )
 
-house_1.add(technologies.PEMElectrolyzer(name="Ely", nominal_power=500))
+house_1.add(technologies.Electrolyser(name="Ely", nominal_power=500))
 house_1.add(technologies.HeatPump(name="hp0", thermal_power_limit=None))
 house_1.add(technologies.GasCompressor(name="H2Compr", nominal_power=50, gas_type=HYDROGEN))
 

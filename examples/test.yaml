@@ -79,8 +79,8 @@ locations:
         technology: GasCompressor
         parameters:
           nominal_power: 100.
-      electrolyzer0:
-        technology: PEMElectrolyzer
+      electrolyser0:
+        technology: Electrolyser
         parameters:
           nominal_power: 100.
           

@@ -13,21 +13,7 @@ SPDX-License-Identifier: MIT
 
 import numpy as np
 
-from ._constants import (
-    H2_MOLAR_MASS,
-    IDEAL_GAS_CONSTANT,
-    rk_a,
-    rk_b,
-    SECONDS_PER_HOUR,
-    ZERO_CELSIUS,
-    CH4_LHV,
-    CH4_HHV,
-    CH4_MOLAR_MASS,
-    CO2_MOLAR_MASS,
-    C2H6_MOLAR_MASS,
-    C3H8_MOLAR_MASS,
-    C4H10_MOLAR_MASS,
-)
+from ._constants import SECONDS_PER_HOUR, ZERO_CELSIUS
 
 
 def kilo_to_mega(arg):
@@ -133,71 +119,4 @@ def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2):
     return R * T * np.log(p_out / p_in) / (3600 * 1000)
 
 
-def calc_hydrogen_density(pressure, temperature: float = 25) -> float:
-    """
-    Calculate the density of hydrogen gas.
-    :param temperature: H2 gas temperature in the storage tank
-    :param pressure: Pressure of hydrogen gas (in bar)
-    :return: Density of hydrogen gas (in kilograms per cubic meter)
-    """
-    pressure = bar_to_pascal(pressure)
-    gas_temperature = 273.15 + temperature
-    a = rk_a  # Redlich-Kwong parameter 'a' for H2
-    b = rk_b  # Redlich-Kwong parameter 'b' for H2
-    v_spec = 10  # predefined initial value for specific volume [m³/mol]
 
-    for i in range(10):
-        v_spec = (
-            IDEAL_GAS_CONSTANT
-            * gas_temperature
-            / (pressure + (a / (gas_temperature**0.5 * v_spec * (v_spec + b))))
-        ) + b
-
-    density = H2_MOLAR_MASS / v_spec
-
-    return density
-
-
-def calc_biogas_heating_value(CH4_share=0.75, CO2_share=0.25, heating_value=CH4_LHV):
-    """
-    Calculate the heating value of biogas based on methane proportion.
-    Heating value either LHV or HHV are calculated based on per kg
-    i.e. KWh/kg
-
-    :param CH4_share: Share proportion of methane in biogas
-    :param CO2_share: Share proportion content of carbon-dioxide in biogas
-    :param heating_value of methane, default LHV.
-    """
-    return (
-        (CH4_share * CH4_MOLAR_MASS)
-        / (CH4_share * CH4_MOLAR_MASS + CO2_share * CO2_MOLAR_MASS)
-    ) * heating_value
-
-
-def calc_biogas_molar_mass(CH4_share=0.75, C0_2_share=0.25):
-    """
-    This function calculates the molar mass of biogas depending on the
-    gas proportion and its molar mass (kg/mol). Only methane (75%) and
-    carbon-dioxide gas (25%) are considered and other impurities are
-    ignored for this calculation.
-    :param CH4_share: Share proportion of methane in biogas
-    :param C0_2_share: Share proportion content of carbon-dioxide in biogas
-    """
-    return (CH4_share * CH4_MOLAR_MASS) + (C0_2_share * CO2_MOLAR_MASS)
-
-def calc_natural_gas_molar_mass(
-    CH4_share=0.9, C2H6_share=0.5, C3H8_share=0.3, C4H10_share=0.2
-):
-    """
-    Calculate the molar mass of the natural gas depending on different
-    gases present and its proportions. In most cases following gas exists:
-    Methane, ethane, propane, butane, and  other impurities. Other impurity
-    gases are ignored for this calculation. By default, natural gas proportions
-    are methane(90%), ethane(5%), propane(3%), butane (2%).
-    """
-    return (
-        (CH4_share * CH4_MOLAR_MASS)
-        + (C2H6_share * C2H6_share)
-        + (C3H8_share * C3H8_MOLAR_MASS)
-        + (C4H10_share * CH4_MOLAR_MASS)
-    )

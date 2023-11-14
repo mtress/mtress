@@ -3,7 +3,7 @@ import logging
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Source
 from mtress.carriers import GasCarrier
-from ...physics import Gas
+from mtress.physics import Gas
 from mtress._abstract_component import AbstractSolphRepresentation
 
 LOGGER = logging.getLogger(__file__)

@@ -10,27 +10,14 @@ SPDX-License-Identifier: MIT
 """
 
 from ._constants import (
-    H2_HHV,
-    H2_LHV,
-    NG_HHV,
-    NG_LHV,
-    CH4_MOLAR_MASS,
-    CO2_MOLAR_MASS,
-    CH4_LHV,
-    CH4_HHV,
-    C2H6_MOLAR_MASS,
-    C3H8_MOLAR_MASS,
-    C4H10_MOLAR_MASS,
-    H2_MOLAR_MASS,
+
     H2O_DENSITY,
     H2O_HEAT_CAPACITY,
     H2O_HEAT_FUSION,
     HHV_WP,
     HS_PER_HI_GAS,
-    HS_PER_HI_WP,
     IDEAL_GAS_CONSTANT,
-    rk_a,
-    rk_b,
+    HS_PER_HI_WP,
     SECONDS_PER_HOUR,
     TC_CONCRETE,
     TC_INSULATION,
@@ -39,11 +26,7 @@ from ._constants import (
 from ._helper_functions import (
     bar_to_pascal,
     calc_cop,
-    calc_hydrogen_density,
     calc_isothermal_compression_energy,
-    calc_biogas_heating_value,
-    calc_biogas_molar_mass,
-    calc_natural_gas_molar_mass,
     celsius_to_kelvin,
     kelvin_to_celsius,
     kilo_to_mega,
@@ -52,12 +35,16 @@ from ._helper_functions import (
     mean_logarithmic_temperature,
 )
 
-from ._gas_defination import (
+from ._gas_definition import (
     Gas,
     HYDROGEN,
     NATURAL_GAS,
     BIO_METHANE,
     BIOGAS,
+    calc_hydrogen_density,
+    calc_biogas_heating_value,
+    calc_biogas_molar_mass,
+    calc_natural_gas_molar_mass,
 )
 
 __all__ = [
@@ -76,22 +63,7 @@ __all__ = [
     "H2O_HEAT_CAPACITY",
     "H2O_HEAT_FUSION",
     "H2O_DENSITY",
-    "H2_LHV",
-    "H2_HHV",
-    "NG_HHV",
-    "NG_LHV",
-    "NG_HHV",
-    "CH4_MOLAR_MASS",
-    "CO2_MOLAR_MASS",
-    "CH4_LHV",
-    "CH4_HHV",
-    "C2H6_MOLAR_MASS",
-    "C3H8_MOLAR_MASS",
-    "C4H10_MOLAR_MASS",
-    "H2_MOLAR_MASS",
     "IDEAL_GAS_CONSTANT",
-    "rk_a",
-    "rk_b",
     "TC_CONCRETE",
     "TC_INSULATION",
     "SECONDS_PER_HOUR",
