@@ -8,7 +8,7 @@ import pytest
 from mtress.carriers import Heat as HeatCarrier
 
 
-def test_heat_carrier_levels():
+def test_heat_carrier_with_reference():
     with pytest.raises(TypeError):
         # temperatures need to be defined
         HeatCarrier()
@@ -28,8 +28,11 @@ def test_heat_carrier_levels():
     reference_level = heat_carier.reference_level
     assert reference_level == 2  # [-10, 10, *15*, ...]
     assert heat_carier.levels[reference_level] == ref_temperature
+
+    assert heat_carier.levels_above_reference == [35, 80]
+    assert heat_carier.levels_below_reference == [-10, 10]
     
-    
+def test_heat_carrier_without_reference():
     # reference temperature (default: 0) is added to the levels
     temperatures = [-10, 15, 35, 80]
     heat_carier = HeatCarrier(
@@ -41,4 +44,27 @@ def test_heat_carrier_levels():
     assert heat_carier.get_surrounding_levels(-5) == (-10, 0)
 
     assert heat_carier.reference_level == 1  # [-10, *0*, ...]
+
+    assert heat_carier.levels_above_reference == [15, 35, 80]
+    assert heat_carier.levels_below_reference == [-10]
+
+
+def test_heat_carrier_without_low_temperatures():
+    temperatures = [35, 80]
+    heat_carier = HeatCarrier(
+        temperature_levels=temperatures,
+        reference_temperature=15,
+    )
+    assert heat_carier.levels_above_reference == temperatures
+    assert heat_carier.levels_below_reference == []
+
+
+def test_heat_carrier_without_high_temperatures():
+    temperatures = [-10, 10]
+    heat_carier = HeatCarrier(
+        temperature_levels=temperatures,
+        reference_temperature=15,
+    )
+    assert heat_carier.levels_above_reference == []
+    assert heat_carier.levels_below_reference == temperatures
 

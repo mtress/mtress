@@ -33,6 +33,7 @@ class AbstractLayeredCarrier(AbstractCarrier):
         LevelType = type(levels)
         self._levels = LevelType(sorted(levels))
         self._reference = reference
+        self._reference_index = self._levels.index(reference)
 
     def get_surrounding_levels(self, level):
         """Get the next bigger and smaller level."""
@@ -48,6 +49,14 @@ class AbstractLayeredCarrier(AbstractCarrier):
     def levels(self):
         """Return levels of carrier."""
         return self._levels
+
+    @property
+    def levels_above_reference(self):
+        return self.levels[self._reference_index+1:]
+
+    @property
+    def levels_below_reference(self):
+        return self.levels[:self._reference_index]
 
     @property
     def input_levels(self):

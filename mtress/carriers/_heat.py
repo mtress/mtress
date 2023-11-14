@@ -99,7 +99,7 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
         # Properties for solph interfaces
         self.outputs = {}
         self.inputs = {}
- 
+
     @property
     def reference_level(self):
         """Return index or key of reference level"""

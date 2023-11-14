@@ -81,7 +81,7 @@ class AbstractMixedStorage(AbstractSolphRepresentation):
         self.storage_multiplexer_inputs = {}
         self.storage_multiplexer_outputs = {}
 
-        for level in carrier.levels:
+        for level in carrier.levels_above_reference:
             if capacity_per_unit is not None:
                 storage_level = (level - empty_level) * capacity_per_unit
             else:
