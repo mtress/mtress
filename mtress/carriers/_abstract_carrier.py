@@ -27,13 +27,15 @@ class AbstractLayeredCarrier(AbstractCarrier):
             levels,
             reference,
             **kwargs):
-        """Initialize carrier."""
+        """Initialize carrier.
+
+        :param levels: Sorted (ascending) quality levels
+        :param refernece: value of reference quality
+        """
         super().__init__(**kwargs)
 
-        LevelType = type(levels)
-        self._levels = LevelType(sorted(levels))
+        self._levels = levels
         self._reference = reference
-        self._reference_index = self._levels.index(reference)
 
     def get_surrounding_levels(self, level):
         return self._get_surrounding_levels(level, self._levels)
@@ -53,24 +55,6 @@ class AbstractLayeredCarrier(AbstractCarrier):
     def levels(self):
         """Return levels of carrier."""
         return self._levels
-
-    @property
-    def levels_above_reference(self):
-        return self.levels[self._reference_index+1:]
-
-    @property
-    def levels_below_reference(self):
-        return self.levels[:self._reference_index]
-
-    @property
-    def input_levels(self):
-        """Return the list of input temperature levels."""
-        return self.levels[1:]
-
-    @property
-    def output_levels(self):
-        """Return the list of output temperature levels."""
-        return self.levels
 
     @property
     def reference(self):

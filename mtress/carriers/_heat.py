@@ -90,11 +90,11 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
         if reference_temperature not in temperature_levels:
             temperature_levels = temperature_levels + [reference_temperature]
         super().__init__(
-            levels=temperature_levels,
+            levels=sorted(temperature_levels),
             reference=reference_temperature,
         )
 
-        self._reference_level = self._levels.index(reference_temperature)
+        self._reference_index = self._levels.index(reference_temperature)
 
         # Properties for solph interfaces
         self.outputs = {}
@@ -103,7 +103,25 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
     @property
     def reference_level(self):
         """Return index or key of reference level"""
-        return self._reference_level
+        return self._reference_index
+
+    @property
+    def levels_above_reference(self):
+        return self.levels[self._reference_index+1:]
+
+    @property
+    def levels_below_reference(self):
+        return self.levels[:self._reference_index]
+
+    @property
+    def input_levels(self):
+        """Return the list of input temperature levels."""
+        return self.levels[1:]
+
+    @property
+    def output_levels(self):
+        """Return the list of output temperature levels."""
+        return self.levels
 
     def _create_temperature_riser(self, temp_low, temp_high):
             bus_in_pri = self.inputs[temp_high]
