@@ -33,7 +33,7 @@ class Implementation(Enum):
     FLEXIBLE = "flexible"
 
 
-class AbstractMixedStorage(AbstractSolphRepresentation):
+class AbstractHomogenousStorage(AbstractSolphRepresentation):
     """Abstract mixed storage."""
 
     def __init__(self, *, implementation: Implementation, **kwargs) -> None:
@@ -49,7 +49,9 @@ class AbstractMixedStorage(AbstractSolphRepresentation):
 
     def build_multiplexer_structure(  # pylint: disable=too-many-arguments
         self,
-        carrier: AbstractLayeredCarrier,
+        levels: list,
+        inputs: list[Bus],
+        outputs: list[Bus],
         power_limit: float,
         capacity_at_level: Optional[Callable] = None,
         capacity_per_unit: Optional[float] = None,
@@ -81,7 +83,7 @@ class AbstractMixedStorage(AbstractSolphRepresentation):
         self.storage_multiplexer_inputs = {}
         self.storage_multiplexer_outputs = {}
 
-        for level in carrier.levels_above_reference:
+        for level in levels:
             if capacity_per_unit is not None:
                 storage_level = (level - empty_level) * capacity_per_unit
             else:
@@ -91,7 +93,7 @@ class AbstractMixedStorage(AbstractSolphRepresentation):
             in_bus = self.create_solph_node(
                 label=f"in_{level:d}",
                 node_type=Bus,
-                inputs={carrier.outputs[level]: Flow()},
+                inputs={outputs[level]: Flow()},
             )
 
             self.storage_multiplexer_inputs[in_bus] = storage_level
@@ -99,7 +101,7 @@ class AbstractMixedStorage(AbstractSolphRepresentation):
             out_bus = self.create_solph_node(
                 label=f"out_{level:d}",
                 node_type=Bus,
-                outputs={carrier.inputs[level]: Flow()},
+                outputs={inputs[level]: Flow()},
             )
 
             self.storage_multiplexer_outputs[out_bus] = storage_level

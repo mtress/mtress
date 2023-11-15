@@ -1,4 +1,4 @@
-"""This module provides hydrogen electrolysers."""
+"""This module provides hydrogen electrolyser."""
 
 
 import logging
@@ -8,15 +8,23 @@ from oemof.solph import Flow
 from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, Heat, Hydrogen
-from ..physics import H2_HHV
+from ..carriers import Electricity, Heat, GasCarrier
+from ..physics import HYDROGEN
 from ._abstract_technology import AbstractTechnology
 
 LOGGER = logging.getLogger(__file__)
 
 
-class PEMElectrolyzer(AbstractTechnology, AbstractSolphRepresentation):
-    """PEM electrolyzer."""
+class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
+    """
+    Electrolyser split water into hydrogen and oxygen with the electricity as input
+    source of energy. Hydrogen can be used as an energy carrier for various applications.
+    Excess heat from electrolyser can also be utilised. Oxygen produced in the electrolysis
+    process is not considered in MTRESS.
+    There are various types of electrolyser : PEM, Alkaline, AEM, SOEC, etc. This class
+    module takes PEM electrolyser as default technology, but user can change the default
+    parameter values to consider other electrolyser types.
+    """
 
     def __init__(
         self,
@@ -31,10 +39,11 @@ class PEMElectrolyzer(AbstractTechnology, AbstractSolphRepresentation):
         """
         Initialize PEM electrolyser.
 
+        :param name: Name of the Component
         :param nominal_power: Nominal electrical power of the component
-        :param hydrogen_efficiency: Electrical efficiency of the electrolyzer,
+        :param hydrogen_efficiency: Electrical efficiency of the electrolyser,
             i.e. ratio of heat output and electrical input
-        :param thermal_efficiency: Thermal efficiency of the electrolyzer,
+        :param thermal_efficiency: Thermal efficiency of the electrolyser,
             i.e. ratio of thermal output and electrical input
         :param minimal_power: Minimal power relative to nominal power, defaults to 0.2
         """
@@ -54,27 +63,26 @@ class PEMElectrolyzer(AbstractTechnology, AbstractSolphRepresentation):
         electrical_bus = electricity_carrier.distribution
 
         # Hydrogen connection
-        h2_carrier = self.location.get_carrier(Hydrogen)
+        gas_carrier = self.location.get_carrier(GasCarrier)
 
-        # PEM electrolyzers produce hydrogen at a pressure of around 30 bar, see e.g.
+        # PEM electrolyser produce hydrogen at an input_pressure of around 30 bar or above,
+        # see e.g.
         # https://en.wikipedia.org/wiki/Polymer_electrolyte_membrane_electrolysis
         # or https://www.h-tec.com/produkte/detail/h-tec-pem-elektrolyseur-me450/me450/
-        pressure, _ = h2_carrier.get_surrounding_levels(self.hydrogen_output_pressure)
 
-        if np.isinf(pressure):
-            raise ValueError("No suitable pressure level available")
+        pressure, _ = gas_carrier.get_surrounding_levels(HYDROGEN, self.hydrogen_output_pressure)
 
-        h2_bus = h2_carrier.inputs[pressure]
+        h2_bus = gas_carrier.inputs[HYDROGEN][pressure]
 
         # H2 output in kg
-        h2_output = self.hydrogen_efficiency / H2_HHV
+        h2_output = self.hydrogen_efficiency / HYDROGEN.HHV
 
         # Heat connection
         heat_carrier = self.location.get_carrier(Heat)
 
-        # PEM electrolyzers produce waste heat at arrount 77 °C
+        # PEM electrolyser produce waste heat at around 77 °C
         # see e.g. Heat Management of PEM Electrolysis. A study on the potential of
-        # excess heat from medium­ to large­scale PEM electrolyisis and the performance
+        # excess heat from medium­ to large­scale PEM electrolysis and the performance
         # analysis of a dedicated cooling system by W.J. Tiktak
         temp_level, _ = heat_carrier.get_surrounding_levels(self.waste_heat_temperature)
         if np.isinf(temp_level):

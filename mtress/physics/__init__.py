@@ -10,18 +10,14 @@ SPDX-License-Identifier: MIT
 """
 
 from ._constants import (
-    H2_HHV,
-    H2_LHV,
-    H2_MOLAR_MASS,
+
     H2O_DENSITY,
     H2O_HEAT_CAPACITY,
     H2O_HEAT_FUSION,
     HHV_WP,
     HS_PER_HI_GAS,
-    HS_PER_HI_WP,
     IDEAL_GAS_CONSTANT,
-    rk_a,
-    rk_b,
+    HS_PER_HI_WP,
     SECONDS_PER_HOUR,
     TC_CONCRETE,
     TC_INSULATION,
@@ -30,7 +26,6 @@ from ._constants import (
 from ._helper_functions import (
     bar_to_pascal,
     calc_cop,
-    calc_hydrogen_density,
     calc_isothermal_compression_energy,
     celsius_to_kelvin,
     kelvin_to_celsius,
@@ -38,6 +33,18 @@ from ._helper_functions import (
     kJ_to_MWh,
     lorenz_cop,
     mean_logarithmic_temperature,
+)
+
+from ._gas_definition import (
+    Gas,
+    HYDROGEN,
+    NATURAL_GAS,
+    BIO_METHANE,
+    BIOGAS,
+    calc_hydrogen_density,
+    calc_biogas_heating_value,
+    calc_biogas_molar_mass,
+    calc_natural_gas_molar_mass,
 )
 
 __all__ = [
@@ -56,15 +63,16 @@ __all__ = [
     "H2O_HEAT_CAPACITY",
     "H2O_HEAT_FUSION",
     "H2O_DENSITY",
-    "H2_LHV",
-    "H2_HHV",
-    "H2_MOLAR_MASS",
     "IDEAL_GAS_CONSTANT",
-    "rk_a",
-    "rk_b",
     "TC_CONCRETE",
     "TC_INSULATION",
     "SECONDS_PER_HOUR",
     "calc_isothermal_compression_energy",
     "calc_hydrogen_density",
+    "calc_biogas_heating_value",
+    "Gas",
+    "HYDROGEN",
+    "NATURAL_GAS",
+    "BIO_METHANE",
+    "BIOGAS",
 ]

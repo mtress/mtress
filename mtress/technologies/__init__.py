@@ -10,27 +10,32 @@ SPDX-License-Identifier: MIT
 from ._air_heat_exchanger import AirHeatExchanger
 from ._geothermal_heat_exchanger import GeothermalHeatExchanger
 from .grid_connection import ElectricityGridConnection
-from ._h2_compressor import H2Compressor
-from ._h2_electrolyzer import PEMElectrolyzer
-from ._h2_fuel_cell import PEMFuelCell
+from .grid_connection import GasGridConnection
+from ._compressor import GasCompressor
+from ._electrolyser import Electrolyser
+from ._fuel_cell import FuelCell
 from ._heat_pump import HeatPump
 from ._heat_storage import FullyMixedHeatStorage, LayeredHeatStorage
 from ._photovoltaics import Photovoltaics
 from ._pressure_storage import H2Storage
+from ._chp import CHP
 from ._battery_storage import BatteryStorage
-
+from ._renewable_electricity_source import RenewableElectricitySource
 __all__ = [
     "AirHeatExchanger",
     "GeothermalHeatExchanger",
     "ElectricityGridConnection",
+    "GasGridConnection",
     "FullyMixedHeatStorage",
-    "H2Compressor",
-    "PEMElectrolyzer",
-    "PEMFuelCell",
+    "Electrolyser",
+    "FuelCell",
     "BatteryStorage",
     "HeatPump",
+    "CHP",
+    "GasCompressor",
     "H2Storage",
-    "PEMFuelCell",
+    "FuelCell",
     "LayeredHeatStorage",
     "Photovoltaics",
+    "RenewableElectricitySource",
 ]

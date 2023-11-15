@@ -18,8 +18,8 @@ class AbstractLayeredCarrier(AbstractCarrier):
     """
     Abstract carrier with multiple levels.
 
-    This acts as a base class for layered energy or substance carriers, i.e.
-    heat with multiple temperature levels or gases with multiple pressure levels.
+    This acts as a base class for heat layered energy or substance
+    carriers, i.e. heat with multiple temperature levels.
     """
 
     def __init__(
@@ -36,14 +36,18 @@ class AbstractLayeredCarrier(AbstractCarrier):
         self._reference_index = self._levels.index(reference)
 
     def get_surrounding_levels(self, level):
+        return self._get_surrounding_levels(level, self._levels)
+
+    @staticmethod
+    def _get_surrounding_levels(level, levels):
         """Get the next bigger and smaller level."""
-        if level in self._levels:
+        if level in levels:
             return level, level
 
         # Extend levels by positive and negative infinity to prevent index errors
-        _levels = np.concatenate(([np.NINF], self._levels, [np.PINF]))
-        i = np.searchsorted(_levels, level)
-        return _levels[i - 1], _levels[i]
+        levels = np.concatenate(([np.NINF], levels, [np.PINF]))
+        i = np.searchsorted(levels, level)
+        return levels[i - 1], levels[i]
 
     @property
     def levels(self):

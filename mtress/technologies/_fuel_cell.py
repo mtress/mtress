@@ -7,19 +7,19 @@ from oemof.solph import Flow
 from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, Heat, Hydrogen
-from ..physics import H2_LHV
+from ..carriers import Electricity, Heat, GasCarrier
+from ..physics import HYDROGEN
 from ._abstract_technology import AbstractTechnology
 
 LOGGER = logging.getLogger(__file__)
 
 
-class PEMFuelCell(AbstractTechnology, AbstractSolphRepresentation):
+class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
     """
-    Polymer Exchange Membrane Fuel Cell (PEMFC)
+    By default, Polymer Exchange Membrane Fuel (PEMFC) is considered.
 
     Functionality: Fuel cells converts chemical energy (hydrogen) to electricity, and
-    potentially produces useful heat and water as byproducts. PEM Fuel Cell could be
+    potentially produces useful heat and water as byproducts. Fuel Cell could be
     used for various application to produce heat and power with hydrogen as fuel input.
     Hence, it enables better sector coupling between electricity and heating sector.
     They find widespread application in various sectors, especially stationary type fuel
@@ -71,8 +71,8 @@ class PEMFuelCell(AbstractTechnology, AbstractSolphRepresentation):
         Initialize Fuel Cell.
 
         :param name: Name of the component
-        :param nominal_power: Nominal electrical power output capacity of PEMFC
-        :param electrical_efficiency: Electrical efficiency of the PEMFC,
+        :param nominal_power: Nominal electrical power output capacity of Fuel Cell (FC)
+        :param electrical_efficiency: Electrical efficiency of the Fuel Cell,
             i.e. ratio of heat output and electrical input
         :param inverter_efficiency: Efficiency for conversion from DC to AC to meet AC
             load demands.
@@ -95,19 +95,16 @@ class PEMFuelCell(AbstractTechnology, AbstractSolphRepresentation):
         """Build core structure of oemof.solph representation."""
 
         # Hydrogen connection as an input to Fuel Cell
-        h2_carrier = self.location.get_carrier(Hydrogen)
+        gas_carrier = self.location.get_carrier(GasCarrier)
 
-        _, pressure = h2_carrier.get_surrounding_levels(self.hydrogen_input_pressure)
+        _, pressure = gas_carrier.get_surrounding_levels(HYDROGEN, self.hydrogen_input_pressure)
 
-        if np.isinf(pressure):
-            raise ValueError("No suitable pressure level available")
+        h2_bus = gas_carrier.inputs[HYDROGEN][pressure]
 
-        h2_bus = h2_carrier.inputs[pressure]
-
-        # Convert Nominal Power Capacity of Fuel Cell (kW) to Nominal H2 Consumption
-        # Capacity (kg)
+        # Convert Nominal Power Capacity of Fuel Cell in kW to Nominal H2 Consumption
+        # Capacity in kg
         nominal_h2_consumption = self.nominal_power / (
-            self.electrical_efficiency * H2_LHV
+            self.electrical_efficiency * HYDROGEN.LHV
         )
 
         # "Hydrogen and fuel cell technologies for heating: A review"
@@ -123,7 +120,7 @@ class PEMFuelCell(AbstractTechnology, AbstractSolphRepresentation):
         # Electrical efficiency with conversion from H2 kg to KW electricity, also
         # includes inverter efficiency.
         electrical_output = (
-            self.electrical_efficiency * self.inverter_efficiency * H2_LHV
+            self.electrical_efficiency * self.inverter_efficiency * HYDROGEN.LHV
         )
 
         # Heat connection for FC heat output
@@ -147,7 +144,7 @@ class PEMFuelCell(AbstractTechnology, AbstractSolphRepresentation):
             )
 
         # thermal efficiency with conversion from H2 kg to KW heat.
-        heat_output = self.thermal_efficiency * H2_LHV
+        heat_output = self.thermal_efficiency * HYDROGEN.LHV
         heat_bus = heat_carrier.inputs[temp_level]
 
         self.create_solph_node(
