@@ -39,7 +39,7 @@ class HeatSink(AbstractDemand, AbstractSolphRepresentation):
             self.temperature_levels
         )
 
-        if temperature_levels not in heat_carrier.temperature_levels:
+        if temperature_levels not in heat_carrier.output_levels:
             raise ValueError("Temperature must be a valid Temperature level")
 
         self.create_solph_node(

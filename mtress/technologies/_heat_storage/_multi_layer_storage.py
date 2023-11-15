@@ -63,8 +63,8 @@ class LayeredHeatStorage(AbstractHeatStorage):
         # Create storage components according to the temperature levels defined
         # by the heat carrier object
         heat_carrier = self.location.get_carrier(Heat)
-        temperature_levels = heat_carrier.temperature_levels
         reference_temperature = heat_carrier.reference_temperature
+        temperature_levels = heat_carrier.levels
 
         for temperature in temperature_levels:
             bus = heat_carrier.outputs[temperature]

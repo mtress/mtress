@@ -22,11 +22,20 @@ class AbstractLayeredCarrier(AbstractCarrier):
     carriers, i.e. heat with multiple temperature levels.
     """
 
-    def __init__(self, *, levels, **kwargs):
-        """Initialize carrier."""
+    def __init__(
+            self, *,
+            levels,
+            reference,
+            **kwargs):
+        """Initialize carrier.
+
+        :param levels: Sorted (ascending) quality levels
+        :param refernece: value of reference quality
+        """
         super().__init__(**kwargs)
 
         self._levels = levels
+        self._reference = reference
 
     def get_surrounding_levels(self, level):
         return self._get_surrounding_levels(level, self._levels)
@@ -46,3 +55,12 @@ class AbstractLayeredCarrier(AbstractCarrier):
     def levels(self):
         """Return levels of carrier."""
         return self._levels
+
+    @property
+    def reference(self):
+        return self._reference
+
+    @property
+    def reference_level(self):
+        """Return index or key of reference level"""
+        raise NotImplementedError

@@ -2,6 +2,7 @@
 
 from enum import IntEnum
 
+import numpy as np
 import pandas as pd
 
 TimeseriesSpecifier = str | pd.Series | list | float
@@ -58,7 +59,7 @@ class DataHandler:
                         index=target_index,
                     )
 
-            case list() as values:
+            case list() | np.ndarray() as values:
                 return pd.Series(data=values, index=target_index)
 
             case float() | int() as value:
