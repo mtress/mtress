@@ -1,14 +1,16 @@
 """This module provides hydrogen electrolyser."""
 
 import logging
+from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 from oemof.solph import Flow
 from oemof.solph.components import Converter
-from dataclasses import dataclass
-from typing import Optional
+
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, Heat, GasCarrier
+from .._helpers._util import enable_template
+from ..carriers import Electricity, GasCarrier, Heat
 from ..physics import HYDROGEN
 from ._abstract_technology import AbstractTechnology
 
@@ -16,7 +18,7 @@ LOGGER = logging.getLogger(__file__)
 
 
 @dataclass(frozen=True)
-class Electrolyser_Template:
+class ElectrolyserTemplate:
     """
     Here we define the template for different electrolyser technologies
     (PEM, AEL, AEM) with their specific parameter values.
@@ -41,6 +43,7 @@ class Electrolyser_Template:
 
 
     """
+
     hydrogen_efficiency: float
     thermal_efficiency: float
     waste_heat_temperature: float
@@ -52,21 +55,21 @@ class Electrolyser_Template:
 #  of Life (BoL). In Practice, both the efficiency values of electrolyser changes
 #  as it gets older.
 
-PEM_Electrolyser = Electrolyser_Template(
+PEM_Electrolyser = ElectrolyserTemplate(
     hydrogen_efficiency=0.63,
     thermal_efficiency=0.25,
     waste_heat_temperature=57,
     hydrogen_output_pressure=30,
 )
 
-Alkaline_Electrolyser = Electrolyser_Template(
+Alkaline_Electrolyser = ElectrolyserTemplate(
     hydrogen_efficiency=0.66,
     thermal_efficiency=0.20,
     waste_heat_temperature=65,
     hydrogen_output_pressure=30,
 )
 
-AEM_Electrolyser = Electrolyser_Template(
+AEM_Electrolyser = ElectrolyserTemplate(
     hydrogen_efficiency=0.625,
     thermal_efficiency=0.29,
     waste_heat_temperature=50,
@@ -91,15 +94,15 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
     as per the requirements.
     """
 
+    @enable_template(ElectrolyserTemplate)
     def __init__(
-            self,
-            name: str,
-            nominal_power: float,
-            hydrogen_efficiency: Optional[float] = None,
-            thermal_efficiency: Optional[float] = None,
-            waste_heat_temperature: Optional[float] = None,
-            hydrogen_output_pressure: Optional[float] = None,
-            electrolyser_type: Optional[Electrolyser_Template] = PEM_Electrolyser,
+        self,
+        name: str,
+        nominal_power: float,
+        hydrogen_efficiency: float,
+        thermal_efficiency: float,
+        waste_heat_temperature: float,
+        hydrogen_output_pressure: float,
     ):
         """
         Initialize Electrolyser
@@ -118,10 +121,10 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
         super().__init__(name=name)
 
         self.nominal_power = nominal_power
-        self.hydrogen_efficiency = hydrogen_efficiency or electrolyser_type.hydrogen_efficiency
-        self.thermal_efficiency = thermal_efficiency or electrolyser_type.thermal_efficiency
-        self.waste_heat_temperature = waste_heat_temperature or electrolyser_type.waste_heat_temperature
-        self.hydrogen_output_pressure = hydrogen_output_pressure or electrolyser_type.hydrogen_output_pressure
+        self.hydrogen_efficiency = hydrogen_efficiency
+        self.thermal_efficiency = thermal_efficiency
+        self.waste_heat_temperature = waste_heat_temperature
+        self.hydrogen_output_pressure = hydrogen_output_pressure
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -132,7 +135,9 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
         # Hydrogen connection
         gas_carrier = self.location.get_carrier(GasCarrier)
 
-        pressure, _ = gas_carrier.get_surrounding_levels(HYDROGEN, self.hydrogen_output_pressure)
+        pressure, _ = gas_carrier.get_surrounding_levels(
+            HYDROGEN, self.hydrogen_output_pressure
+        )
 
         h2_bus = gas_carrier.inputs[HYDROGEN][pressure]
 
