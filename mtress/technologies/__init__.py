@@ -8,19 +8,23 @@ SPDX-License-Identifier: MIT
 """
 
 from ._air_heat_exchanger import AirHeatExchanger
-from ._geothermal_heat_exchanger import GeothermalHeatExchanger
-from .grid_connection import ElectricityGridConnection
-from .grid_connection import GasGridConnection
+from ._battery_storage import BatteryStorage
+from ._chp import CHP
 from ._compressor import GasCompressor
-from ._electrolyser import Electrolyser, PEM_Electrolyser, Alkaline_Electrolyser, AEM_Electrolyser
-from ._fuel_cell import FuelCell, PEMFC, AFC, AEMFC
+from ._electrolyser import (
+    AEM_ELECTROLYSER,
+    ALKALINE_ELECTROLYSER,
+    PEM_ELECTROLYSER,
+    Electrolyser,
+)
+from ._fuel_cell import AEMFC, AFC, PEMFC, FuelCell
+from ._geothermal_heat_exchanger import GeothermalHeatExchanger
 from ._heat_pump import HeatPump
 from ._heat_storage import FullyMixedHeatStorage, LayeredHeatStorage
 from ._photovoltaics import Photovoltaics
 from ._pressure_storage import H2Storage
-from ._chp import CHP
-from ._battery_storage import BatteryStorage
 from ._renewable_electricity_source import RenewableElectricitySource
+from .grid_connection import ElectricityGridConnection, GasGridConnection
 
 __all__ = [
     "AirHeatExchanger",
@@ -29,9 +33,9 @@ __all__ = [
     "GasGridConnection",
     "FullyMixedHeatStorage",
     "Electrolyser",
-    "PEM_Electrolyser",
-    "Alkaline_Electrolyser",
-    "AEM_Electrolyser",
+    "PEM_ELECTROLYSER",
+    "ALKALINE_ELECTROLYSER",
+    "AEM_ELECTROLYSER",
     "FuelCell",
     "PEMFC",
     "AEMFC",

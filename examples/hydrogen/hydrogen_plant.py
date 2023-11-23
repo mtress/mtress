@@ -1,16 +1,19 @@
 """Example to illustrate hydrogen production to meet hydrogen demand."""
-import os
-from oemof.solph.processing import results
-from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 import logging
+import os
 
+from oemof.solph.processing import results
+
+from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 from mtress.physics import HYDROGEN
-from mtress.technologies import PEM_Electrolyser, AFC
+from mtress.technologies import AFC, PEM_ELECTROLYSER
+
 LOGGER = logging.getLogger(__file__)
 from mtress._helpers import get_flows
+
 energy_system = MetaModel()
 
-os.chdir(os.path.dirname (__file__))
+os.chdir(os.path.dirname(__file__))
 
 house_1 = Location(name="house_1")
 
@@ -20,10 +23,13 @@ energy_system.add_location(house_1)
 house_1.add(carriers.Electricity())
 house_1.add(technologies.ElectricityGridConnection(working_rate=70))
 
-house_1.add(carriers.GasCarrier(gases={
-     HYDROGEN: [20, 30, 355],
-     }
-))
+house_1.add(
+    carriers.GasCarrier(
+        gases={
+            HYDROGEN: [20, 30, 355],
+        }
+    )
+)
 weather = {
     "ghi": "FILE:../input_file.csv:ghi",
     "dhi": "FILE:../input_file.csv:dhi",
@@ -95,25 +101,16 @@ house_1.add(
 
 house_1.add(
     technologies.Electrolyser(
-        name="PEM_Ely",
-        nominal_power=600,
-        electrolyser_type=PEM_Electrolyser
+        name="PEM_Ely", nominal_power=600, template=PEM_ELECTROLYSER
     )
 )
 house_1.add(
     technologies.FuelCell(
-        name="AFC",
-        nominal_power=50,
-        hydrogen_input_pressure=20,
-        fuel_cell_type=AFC
+        name="AFC", nominal_power=50, hydrogen_input_pressure=20, fuel_cell_type=AFC
     )
 )
 house_1.add(
-    technologies.GasCompressor(
-        name="H2Compr",
-        nominal_power=100,
-        gas_type=HYDROGEN
-    )
+    technologies.GasCompressor(name="H2Compr", nominal_power=100, gas_type=HYDROGEN)
 )
 
 solph_representation = SolphModel(

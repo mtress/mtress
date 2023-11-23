@@ -55,21 +55,21 @@ class ElectrolyserTemplate:
 #  of Life (BoL). In Practice, both the efficiency values of electrolyser changes
 #  as it gets older.
 
-PEM_Electrolyser = ElectrolyserTemplate(
+PEM_ELECTROLYSER = ElectrolyserTemplate(
     hydrogen_efficiency=0.63,
     thermal_efficiency=0.25,
     waste_heat_temperature=57,
     hydrogen_output_pressure=30,
 )
 
-Alkaline_Electrolyser = ElectrolyserTemplate(
+ALKALINE_ELECTROLYSER = ElectrolyserTemplate(
     hydrogen_efficiency=0.66,
     thermal_efficiency=0.20,
     waste_heat_temperature=65,
     hydrogen_output_pressure=30,
 )
 
-AEM_Electrolyser = ElectrolyserTemplate(
+AEM_ELECTROLYSER = ElectrolyserTemplate(
     hydrogen_efficiency=0.625,
     thermal_efficiency=0.29,
     waste_heat_temperature=50,

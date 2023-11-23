@@ -2,10 +2,12 @@
 import os
 
 from oemof.solph.processing import results
+
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 from mtress.physics import HYDROGEN
-from mtress.technologies import Alkaline_Electrolyser
-os.chdir(os.path.dirname (__file__))
+from mtress.technologies import ALKALINE_ELECTROLYSER
+
+os.chdir(os.path.dirname(__file__))
 
 energy_system = MetaModel()
 
@@ -44,11 +46,7 @@ house_1.add(
     )
 )
 
-house_1.add(
-    carriers.GasCarrier(
-        gases={HYDROGEN: [30, 70, 250]}
-    )
-)
+house_1.add(carriers.GasCarrier(gases={HYDROGEN: [30, 70, 250]}))
 
 house_1.add(
     demands.GasDemand(
@@ -97,29 +95,15 @@ house_1.add(
     technologies.Electrolyser(
         name="Alk-Ely",
         nominal_power=500,
-        electrolyser_type=Alkaline_Electrolyser,
+        template=ALKALINE_ELECTROLYSER,
     )
 )
+house_1.add(technologies.HeatPump(name="hp0", thermal_power_limit=None))
 house_1.add(
-    technologies.HeatPump(
-        name="hp0",
-        thermal_power_limit=None
-    )
-)
-house_1.add(
-    technologies.GasCompressor(
-        name="H2Compr",
-        nominal_power=50,
-        gas_type=HYDROGEN
-    )
+    technologies.GasCompressor(name="H2Compr", nominal_power=50, gas_type=HYDROGEN)
 )
 
-house_1.add(
-    technologies.AirHeatExchanger(
-        name="ahe",
-        air_temperatures=[3, 6, 13, 12]
-    )
-)
+house_1.add(technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6, 13, 12]))
 solph_representation = SolphModel(
     energy_system,
     timeindex={
@@ -142,4 +126,6 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
 myresults = results(solved_model)
 
-solved_model.write("hydrogen_production.lp", io_options={"symbolic_solver_labels": True})
+solved_model.write(
+    "hydrogen_production.lp", io_options={"symbolic_solver_labels": True}
+)
