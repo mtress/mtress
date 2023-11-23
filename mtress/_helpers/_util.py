@@ -107,7 +107,7 @@ def read_input_data(data_specifier: str) -> pd.Series:
     return _parser(file, specifier)
 
 
-def enable_template(template_class):
+def enable_templating(template_class):
     """Decorate a function to accept a dataclass as a template."""
 
     def _decorator(func):

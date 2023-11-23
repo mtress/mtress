@@ -9,7 +9,7 @@ from oemof.solph import Flow
 from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from .._helpers._util import enable_template
+from .._helpers._util import enable_templating
 from ..carriers import Electricity, GasCarrier, Heat
 from ..physics import HYDROGEN
 from ._abstract_technology import AbstractTechnology
@@ -94,7 +94,7 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
     as per the requirements.
     """
 
-    @enable_template(ElectrolyserTemplate)
+    @enable_templating(ElectrolyserTemplate)
     def __init__(
         self,
         name: str,
