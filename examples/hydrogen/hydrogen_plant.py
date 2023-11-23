@@ -5,7 +5,7 @@ from mtress import Location, MetaModel, SolphModel, carriers, demands, technolog
 import logging
 
 from mtress.physics import HYDROGEN
-
+from mtress.technologies import PEM_Electrolyser, AFC
 LOGGER = logging.getLogger(__file__)
 from mtress._helpers import get_flows
 energy_system = MetaModel()
@@ -21,7 +21,7 @@ house_1.add(carriers.Electricity())
 house_1.add(technologies.ElectricityGridConnection(working_rate=70))
 
 house_1.add(carriers.GasCarrier(gases={
-     HYDROGEN: [1, 30, 355],
+     HYDROGEN: [20, 30, 355],
      }
 ))
 weather = {
@@ -72,22 +72,49 @@ house_1.add(
 
 house_1.add(
     carriers.Heat(
-        temperature_levels=[60],
-        reference_temperature=20,
+        temperature_levels=[20, 57, 65],
+        reference_temperature=10,
     )
 )
 
+house_1.add(
+    demands.FixedTemperatureHeat(
+        name="hot water",
+        flow_temperature=65,
+        return_temperature=20,
+        time_series="FILE:../input_file.csv:heat",
+    )
+)
 
 house_1.add(
     demands.HeatSink(
         name="Excess Heat",
-        temperature_levels=60,
+        temperature_levels=65,
     )
 )
 
-house_1.add(technologies.Electrolyser(name="Ely", nominal_power=600))
-house_1.add(technologies.FuelCell(name="Fuel_Cell", nominal_power=50))
-house_1.add(technologies.GasCompressor(name="H2Compr", nominal_power=100, gas_type=HYDROGEN))
+house_1.add(
+    technologies.Electrolyser(
+        name="PEM_Ely",
+        nominal_power=600,
+        electrolyser_type=PEM_Electrolyser
+    )
+)
+house_1.add(
+    technologies.FuelCell(
+        name="AFC",
+        nominal_power=50,
+        hydrogen_input_pressure=20,
+        fuel_cell_type=AFC
+    )
+)
+house_1.add(
+    technologies.GasCompressor(
+        name="H2Compr",
+        nominal_power=100,
+        gas_type=HYDROGEN
+    )
+)
 
 solph_representation = SolphModel(
     energy_system,

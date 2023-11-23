@@ -12,8 +12,8 @@ from ._geothermal_heat_exchanger import GeothermalHeatExchanger
 from .grid_connection import ElectricityGridConnection
 from .grid_connection import GasGridConnection
 from ._compressor import GasCompressor
-from ._electrolyser import Electrolyser
-from ._fuel_cell import FuelCell
+from ._electrolyser import Electrolyser, PEM_Electrolyser, Alkaline_Electrolyser, AEM_Electrolyser
+from ._fuel_cell import FuelCell, PEMFC, AFC, AEMFC
 from ._heat_pump import HeatPump
 from ._heat_storage import FullyMixedHeatStorage, LayeredHeatStorage
 from ._photovoltaics import Photovoltaics
@@ -21,6 +21,7 @@ from ._pressure_storage import H2Storage
 from ._chp import CHP
 from ._battery_storage import BatteryStorage
 from ._renewable_electricity_source import RenewableElectricitySource
+
 __all__ = [
     "AirHeatExchanger",
     "GeothermalHeatExchanger",
@@ -28,7 +29,13 @@ __all__ = [
     "GasGridConnection",
     "FullyMixedHeatStorage",
     "Electrolyser",
+    "PEM_Electrolyser",
+    "Alkaline_Electrolyser",
+    "AEM_Electrolyser",
     "FuelCell",
+    "PEMFC",
+    "AEMFC",
+    "AFC",
     "BatteryStorage",
     "HeatPump",
     "CHP",

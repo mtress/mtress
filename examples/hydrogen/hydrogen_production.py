@@ -4,7 +4,7 @@ import os
 from oemof.solph.processing import results
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 from mtress.physics import HYDROGEN
-
+from mtress.technologies import Alkaline_Electrolyser
 os.chdir(os.path.dirname (__file__))
 
 energy_system = MetaModel()
@@ -79,7 +79,7 @@ house_1.add(
 
 house_1.add(
     carriers.Heat(
-        temperature_levels=[45],
+        temperature_levels=[55],
         reference_temperature=10,
     )
 )
@@ -87,18 +87,38 @@ house_1.add(
 house_1.add(
     demands.FixedTemperatureHeat(
         name="hot water",
-        flow_temperature=45,
+        flow_temperature=55,
         return_temperature=10,
         time_series=[155, 125, 185, 213],
     )
 )
 
-house_1.add(technologies.Electrolyser(name="Ely", nominal_power=500))
-house_1.add(technologies.HeatPump(name="hp0", thermal_power_limit=None))
-house_1.add(technologies.GasCompressor(name="H2Compr", nominal_power=50, gas_type=HYDROGEN))
+house_1.add(
+    technologies.Electrolyser(
+        name="Alk-Ely",
+        nominal_power=500,
+        electrolyser_type=Alkaline_Electrolyser,
+    )
+)
+house_1.add(
+    technologies.HeatPump(
+        name="hp0",
+        thermal_power_limit=None
+    )
+)
+house_1.add(
+    technologies.GasCompressor(
+        name="H2Compr",
+        nominal_power=50,
+        gas_type=HYDROGEN
+    )
+)
 
 house_1.add(
-    technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6, 13, 12])
+    technologies.AirHeatExchanger(
+        name="ahe",
+        air_temperatures=[3, 6, 13, 12]
+    )
 )
 solph_representation = SolphModel(
     energy_system,
