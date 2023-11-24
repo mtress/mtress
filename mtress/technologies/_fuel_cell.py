@@ -1,66 +1,67 @@
 """This module provides PEM fuel cell."""
 
 import logging
+from dataclasses import dataclass
 
 import numpy as np
 from oemof.solph import Flow
 from oemof.solph.components import Converter
-from dataclasses import dataclass
-from typing import Optional
+
 from .._abstract_component import AbstractSolphRepresentation
+from .._helpers._util import enable_templating
 from ..carriers import Electricity, Heat, GasCarrier
-from ..physics import HYDROGEN
+from ..physics import HYDROGEN, Gas
 from ._abstract_technology import AbstractTechnology
 
 LOGGER = logging.getLogger(__file__)
 
 
 @dataclass(frozen=True)
-class Fuel_Cell_Template:
+class FuelCellTemplate:
     """
     Here we define the different fuel cell technologies (PEM, Alkaline, AEM)
     with their specific parameter values.
 
-    "Hydrogen and fuel cell technologies for heating: A review"
-    by Pual E. Dodds et. al. suggest that the PEMFC electrical efficiency ranges
-    from 35 - 39% and thermal efficiency at 55% based on LHV as a rated
-    specification when it is new, which are slightly higher than in practical
-    scenario. PEM Fuel cell generates waste heat at around 60-80 °C, considered
-    70 °C in this implementation. "Prospects of Fuel Cell Combined Heat and Power
-    Systems" by AG. Olabi et. al.
+    Important references on technologies:
+    1. "Hydrogen and fuel cell technologies for heating: A review"
+        by Pual E. Dodds et. al.
+
+    2. "Prospects of Fuel Cell Combined Heat and Power Systems"
+        by AG. Olabi et. al.
 
     Users can modify the parameter values for a particular technology type
     if needed or can create user-defined fuel cell technology (e.g., SOFC, PFC,
     MCFC, etc.).
     """
+
     electrical_efficiency: float
     thermal_efficiency: float
     waste_heat_temperature: float
-    hydrogen_input_pressure: float
+    gas_input_pressure: float
 
 
 # Polymer Exchange Membrane Fuel Cell (PEMFC)
-PEMFC = Fuel_Cell_Template(
+PEMFC = FuelCellTemplate(
     electrical_efficiency=0.36,
     thermal_efficiency=0.50,
     waste_heat_temperature=70,
-    hydrogen_input_pressure=80,
+    gas_input_pressure=80,
 )
 
 # Alkaline Fuel Cell (AFC)
-AFC = Fuel_Cell_Template(
+AFC = FuelCellTemplate(
     electrical_efficiency=0.37,
     thermal_efficiency=0.45,
     waste_heat_temperature=65,
-    hydrogen_input_pressure=60,
+    gas_input_pressure=60,
 )
 
 #  Anion Exchange Membrane Fuel Cell (AEMFC)
-AEMFC = Fuel_Cell_Template(
+AEMFC = FuelCellTemplate(
     electrical_efficiency=0.33,
     thermal_efficiency=0.42,
     waste_heat_temperature=55,
-    hydrogen_input_pressure=35,
+    gas_input_pressure=35,
 )
 
 
@@ -68,7 +69,7 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
     """
     There are various types of fuel cell (FC) technology : PEM, Alkaline, AEM, etc.
     This class module takes PEMFC as default technology, but user can select different
-    technology type or can also user-defined their own FC technology as per the needs.
+    technology type or can also user-defined FC technology as per the needs.
 
     Functionality: Fuel cells converts chemical energy (hydrogen) to electricity, and
     potentially produces useful heat and water as byproducts. Fuel Cell could be
@@ -109,68 +110,69 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
 
     """
 
+    @enable_templating(FuelCellTemplate)
     def __init__(
-            self,
-            name: str,
-            nominal_power: float,
-            electrical_efficiency: Optional[float] = None,
-            inverter_efficiency: float = 0.98,
-            thermal_efficiency: Optional[float] = None,
-            waste_heat_temperature: Optional[float] = None,
-            hydrogen_input_pressure: Optional[float] = None,
-            fuel_cell_type: Optional[Fuel_Cell_Template] = PEMFC,
+        self,
+        name: str,
+        nominal_power: float,
+        electrical_efficiency: float,
+        thermal_efficiency: float,
+        waste_heat_temperature: float,
+        gas_input_pressure: float,
+        gas_type: Gas = HYDROGEN,
+        inverter_efficiency: float = 0.98,
     ):
         """
         Initialize Fuel Cell (FC)
 
         :param name: Name of the component
-        :param nominal_power: Nominal electrical power output capacity of Fuel Cell (FC)
+        :param nominal_power: Nominal electrical power output of Fuel Cell (FC)
         :param electrical_efficiency: Electrical efficiency of the Fuel Cell,
-            i.e. ratio of electrical output and hydrogen gas input
-        :param inverter_efficiency: Efficiency for conversion from DC output from FC to
-            AC to meet load demands. Default value is 98 %
+            i.e. ratio of electrical output and gas input
         :param thermal_efficiency: Thermal efficiency of the Fuel Cell,
-            i.e. ratio of thermal output and hydrogen gas input
-        :param waste_heat_temperature: Temperature (°C) at which heat could be extracted
-            from FC.
-        :param hydrogen_input_pressure: Pressure at which hydrogen is injected to FC.
+            i.e. ratio of thermal output and gas input
+        :param waste_heat_temperature: Temperature (°C) at which heat could
+            be extracted from FC.
+        :param gas_input_pressure: Pressure at which gas is injected to FC.
+        :param gas_type: Input gas to FC, by default Hydrogen gas is used.
+        :param inverter_efficiency: Efficiency for conversion from DC output
+            from FC to AC to meet load demands. Default value is 98 %.
         """
         super().__init__(name=name)
 
         self.nominal_power = nominal_power
-        self.electrical_efficiency = electrical_efficiency or \
-                                     fuel_cell_type.electrical_efficiency
-        self.thermal_efficiency = thermal_efficiency or \
-                                  fuel_cell_type.thermal_efficiency
+        self.electrical_efficiency = electrical_efficiency
+        self.thermal_efficiency = thermal_efficiency
+        self.waste_heat_temperature = waste_heat_temperature
+        self.gas_input_pressure = gas_input_pressure
+        self.gas_type = gas_type
         self.inverter_efficiency = inverter_efficiency
-        self.waste_heat_temperature = waste_heat_temperature or \
-                                      fuel_cell_type.waste_heat_temperature
-        self.hydrogen_input_pressure = hydrogen_input_pressure or \
-                                       fuel_cell_type.hydrogen_input_pressure
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
 
-        # Hydrogen connection as an input to Fuel Cell
+        # Gas connection as an input to Fuel Cell
         gas_carrier = self.location.get_carrier(GasCarrier)
 
-        _, pressure = gas_carrier.get_surrounding_levels(HYDROGEN, self.hydrogen_input_pressure)
+        _, pressure = gas_carrier.get_surrounding_levels(
+            self.gas_type, self.gas_input_pressure
+        )
 
-        h2_bus = gas_carrier.inputs[HYDROGEN][pressure]
+        gas_bus = gas_carrier.inputs[self.gas_type][pressure]
 
-        # Convert Nominal Power Capacity of Fuel Cell in kW to Nominal H2 Consumption
-        # Capacity in kg
-        nominal_h2_consumption = self.nominal_power / (
-                self.electrical_efficiency * HYDROGEN.LHV
+        # Convert nominal power capacity of FC in kW to nominal gas consumption
+        # capacity in kg
+        nominal_gas_consumption = self.nominal_power / (
+            self.electrical_efficiency * self.gas_type.LHV
         )
 
         # Electrical connection for FC electrical output
         electricity_carrier = self.location.get_carrier(Electricity)
 
-        # Electrical efficiency with conversion from H2 kg to KW electricity, also
+        # Electrical efficiency with conversion from gas in kg to kW electricity, also
         # includes inverter efficiency.
         electrical_output = (
-                self.electrical_efficiency * self.inverter_efficiency * HYDROGEN.LHV
+            self.electrical_efficiency * self.inverter_efficiency * self.gas_type.LHV
         )
 
         # Heat connection for FC heat output
@@ -179,7 +181,7 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
         temp_level, _ = heat_carrier.get_surrounding_levels(self.waste_heat_temperature)
 
         if np.isinf(temp_level):
-            ValueError(
+            raise ValueError(
                 "No suitable temperature level available for fuel cell temperature"
             )
 
@@ -189,20 +191,20 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
                 "higher than suitable temperature level"
             )
 
-        # thermal efficiency with conversion from H2 kg to KW heat.
-        heat_output = self.thermal_efficiency * HYDROGEN.LHV
+        # thermal efficiency with conversion from gas in kg to kW heat.
+        heat_output = self.thermal_efficiency * self.gas_type.LHV
         heat_bus = heat_carrier.inputs[temp_level]
 
         self.create_solph_node(
             label="converter",
             node_type=Converter,
-            inputs={h2_bus: Flow(nominal_value=nominal_h2_consumption)},
+            inputs={gas_bus: Flow(nominal_value=nominal_gas_consumption)},
             outputs={
                 electricity_carrier.distribution: Flow(),
                 heat_bus: Flow(),
             },
             conversion_factors={
-                h2_bus: 1,
+                gas_bus: 1,
                 electricity_carrier.distribution: electrical_output,
                 heat_bus: heat_output,
             },

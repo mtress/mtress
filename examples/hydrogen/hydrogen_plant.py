@@ -106,7 +106,7 @@ house_1.add(
 )
 house_1.add(
     technologies.FuelCell(
-        name="AFC", nominal_power=50, hydrogen_input_pressure=20, fuel_cell_type=AFC
+        name="AFC", nominal_power=50, gas_input_pressure=20, template=AFC
     )
 )
 house_1.add(
