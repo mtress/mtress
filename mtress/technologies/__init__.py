@@ -9,7 +9,14 @@ SPDX-License-Identifier: MIT
 
 from ._air_heat_exchanger import AirHeatExchanger
 from ._battery_storage import BatteryStorage
-from ._chp import CHP
+from ._chp import (
+    CHP,
+    NATURALGAS_CHP,
+    BIOGAS_CHP,
+    BIOMETHANE_CHP,
+    HYDROGEN_CHP,
+    HYDROGEN_MIXED_CHP,
+)
 from ._compressor import GasCompressor
 from ._electrolyser import (
     AEM_ELECTROLYSER,
@@ -43,6 +50,11 @@ __all__ = [
     "BatteryStorage",
     "HeatPump",
     "CHP",
+    "NATURALGAS_CHP",
+    "BIOGAS_CHP",
+    "BIOMETHANE_CHP",
+    "HYDROGEN_CHP",
+    "HYDROGEN_MIXED_CHP",
     "GasCompressor",
     "H2Storage",
     "FuelCell",

@@ -115,8 +115,6 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
             i.e., ratio of thermal output and electrical input
         :param waste_heat_temperature: Waste heat temperature level (°C).
         :param hydrogen_output_pressure: Hydrogen output pressure (bar)
-        :param electrolyser_type: PEM_Electrolyser, or Alkaline_Electrolyser
-            or AEM_Electrolyser. By default, it is PEM_Electrolyser.
         """
         super().__init__(name=name)
 
