@@ -21,6 +21,7 @@ from ._pressure_storage import H2Storage
 from ._chp import CHP
 from ._battery_storage import BatteryStorage
 from ._renewable_electricity_source import RenewableElectricitySource
+from ._heating_rod import HeatingRod
 __all__ = [
     "AirHeatExchanger",
     "GeothermalHeatExchanger",
@@ -32,6 +33,7 @@ __all__ = [
     "BatteryStorage",
     "HeatPump",
     "CHP",
+    "HeatingRod",
     "GasCompressor",
     "H2Storage",
     "FuelCell",
