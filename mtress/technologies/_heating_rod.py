@@ -13,7 +13,11 @@ LOGGER = logging.getLogger(__file__)
 
 class HeatingRod(AbstractTechnology, AbstractSolphRepresentation):
     """
-    Heating Rod represents all electric resistance heat technologies. It converts electricity into heat at a 100% efficiency or COP of 1.      Typically used with other heating technologies such as heat pumps etc. to keep their nominal sizes down and the heating rod helps reach those peak heat demands.
+    Heating Rod represents all electric resistance heat technologies. 
+    It converts electricity into heat at a 100% efficiency or COP of 1. 
+    Typically used with other heating technologies such as heat pumps etc. 
+    to keep their nominal sizes down and the heating rod helps reach those 
+    peak heat demands.
     """
 
     def __init__(
