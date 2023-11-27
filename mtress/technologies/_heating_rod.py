@@ -1,4 +1,4 @@
-"""This module provides combined heat and power (CHP)"""
+"""This module provides heating rod component (power to heat)"""
 
 import logging
 from oemof.solph import Flow
