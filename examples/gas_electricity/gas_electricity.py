@@ -6,12 +6,14 @@ import os
 
 from oemof.solph.processing import results
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
-from mtress.physics import NATURAL_GAS
+from mtress.physics import NATURAL_GAS, HYDROGEN
+from mtress.technologies import HYDROGEN_MIXED_CHP
 import logging
+
 LOGGER = logging.getLogger(__file__)
 from mtress._helpers import get_flows
 
-os.chdir(os.path.dirname (__file__))
+os.chdir(os.path.dirname(__file__))
 
 energy_system = MetaModel()
 
@@ -24,17 +26,30 @@ house_1.add(carriers.Electricity())
 house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 house_1.add(
     technologies.GasGridConnection(
-        name="gas_grid_connection",
+        name="NG_Grid",
         gas_type=NATURAL_GAS,
         grid_pressure=20,
         working_rate=15,
     )
 )
 
-house_1.add(carriers.GasCarrier(gases={
-     NATURAL_GAS: [20, 50],
-     }
-))
+house_1.add(
+    technologies.GasGridConnection(
+        name="H2_Grid",
+        gas_type=HYDROGEN,
+        grid_pressure=30,
+        working_rate=15,
+    )
+)
+
+house_1.add(
+    carriers.GasCarrier(
+        gases={
+            HYDROGEN: [30],
+            NATURAL_GAS: [20],
+        }
+    )
+)
 
 weather = {
     "ghi": "FILE:../input_file.csv:ghi",
@@ -66,7 +81,7 @@ house_1.add(
 
 house_1.add(
     carriers.Heat(
-        temperature_levels=[80, 20],
+        temperature_levels=[80],
         reference_temperature=10,
     )
 )
@@ -78,11 +93,17 @@ house_1.add(
         temperature_levels=80,
     )
 )
+# Choose default CHP template (HYDROGEN_MIXED_CHP) and change gas
+# shares (vol %)
 
-house_1.add(technologies.CHP(name="CHP", thermal_temperature=80, nominal_power=100,
-                             input_pressure=50, gas_type=NATURAL_GAS))
-house_1.add(technologies.GasCompressor(name="NG_Compressor", nominal_power=50,
-                                       gas_type=NATURAL_GAS))
+house_1.add(
+    technologies.CHP(
+        name="Mixed_CHP",
+        nominal_power=100,
+        gas_type={NATURAL_GAS: 0.75, HYDROGEN: 0.25},
+        template=HYDROGEN_MIXED_CHP,
+    )
+)
 
 solph_representation = SolphModel(
     energy_system,

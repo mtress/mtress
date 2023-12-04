@@ -1,6 +1,7 @@
 """Utility functions."""
 
 
+import dataclasses
 from pathlib import Path
 from typing import Any
 
@@ -104,3 +105,27 @@ def read_input_data(data_specifier: str) -> pd.Series:
 
     _parser = _data_parsers[_suffix]
     return _parser(file, specifier)
+
+
+def enable_templating(template_class):
+    """Decorate a function to accept a dataclass as a template."""
+
+    def _decorator(func):
+        param_names = [field.name for field in dataclasses.fields(template_class)]
+
+        def _wrapper(*args, template=None, **kwargs):
+            if template is not None:
+                if not isinstance(template, template_class):
+                    raise TypeError(f"template should be of type {template_class}")
+
+                for param in param_names:
+                    if param not in kwargs:
+                        # Take the value from the template if it is not provided as keyword
+                        # argument
+                        kwargs[param] = getattr(template, param)
+
+            return func(*args, **kwargs)
+
+        return _wrapper
+
+    return _decorator

@@ -11,22 +11,26 @@ from ._constants import IDEAL_GAS_CONSTANT
 
 # Some parameters for different gases are given below
 
-# Natural gas
+# Natural gas properties
+# https://www.chemie-schule.de/KnowHow/Erdgas
+# https://www.energie-experten.org/heizung/gasheizung/erdgas
+# https://www.engineeringtoolbox.com/fuels-higher-calorific-values-d_169.html
 HS_PER_HI_GAS = 1.11  # according to DIN V 18599
 NG_LHV = 13  # kWh/kg
 NG_HHV = 14.5  # kWh/kg
 C2H6_MOLAR_MASS = 0.03007  # kg/mol
-C3H8_MOLAR_MASS = 0.0441   # kg/mol
-C4H10_MOLAR_MASS = 0.0582  # kg/mol
+C3H8_MOLAR_MASS = 0.04409  # kg/mol
+C4H10_MOLAR_MASS = 0.05812  # kg/mol
+N2_MOLAR_MASS = 0.02802  # kg/mol
 
-# Biogas
+# Biogas properties
 CH4_MOLAR_MASS = 0.01604  # kg/mol
 CO2_MOLAR_MASS = 0.04401  # kg/mol
 CH4_HHV = 15.4  # Kwh/kg
 CH4_LHV = 13.9  # Kwh/kg
 
 
-# Hydrogen
+# Hydrogen properties
 H2_LHV = 33.33  # kWh/kg
 H2_HHV = 39.41  # kWh/kg
 H2_MOLAR_MASS = 0.00201588  # kg/mol
@@ -86,21 +90,28 @@ def calc_biogas_molar_mass(CH4_share=0.75, C0_2_share=0.25):
     """
     return (CH4_share * CH4_MOLAR_MASS) + (C0_2_share * CO2_MOLAR_MASS)
 
+
 def calc_natural_gas_molar_mass(
-    CH4_share=0.9, C2H6_share=0.5, C3H8_share=0.3, C4H10_share=0.2
+    CH4_share=0.93, C2H6_share=0.03, C3H8_share=0.01,
+    C4H10_share=0.01, CO2_share=0.01, N2_share=0.01,
 ):
     """
     Calculate the molar mass of the natural gas depending on different
     gases present and its proportions. In most cases following gas exists:
     Methane, ethane, propane, butane, and  other impurities. Other impurity
     gases are ignored for this calculation. By default, natural gas proportions
-    are methane(90%), ethane(5%), propane(3%), butane (2%).
+    (in vol%) are methane(93%), ethane(3%), propane(1%), butane (1%), carbon-
+    dioxide (1%), nitrogen (1%). This composition is based on natural gas
+    group "H" (Erdgas-H).
+    https://www.energie-experten.org/heizung/gasheizung/erdgas
     """
     return (
         (CH4_share * CH4_MOLAR_MASS)
-        + (C2H6_share * C2H6_share)
+        + (C2H6_share * C2H6_MOLAR_MASS)
         + (C3H8_share * C3H8_MOLAR_MASS)
-        + (C4H10_share * CH4_MOLAR_MASS)
+        + (C4H10_share * C4H10_MOLAR_MASS)
+        + (CO2_share * CO2_MOLAR_MASS)
+        + (N2_share * N2_MOLAR_MASS)
     )
 
 @dataclass(frozen=True)
