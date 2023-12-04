@@ -32,7 +32,7 @@ from ._photovoltaics import Photovoltaics
 from ._pressure_storage import H2Storage
 from ._renewable_electricity_source import RenewableElectricitySource
 from .grid_connection import ElectricityGridConnection, GasGridConnection
-
+from ._heating_rod import HeatingRod
 __all__ = [
     "AirHeatExchanger",
     "GeothermalHeatExchanger",
@@ -50,6 +50,7 @@ __all__ = [
     "BatteryStorage",
     "HeatPump",
     "CHP",
+    "HeatingRod",
     "NATURALGAS_CHP",
     "BIOGAS_CHP",
     "BIOMETHANE_CHP",
