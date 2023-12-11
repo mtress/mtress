@@ -22,7 +22,7 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
     """
     Connector class for modelling power flows with variable temperature levels.
 
-    This class models a heat bus system with configurable temperature levels
+    This class models is a heat bus system with configurable temperature levels
     (see https://arxiv.org/abs/2012.12664). The temperature levels can
     represent flow and return of a room heating system or various tapping
     temperatures.
@@ -84,8 +84,8 @@ class Heat(AbstractLayeredCarrier, AbstractSolphRepresentation):
         """
         Initialize heat energy carrier and add components.
 
-        :param temperature_levels: Temperature levels
-        :param reference_temperature: Reference temperature
+        :param temperature_levels: Temperature levels (in °C)
+        :param reference_temperature: Reference temperature (in °C)
         """
         if reference_temperature not in temperature_levels:
             temperature_levels = temperature_levels + [reference_temperature]

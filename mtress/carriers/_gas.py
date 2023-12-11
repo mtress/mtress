@@ -10,9 +10,14 @@ from ._abstract_carrier import AbstractLayeredCarrier
 class GasCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
     """
     GasCarrier is the container for different types of gases, which
-    considers the gas properties from dataclass Gas. All gas flows
-    be it Hydrogen, Natural gas, Biogas or Bio-Methane are considered
+    considers the gas properties from dataclass Gas. All gas flows,
+    be it Hydrogen, Natural gas, Biogas or Bio-Methane, are considered
     to be in kg to maintain resiliency in the modelling.
+
+    Parameters
+    ----------
+    gas: in kg
+    pressure: in bar
     """
 
     def __init__(self, *, gases, **kwargs):

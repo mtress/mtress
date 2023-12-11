@@ -37,11 +37,11 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
         Create fully mixed heat storage component.
 
         :param name: Name of the component
-        :param diameter: Diameter of the storage in m
-        :param volume: Volume of the storage in m³
-        :param power_limit: power limit in kW
-        :param ambient_temperature: Ambient temperature in deg C
-        :param u_value: Thermal transmittance in W/m²/K
+        :param diameter: Diameter of the storage (in m)
+        :param volume: Volume of the storage (in m^3)
+        :param power_limit: power limit (in W)
+        :param ambient_temperature: Ambient temperature (in °C)
+        :param u_value: Thermal transmittance (in W/m^2/K)
         """
         if not isinstance(multiplexer_implementation, Implementation):
             multiplexer_implementation = Implementation(multiplexer_implementation)
@@ -59,7 +59,8 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         carrier: Heat = self.location.get_carrier(Heat)
-        capacity_per_unit = self.volume * kJ_to_MWh(H2O_DENSITY * H2O_HEAT_CAPACITY)
+        # Check capacity_per_unit
+        capacity_per_unit = self.volume * kJ_to_MWh(H2O_DENSITY * H2O_HEAT_CAPACITY) # in MWh/K
         empty_level = carrier.reference
 
         solph_storage_arguments = {

@@ -56,9 +56,9 @@ def mean_logarithmic_temperature(t_high, t_low):
     Logarithmic mean temperature as used by the
     Lorenz CIO Model
 
-    :param t_high: High Temperature [K]
-    :param t_low: Low Temperature [K]
-    :return: Mean Logarithmic Temperature [K]
+    :param t_high: High Temperature (in K)
+    :param t_low: Low Temperature (in K)
+    :return: Mean Logarithmic Temperature (in K)
     """
     return (t_low - t_high) / np.log(t_low / t_high)
 
@@ -71,8 +71,8 @@ def lorenz_cop(temp_in, temp_out):
     (Lorenz, H, 1895. Die Ermittlung der Grenzwerte der
     thermodynamischen Energieumwandlung. Zeitschrift für
     die gesammte Kälte-Industrie, 2(1-3, 6-12).)
-    :param temp_in: Inlet Temperature
-    :param temp_out: Outlet Temperature
+    :param temp_in: Inlet Temperature (in K?)
+    :param temp_out: Outlet Temperature (in K?)
     :return: Ideal COP
     """
     return temp_out / np.maximum(temp_out - temp_in, 1e-3)
@@ -80,8 +80,8 @@ def lorenz_cop(temp_in, temp_out):
 
 def calc_cop(temp_input, temp_output, cop_0_35=4.6):
     """
-    :param temp_input: Higher Temperature of the source (K)
-    :param temp_output: Flow Temperature of the heating system (K)
+    :param temp_input: Higher Temperature of the source (in K)
+    :param temp_output: Flow Temperature of the heating system (in K)
     :param cop_0_35: COP for B0/W35
     :return: Scaled COP for the given temperatures
     """
@@ -109,14 +109,14 @@ def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2):
 
     where :math:`R` denotes the gas constant of the gas in question.
 
-    :param p_in: Inlet input_pressure in bar
-    :param p_out: Outlet input_pressure in bar
-    :param T: Temperature in deg C, defaults to 20
-    :param R: Gas constant in  J / (kg * K), defaults to 4124.2
-    :return: Energy required for compression in kWh
+    :param p_in: Inlet input_pressure (in bar)
+    :param p_out: Outlet input_pressure (in bar)
+    :param T: Temperature (in °C), by default to 20 °C
+    :param R: Gas constant ( in J/(kg * K)), by default to 4124.2 J/(kg * K)
+    :return: Energy required for compression (in Wh)
     """
     T += 273.15  # Convert temperature to Kelvin
-    return R * T * np.log(p_out / p_in) / (3600 * 1000)
+    return R * T * np.log(p_out / p_in) / (3600)
 
 
 

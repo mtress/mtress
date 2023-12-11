@@ -15,7 +15,7 @@ from oemof.thermal import stratified_thermal_storage
 
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import Heat
-from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
+from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR
 
 from ._abstract_heat_storage import AbstractHeatStorage
 
@@ -69,10 +69,9 @@ class LayeredHeatStorage(AbstractHeatStorage):
         for temperature in temperature_levels:
             bus = heat_carrier.outputs[temperature]
 
-            capacity = self.volume * kJ_to_MWh(
+            capacity = self.volume * (
                 (temperature - reference_temperature) * H2O_DENSITY * H2O_HEAT_CAPACITY
-            )
-
+            ) / SECONDS_PER_HOUR
             if self.u_value is None:
                 loss_rate = 0
                 fixed_losses_relative = 0
@@ -120,8 +119,8 @@ class LayeredHeatStorage(AbstractHeatStorage):
             *[
                 (
                     component,
-                    1
-                    / kJ_to_MWh(
+                    SECONDS_PER_HOUR
+                    / (
                         H2O_HEAT_CAPACITY
                         * H2O_DENSITY
                         * (temperature - reference_temperature)

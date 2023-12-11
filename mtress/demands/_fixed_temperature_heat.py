@@ -34,8 +34,8 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphRepresentation):
     Procedure: Create a simple heat demand by doing the following:
 
             house_1.add(demands.FixedTemperatureHeat(
-                flow_temperature=30,
-                return_temperature=20,
+                flow_temperature=30, # in °C
+                return_temperature=20, # in °C
                 time_series=[50]))
 
     Notice: While energy from electricity and the gaseous carriers is
