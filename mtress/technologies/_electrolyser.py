@@ -41,7 +41,6 @@ class ElectrolyserTemplate:
     9. https://mart.cummins.com/imagelibrary/data/assetfiles/0070331.pdf
     10. https://hydrogen.johncockerill.com/en/products/electrolysers/
 
-
     """
 
     hydrogen_efficiency: float
@@ -108,13 +107,13 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
         Initialize Electrolyser
 
         :param name: Name of the component
-        :param nominal_power: Nominal electrical power (kW) of the component
+        :param nominal_power: Nominal electrical power (in W) of the component
         :param hydrogen_efficiency: Hydrogen production efficiency of the electrolyser,
             i.e., the ratio of hydrogen output and electrical input
         :param thermal_efficiency: Thermal efficiency of the electrolyser,
             i.e., ratio of thermal output and electrical input
-        :param waste_heat_temperature: Waste heat temperature level (°C).
-        :param hydrogen_output_pressure: Hydrogen output pressure (bar)
+        :param waste_heat_temperature: Waste heat temperature level (in °C).
+        :param hydrogen_output_pressure: Hydrogen output pressure (in bar)
         """
         super().__init__(name=name)
 

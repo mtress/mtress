@@ -37,21 +37,22 @@ class GeothermalHeatExchanger(
     def __init__(
         self,
         name: str,
-        ground_temperature: TimeseriesSpecifier = 10,
+        ground_temperature: TimeseriesSpecifier = 1,
         nominal_power: Optional[float] = None,
     ):
         """
         Initialize geothermal heat exchanger for e.g. heat pumps.
 
-        :param name: Name of the component.
-        :param nominal_power: Nominal power of the heat exchanger.
+        :param name: Name of the component
         :param ground_temperature: Reference to ground temperature
                                    time series
+        :param nominal_power: Nominal power of the heat exchanger
+                              (in W), default to None.
         """
         super().__init__(name=name)
 
-        self.nominal_power = nominal_power
         self.ground_temperature = ground_temperature
+        self.nominal_power = nominal_power
 
         # Solph model interfaces
         self._bus = None

@@ -25,7 +25,7 @@ class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
         Initialize Battery Storage.
 
         :param name: Name of the component
-        :param nominal_capacity: Nominal capacity of the battery
+        :param nominal_capacity: Nominal capacity of the battery (in Wh)
         :param charging_C_Rate: Charging C-rate, default to 1
         :param discharging_C_Rate: Discharging C-rate, default to 1
         :param charging_efficiency: Efficiency during battery charging,

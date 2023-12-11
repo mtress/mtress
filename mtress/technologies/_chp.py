@@ -123,7 +123,7 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
     generator (boiler) produces electricity. For heat recovery, usually,
     the cooling water circuits of the engine are first linked to a plate
     heat exchanger which facilitates the transfer of hot water to an external
-    hot-water circuit, typically on a 90◦C/70◦C flow/return basis. Any excess
+    hot-water circuit, typically on a 90°C/70°C flow/return basis. Any excess
     heat should be dumped using adjacent heat dump radiators to facilitate
     the correct operation of the engine. Heat extracted from CHP could be
     utilized for various applications, including, hot water, space heating,
@@ -156,10 +156,10 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         :param name: Set the name of the component
         :param gas_type: (Dict) type of gas from gas carrier and its share in
                          vol %
-        :parma thermal_temperature: Temperature level (°C) of the heat output
+        :parma thermal_temperature: Temperature level (in °C) of the heat output
                                     from CHP that is recoverable.
-        :param nominal_power: Nominal electric output capacity of the CHP
-        :param input_pressure: Input pressure of gas or gases.
+        :param nominal_power: Nominal electric output capacity of the CHP (in Watts)
+        :param input_pressure: Input pressure of gas or gases (in bar).
         :param electric_efficiency: Electric conversion efficiency (LHV) of the CHP
         :param thermal_efficiency: Thermal conversion efficiency (LHV) of the CHP
 
@@ -202,7 +202,7 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
             # Calculate LHV of gas or gas-mixture
             gas_LHV += gas.LHV * share
 
-        # convert gas in kg to KWh heat with thermal efficiency conversion
+        # convert gas in kg to heat in Wh with thermal efficiency conversion
         heat_output = self.thermal_efficiency * gas_LHV
         heat_carrier = self.location.get_carrier(Heat)
         temp_level, _ = heat_carrier.get_surrounding_levels(self.thermal_temperature)
@@ -221,8 +221,10 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         # Add electrical connection
         electricity_carrier = self.location.get_carrier(Electricity)
         electrical_bus = electricity_carrier.distribution
-        # convert gas in kg to KWh electricity with thermal efficiency conversion
+        # convert gas in kg to electricity in Wh with thermal efficiency conversion
         electrical_output = self.electric_efficiency * gas_LHV
+        # convert nominal electrical capacity in watts to nominal gas consumption
+        # in kg
         nominal_gas_consumption = self.nominal_power / (
                 self.electric_efficiency * gas_LHV
         )

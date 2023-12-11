@@ -31,8 +31,8 @@ class HeatingRod(AbstractTechnology, AbstractSolphRepresentation):
         Initialize Heating Rod.
 
         :param name: Set the name of the component
-        :param nominal_power: Nominal heating capacity of the heating rod
-        :parma thermal_temperature: Temperature level (°C) of the heat output
+        :param nominal_power: Nominal heating capacity of the heating rod (in W)
+        :parma thermal_temperature: Temperature level (in °C) of the heat output
                                     from CHP that is recoverable.
         :param thermal_efficiency: Thermal conversion efficiency (LHV) of the CHP
         """

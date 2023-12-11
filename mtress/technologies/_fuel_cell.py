@@ -127,11 +127,12 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
 
         :param name: Name of the component
         :param nominal_power: Nominal electrical power output of Fuel Cell (FC)
+            (in W)
         :param electrical_efficiency: Electrical efficiency of the Fuel Cell,
             i.e. ratio of electrical output and gas input
         :param thermal_efficiency: Thermal efficiency of the Fuel Cell,
             i.e. ratio of thermal output and gas input
-        :param waste_heat_temperature: Temperature (°C) at which heat could
+        :param waste_heat_temperature: Temperature (in °C) at which heat could
             be extracted from FC.
         :param gas_input_pressure: Pressure at which gas is injected to FC.
         :param gas_type: Input gas to FC, by default Hydrogen gas is used.
@@ -160,7 +161,7 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
 
         gas_bus = gas_carrier.inputs[self.gas_type][pressure]
 
-        # Convert nominal power capacity of FC in kW to nominal gas consumption
+        # Convert nominal power capacity of FC in W to nominal gas consumption
         # capacity in kg
         nominal_gas_consumption = self.nominal_power / (
             self.electrical_efficiency * self.gas_type.LHV
@@ -169,7 +170,7 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
         # Electrical connection for FC electrical output
         electricity_carrier = self.location.get_carrier(Electricity)
 
-        # Electrical efficiency with conversion from gas in kg to kW electricity, also
+        # Electrical efficiency with conversion from gas in kg to electricity in W, also
         # includes inverter efficiency.
         electrical_output = (
             self.electrical_efficiency * self.inverter_efficiency * self.gas_type.LHV
@@ -191,7 +192,7 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
                 "higher than suitable temperature level"
             )
 
-        # thermal efficiency with conversion from gas in kg to kW heat.
+        # thermal efficiency with conversion from gas in kg to heat in W.
         heat_output = self.thermal_efficiency * self.gas_type.LHV
         heat_bus = heat_carrier.inputs[temp_level]
 
