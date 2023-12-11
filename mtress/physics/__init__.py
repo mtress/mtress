@@ -33,6 +33,8 @@ from ._helper_functions import (
     kJ_to_MWh,
     lorenz_cop,
     mean_logarithmic_temperature,
+    mega_to_one,
+    one_to_mega
 )
 
 from ._gas_definition import (
@@ -75,4 +77,6 @@ __all__ = [
     "NATURAL_GAS",
     "BIO_METHANE",
     "BIOGAS",
+    "mega_to_one",
+    "one_to_mega"
 ]

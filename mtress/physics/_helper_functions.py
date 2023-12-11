@@ -16,6 +16,26 @@ import numpy as np
 from ._constants import SECONDS_PER_HOUR, ZERO_CELSIUS
 
 
+def one_to_mega(arg):
+    """
+    use to make explicit unit conversions instead of just dividing by 1000000
+    """
+    return arg / 1000000
+
+def mega_to_one(arg):
+    """
+    use to make explicit unit conversions instead of just dividing by 1000000
+    """
+    return arg * 1000000
+
+
+def one_to_kilo(arg):
+    """
+    use to make explicit unit conversions instead of just dividing by 1000
+    """
+    return arg / 1000
+
+
 def kilo_to_mega(arg):
     """
     use to make explicit unit conversions instead of just dividing by 1000

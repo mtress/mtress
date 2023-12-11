@@ -15,7 +15,7 @@ from oemof.thermal import stratified_thermal_storage
 
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import Heat
-from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR
+from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR, mega_to_one
 
 from ._abstract_heat_storage import AbstractHeatStorage
 
@@ -78,9 +78,9 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 fixed_losses_absolute = 0
             else:
                 (
-                    loss_rate,
-                    fixed_losses_relative,
-                    fixed_losses_absolute,
+                    loss_rate, 
+                    fixed_losses_relative,  # MW
+                    fixed_losses_absolute,  # MW
                 ) = stratified_thermal_storage.calculate_losses(
                     u_value=self.u_value,
                     diameter=self.diameter,
@@ -91,7 +91,9 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         kind=TimeseriesType.INTERVAL,
                     ),
                 )
-
+                fixed_losses_relative = mega_to_one(fixed_losses_relative)
+                fixed_losses_absolute = mega_to_one(fixed_losses_absolute)
+                
             # losses to the upper side of the storage will just leave the
             # storage for the uppermost level.
             # So, we neglect them for the others.
@@ -123,7 +125,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                     / (
                         H2O_HEAT_CAPACITY
                         * H2O_DENSITY
-                        * (temperature - reference_temperature)
+                        * (temperature - reference_temperature) 
                     ),
                 )
                 for temperature, component in self.storage_components.items()
