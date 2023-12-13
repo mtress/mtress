@@ -83,23 +83,26 @@ class AbstractHomogenousStorage(AbstractSolphRepresentation):
                 # Use user defined function calculating the storage content at level
                 storage_level = capacity_at_level(level)
             else:
-                storage_level = (level - empty_level)/max_level
+                storage_level = (level - empty_level)/(max_level - empty_level)
 
-            in_bus = self.create_solph_node(
-                label=f"in_{level:d}",
-                node_type=Bus,
-                inputs={outputs[level]: Flow()},
-            )
+            print(storage_level)
 
-            self.storage_multiplexer_inputs[in_bus] = storage_level
+            if storage_level > 0:
+                in_bus = self.create_solph_node(
+                    label=f"in_{level:d}",
+                    node_type=Bus,
+                    inputs={outputs[level]: Flow()},
+                )
+                self.storage_multiplexer_inputs[in_bus] = storage_level
 
-            out_bus = self.create_solph_node(
-                label=f"out_{level:d}",
-                node_type=Bus,
-                outputs={inputs[level]: Flow()},
-            )
+            if storage_level < 1:
+                out_bus = self.create_solph_node(
+                    label=f"out_{level:d}",
+                    node_type=Bus,
+                    outputs={inputs[level]: Flow()},
+                )
 
-            self.storage_multiplexer_outputs[out_bus] = storage_level
+                self.storage_multiplexer_outputs[out_bus] = storage_level
 
         self.multiplexer = self.create_solph_node(
             label="multiplexer",
