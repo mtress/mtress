@@ -87,7 +87,6 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
             inputs=carrier.inputs,
             outputs=carrier.outputs,
             power_limit=self.power_limit,
-            capacity_per_unit=capacity_per_unit,
             empty_level=empty_level,
             solph_storage_arguments=solph_storage_arguments,
         )
