@@ -64,47 +64,45 @@ class AbstractHomogenousStorage(AbstractSolphRepresentation):
         :param carrier: Carrier to connect to.
         :param power_limit: Power limit of the storage.
         :param capacity_at_level: Function to calculate the storage content for a given
-            level, e.g. energy content at a given pressure level. Exactly one of
-            capacity_at_level and capacity_per_unit must be given.
-        :param capacity_per_unit: Storage capacity corresponding to one unit of the
-            carrier, e.g. energy needed to heat the storage by 1K. Exactly one of
-            capacity_at_level and capacity_per_unit must be given.
+            level, e.g. energy content at a given pressure level. If no function is
+            given, linear relation between carrier quality and storage level is assumed.
         :param empty_level: Level which corresponds to an empty storage, e.g. the
             reference temperature of the heat carrier. This argument is only used in
             conjunction with capacity_per_unit.
         :param solph_storage_arguments: Additional arguments to be passed to the
             storage constructor, e.g. loss rates
         """
-        if (capacity_at_level is None) == (capacity_per_unit is None):
-            raise ValueError(
-                "Exactly one of capacity_at_level and capacity_per_unit must be given"
-            )
 
         self.storage_multiplexer_inputs = {}
         self.storage_multiplexer_outputs = {}
 
+        max_level = max(levels)
+
         for level in levels:
-            if capacity_per_unit is not None:
-                storage_level = (level - empty_level) * capacity_per_unit
-            else:
+            if capacity_at_level is not None:
                 # Use user defined function calculating the storage content at level
                 storage_level = capacity_at_level(level)
+            else:
+                storage_level = (level - empty_level)/(max_level - empty_level)
 
-            in_bus = self.create_solph_node(
-                label=f"in_{level:d}",
-                node_type=Bus,
-                inputs={outputs[level]: Flow()},
-            )
+            print(storage_level)
 
-            self.storage_multiplexer_inputs[in_bus] = storage_level
+            if storage_level > 0:
+                in_bus = self.create_solph_node(
+                    label=f"in_{level:d}",
+                    node_type=Bus,
+                    inputs={outputs[level]: Flow()},
+                )
+                self.storage_multiplexer_inputs[in_bus] = storage_level
 
-            out_bus = self.create_solph_node(
-                label=f"out_{level:d}",
-                node_type=Bus,
-                outputs={inputs[level]: Flow()},
-            )
+            if storage_level < 1:
+                out_bus = self.create_solph_node(
+                    label=f"out_{level:d}",
+                    node_type=Bus,
+                    outputs={inputs[level]: Flow()},
+                )
 
-            self.storage_multiplexer_outputs[out_bus] = storage_level
+                self.storage_multiplexer_outputs[out_bus] = storage_level
 
         self.multiplexer = self.create_solph_node(
             label="multiplexer",
