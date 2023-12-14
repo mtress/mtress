@@ -36,7 +36,7 @@ class MultiLayerStorage:
                  heat_layers,
                  initial_storage_levels,
                  label="",
-                 balanced=False):
+                 balanced=True):
         """
         :param diameter: numeric scalar (in m)
         :param volume: numeric scalar (in m³)
