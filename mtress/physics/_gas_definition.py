@@ -16,7 +16,7 @@ HS_PER_HI_GAS = 1.11  # according to DIN V 18599
 NG_LHV = 13000  # Wh/kg
 NG_HHV = 14500  # Wh/kg
 C2H6_MOLAR_MASS = 0.03007  # kg/mol
-C3H8_MOLAR_MASS = 0.0441   # kg/mol
+C3H8_MOLAR_MASS = 0.0441  # kg/mol
 C4H10_MOLAR_MASS = 0.0582  # kg/mol
 
 # Biogas
@@ -30,7 +30,7 @@ CH4_LHV = 13900  # Wh/kg
 H2_LHV = 33330  # Wh/kg
 H2_HHV = 39410  # Wh/kg
 H2_MOLAR_MASS = 0.00201588  # kg/mol
-rk_a = 0.1428  # Redlich-Kwong parameter 'a' for H2 in (m³bar/mol^2)
+rk_a = 0.1428  # Redlich-Kwong parameter 'a' for H2 in (m³bar/mol²)
 rk_b = 1.8208 * 10**-5  # Redlich-Kwong parameter 'b' for H2 in (m³/mol)
 
 
@@ -65,10 +65,10 @@ def calc_biogas_heating_value(CH4_share=0.75, CO2_share=0.25, heating_value=CH4_
     Heating value either LHV or HHV are calculated based on per kg
     i.e. KWh/kg
 
-    :param CH4_share: Share proportion of methane in biogas 
+    :param CH4_share: Share proportion of methane in biogas
     :param CO2_share: Share proportion content of carbon-dioxide in biogas
     :param heating_value of methane: default LHV (in Wh/kg)
-    :return: heating value in Wh 
+    :return: heating value in Wh
     """
     return (
         (CH4_share * CH4_MOLAR_MASS)
@@ -88,6 +88,7 @@ def calc_biogas_molar_mass(CH4_share=0.75, C0_2_share=0.25):
     """
     return (CH4_share * CH4_MOLAR_MASS) + (C0_2_share * CO2_MOLAR_MASS)
 
+
 def calc_natural_gas_molar_mass(
     CH4_share=0.9, C2H6_share=0.5, C3H8_share=0.3, C4H10_share=0.2
 ):
@@ -101,10 +102,11 @@ def calc_natural_gas_molar_mass(
     """
     return (
         (CH4_share * CH4_MOLAR_MASS)
-        + (C2H6_share * C2H6_MOLAR_MASS )
+        + (C2H6_share * C2H6_MOLAR_MASS)
         + (C3H8_share * C3H8_MOLAR_MASS)
         + (C4H10_share * CH4_MOLAR_MASS)
     )
+
 
 @dataclass(frozen=True)
 class Gas:
@@ -114,6 +116,7 @@ class Gas:
     User can define its own gas by creating an object of the
     specific gas via this dataclass.
     """
+
     name: str
     # Heating value Wh/kg
     LHV: float
