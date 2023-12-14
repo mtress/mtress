@@ -38,10 +38,9 @@ class AirHeatExchanger(
         """
         Initialize air heat exchanger for e.g. heat pumps.
 
-        :param name: Name of the component
+        :param name: Name of the component.
+        :param nominal_power: Nominal power of the heat exchanger (in W), default to None.
         :param air_temperatures: Reference to air temperature time series
-        :param nominal_power: Nominal power of the heat exchanger
-                              (in W), default to None.
         """
         super().__init__(name=name)
 

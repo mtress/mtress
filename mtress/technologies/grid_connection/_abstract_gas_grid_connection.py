@@ -4,7 +4,12 @@ from mtress._abstract_component import AbstractComponent
 
 
 class AbstractGasGridConnection(AbstractComponent):
-    """Abstract class to ensure a unified interface."""
+    """Abstract class to ensure a unified interface.
+    :grig_pressure: in bar
+    :working_rate:
+    :demand_rate:
+    :revenue:
+    """
 
     def __init__(
         self,
@@ -14,7 +19,6 @@ class AbstractGasGridConnection(AbstractComponent):
         demand_rate: Optional[float] = 0,
         revenue: float = 0,
         **kwargs,
-
     ):
         super().__init__(name=self.__class__.__name__, **kwargs)
 
@@ -22,6 +26,3 @@ class AbstractGasGridConnection(AbstractComponent):
         self.working_rate = working_rate
         self.demand_rate = demand_rate
         self.revenue = revenue
-
-
-

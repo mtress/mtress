@@ -29,7 +29,7 @@ class CHPTemplate:
     uses natural gas as fuel. Parametric values of the CHP techno-
     -logies defined here are typically based on gas turbine or
     reciprocating engine type. Thermal and electrical efficiencies
-    differs with the size of the CHP, therefore, 500 KW electrical
+    differs with the size of the CHP, therefore, 500 kW electrical
     nominal capacity is considered, as a base size, for each technology,
     to provide default efficiency values. Users are recommended to
     change the efficiency values based on their use-case.
@@ -39,7 +39,6 @@ class CHPTemplate:
     -defined technology. Moreover, in the variable gas_type, user must
     provide gas/gases with their respective share/s in vol %, if default
     template is not selected.
-
 
     Important references for technologies:
     1. https://gentec.cz/en/cogeneration-units/
@@ -190,7 +189,7 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         }
 
         gas_bus = {}  # gas bus for each gas type
-        gas_LHV = 0   # Calculate LHV of gas or gas-mixtures
+        gas_LHV = 0  # Calculate LHV of gas or gas-mixtures
 
         for gas, share in self.gas_type.items():
             gas_carrier = self.location.get_carrier(GasCarrier)
@@ -226,7 +225,7 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         # convert nominal electrical capacity in watts to nominal gas consumption
         # in kg
         nominal_gas_consumption = self.nominal_power / (
-                self.electric_efficiency * gas_LHV
+            self.electric_efficiency * gas_LHV
         )
 
         # Conversion factors of the oemof converter

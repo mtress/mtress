@@ -60,12 +60,13 @@ class ElectricityGridConnection(AbstractGridConnection, AbstractSolphRepresentat
                 outputs={
                     b_grid_import: Flow(
                         variable_costs=self._solph_model.data.get_timeseries(
-                            self.working_rate,
-                            kind=TimeseriesType.INTERVAL),
+                            self.working_rate, kind=TimeseriesType.INTERVAL
+                        ),
                         investment=demand_rate,
                     )
                 },
             )
+
     def connect(
         self,
         other: ElectricityGridConnection,

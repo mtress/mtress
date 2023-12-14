@@ -24,7 +24,7 @@ def one_to_mega(arg):
 
 def mega_to_one(arg):
     """
-    use to make explicit unit conversions instead of just dividing by 1000000
+    use to make explicit unit conversions instead of just multiplying by 1000000
     """
     return arg * 1000000
 

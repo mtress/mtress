@@ -39,7 +39,7 @@ def calc_hydrogen_density(pressure, temperature: float = 25) -> float:
     Calculate the density of hydrogen gas.
     :param temperature: H2 gas temperature in the storage tank (in °C)
     :param pressure: Pressure of hydrogen gas (in bar)
-    :return: Density of hydrogen gas (in kg/m^3)
+    :return: Density of hydrogen gas (in kg/m³)
     """
     pressure = bar_to_pascal(pressure)
     gas_temperature = 273.15 + temperature
@@ -56,7 +56,7 @@ def calc_hydrogen_density(pressure, temperature: float = 25) -> float:
 
     density = H2_MOLAR_MASS / v_spec
 
-    return density # in kg/m³
+    return density
 
 
 def calc_biogas_heating_value(CH4_share=0.75, CO2_share=0.25, heating_value=CH4_LHV):

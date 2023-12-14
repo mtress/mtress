@@ -42,8 +42,9 @@ class LayeredHeatStorage(AbstractHeatStorage):
 
         :param diameter: Diameter of the storage in m
         :param volume: Volume of the storage in m³
+        :param power_limit: power in W
+        :param ambient_temperature: Ambient temperature in °C
         :param u_value: Thermal transmittance in W/m²/K
-        :param ambient_temperature: Ambient temperature in deg C
         """
         super().__init__(
             name=name,
@@ -123,8 +124,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                     component,
                     SECONDS_PER_HOUR
                     / (
-                        H2O_HEAT_CAPACITY
-                        * H2O_DENSITY
+                        H2O_HEAT_CAPACITY * H2O_DENSITY 
                         * (temperature - reference_temperature) 
                     ),
                 )
