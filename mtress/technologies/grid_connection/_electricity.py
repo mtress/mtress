@@ -19,6 +19,11 @@ class ElectricityGridConnection(AbstractGridConnection, AbstractSolphRepresentat
         revenue: Optional[TimeseriesSpecifier] = None,
         demand_rate: Optional[float] = 0,
     ) -> None:
+        """
+        :working_rate: in currency/Wh
+        :revenue: in currency/Wh
+        :demand_rate: in currency/Wh
+        """
         super().__init__()
 
         self.working_rate = working_rate

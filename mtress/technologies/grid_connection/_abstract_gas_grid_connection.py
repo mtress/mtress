@@ -5,10 +5,10 @@ from mtress._abstract_component import AbstractComponent
 
 class AbstractGasGridConnection(AbstractComponent):
     """Abstract class to ensure a unified interface.
-    :grig_pressure: in bar
-    :working_rate:
-    :demand_rate:
-    :revenue:
+    :grid_pressure: in bar
+    :working_rate: in currency/Wh
+    :demand_rate: in currency/Wh
+    :revenue: in currency/Wh
     """
 
     def __init__(
