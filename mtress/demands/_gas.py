@@ -26,6 +26,10 @@ class GasDemand(AbstractDemand, AbstractSolphRepresentation):
     gaseous carriers is just consumed, heat demands have a returning
     energy flow.
 
+    Parameters
+    ----------
+    gas_type: in kg
+    pressure: in bar
     """
 
     def __init__(self, name: str, gas_type: Gas, time_series: TimeseriesSpecifier, pressure: float):

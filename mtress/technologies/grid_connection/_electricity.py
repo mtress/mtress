@@ -19,6 +19,11 @@ class ElectricityGridConnection(AbstractGridConnection, AbstractSolphRepresentat
         revenue: Optional[TimeseriesSpecifier] = None,
         demand_rate: Optional[float] = 0,
     ) -> None:
+        """
+        :working_rate: in currency/Wh
+        :revenue: in currency/Wh
+        :demand_rate: in currency/Wh
+        """
         super().__init__()
 
         self.working_rate = working_rate
@@ -60,12 +65,13 @@ class ElectricityGridConnection(AbstractGridConnection, AbstractSolphRepresentat
                 outputs={
                     b_grid_import: Flow(
                         variable_costs=self._solph_model.data.get_timeseries(
-                            self.working_rate,
-                            kind=TimeseriesType.INTERVAL),
+                            self.working_rate, kind=TimeseriesType.INTERVAL
+                        ),
                         investment=demand_rate,
                     )
                 },
             )
+
     def connect(
         self,
         other: ElectricityGridConnection,

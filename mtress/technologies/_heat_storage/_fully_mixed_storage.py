@@ -9,7 +9,7 @@ SPDX-License-Identifier: MIT
 """
 from mtress._data_handler import TimeseriesSpecifier
 from mtress.carriers import Heat
-from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
+from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR
 
 from .._abstract_homogenous_storage import AbstractHomogenousStorage, Implementation
 from ._abstract_heat_storage import AbstractHeatStorage
@@ -37,11 +37,11 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
         Create fully mixed heat storage component.
 
         :param name: Name of the component
-        :param diameter: Diameter of the storage in m
-        :param volume: Volume of the storage in m³
-        :param power_limit: power limit in kW
-        :param ambient_temperature: Ambient temperature in deg C
-        :param u_value: Thermal transmittance in W/m²/K
+        :param diameter: Diameter of the storage (in m)
+        :param volume: Volume of the storage (in m³)
+        :param power_limit: power limit (in W)
+        :param ambient_temperature: Ambient temperature (in °C)
+        :param u_value: Thermal transmittance (in W/m²/K)
         """
         if not isinstance(multiplexer_implementation, Implementation):
             multiplexer_implementation = Implementation(multiplexer_implementation)
@@ -55,18 +55,18 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
             u_value=u_value,
             implementation=multiplexer_implementation,
         )
+        self.capacity_per_unit = self.volume * (H2O_DENSITY * H2O_HEAT_CAPACITY) / SECONDS_PER_HOUR
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         carrier: Heat = self.location.get_carrier(Heat)
-        capacity_per_unit = self.volume * kJ_to_MWh(H2O_DENSITY * H2O_HEAT_CAPACITY)
         empty_level = carrier.reference
 
         solph_storage_arguments = {
             "nominal_storage_capacity": (
                 max(carrier.levels) - carrier.reference_level
             )
-            * capacity_per_unit
+            * self.capacity_per_unit
         }
 
         if self.u_value is None:

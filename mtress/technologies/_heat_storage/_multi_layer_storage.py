@@ -15,7 +15,7 @@ from oemof.thermal import stratified_thermal_storage
 
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import Heat
-from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, kJ_to_MWh
+from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR, mega_to_one
 
 from ._abstract_heat_storage import AbstractHeatStorage
 
@@ -42,8 +42,9 @@ class LayeredHeatStorage(AbstractHeatStorage):
 
         :param diameter: Diameter of the storage in m
         :param volume: Volume of the storage in m³
+        :param power_limit: power in W
+        :param ambient_temperature: Ambient temperature in °C
         :param u_value: Thermal transmittance in W/m²/K
-        :param ambient_temperature: Ambient temperature in deg C
         """
         super().__init__(
             name=name,
@@ -69,19 +70,18 @@ class LayeredHeatStorage(AbstractHeatStorage):
         for temperature in temperature_levels:
             bus = heat_carrier.outputs[temperature]
 
-            capacity = self.volume * kJ_to_MWh(
+            capacity = self.volume * (
                 (temperature - reference_temperature) * H2O_DENSITY * H2O_HEAT_CAPACITY
-            )
-
+            ) / SECONDS_PER_HOUR
             if self.u_value is None:
                 loss_rate = 0
                 fixed_losses_relative = 0
                 fixed_losses_absolute = 0
             else:
                 (
-                    loss_rate,
-                    fixed_losses_relative,
-                    fixed_losses_absolute,
+                    loss_rate, 
+                    fixed_losses_relative,  # MW
+                    fixed_losses_absolute,  # MW
                 ) = stratified_thermal_storage.calculate_losses(
                     u_value=self.u_value,
                     diameter=self.diameter,
@@ -92,7 +92,9 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         kind=TimeseriesType.INTERVAL,
                     ),
                 )
-
+                fixed_losses_relative = mega_to_one(fixed_losses_relative)
+                fixed_losses_absolute = mega_to_one(fixed_losses_absolute)
+                
             # losses to the upper side of the storage will just leave the
             # storage for the uppermost level.
             # So, we neglect them for the others.
@@ -120,11 +122,10 @@ class LayeredHeatStorage(AbstractHeatStorage):
             *[
                 (
                     component,
-                    1
-                    / kJ_to_MWh(
-                        H2O_HEAT_CAPACITY
-                        * H2O_DENSITY
-                        * (temperature - reference_temperature)
+                    SECONDS_PER_HOUR
+                    / (
+                        H2O_HEAT_CAPACITY * H2O_DENSITY 
+                        * (temperature - reference_temperature) 
                     ),
                 )
                 for temperature, component in self.storage_components.items()

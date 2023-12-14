@@ -32,7 +32,29 @@ def calculate_dni(weather: pd.DataFrame, location: pvlib.location.Location):
     :param location: Location of PV system
     :type location: class:`pvlib.location.Location`
 
-    :return: DNI values
+    Parameters
+    ----------
+    ghi : array-like
+        Global horizontal irradiance in W/m².
+
+    solar_zenith : array-like
+        True (not refraction-corrected) solar_zenith angles in °.
+        0 <= solar_zenith <= 90
+
+    times : DatetimeIndex
+
+    pressure : float or array-like, default 101325.0
+        The site pressure in Pascal. Pressure may be measured or an
+        average pressure may be calculated from site altitude.
+
+    temp_dew : None, float, or array-like, default None
+        Surface dew point temperatures, in °C. Values of temp_dew
+        may be numeric or NaN. Any single time period point with a
+        temp_dew=NaN does not have dew point improvements applied. If
+        temp_dew is not provided, then dew point improvements are not
+        applied.
+
+    :return: DNI values in W/m²
     :rtype: class:`pandas.Series`
     """
     solar_position = location.get_solarposition(
@@ -77,7 +99,7 @@ class Photovoltaics(RenewableElectricitySource):
 
         :param name: Name of the component.
         :param location: Geographical location of the system.
-        :param nominal_power: Nominal power of the system [kWp].
+        :param nominal_power: Nominal power of the system (in W).
         :param weather: Weather time series.
         :param surface_tilt: Tilt of the system.
         :param surface_azimuth: Azimuth of the system.

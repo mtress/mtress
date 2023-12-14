@@ -8,6 +8,7 @@ from mtress._abstract_component import AbstractSolphRepresentation
 
 LOGGER = logging.getLogger(__file__)
 
+
 class GasGridConnection(AbstractSolphRepresentation):
     """
     The gas grid connection represents the distribution pipelines for
@@ -20,6 +21,7 @@ class GasGridConnection(AbstractSolphRepresentation):
     Note: Working_rate must be defined to enable gas import for your
           energy system.
     """
+
     def __init__(
         self,
         *,
@@ -30,6 +32,13 @@ class GasGridConnection(AbstractSolphRepresentation):
         revenue: float = 0,
         **kwargs,
     ):
+        """
+        :gas_type: import a gas constant e.g. HYDROGEN
+        :grid_pressure: in bar
+        :working_rate: in currency/Wh
+        :demand_rate: in currency/Wh
+        :revenue: in currency/Wh
+        """
 
         super().__init__(**kwargs)
         self.gas_type = gas_type
@@ -41,7 +50,9 @@ class GasGridConnection(AbstractSolphRepresentation):
     def build_core(self):
         gas_carrier = self.location.get_carrier(GasCarrier)
 
-        _, pressure_level = gas_carrier.get_surrounding_levels(self.gas_type, self.grid_pressure)
+        _, pressure_level = gas_carrier.get_surrounding_levels(
+            self.gas_type, self.grid_pressure
+        )
 
         if self.working_rate is not None:
             if self.demand_rate:

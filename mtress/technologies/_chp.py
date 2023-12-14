@@ -29,7 +29,7 @@ class CHPTemplate:
     uses natural gas as fuel. Parametric values of the CHP techno-
     -logies defined here are typically based on gas turbine or
     reciprocating engine type. Thermal and electrical efficiencies
-    differs with the size of the CHP, therefore, 500 KW electrical
+    differs with the size of the CHP, therefore, 500 kW electrical
     nominal capacity is considered, as a base size, for each technology,
     to provide default efficiency values. Users are recommended to
     change the efficiency values based on their use-case.
@@ -39,7 +39,6 @@ class CHPTemplate:
     -defined technology. Moreover, in the variable gas_type, user must
     provide gas/gases with their respective share/s in vol %, if default
     template is not selected.
-
 
     Important references for technologies:
     1. https://gentec.cz/en/cogeneration-units/
@@ -123,7 +122,7 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
     generator (boiler) produces electricity. For heat recovery, usually,
     the cooling water circuits of the engine are first linked to a plate
     heat exchanger which facilitates the transfer of hot water to an external
-    hot-water circuit, typically on a 90◦C/70◦C flow/return basis. Any excess
+    hot-water circuit, typically on a 90°C/70°C flow/return basis. Any excess
     heat should be dumped using adjacent heat dump radiators to facilitate
     the correct operation of the engine. Heat extracted from CHP could be
     utilized for various applications, including, hot water, space heating,
@@ -156,10 +155,10 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         :param name: Set the name of the component
         :param gas_type: (Dict) type of gas from gas carrier and its share in
                          vol %
-        :parma thermal_temperature: Temperature level (°C) of the heat output
+        :parma thermal_temperature: Temperature level (in °C) of the heat output
                                     from CHP that is recoverable.
-        :param nominal_power: Nominal electric output capacity of the CHP
-        :param input_pressure: Input pressure of gas or gases.
+        :param nominal_power: Nominal electric output capacity of the CHP (in Watts)
+        :param input_pressure: Input pressure of gas or gases (in bar).
         :param electric_efficiency: Electric conversion efficiency (LHV) of the CHP
         :param thermal_efficiency: Thermal conversion efficiency (LHV) of the CHP
 
@@ -190,7 +189,7 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         }
 
         gas_bus = {}  # gas bus for each gas type
-        gas_LHV = 0   # Calculate LHV of gas or gas-mixtures
+        gas_LHV = 0  # Calculate LHV of gas or gas-mixtures
 
         for gas, share in self.gas_type.items():
             gas_carrier = self.location.get_carrier(GasCarrier)
@@ -202,7 +201,7 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
             # Calculate LHV of gas or gas-mixture
             gas_LHV += gas.LHV * share
 
-        # convert gas in kg to KWh heat with thermal efficiency conversion
+        # convert gas in kg to heat in Wh with thermal efficiency conversion
         heat_output = self.thermal_efficiency * gas_LHV
         heat_carrier = self.location.get_carrier(Heat)
         temp_level, _ = heat_carrier.get_surrounding_levels(self.thermal_temperature)
@@ -221,10 +220,12 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         # Add electrical connection
         electricity_carrier = self.location.get_carrier(Electricity)
         electrical_bus = electricity_carrier.distribution
-        # convert gas in kg to KWh electricity with thermal efficiency conversion
+        # convert gas in kg to electricity in Wh with thermal efficiency conversion
         electrical_output = self.electric_efficiency * gas_LHV
+        # convert nominal electrical capacity in watts to nominal gas consumption
+        # in kg
         nominal_gas_consumption = self.nominal_power / (
-                self.electric_efficiency * gas_LHV
+            self.electric_efficiency * gas_LHV
         )
 
         # Conversion factors of the oemof converter

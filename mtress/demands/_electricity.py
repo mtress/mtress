@@ -14,10 +14,10 @@ class Electricity(AbstractDemand, AbstractSolphRepresentation):
     """
     Class representing an electricity demand.
 
-    Functionality: Demands contain time series of energy that is needed.
-        The electricity demand automatically connects to its corresponding
-        electricity  carrier. A name identifying the demand has
-        to be given that is unique for the location, because multiple
+    Functionality: Demands contain time series (in Wh) of energy that is 
+        needed. The electricity demand automatically connects to its 
+        corresponding electricity  carrier. A name identifying the demand 
+        has to be given that is unique for the location, because multiple
         demands of one type can exist for one location.
 
     Procedure: Create a simple electricity demand by doing the following:
@@ -33,7 +33,7 @@ class Electricity(AbstractDemand, AbstractSolphRepresentation):
     """
 
     def __init__(self, name: str, time_series: TimeseriesSpecifier):
-        """Initialize heat energy carrier and add components."""
+        """Initialize electricity energy carrier and add components."""
         super().__init__(name=name)
         self._time_series = time_series
         self.input = None

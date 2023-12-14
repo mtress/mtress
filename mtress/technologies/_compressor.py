@@ -24,7 +24,7 @@ class GasCompressor(AbstractTechnology, AbstractSolphRepresentation):
         Initialize gas compressor.
 
         :param name: Name of the compressor component
-        :param nominal_power: Nominal power
+        :param nominal_power: Nominal power (in W)
         :param gas_type: Type of gas, for ex. HYDROGEN, NATURAL_GAS, etc.
         :param isothermal_efficiency: Isothermal efficiency, defaults to .85
         """
@@ -63,7 +63,9 @@ class GasCompressor(AbstractTechnology, AbstractSolphRepresentation):
                         gas_carrier.outputs[self.gas_type][pressure]: 1,
                         electrical_input: (
                             calc_isothermal_compression_energy(
-                                pressure_low, pressure, R=IDEAL_GAS_CONSTANT/self.gas_type.molar_mass
+                                pressure_low,
+                                pressure,
+                                R=IDEAL_GAS_CONSTANT / self.gas_type.molar_mass,
                             )
                             / self.isothermal_efficiency
                         ),

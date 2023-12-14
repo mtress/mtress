@@ -31,11 +31,11 @@ class AbstractHeatStorage(AbstractTechnology, AbstractSolphRepresentation):
         Create heat storage component.
 
         :param name: Name of the component
-        :param diameter: Diameter of the storage in m
-        :param volume: Volume of the storage in m³
-        :param power_limit: power limit in kW
-        :param ambient_temperature: Ambient temperature in deg C
-        :param u_value: Thermal transmittance in W/m²/K
+        :param diameter: Diameter of the storage (in m)
+        :param volume: Volume of the storage (in m³)
+        :param power_limit: power limit (in W)
+        :param ambient_temperature: Ambient temperature (in °C)
+        :param u_value: Thermal transmittance (in W/m²/K)
         """
         super().__init__(**kwargs)
 

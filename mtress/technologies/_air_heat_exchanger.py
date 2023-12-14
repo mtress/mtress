@@ -39,13 +39,13 @@ class AirHeatExchanger(
         Initialize air heat exchanger for e.g. heat pumps.
 
         :param name: Name of the component.
-        :param nominal_power: Nominal power of the heat exchanger.
+        :param nominal_power: Nominal power of the heat exchanger (in W), default to None.
         :param air_temperatures: Reference to air temperature time series
         """
         super().__init__(name=name)
 
-        self.nominal_power = nominal_power
         self.air_temperatures = air_temperatures
+        self.nominal_power = nominal_power
 
         # Solph model interfaces
         self._bus = None

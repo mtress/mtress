@@ -26,14 +26,14 @@ class RenewableElectricitySource(AbstractTechnology, AbstractSolphRepresentation
     def __init__(
         self,
         name: str,
-        nominal_power: float,
+        nominal_power: float, 
         specific_generation: TimeseriesSpecifier,
         fixed: bool = True,
     ):
         """
         Initialize generic electricity source.
 
-        :param nominal_power: Nominal power of the source.
+        :param nominal_power: Nominal power of the source (in W).
         :param specific_generation: Timeseries of generated power (values in [0,1]).
         :param fixed: Indicate if the generation is fixed to the values defined by
             nominal_power and specific_generation or bounded by these values.
