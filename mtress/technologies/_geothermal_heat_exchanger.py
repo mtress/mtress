@@ -37,7 +37,7 @@ class GeothermalHeatExchanger(
     def __init__(
         self,
         name: str,
-        ground_temperature: TimeseriesSpecifier = 1,
+        ground_temperature: TimeseriesSpecifier = 10,
         nominal_power: Optional[float] = None,
     ):
         """
@@ -45,7 +45,7 @@ class GeothermalHeatExchanger(
 
         :param name: Name of the component
         :param ground_temperature: Reference to ground temperature
-                                   time series
+                                   time series (in °C)
         :param nominal_power: Nominal power of the heat exchanger
                               (in W), default to None.
         """
