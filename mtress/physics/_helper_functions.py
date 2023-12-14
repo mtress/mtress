@@ -136,7 +136,7 @@ def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2):
     :return: Energy required for compression (in Wh)
     """
     T += 273.15  # Convert temperature to Kelvin
-    return R * T * np.log(p_out / p_in) / (3600)
+    return R * celsius_to_kelvin(T) * np.log(p_out / p_in) / SECONDS_PER_HOUR
 
 
 

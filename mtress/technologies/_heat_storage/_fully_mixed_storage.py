@@ -38,10 +38,10 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
 
         :param name: Name of the component
         :param diameter: Diameter of the storage (in m)
-        :param volume: Volume of the storage (in m^3)
+        :param volume: Volume of the storage (in m³)
         :param power_limit: power limit (in W)
         :param ambient_temperature: Ambient temperature (in °C)
-        :param u_value: Thermal transmittance (in W/m^2/K)
+        :param u_value: Thermal transmittance (in W/m²/K)
         """
         if not isinstance(multiplexer_implementation, Implementation):
             multiplexer_implementation = Implementation(multiplexer_implementation)
