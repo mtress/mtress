@@ -1,3 +1,15 @@
+"""These data transfer objects (DTO) can be used to define the meta model. All classes are annotated as dataclasses and therefore have the to_dict method.
+Using the to_dict method on the ModelVariables class can be used to pass it to the MetaModel class to instantiate it.
+For example:
+
+meteo = Meteorology()
+...
+model_variables = ModelVariables(meteo, ...)
+
+meta_model = MetaModel(**model_variables.to_dict())
+
+The models itself have all fields, which can be used in the MetaModel and are commented with the corresponding units.
+"""
 from .meteorology import Meteorology
 from .chp import Chp
 from .pv import PV
