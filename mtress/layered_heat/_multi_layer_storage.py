@@ -35,7 +35,8 @@ class MultiLayerStorage:
                  ambient_temperature,
                  heat_layers,
                  initial_storage_levels,
-                 label=""):
+                 label="",
+                 balanced=True):
         """
         :param diameter: numeric scalar (in m)
         :param volume: numeric scalar (in m³)
@@ -118,6 +119,7 @@ class MultiLayerStorage:
                 fixed_losses_relative=hs_fixed_losses_relative,
                 initial_storage_level=initial_storage_levels.get(temperature,
                                                                  None),
+                balanced=balanced,
             )
             self.in_flows[temperature] = (b_th_level.label, s_heat.label)
             self.out_flows[temperature] = (s_heat.label, b_th_level.label)

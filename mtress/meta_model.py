@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Generic model to be used to model residential energy supply systems
 
@@ -46,7 +44,7 @@ except ImportError:  # solph <= v0.4
     )
 from oemof.solph.processing import meta_results, results
 
-from mtress.layered_heat import (HeatLayers, LayeredHeatPump,
+from mtress.layered_heat import (HeatLayers, LayeredHeatPump, 
                                  MultiLayerStorage, HeatExchanger)
 from mtress.physics import (HHV_WP, H2O_HEAT_FUSION, H2O_DENSITY)
 
@@ -88,14 +86,7 @@ class MetaModel:
             'exclusive_grid_connection', True)
 
         # Create relevant temperature list
-        temperature_levels = self.temps.get('additional', list())
-        temperature_levels.append(self.temps['forward_flow'])
-        temperature_levels.append(self.temps['backward_flow'])
-
-        # Ensure unique temperatures
-        temperature_levels = list(set(temperature_levels))
-        temperature_levels.sort()
-        self.temperature_levels = temperature_levels
+        self._create_relevant_temperature_list()
 
         # Time range of the data (in a)
         index = self.demand['heating'].index
@@ -166,6 +157,123 @@ class MetaModel:
 
         ###############################################################
         # Create main buses
+        b_el_adjacent, b_eldist, b_elprod, b_elxprt = self._create_main_buses(energy_system)
+
+        self._create_adjacent_renewables(b_el_adjacent, energy_system, kwargs)
+
+        self._create_electricity_adjacent(b_el_adjacent, energy_system)
+
+        b_grid_connection_out = self._create_grid_connection(b_el_adjacent, b_eldist, b_elxprt, energy_system)
+
+        self._create_electricity_outflows(b_grid_connection_out)
+
+        # Create gas buses if needed
+        b_fossil_gas = self._create_gas_bus(energy_system, kwargs)
+
+        b_biomethane = self._create_chp_biomethane_flows(energy_system, kwargs)
+
+        b_pellet = self._create_wood_pellet_boiler_flows(energy_system, kwargs)
+
+        ###################################################################
+        # Thermal components
+        heat_layers = HeatLayers(energy_system=energy_system,
+                                 temperature_levels=self.temperature_levels,
+                                 reference_temperature=self.temps['reference'])
+
+        self._create_heat_storage(heat_layers, kwargs)
+
+        ####################################################################
+
+        self._create_air_source_heat_pump(b_eldist, energy_system, heat_layers, kwargs)
+
+        b_ihs, b_tgs, ihs, tgs = self._create_heat_pump(b_eldist, energy_system, heat_layers, kwargs)
+
+        self._create_solar_thermal(b_ihs, b_tgs, energy_system, heat_layers, ihs, kwargs, tgs)
+
+        self._create_local_demand_network(b_eldist)
+
+        self._create_building_heat(b_eldist, energy_system, heat_layers)
+
+        self._create_missing_heat(energy_system, heat_layers)
+
+        self._create_gas_boiler(b_fossil_gas, energy_system, heat_layers, kwargs)
+
+        self._create_wood_pellet_boiler(b_pellet, energy_system, heat_layers, kwargs)
+
+        self._create_chp(b_biomethane, b_elprod, b_elxprt, b_fossil_gas, energy_system, heat_layers, kwargs)
+
+        self._create_pv(b_elprod, b_elxprt, energy_system, kwargs)
+
+        self._create_power_to_heat(b_eldist, energy_system, heat_layers, kwargs)
+
+        self._create_wind_turbine(b_elprod, b_elxprt, energy_system, kwargs)
+
+        self._create_battery(b_elprod, energy_system, kwargs)
+
+        model = Model(energy_system)
+
+        if self._thermal_storage:
+            self._thermal_storage.add_shared_limit(model=model)
+
+        self._create_exclusive_grid_connection(model)
+
+        self.production_el_flows = (self.wt_el_flows
+                                    + self.pv_el_flows
+                                    + self.chp_el_flows)
+        self.gas_flows = (self.fossil_gas_import_flows
+                          + self.biomethane_import_flows)
+        self.demand_el_flows = (self.demand_el_flows
+                                + self.p2h_el_flows
+                                + self.ahp_el_flows
+                                + self.bhp_el_flows)
+
+        self.energy_system = energy_system
+        self.model = model
+        if len(kwargs) > 0:
+            print(10*"#")
+            print("Unhandled arguments while initialising MTRESS:")
+            pprint.pprint(kwargs)
+            print(10 * "#")
+
+        # variables for net import/export
+        self._raw_electricity_import = None
+        self._raw_electricity_export = None
+        self._electricity_export = None
+        self._electricity_import = None
+
+    def _create_exclusive_grid_connection(self, model):
+        if self.exclusive_grid_connection:
+            # Check if simultaneous  feed in
+            # and feed out might occur due to expediencies
+            expendency_pv = max(self.pv_revenue
+                                - self.grid_connection_in_costs)
+            expendency_wt = max(self.wt_revenue
+                                - self.grid_connection_in_costs)
+            expendency_chp = max(self.chp_revenue_funded
+                                 - self.grid_connection_in_costs)
+            max_expendency = max([expendency_chp,
+                                  expendency_pv,
+                                  expendency_wt])
+
+            # Only activate exclusive grid connection
+            # if such situations might occur
+            if max_expendency >= 0:
+                constraints.limit_active_flow_count_by_keyword(
+                    model,
+                    "grid_connection",
+                    lower_limit=0,
+                    upper_limit=1)
+
+    def _create_relevant_temperature_list(self):
+        temperature_levels = self.temps.get('additional', list())
+        temperature_levels.append(self.temps['forward_flow'])
+        temperature_levels.append(self.temps['backward_flow'])
+        # Ensure unique temperatures
+        temperature_levels = list(set(temperature_levels))
+        temperature_levels.sort()
+        self.temperature_levels = temperature_levels
+
+    def _create_main_buses(self, energy_system):
         b_eldist = Bus(label="b_eldist")  # Local distribution network
         b_elprod = Bus(label="b_elprod",  # local production network
                        outputs={b_eldist: Flow(
@@ -173,26 +281,24 @@ class MetaModel:
                                'electricity']['eeg_levy'])})
         b_elxprt = Bus(label="b_elxprt")  # electricity export network
         b_elgrid = Bus(label="b_elgrid")
-
         # bus for adjacent renewable sources
         b_el_adjacent = Bus(
             label="b_el_adjacent",
             inputs={b_elgrid: Flow()},
             outputs={b_elgrid: Flow()}
         )
-
         energy_system.add(b_eldist, b_elprod, b_elxprt, b_elgrid,
                           b_el_adjacent)
-
         m_el_in = Source(
             label='m_el_in',
             outputs={b_el_adjacent: Flow(
                 variable_costs=1e-9,
             )})
         self.grid_el_flows.append((m_el_in.label, b_el_adjacent.label))
-
         energy_system.add(m_el_in)
+        return b_el_adjacent, b_eldist, b_elprod, b_elxprt
 
+    def _create_adjacent_renewables(self, b_el_adjacent, energy_system, kwargs):
         if 'adjacent_renewables' in kwargs:
             s_el_adjacent = Source(
                 label='s_el_adjacent',
@@ -206,6 +312,7 @@ class MetaModel:
             )
             energy_system.add(s_el_adjacent)
 
+    def _create_electricity_adjacent(self, b_el_adjacent, energy_system):
         if 'electricity_adjacent' in self.demand:
             d_el_adjacent = Sink(
                 label='d_el_adjacent',
@@ -216,6 +323,7 @@ class MetaModel:
             )
             energy_system.add(d_el_adjacent)
 
+    def _create_grid_connection(self, b_el_adjacent, b_eldist, b_elxprt, energy_system):
         # (unidirectional) grid connection
         # RLM customer for district and larger buildings
         self.grid_connection_in_costs = (
@@ -224,7 +332,6 @@ class MetaModel:
                 + self.energy_cost['electricity']['market']
                 + self.spec_co2['el_in']
                 * self.spec_co2['price_el'])
-
         if old_solph:
             grid_in_flow = Flow(
                 nonconvex=NonConvex(),
@@ -237,7 +344,6 @@ class MetaModel:
                 nominal_value=1e5,
                 custom_attributes={"grid_connection": True}
             )
-
         b_grid_connection_in = Bus(
             label="b_grid_connection_in",
             inputs={b_el_adjacent: Flow(
@@ -247,10 +353,8 @@ class MetaModel:
                                  'demand_rate'] * self.time_range))},
             outputs={b_eldist: grid_in_flow}
         )
-
         self.electricity_import_flows.append((b_el_adjacent.label,
                                               b_grid_connection_in.label))
-
         if old_solph:
             grid_out_flow = Flow(
                 nonconvex=NonConvex(),
@@ -268,20 +372,20 @@ class MetaModel:
             label="b_grid_connection_out",
             inputs={b_elxprt: grid_out_flow}
         )
-
         energy_system.add(b_grid_connection_in, b_grid_connection_out)
+        return b_grid_connection_out
 
+    def _create_electricity_outflows(self, b_grid_connection_out):
         m_el_out = Sink(label='m_el_out',
                         inputs={b_grid_connection_out: Flow()})
         self.electricity_export_flows.append((b_grid_connection_out.label,
                                               m_el_out.label))
 
-        # Create gas buses if needed
+    def _create_gas_bus(self, energy_system, kwargs):
         b_fossil_gas = Bus(label="b_fossil_gas")
         if ('gas_boiler' in kwargs
                 or ('chp' in kwargs
                     and kwargs['chp']['biomethane_fraction'] < 1)):
-
             gas_price = (self.energy_cost['gas']['fossil_gas']
                          + self.spec_co2['fossil_gas']
                          * self.spec_co2['price_gas'])
@@ -293,7 +397,9 @@ class MetaModel:
                                                  b_fossil_gas.label))
 
             energy_system.add(b_fossil_gas, m_fossil_gas)
+        return b_fossil_gas
 
+    def _create_chp_biomethane_flows(self, energy_system, kwargs):
         if 'chp' in kwargs and kwargs['chp']['biomethane_fraction'] > 0:
             b_biomethane = Bus(label='b_biomethane')
 
@@ -305,7 +411,10 @@ class MetaModel:
 
             self.biomethane_import_flows.append((m_biomethane.label,
                                                  b_biomethane.label))
+            return b_biomethane
+        return None
 
+    def _create_wood_pellet_boiler_flows(self, energy_system, kwargs):
         # Create wood pellet buses if needed
         if 'pellet_boiler' in kwargs:
             b_pellet = Bus(label="b_pellet")
@@ -316,13 +425,10 @@ class MetaModel:
             self.pellet_import_flows.append((m_pellet.label, b_pellet.label))
 
             energy_system.add(b_pellet, m_pellet)
+            return b_pellet
+        return None
 
-        ###################################################################
-        # Thermal components
-        heat_layers = HeatLayers(energy_system=energy_system,
-                                 temperature_levels=temperature_levels,
-                                 reference_temperature=self.temps['reference'])
-
+    def _create_heat_storage(self, heat_layers, kwargs: dict):
         # Heat Storage
         if 'heat_storage' in kwargs and kwargs["heat_storage"]["volume"] > 0:
             hs = kwargs.pop('heat_storage')
@@ -333,6 +439,7 @@ class MetaModel:
                 ambient_temperature=self.meteo['temp_air'],
                 heat_layers=heat_layers,
                 initial_storage_levels=hs.get("initial_storage_levels", None),
+                balanced=hs.get("balanced", False)
             )
             self.th_storage_inflows = self._thermal_storage.in_flows.values()
             self.th_storage_outflows = self._thermal_storage.out_flows.values()
@@ -340,8 +447,7 @@ class MetaModel:
         else:
             self._thermal_storage = None
 
-        ####################################################################
-
+    def _create_air_source_heat_pump(self, b_eldist, energy_system, heat_layers, kwargs):
         if "air_source_heat_pump" in kwargs:
             ahp = kwargs.pop("air_source_heat_pump")
             assert ahp['electric_input'] >= 0
@@ -372,7 +478,12 @@ class MetaModel:
         else:
             air_heat_pump = None
 
+    def _create_heat_pump(self, b_eldist, energy_system, heat_layers, kwargs):
         # Heat pump
+        b_ihs = None
+        b_tgs = None
+        ihs = None
+        tgs = None
         if "heat_pump" in kwargs:
             bhp = kwargs.pop("heat_pump")
             assert bhp['electric_input'] >= 0
@@ -475,10 +586,11 @@ class MetaModel:
             self.heat_pump = None
             tgs = None
             ihs = None
+        return b_ihs, b_tgs, ihs, tgs
 
+    def _create_solar_thermal(self, b_ihs, b_tgs, energy_system, heat_layers, ihs, kwargs, tgs):
         ###############################################################
         # Solar thermal
-
         if 'solar_thermal' in kwargs and kwargs['solar_thermal']['area'] > 0:
             st = kwargs.pop('solar_thermal')
             b_st = Bus(label="b_st")
@@ -540,26 +652,25 @@ class MetaModel:
                                                     b_th_in_level.label))
                 energy_system.add(t_st_level)
 
+    def _create_local_demand_network(self, b_eldist):
         # electricity demands covered of the local electricity network
         d_el_local = Sink(
             label='d_el_local',
             inputs={b_eldist: Flow(fix=self.demand['electricity'],
                                    nominal_value=1)})
-
         self.demand_el_flows.append((b_eldist.label,
                                      d_el_local.label))
 
+    def _create_building_heat(self, b_eldist, energy_system, heat_layers):
         # create building heat
         b_th_buildings = Bus(label="b_th_buildings")
         energy_system.add(b_th_buildings)
-
         self.heat_exchanger_buildings = HeatExchanger(
             heat_layers=heat_layers,
             heat_demand=b_th_buildings,
             label="heat_exchanger",
             forward_flow_temperature=self.temps['forward_flow'],
             backward_flow_temperature=(self.temps['backward_flow']))
-
         d_sh = Sink(label='d_sh',
                     inputs={b_th_buildings: Flow(
                         fix=self.demand['heating'],
@@ -567,8 +678,7 @@ class MetaModel:
         self.demand_th_flows.append((b_th_buildings.label,
                                      d_sh.label))
         energy_system.add(d_sh)
-
-        if sum(self.demand['dhw'] > 0):
+        if 'dhw' in self.demand and self.demand['dhw'] is not None and sum(self.demand['dhw'] > 0):
             b_th_dhw_local = Bus(label="b_th_dhw_local")
 
             d_dhw = Sink(label='d_dhw',
@@ -609,6 +719,7 @@ class MetaModel:
 
             energy_system.add(dhw_booster)
 
+    def _create_missing_heat(self, energy_system, heat_layers):
         # create expensive source for missing heat to ensure model is solvable
         if self.allow_missing_heat:
             missing_heat = Source(
@@ -619,6 +730,7 @@ class MetaModel:
             self.missing_heat_flow.append((missing_heat.label,
                                            heat_layers.b_th_in_highest.label))
 
+    def _create_gas_boiler(self, b_fossil_gas, energy_system, heat_layers, kwargs):
         # gas_boiler
         if ('gas_boiler' in kwargs
                 and kwargs['gas_boiler']["thermal_output"] > 0):
@@ -637,6 +749,7 @@ class MetaModel:
                                          heat_layers.b_th_in_highest.label))
             energy_system.add(t_boiler)
 
+    def _create_wood_pellet_boiler(self, b_pellet, energy_system, heat_layers, kwargs):
         # wood pellet gas_boiler
         if ('pellet_boiler' in kwargs
                 and kwargs['pellet_boiler']['thermal_output'] > 0):
@@ -656,6 +769,7 @@ class MetaModel:
                                          heat_layers.b_th_in_highest.label))
             energy_system.add(t_pellet)
 
+    def _create_chp(self, b_biomethane, b_elprod, b_elxprt, b_fossil_gas, energy_system, heat_layers, kwargs):
         # CHP
         if 'chp' in kwargs and kwargs['chp']['electric_output'] > 0:
             chp = kwargs.pop('chp')
@@ -666,8 +780,8 @@ class MetaModel:
             subsidised_timesteps[subsidised_timesteps <= 0] = 0
 
             self.chp_revenue_funded = (
-                self.energy_cost['electricity']['market']
-                + subsidised_timesteps * chp['feed_in_subsidy'])
+                    self.energy_cost['electricity']['market']
+                    + subsidised_timesteps * chp['feed_in_subsidy'])
             self.chp_revenue_unfunded = self.energy_cost[
                 'electricity']['market']
 
@@ -749,6 +863,7 @@ class MetaModel:
             self.chp_revenue_funded = 0
             self.chp_revenue_unfunded = 0
 
+    def _create_pv(self, b_elprod, b_elxprt, energy_system, kwargs):
         # PV
         if 'pv' in kwargs and kwargs['pv']['nominal_power'] > 0:
             pv = kwargs.pop('pv')
@@ -772,6 +887,7 @@ class MetaModel:
         else:
             self.pv_revenue = 0
 
+    def _create_power_to_heat(self, b_eldist, energy_system, heat_layers, kwargs):
         # Power to Heat
         if ('power_to_heat' in kwargs
                 and kwargs['power_to_heat']['thermal_output'] > 0):
@@ -791,6 +907,7 @@ class MetaModel:
             self.p2h_th_flows.append((t_p2h.label,
                                       heat_layers.b_th_in_highest.label))
 
+    def _create_wind_turbine(self, b_elprod, b_elxprt, energy_system, kwargs):
         # Wind Turbine
         if 'wind_turbine' in kwargs \
                 and kwargs['wind_turbine']['nominal_power'] > 0:
@@ -816,6 +933,7 @@ class MetaModel:
         else:
             self.wt_revenue = 0
 
+    def _create_battery(self, b_elprod, energy_system, kwargs):
         # Battery
         if 'battery' in kwargs and kwargs['battery']['capacity'] > 0:
             battery = kwargs.pop('battery')
@@ -829,63 +947,13 @@ class MetaModel:
                 initial_storage_level=battery.get('initial_storage_level', None),
                 nominal_storage_capacity=battery['capacity'],
                 inflow_conversion_factor=battery['efficiency_inflow'],
-                outflow_conversion_factor=battery['efficiency_outflow'])
+                outflow_conversion_factor=battery['efficiency_outflow'],
+                balanced=battery.get('balanced', False))
 
             energy_system.add(s_battery)
             self.battery_content = (s_battery.label, "None")
             self.battery_inflows.append((b_elprod.label, s_battery.label))
             self.battery_outflows.append((s_battery.label, b_elprod.label))
-
-        model = Model(energy_system)
-
-        if self._thermal_storage:
-            self._thermal_storage.add_shared_limit(model=model)
-
-        if self.exclusive_grid_connection:
-            # Check if simultaneous  feed in
-            # and feed out might occur due to expediencies
-            expendency_pv = max(self.pv_revenue
-                                - self.grid_connection_in_costs)
-            expendency_wt = max(self.wt_revenue
-                                - self.grid_connection_in_costs)
-            expendency_chp = max(self.chp_revenue_funded
-                                 - self.grid_connection_in_costs)
-            max_expendency = max([expendency_chp,
-                                  expendency_pv,
-                                  expendency_wt])
-
-            # Only activate exclusive grid connection
-            # if such situations might occur
-            if max_expendency >= 0:
-                constraints.limit_active_flow_count_by_keyword(
-                    model,
-                    "grid_connection",
-                    lower_limit=0,
-                    upper_limit=1)
-
-        self.production_el_flows = (self.wt_el_flows
-                                    + self.pv_el_flows
-                                    + self.chp_el_flows)
-        self.gas_flows = (self.fossil_gas_import_flows
-                          + self.biomethane_import_flows)
-        self.demand_el_flows = (self.demand_el_flows
-                                + self.p2h_el_flows
-                                + self.ahp_el_flows
-                                + self.bhp_el_flows)
-
-        self.energy_system = energy_system
-        self.model = model
-        if len(kwargs) > 0:
-            print(10*"#")
-            print("Unhandled arguments while initialising MTRESS:")
-            pprint.pprint(kwargs)
-            print(10 * "#")
-
-        # variables for net import/export
-        self._raw_electricity_import = None
-        self._raw_electricity_export = None
-        self._electricity_export = None
-        self._electricity_import = None
 
     def aggregate_flows(self, flows_to_aggregate):
         """
@@ -901,7 +969,7 @@ class MetaModel:
         res = np.zeros(self.number_of_time_steps)
         for flow in flows_to_aggregate:
             res += self.energy_system.results['main'][flow][
-                'sequences']['flow'][:self.number_of_time_steps].to_numpy()
+                'sequences']['flow'].to_numpy()
 
         return res
 
@@ -1009,10 +1077,10 @@ class MetaModel:
         electricity_from_adjacent = self.aggregate_flows(
             self.adjacent_renewable_flows)
         grid_electricity_fraction = (
-            electricity_from_grid
-            / (electricity_from_adjacent
-               + electricity_from_grid
-               + 1e-10)
+                electricity_from_grid
+                / (electricity_from_adjacent
+                   + electricity_from_grid
+                   + 1e-10)
         )
         co2_import_el = (self._electricity_import
                          * grid_electricity_fraction
