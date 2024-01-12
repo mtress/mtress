@@ -21,7 +21,7 @@ energy_system.add_location(house_1)
 
 
 house_1.add(carriers.Electricity())
-house_1.add(technologies.ElectricityGridConnection(working_rate=70))
+house_1.add(technologies.ElectricityGridConnection(working_rate=0.70))
 
 house_1.add(
     carriers.GasCarrier(
@@ -43,7 +43,7 @@ house_1.add(
     technologies.Photovoltaics(
         "pv0",
         (52.729, 8.181),
-        nominal_power=2000,
+        nominal_power=2e6,
         weather=weather,
         surface_azimuth=180,
         surface_tilt=35,
@@ -101,16 +101,16 @@ house_1.add(
 
 house_1.add(
     technologies.Electrolyser(
-        name="PEM_Ely", nominal_power=600, template=PEM_ELECTROLYSER
+        name="PEM_Ely", nominal_power=6e5, template=PEM_ELECTROLYSER
     )
 )
 house_1.add(
     technologies.FuelCell(
-        name="AFC", nominal_power=50, gas_input_pressure=20, template=AFC
+        name="AFC", nominal_power=5e4, gas_input_pressure=20, template=AFC
     )
 )
 house_1.add(
-    technologies.GasCompressor(name="H2Compr", nominal_power=100, gas_type=HYDROGEN)
+    technologies.GasCompressor(name="H2Compr", nominal_power=1e5, gas_type=HYDROGEN)
 )
 
 solph_representation = SolphModel(
