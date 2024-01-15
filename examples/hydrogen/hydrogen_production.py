@@ -15,7 +15,7 @@ house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
 house_1.add(carriers.Electricity())
-house_1.add(technologies.ElectricityGridConnection(working_rate=35))
+house_1.add(technologies.ElectricityGridConnection(working_rate=0.35))
 
 weather = {
     "ghi": "FILE:../weather.csv:ghi",
@@ -31,7 +31,7 @@ house_1.add(
     technologies.Photovoltaics(
         "pv0",
         (52.729, 8.181),
-        nominal_power=1500,
+        nominal_power=15e5,
         weather=weather,
         surface_azimuth=180,
         surface_tilt=35,
@@ -42,7 +42,7 @@ house_1.add(
 house_1.add(
     demands.Electricity(
         name="electricity demand",
-        time_series=[90, 30, 50, 34],
+        time_series=[9e4, 3e4, 5e4, 3.4e4],
     )
 )
 
@@ -62,6 +62,7 @@ house_1.add(
         name="low_pressure",
         gas_type=HYDROGEN,
         grid_pressure=30,
+        working_rate=15,
     )
 )
 
@@ -87,20 +88,28 @@ house_1.add(
         name="hot water",
         flow_temperature=55,
         return_temperature=10,
-        time_series=[155, 125, 185, 213],
+        time_series=[155e3, 125e3, 185e3, 213e3],
     )
 )
 
 house_1.add(
     technologies.Electrolyser(
         name="Alk-Ely",
-        nominal_power=500,
+        nominal_power=5e5,
         template=ALKALINE_ELECTROLYSER,
     )
 )
+
+house_1.add(
+    demands.HeatSink(
+        name="Excess Heat",
+        temperature_levels=55,
+    )
+)
+
 house_1.add(technologies.HeatPump(name="hp0", thermal_power_limit=None))
 house_1.add(
-    technologies.GasCompressor(name="H2Compr", nominal_power=50, gas_type=HYDROGEN)
+    technologies.GasCompressor(name="H2Compr", nominal_power=5e4, gas_type=HYDROGEN)
 )
 
 house_1.add(technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6, 13, 12]))

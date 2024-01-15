@@ -23,13 +23,13 @@ energy_system.add_location(house_1)
 
 
 house_1.add(carriers.Electricity())
-house_1.add(technologies.ElectricityGridConnection(working_rate=35))
+house_1.add(technologies.ElectricityGridConnection(working_rate=0.35))
 house_1.add(
     technologies.GasGridConnection(
         name="NG_Grid",
         gas_type=NATURAL_GAS,
         grid_pressure=20,
-        working_rate=15,
+        working_rate=5,
     )
 )
 
@@ -64,7 +64,7 @@ house_1.add(
     technologies.Photovoltaics(
         "pv0",
         (52.729, 8.181),
-        nominal_power=800,
+        nominal_power=8e5,
         weather=weather,
         surface_azimuth=180,
         surface_tilt=35,
@@ -99,7 +99,7 @@ house_1.add(
 house_1.add(
     technologies.CHP(
         name="Mixed_CHP",
-        nominal_power=100,
+        nominal_power=1e5,
         gas_type={NATURAL_GAS: 0.75, HYDROGEN: 0.25},
         template=HYDROGEN_MIXED_CHP,
     )
