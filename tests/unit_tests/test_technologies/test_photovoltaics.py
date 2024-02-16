@@ -21,7 +21,8 @@ def test_pv_initialisation():
     )
 
     assert pv.name == pv_name
-    assert pv.location == pv_location
+    assert pv.geo_location.latitude == pv_location[0]
+    assert pv.geo_location.longitude == pv_location[1]
     assert pv.nominal_power == pv_nominal_power
     assert pv.weather == pv_weather
     assert pv.surface_azimuth == pv_surface_azimuth
