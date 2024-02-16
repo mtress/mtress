@@ -44,7 +44,7 @@ def test_layered_heat_demand():
         },
     )
 
-    in_80 = solph_model.energy_system.nodes[0]
+    in_80 = list(solph_model.energy_system.nodes)[0]
     heat_source = solph.components.Source(
             label="heat_source",
             outputs={in_80: solph.Flow()}
