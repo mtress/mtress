@@ -85,8 +85,6 @@ class AbstractHomogenousStorage(AbstractSolphRepresentation):
             else:
                 storage_level = (level - empty_level)/(max_level - empty_level)
 
-            print(storage_level)
-
             if storage_level > 0:
                 in_bus = self.create_solph_node(
                     label=f"in_{level:d}",
