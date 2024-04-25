@@ -19,6 +19,10 @@ to perform the actual optimisation. Please refer to the
 [documentation of solph](https://oemof-solph.readthedocs.io/en/v0.4.4/readme.html#installing-a-solver)
 to learn how to install a solver.
 
+## Documentation
+
+The auto-generated documentation can be found on the [GitLab pages](https://mtress-ecosystem.pages.gitlab.dlr.de/mtress).
+
 
 ## Contributing
 
