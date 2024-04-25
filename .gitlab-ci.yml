@@ -38,7 +38,16 @@ pytest:
   stage: test
   script:
     - pip install pytest 
-    - python -m pytest tests
+    - pytest --cov=mtress tests
+    - coverage xml
+  artifacts:
+    paths:
+      - coverage.xml
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
   allow_failure: true
 
 pages:
