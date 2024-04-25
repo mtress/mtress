@@ -1,58 +1,56 @@
-stages:
-  - test
-  - build
-  - package
+# Inspired by https://gitlab.com/gitlab-org/gitlab-foss/-/blob/master/lib/gitlab/ci/templates/Python.gitlab-ci.yml
 
-.test_before_script:
+default:
+  image: python:3.10
+
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+  
+.base_environment:
   before_script:
     - apt-get update -qy
-    - apt-get install -y coinor-cbc
-    - apt-get install git
-    - pip install --upgrade pip
-    - pip install git+https://github.com/oemof/oemof-thermal.git
-    - pip install git+https://github.com/oemof/oemof-solph.git
+    - apt-get install -y coinor-cbc git
     - pip install -r requirements.txt
-    - pip install pytest
 
-test_scripts:
-  stage: test
-  image: python:3.7
-  extends: .test_before_script
-  script:
-  - python -m pytest tests
+# Make the default stages explicit
+stages:
+  - linting
+  - build
+  - test
+  - deploy
 
-pylint:
-  stage: test
-  image: python:3.7
+ruff:
+  extends: .base_environment
+  stage: linting
   script:
-    - pip install pylint --quiet
-    - pip install git+https://github.com/oemof/oemof-thermal.git
-    - pip install -r requirements.txt
-    - pylint mtress
+    - pip install ruff
+    - ruff --output-format=gitlab .
   allow_failure: true
 
-build_pypi:
+pytest:
+  extends: .base_environment
+  stage: test
+  script:
+    - pip install pytest 
+    - python -m pytest tests
+  allow_failure: true
+
+pdoc:
+  extends: .base_environment
   stage: build
-  image: python:3.7
   script:
-    - pip install twine
-    - python setup.py sdist bdist_wheel
-  only:
-    - master
-  artifacts:    
-    expire_in: 30 days
+    - pip install pdoc
+    - pdoc mtress -o ./public
+  artifacts:
     paths:
-      - dist/
-  
-package_pypi:
-  stage: package
-  image: python:3.7
-  only:
-    - master
-  script:
-    - echo "Project ID:"
-    - echo ${CI_PROJECT_ID}
-    - pip install twine
-    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/pypi dist/*
-  when: manual
+      - public
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
 
