@@ -42,6 +42,7 @@ pytest:
   allow_failure: true
 
 pages:
+  extends: .base_environment
   stage: build
   script:
     - pip install pdoc
