@@ -41,22 +41,11 @@ pytest:
     - python -m pytest tests
   allow_failure: true
 
-pdoc:
-  extends: .base_environment
+pages:
   stage: build
   script:
     - pip install pdoc
-    - pdoc mtress -o ./docs
-  artifacts:
-    paths:
-      - docs
-#  rules:
-#    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-pages:
-  stage: deploy
-  script:
-    - mv ./docs ./public
+    - pdoc mtress -o ./public
   artifacts:
     paths:
       - public
