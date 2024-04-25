@@ -30,7 +30,7 @@ ruff:
   stage: linting
   script:
     - pip install ruff
-    - ruff --output-format=gitlab .
+    - ruff check --output-format=gitlab .
   allow_failure: true
 
 pytest:
@@ -46,11 +46,15 @@ pdoc:
   stage: build
   script:
     - pip install pdoc
-    - pdoc mtress -o ./public
+    - pdoc mtress -o ./docs
   artifacts:
     paths:
-      - public
+      - docs
 #  rules:
 #    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-
+pages:
+  script:
+    - mv ./docs ./public
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
