@@ -37,7 +37,7 @@ pytest:
   extends: .base_environment
   stage: test
   script:
-    - pip install pytest 
+    - pip install pytest pytest-cov
     - pytest --cov=mtress tests
     - coverage xml
   artifacts:
