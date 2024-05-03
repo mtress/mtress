@@ -1,8 +1,7 @@
 """This module provides a class representing an air heat exchanger."""
 
-
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Source
+from oemof.solph.components import Source, Sink
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
@@ -48,7 +47,8 @@ class AirHeatExchanger(
         self.nominal_power = nominal_power
 
         # Solph model interfaces
-        self._bus = None
+        self._bus_source = None
+        self._bus_sink = None
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -57,23 +57,39 @@ class AirHeatExchanger(
             kind=TimeseriesType.INTERVAL,
         )
 
-        self._bus = _bus = self.create_solph_node(
-            label="output",
+        self._bus_source = _bus_source = self.create_solph_node(
+            label="input",
             node_type=Bus,
         )
 
         self.create_solph_node(
             label="source",
             node_type=Source,
-            outputs={_bus: Flow(nominal_value=self.nominal_power)},
+            outputs={_bus_source: Flow(nominal_value=self.nominal_power)},
+        )
+
+        self._bus_sink = _bus_sink = self.create_solph_node(
+            label="output",
+            node_type=Bus,
+        )  #  The inside of the house
+
+        self.create_solph_node(
+            label="sink",
+            node_type=Sink,
+            inputs={_bus_sink: Flow(nominal_value=self.nominal_power)},
         )
 
     @property
     def temperature(self):
-        """Return temperature level of anergy source."""
+        """Return temperature level of the air."""
         return self.air_temperatures
 
     @property
-    def bus(self):
+    def bus_source(self):
         """Return _bus to connect to."""
-        return self._bus
+        return self._bus_source
+
+    @property
+    def bus_sink(self):
+        """Return _bus to connect to."""
+        return self._bus_sink
