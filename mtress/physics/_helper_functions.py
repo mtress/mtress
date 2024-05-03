@@ -22,6 +22,7 @@ def one_to_mega(arg):
     """
     return arg / 1000000
 
+
 def mega_to_one(arg):
     """
     use to make explicit unit conversions instead of just multiplying by 1000000
@@ -71,14 +72,14 @@ def bar_to_pascal(arg):
     return arg * 100000
 
 
-def mean_logarithmic_temperature(t_high, t_low):
+def logarithmic_mean_temperature(t_high, t_low):
     """
-    Logarithmic mean temperature as used by the
+    Logarithmic mean temperature difference as used by the
     Lorenz CIO Model
 
     :param t_high: High Temperature (in K)
     :param t_low: Low Temperature (in K)
-    :return: Mean Logarithmic Temperature (in K)
+    :return: Logarithmic Mean Temperature Difference (in K)
     """
     return (t_low - t_high) / np.log(t_low / t_high)
 
@@ -137,6 +138,3 @@ def calc_isothermal_compression_energy(p_in, p_out, T=20, R=4124.2):
     """
     T += 273.15  # Convert temperature to Kelvin
     return R * celsius_to_kelvin(T) * np.log(p_out / p_in) / SECONDS_PER_HOUR
-
-
-
