@@ -2,13 +2,15 @@
 Example to illustrate use of gas carrier and gas grid connection along with
 CHP implementation for heat and power generation.
 """
+
+import logging
 import os
 
 from oemof.solph.processing import results
+
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
-from mtress.physics import NATURAL_GAS, HYDROGEN
+from mtress.physics import HYDROGEN, NATURAL_GAS
 from mtress.technologies import HYDROGEN_MIXED_CHP
-import logging
 
 LOGGER = logging.getLogger(__file__)
 from mtress._helpers import get_flows
@@ -80,7 +82,7 @@ house_1.add(
 )
 
 house_1.add(
-    carriers.Heat(
+    carriers.HeatCarrier(
         temperature_levels=[80],
         reference_temperature=10,
     )

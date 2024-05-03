@@ -1,4 +1,5 @@
 """Example to illustrate hydrogen production to meet hydrogen demand."""
+
 import logging
 import os
 
@@ -77,7 +78,7 @@ house_1.add(
 )
 
 house_1.add(
-    carriers.Heat(
+    carriers.HeatCarrier(
         temperature_levels=[20, 57, 65],
         reference_temperature=10,
     )

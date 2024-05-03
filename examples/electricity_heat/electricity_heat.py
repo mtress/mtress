@@ -20,11 +20,12 @@ temperature are added to the energy system.
 Finally, the energy system is optimised/solved via meta_model.solve, a plot is
 created and the solver output is written to an .lp file.
 """
+
 import os
 
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 
-os.chdir(os.path.dirname (__file__))
+os.chdir(os.path.dirname(__file__))
 
 energy_system = MetaModel()
 
@@ -42,7 +43,7 @@ house_1.add(
 )
 
 house_1.add(
-    carriers.Heat(
+    carriers.HeatCarrier(
         temperature_levels=[20, 30, 55],
         reference_temperature=10,
     )
@@ -68,9 +69,7 @@ house_1.add(
     technologies.HeatPump(name="hp1", thermal_power_limit=None, anergy_sources=["ahe"])
 )
 
-house_1.add(
-    technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6])
-)
+house_1.add(technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6]))
 
 house_1.add(
     technologies.FullyMixedHeatStorage(

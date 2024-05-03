@@ -1,4 +1,5 @@
 """Example to illustrate hydrogen production to meet hydrogen demand."""
+
 import os
 
 from oemof.solph.processing import results
@@ -77,7 +78,7 @@ house_1.add(
 )
 
 house_1.add(
-    carriers.Heat(
+    carriers.HeatCarrier(
         temperature_levels=[55],
         reference_temperature=10,
     )
