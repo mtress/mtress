@@ -1,4 +1,4 @@
-"""This module provides heating rod component (power to heat)"""
+"""This module provides ResistiveHeater component (power to heat)"""
 
 import logging
 from oemof.solph import Flow
@@ -11,15 +11,9 @@ from ._abstract_technology import AbstractTechnology
 LOGGER = logging.getLogger(__file__)
 
 
-class HeatingRod(AbstractTechnology, AbstractSolphRepresentation):
+class ResistiveHeater(AbstractTechnology, AbstractSolphRepresentation):
     """
-    Heating Rod represents all electric resistance heat technologies.
-    It converts electricity into heat at a given efficiency.
-    Typically used with other heating technologies such as heat pumps etc.
-    to keep their nominal sizes down and the heating rod helps reach those
-    peak heat demands.
-
-
+    ResistiveHeater converts electricity into heat at a given efficiency.
     """
 
     def __init__(
@@ -30,7 +24,7 @@ class HeatingRod(AbstractTechnology, AbstractSolphRepresentation):
         efficiency: float = 1,
     ):
         """
-        Initialize Heating Rod.
+        Initialize ResistiveHeater.
 
         :param name: Set the name of the component.
         :param nominal_power: Nominal heating capacity of the heating rod (in W)
