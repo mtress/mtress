@@ -9,7 +9,7 @@ from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._helpers._util import enable_templating
-from ..carriers import Electricity, Heat, GasCarrier
+from ..carriers import Electricity, GasCarrier, HeatCarrier
 from ..physics import HYDROGEN, Gas
 from ._abstract_technology import AbstractTechnology
 
@@ -177,7 +177,7 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
         )
 
         # Heat connection for FC heat output
-        heat_carrier = self.location.get_carrier(Heat)
+        heat_carrier = self.location.get_carrier(HeatCarrier)
 
         temp_level, _ = heat_carrier.get_surrounding_levels(self.waste_heat_temperature)
 
@@ -194,7 +194,7 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
 
         # thermal efficiency with conversion from gas in kg to heat in W.
         heat_output = self.thermal_efficiency * self.gas_type.LHV
-        heat_bus = heat_carrier.inputs[temp_level]
+        heat_bus = heat_carrier.levels[temp_level]
 
         self.create_solph_node(
             label="converter",

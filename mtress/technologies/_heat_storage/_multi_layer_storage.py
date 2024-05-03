@@ -7,6 +7,7 @@ SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 
 SPDX-License-Identifier: MIT
 """
+
 from numpy import power
 from oemof.solph import Flow
 from oemof.solph.components import GenericStorage
@@ -14,7 +15,7 @@ from oemof.solph.constraints import shared_limit
 from oemof.thermal import stratified_thermal_storage
 
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
-from mtress.carriers import Heat
+from mtress.carriers import HeatCarrier
 from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR, mega_to_one
 
 from ._abstract_heat_storage import AbstractHeatStorage
@@ -63,23 +64,29 @@ class LayeredHeatStorage(AbstractHeatStorage):
         """Build core structure of oemof.solph representation."""
         # Create storage components according to the temperature levels defined
         # by the heat carrier object
-        heat_carrier = self.location.get_carrier(Heat)
+        heat_carrier = self.location.get_carrier(HeatCarrier)
         reference_temperature = heat_carrier.reference_temperature
         temperature_levels = heat_carrier.levels
 
         for temperature in temperature_levels:
-            bus = heat_carrier.outputs[temperature]
+            bus = heat_carrier.levels[temperature]
 
-            capacity = self.volume * (
-                (temperature - reference_temperature) * H2O_DENSITY * H2O_HEAT_CAPACITY
-            ) / SECONDS_PER_HOUR
+            capacity = (
+                self.volume
+                * (
+                    (temperature - reference_temperature)
+                    * H2O_DENSITY
+                    * H2O_HEAT_CAPACITY
+                )
+                / SECONDS_PER_HOUR
+            )
             if self.u_value is None:
                 loss_rate = 0
                 fixed_losses_relative = 0
                 fixed_losses_absolute = 0
             else:
                 (
-                    loss_rate, 
+                    loss_rate,
                     fixed_losses_relative,  # MW
                     fixed_losses_absolute,  # MW
                 ) = stratified_thermal_storage.calculate_losses(
@@ -94,7 +101,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 )
                 fixed_losses_relative = mega_to_one(fixed_losses_relative)
                 fixed_losses_absolute = mega_to_one(fixed_losses_absolute)
-                
+
             # losses to the upper side of the storage will just leave the
             # storage for the uppermost level.
             # So, we neglect them for the others.
@@ -116,7 +123,9 @@ class LayeredHeatStorage(AbstractHeatStorage):
 
     def add_constraints(self):
         """Add constraints to the model."""
-        reference_temperature = self.location.get_carrier(Heat).reference_temperature
+        reference_temperature = self.location.get_carrier(
+            HeatCarrier
+        ).reference_temperature
 
         components, weights = zip(
             *[
@@ -124,8 +133,9 @@ class LayeredHeatStorage(AbstractHeatStorage):
                     component,
                     SECONDS_PER_HOUR
                     / (
-                        H2O_HEAT_CAPACITY * H2O_DENSITY 
-                        * (temperature - reference_temperature) 
+                        H2O_HEAT_CAPACITY
+                        * H2O_DENSITY
+                        * (temperature - reference_temperature)
                     ),
                 )
                 for temperature, component in self.storage_components.items()

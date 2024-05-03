@@ -8,13 +8,14 @@ SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
+
 from typing import Optional
 
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Source, Converter
+from oemof.solph.components import Converter, Source
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, Heat
+from ..carriers import Electricity, HeatCarrier
 from ..physics import calc_cop, celsius_to_kelvin
 from ._abstract_technology import AbstractAnergySource, AbstractTechnology
 
@@ -105,7 +106,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
 
     def establish_interconnections(self):
         """Add connections to anergy sources."""
-        heat_carrier = self.location.get_carrier(Heat)
+        heat_carrier = self.location.get_carrier(HeatCarrier)
 
         for anergy_source in self.location.get_technology(AbstractAnergySource):
             if self.anergy_sources is None or anergy_source.name in self.anergy_sources:
@@ -126,12 +127,12 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
                             self.heat_budget_bus: Flow(),
                         },
                         outputs={
-                            heat_carrier.inputs[target_temperature]: Flow(),
+                            heat_carrier.levels[target_temperature]: Flow(),
                         },
                         conversion_factors={
                             self.heat_budget_bus: 1,
                             anergy_source.bus: (cop - 1) / cop,
                             self.electricity_bus: 1 / cop,
-                            heat_carrier.inputs[target_temperature]: 1,
+                            heat_carrier.levels[target_temperature]: 1,
                         },
                     )

@@ -9,8 +9,8 @@ from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._helpers._util import enable_templating
-from ..carriers import Electricity, Heat, GasCarrier
-from ..physics import Gas, HYDROGEN, NATURAL_GAS, BIOGAS, BIO_METHANE
+from ..carriers import Electricity, GasCarrier, HeatCarrier
+from ..physics import BIO_METHANE, BIOGAS, HYDROGEN, NATURAL_GAS, Gas
 from ._abstract_technology import AbstractTechnology
 
 LOGGER = logging.getLogger(__file__)
@@ -203,7 +203,7 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
 
         # convert gas in kg to heat in Wh with thermal efficiency conversion
         heat_output = self.thermal_efficiency * gas_LHV
-        heat_carrier = self.location.get_carrier(Heat)
+        heat_carrier = self.location.get_carrier(HeatCarrier)
         temp_level, _ = heat_carrier.get_surrounding_levels(self.thermal_temperature)
 
         if np.isinf(temp_level):
@@ -215,7 +215,7 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
                 "higher than suitable temperature level"
             )
 
-        heat_bus = heat_carrier.inputs[temp_level]
+        heat_bus = heat_carrier.levels[temp_level]
 
         # Add electrical connection
         electricity_carrier = self.location.get_carrier(Electricity)

@@ -10,7 +10,7 @@ from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._helpers._util import enable_templating
-from ..carriers import Electricity, GasCarrier, Heat
+from ..carriers import Electricity, GasCarrier, HeatCarrier
 from ..physics import HYDROGEN
 from ._abstract_technology import AbstractTechnology
 
@@ -142,7 +142,7 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
         h2_output = self.hydrogen_efficiency / HYDROGEN.LHV
 
         # Heat connection
-        heat_carrier = self.location.get_carrier(Heat)
+        heat_carrier = self.location.get_carrier(HeatCarrier)
 
         temp_level, _ = heat_carrier.get_surrounding_levels(self.waste_heat_temperature)
         if np.isinf(temp_level):
@@ -154,7 +154,7 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
                 "higher than suitable temperature level"
             )
 
-        heat_bus = heat_carrier.inputs[temp_level]
+        heat_bus = heat_carrier.levels[temp_level]
 
         # TODO: Minimal power implementieren
         self.create_solph_node(

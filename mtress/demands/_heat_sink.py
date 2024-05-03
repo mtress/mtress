@@ -1,7 +1,8 @@
 from oemof.solph import Flow
 from oemof.solph.components import Sink
+
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Heat
+from ..carriers import HeatCarrier
 from ._abstract_demand import AbstractDemand
 
 
@@ -33,7 +34,7 @@ class HeatSink(AbstractDemand, AbstractSolphRepresentation):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        heat_carrier = self.location.get_carrier(Heat)
+        heat_carrier = self.location.get_carrier(HeatCarrier)
 
         _, temperature_levels = heat_carrier.get_surrounding_levels(
             self.temperature_levels
@@ -45,5 +46,5 @@ class HeatSink(AbstractDemand, AbstractSolphRepresentation):
         self.create_solph_node(
             label="Sink",
             node_type=Sink,
-            inputs={heat_carrier.outputs[temperature_levels]: Flow()},
+            inputs={heat_carrier.levels[temperature_levels]: Flow()},
         )
