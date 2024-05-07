@@ -81,9 +81,9 @@ class AbstractHomogenousStorage(AbstractSolphRepresentation):
         for level in levels:
             if capacity_at_level is not None:
                 # Use user defined function calculating the storage content at level
-                storage_level = capacity_at_level(level)/capacity_at_level(max_level)
+                storage_level = capacity_at_level(level) / capacity_at_level(max_level)
             else:
-                storage_level = (level - empty_level)/(max_level - empty_level)
+                storage_level = (level - empty_level) / (max_level - empty_level)
 
             if storage_level > 0:
                 in_bus = self.create_solph_node(

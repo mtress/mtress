@@ -70,7 +70,7 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
         self._reference_index = self._levels.index(reference_temperature)
 
         # Properties for solph interfaces
-        self.levels = {}
+        self.level_nodes = {}
 
     @property
     def reference_level(self):
@@ -107,5 +107,5 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
                 inputs=higher_level,
             )
 
-            self.levels[temperature] = bus
+            self.level_nodes[temperature] = bus
             higher_level = {bus: Flow()}

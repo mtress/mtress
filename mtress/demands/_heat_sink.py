@@ -46,5 +46,5 @@ class HeatSink(AbstractDemand, AbstractSolphRepresentation):
         self.create_solph_node(
             label="Sink",
             node_type=Sink,
-            inputs={heat_carrier.levels[temperature_levels]: Flow()},
+            inputs={heat_carrier.level_nodes[temperature_levels]: Flow()},
         )

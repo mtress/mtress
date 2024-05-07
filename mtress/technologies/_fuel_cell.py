@@ -194,7 +194,7 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
 
         # thermal efficiency with conversion from gas in kg to heat in W.
         heat_output = self.thermal_efficiency * self.gas_type.LHV
-        heat_bus = heat_carrier.levels[temp_level]
+        heat_bus = heat_carrier.level_nodes[temp_level]
 
         self.create_solph_node(
             label="converter",

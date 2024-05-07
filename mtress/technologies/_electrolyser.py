@@ -154,7 +154,7 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
                 "higher than suitable temperature level"
             )
 
-        heat_bus = heat_carrier.levels[temp_level]
+        heat_bus = heat_carrier.level_nodes[temp_level]
 
         # TODO: Minimal power implementieren
         self.create_solph_node(

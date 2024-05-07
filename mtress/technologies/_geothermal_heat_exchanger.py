@@ -1,6 +1,5 @@
 """This module provides a class representing an ground heat exchanger."""
 
-
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Source
 
@@ -9,6 +8,8 @@ from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ._abstract_technology import AbstractAnergySource, AbstractTechnology
 
 from typing import Optional
+
+
 class GeothermalHeatExchanger(
     AbstractTechnology, AbstractAnergySource, AbstractSolphRepresentation
 ):

@@ -80,23 +80,23 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphRepresentation):
         conversion_factors = {}
 
         if self.flow_temperature > carrier.reference:
-            inputs[carrier.levels[self.flow_temperature]] = Flow()
+            inputs[carrier.level_nodes[self.flow_temperature]] = Flow()
         elif self.flow_temperature < carrier.reference:
-            outputs[carrier.levels[self.flow_temperature]] = Flow()
+            outputs[carrier.level_nodes[self.flow_temperature]] = Flow()
 
         if self.return_temperature > carrier.reference:
-            outputs[carrier.levels[self.return_temperature]] = Flow()
+            outputs[carrier.level_nodes[self.return_temperature]] = Flow()
         elif self.return_temperature < carrier.reference:
-            inputs[carrier.levels[self.return_temperature]] = Flow()
+            inputs[carrier.level_nodes[self.return_temperature]] = Flow()
 
         if self.return_temperature > carrier.reference:
             temperature_ratio = (self.return_temperature - carrier.reference) / (
                 self.flow_temperature - carrier.reference
             )
             conversion_factors = {
-                carrier.levels[self.flow_temperature]: 1,
+                carrier.level_nodes[self.flow_temperature]: 1,
                 output: 1 - temperature_ratio,
-                carrier.levels[self.return_temperature]: temperature_ratio,
+                carrier.level_nodes[self.return_temperature]: temperature_ratio,
             }
         elif self.return_temperature < carrier.reference:
             if self.flow_temperature < carrier.reference:
@@ -104,18 +104,18 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphRepresentation):
                     self.return_temperature - carrier.reference
                 )
                 conversion_factors = {
-                    carrier.levels[self.flow_temperature]: 1 - temperature_ratio,
+                    carrier.level_nodes[self.flow_temperature]: 1 - temperature_ratio,
                     output: temperature_ratio,
-                    carrier.levels[self.return_temperature]: 1,
+                    carrier.level_nodes[self.return_temperature]: 1,
                 }
             elif self.flow_temperature > carrier.reference:
                 temperature_ratio = (self.flow_temperature - carrier.reference) / (
                     self.flow_temperature - self.return_temperature
                 )
                 conversion_factors = {
-                    carrier.levels[self.flow_temperature]: temperature_ratio,
+                    carrier.level_nodes[self.flow_temperature]: temperature_ratio,
                     output: 1,
-                    carrier.levels[self.return_temperature]: 1 - temperature_ratio,
+                    carrier.level_nodes[self.return_temperature]: 1 - temperature_ratio,
                 }
 
         self.create_solph_node(

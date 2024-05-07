@@ -52,7 +52,7 @@ class ResistiveHeater(AbstractTechnology, AbstractSolphRepresentation):
         if temp_level not in heat_carrier.levels:
             raise ValueError("No suitable temperature level available")
 
-        heat_bus = heat_carrier.levels[temp_level]
+        heat_bus = heat_carrier.level_nodes[temp_level]
 
         self.create_solph_node(
             label="converter",

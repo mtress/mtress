@@ -12,7 +12,7 @@ SPDX-License-Identifier: MIT
 from typing import Optional
 
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Converter, Source
+from oemof.solph.components import Source, Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import Electricity, HeatCarrier
@@ -127,12 +127,12 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
                             self.heat_budget_bus: Flow(),
                         },
                         outputs={
-                            heat_carrier.levels[target_temperature]: Flow(),
+                            heat_carrier.level_nodes[target_temperature]: Flow(),
                         },
                         conversion_factors={
                             self.heat_budget_bus: 1,
                             anergy_source.bus: (cop - 1) / cop,
                             self.electricity_bus: 1 / cop,
-                            heat_carrier.levels[target_temperature]: 1,
+                            heat_carrier.level_nodes[target_temperature]: 1,
                         },
                     )

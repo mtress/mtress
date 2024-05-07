@@ -69,7 +69,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
         temperature_levels = heat_carrier.levels
 
         for temperature in temperature_levels:
-            bus = heat_carrier.levels[temperature]
+            bus = heat_carrier.level_nodes[temperature]
 
             capacity = (
                 self.volume

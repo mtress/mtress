@@ -215,7 +215,7 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
                 "higher than suitable temperature level"
             )
 
-        heat_bus = heat_carrier.levels[temp_level]
+        heat_bus = heat_carrier.level_nodes[temp_level]
 
         # Add electrical connection
         electricity_carrier = self.location.get_carrier(Electricity)
