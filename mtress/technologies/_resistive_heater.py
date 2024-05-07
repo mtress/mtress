@@ -1,6 +1,7 @@
 """This module provides ResistiveHeater component (power to heat)"""
 
 import logging
+
 from oemof.solph import Flow
 from oemof.solph.components import Converter
 
@@ -52,12 +53,23 @@ class ResistiveHeater(AbstractTechnology, AbstractSolphRepresentation):
         if temp_level not in heat_carrier.levels:
             raise ValueError("No suitable temperature level available")
 
-        heat_bus = heat_carrier.level_nodes[temp_level]
+        lowest_temp_level = heat_carrier.levels[0]
+        # temperature_levels = [10, 15, 17, 20, 30]
+
+        heat_bus_out = heat_carrier.level_nodes[temp_level]
+        heat_bus_in = heat_carrier.level_nodes[lowest_temp_level]
+
+        temperature_ratio = lowest_temp_level / temp_level
 
         self.create_solph_node(
             label="converter",
             node_type=Converter,
-            inputs={electrical_bus: Flow()},
-            outputs={heat_bus: Flow(nominal_value=self.nominal_power)},
-            conversion_factors={heat_bus: self.efficiency},
+            inputs={
+                electrical_bus: Flow(nominal_value=self.nominal_power),
+                heat_bus_in: Flow(),
+            },
+            outputs={heat_bus_out: Flow()},
+            conversion_factors={
+                heat_bus_out: self.efficiency / (1 - temperature_ratio),
+            },
         )
