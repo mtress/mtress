@@ -38,8 +38,7 @@ pytest:
   stage: test
   script:
     - pip install pytest pytest-cov
-    - pytest --cov=mtress tests
-    - ls -laR # debug
+    - python -m pytest --cov=mtress tests
     - coverage xml
   artifacts:
     paths:
