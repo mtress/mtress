@@ -22,6 +22,7 @@ class ResistiveHeater(AbstractTechnology, AbstractSolphRepresentation):
         name: str,
         nominal_power: float,
         maximum_temperature: float,
+        minumum_temperature: float = 0,
         efficiency: float = 1,
     ):
         """
@@ -36,6 +37,7 @@ class ResistiveHeater(AbstractTechnology, AbstractSolphRepresentation):
 
         self.nominal_power = nominal_power
         self.maximum_temperature = maximum_temperature
+        self.minumum_temperature = minumum_temperature
         self.efficiency = efficiency
 
     def build_core(self):
@@ -48,28 +50,37 @@ class ResistiveHeater(AbstractTechnology, AbstractSolphRepresentation):
         # Add heat connection
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
-        temp_level, _ = heat_carrier.get_surrounding_levels(self.maximum_temperature)
+        warm_level, _ = heat_carrier.get_surrounding_levels(self.maximum_temperature)
+        _, cold_level = heat_carrier.get_surrounding_levels(self.minumum_temperature)
 
-        if temp_level not in heat_carrier.levels:
-            raise ValueError("No suitable temperature level available")
+        if cold_level not in heat_carrier.levels:
+            raise ValueError(
+                f"No suitable temperature level available for {cold_level}."
+            )
+        if warm_level not in heat_carrier.levels:
+            raise ValueError(
+                f"No suitable temperature level available for {warm_level}."
+            )
 
-        lowest_temp_level = heat_carrier.levels[0]
+        reference_temp = heat_carrier.reference
         # temperature_levels = [10, 15, 17, 20, 30]
 
-        heat_bus_out = heat_carrier.level_nodes[temp_level]
-        heat_bus_in = heat_carrier.level_nodes[lowest_temp_level]
+        heat_bus_warm = heat_carrier.level_nodes[warm_level]
+        heat_bus_cold = heat_carrier.level_nodes[cold_level]
 
-        temperature_ratio = lowest_temp_level / temp_level
+        ratio = (cold_level - reference_temp) / (warm_level - reference_temp)
 
         self.create_solph_node(
             label="converter",
             node_type=Converter,
             inputs={
                 electrical_bus: Flow(nominal_value=self.nominal_power),
-                heat_bus_in: Flow(),
+                heat_bus_cold: Flow(),
             },
-            outputs={heat_bus_out: Flow()},
+            outputs={heat_bus_warm: Flow()},
             conversion_factors={
-                heat_bus_out: self.efficiency / (1 - temperature_ratio),
+                electrical_bus: (1 - ratio) / self.efficiency,
+                heat_bus_cold: ratio,
+                heat_bus_warm: 1,
             },
         )
