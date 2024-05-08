@@ -39,7 +39,9 @@ pytest:
   script:
     - pip install pytest pytest-cov
     - python -m pytest --cov=mtress tests
+    - coverage report
     - coverage xml
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     paths:
       - coverage.xml
