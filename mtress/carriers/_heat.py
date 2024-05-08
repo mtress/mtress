@@ -12,7 +12,6 @@ SPDX-License-Identifier: MIT
 """
 
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractLayeredCarrier
@@ -106,6 +105,8 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
                 node_type=Bus,
                 inputs=higher_level,
             )
+            if temperature is self.reference:
+                bus.balanced = False
 
             self.level_nodes[temperature] = bus
             higher_level = {bus: Flow()}
