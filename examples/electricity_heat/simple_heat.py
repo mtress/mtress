@@ -18,31 +18,25 @@ house_1.add(carriers.Electricity())
 house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 house_1.add(
-    demands.Electricity(
-        name="electricity demand",
-        time_series=[9, 13],
-    )
-)
-
-house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[20, 30],
+        temperature_levels=[20, 30, 40, 50],
         reference_temperature=10,
     )
 )
 house_1.add(
     technologies.ResistiveHeater(
         name="Resistive_Heater",
-        nominal_power=20,
-        maximum_temperature=30,
+        nominal_power=None,
+        maximum_temperature=50,
+        minumum_temperature=20,
     )
 )
 house_1.add(
     demands.FixedTemperatureHeat(
         name="heating",
-        flow_temperature=30,
+        flow_temperature=40,
         return_temperature=20,
-        time_series=[2, 10],
+        time_series=[10, 10],
     )
 )
 
