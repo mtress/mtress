@@ -1,16 +1,15 @@
 """This module provides a class representing an air heat exchanger."""
 
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Source, Sink
+from oemof.solph.components import Source, Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
-from ._abstract_technology import AbstractAnergySource, AbstractTechnology
+from ._abstract_technology import AbstractTechnology, AbstractAnergySource
+from ..carriers import HeatCarrier
 
 
-class AirHeatExchanger(
-    AbstractTechnology, AbstractAnergySource, AbstractSolphRepresentation
-):
+class AirHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
     """
     Air heat exchanger for e.g. heat pumps.
 
@@ -31,7 +30,9 @@ class AirHeatExchanger(
     def __init__(
         self,
         name: str,
-        air_temperatures: TimeseriesSpecifier,
+        air_temperatures: float,  # 30 °C
+        # flow_temperature: float = None,
+        minimum_temperature: float = 0,
         nominal_power: float = None,
     ):
         """
@@ -45,17 +46,31 @@ class AirHeatExchanger(
 
         self.air_temperatures = air_temperatures
         self.nominal_power = nominal_power
+        # self.flow_temperature = flow_temperature
+        self.minimum_temperature = minimum_temperature
 
         # Solph model interfaces
         self._bus_source = None
-        self._bus_sink = None
+        # self._bus_sink = None
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        self.air_temperatures = self._solph_model.data.get_timeseries(
-            self.air_temperatures,
-            kind=TimeseriesType.INTERVAL,
-        )
+        # self.air_temperatures = self._solph_model.data.get_timeseries(
+        #     self.air_temperatures,
+        #     kind=TimeseriesType.INTERVAL,
+        # )
+
+        # self._bus_sink = _bus_sink = self.create_solph_node(
+        #     label="output",
+        #     node_type=Bus,
+        # )
+
+        # self.create_solph_node(
+        #     label="sink",
+        #     node_type=Sink,
+        #     # Flow shouldnt be empty here?
+        #     inputs={_bus_sink: Flow(nominal_value=self.nominal_power)},
+        # )
 
         self._bus_source = _bus_source = self.create_solph_node(
             label="input",
@@ -65,31 +80,53 @@ class AirHeatExchanger(
         self.create_solph_node(
             label="source",
             node_type=Source,
-            outputs={_bus_source: Flow(nominal_value=self.nominal_power)},
+            outputs={_bus_source: Flow()},
         )
 
-        self._bus_sink = _bus_sink = self.create_solph_node(
-            label="output",
-            node_type=Bus,
-        )  #  The inside of the house
+        heat_carrier = self.location.get_carrier(HeatCarrier)
+
+        warm_level_heating, _ = heat_carrier.get_surrounding_levels(
+            self.air_temperatures
+        )
+        _, cold_level_heating = heat_carrier.get_surrounding_levels(
+            self.minimum_temperature
+        )
+
+        reference_temp = heat_carrier.reference
+
+        heat_bus_cold = heat_carrier.level_nodes[cold_level_heating]
+        heat_bus_warm = heat_carrier.level_nodes[warm_level_heating]
+
+        ratio = (cold_level_heating - reference_temp) / (
+            warm_level_heating - reference_temp
+        )
 
         self.create_solph_node(
-            label="sink",
-            node_type=Sink,
-            inputs={_bus_sink: Flow(nominal_value=self.nominal_power)},
+            label="converter",
+            node_type=Converter,
+            inputs={
+                _bus_source: Flow(nominal_value=self.nominal_power),
+                heat_bus_cold: Flow(),
+            },
+            outputs={heat_bus_warm: Flow()},
+            conversion_factors={
+                _bus_source: (1 - ratio),
+                heat_bus_cold: ratio,
+                heat_bus_warm: 1,
+            },
         )
 
-    @property
-    def temperature(self):
-        """Return temperature level of the air."""
-        return self.air_temperatures
+    # @property
+    # def temperature(self):
+    #     """Return temperature level of the air."""
+    #     return self.air_temperatures
 
-    @property
-    def bus_source(self):
-        """Return _bus to connect to."""
-        return self._bus_source
+    # @property
+    # def bus_source(self):
+    #     """Return _bus to connect to."""
+    #     return self._bus_source
 
-    @property
-    def bus_sink(self):
-        """Return _bus to connect to."""
-        return self._bus_sink
+    # @property
+    # def bus_sink(self):
+    #     """Return _bus to connect to."""
+    #     return self._bus_sink
