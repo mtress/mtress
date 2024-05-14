@@ -63,7 +63,6 @@ class ResistiveHeater(AbstractTechnology, AbstractSolphRepresentation):
             )
 
         reference_temp = heat_carrier.reference
-        # temperature_levels = [10, 15, 17, 20, 30]
 
         heat_bus_warm = heat_carrier.level_nodes[warm_level]
         heat_bus_cold = heat_carrier.level_nodes[cold_level]
