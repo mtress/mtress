@@ -12,9 +12,6 @@ energy_system = MetaModel()
 house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
-house_1.add(carriers.Electricity())
-house_1.add(technologies.ElectricityGridConnection(working_rate=35))
-
 house_1.add(
     carriers.HeatCarrier(
         temperature_levels=[20, 30],
@@ -22,17 +19,14 @@ house_1.add(
     )
 )
 house_1.add(
-    demands.FixedTemperatureHeat(
-        name="space heating",
-        flow_temperature=30,
-        return_temperature=20,
-        time_series=[50, 50],
+    demands.HeatSink(
+        name="Excess_heat",
+        temperature_levels=15,
     )
 )
-
 house_1.add(
     technologies.AirHeatExchanger(
-        name="ahe", air_temperatures=45, minimum_temperature=20
+        name="ahe", air_temperatures=40, minimum_temperature=20, source=False
     )
 )
 
@@ -48,7 +42,7 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 plot = solph_representation.graph(detail=True)
-plot.render(outfile="electricity_heat_detail.png")
+plot.render(outfile="air_heat_exchanger_sink.png")
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
