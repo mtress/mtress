@@ -19,7 +19,7 @@ house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[20, 30, 40, 50],
+        temperature_levels=[20, 30, 50],
         reference_temperature=10,
     )
 )
@@ -29,14 +29,15 @@ house_1.add(
         nominal_power=None,
         maximum_temperature=50,
         minumum_temperature=20,
+        efficiency=1,
     )
 )
 house_1.add(
     demands.FixedTemperatureHeat(
         name="heating",
-        flow_temperature=40,
+        flow_temperature=50,
         return_temperature=20,
-        time_series=[10, 10],
+        time_series=[50, 50],
     )
 )
 
