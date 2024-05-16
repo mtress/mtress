@@ -7,7 +7,7 @@ def read(file_name):
 
 setup(
     name="mtress",
-    version="3.0.0dev0",
+    version="3.0.0a2",
     url="https://github.com/mtress/mtress",
     author="Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)",
     author_email="patrik.schoenfeldt@dlr.de",
