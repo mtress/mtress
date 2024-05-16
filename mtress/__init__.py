@@ -7,7 +7,7 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
-__version__ = "3.0.0dev0"
+__version__ = "3.0.0a2"
 
 from ._abstract_component import SolphLabel
 from ._location import Location
