@@ -1,0 +1,87 @@
+general:
+  timeindex:
+    start: 2021-07-10 00:00:00
+    end: 2022-05-20 23:59:59
+    freq: 15T
+  # time_index: time_index.csv
+  # time_index:
+  #  - 2021-01-01 00:00:00
+  #  - ...
+
+  # cache: None
+  working_directory: ./tmp/results
+  loglevel: INFO
+  cbc:
+    solve_kwargs:
+      tee: False
+      keepfiles: False
+    cmdline_options:
+      ratio: .001
+      sec: 14400 # 4 hours
+      threads: 4
+
+locations:
+  LocationA:
+    energy_cost:
+      electricity:
+        demand_rate: 15000  # €/MW
+        working: 300  # €/MWh
+      gas:
+        working_price: 95  # €/MWh
+        demand_rate: 5.5  # €/MW
+      wood_pellet: 300  # €/MWh
+    
+    meteorology:
+      temp_air: meteo.csv:temp_air
+      temp_soil: meteo.csv:temp_soil
+    
+    carriers:
+      Heat: # class name
+        reference_temperature: 10 # °C
+        temperature_levels:
+          - 35. # °C
+          - 60. # °C
+          - 80. # °C
+      Electricity:
+        grid_connection: True
+      Hydrogen:
+        pressure_levels:
+          - 30 
+          - 350
+          - 700
+
+    demands:
+      Electricity:
+        time_series: FILE:demand.csv:electricity
+      SpaceHeating:
+        time_series: FILE:demand.csv:space_heating
+    
+    components:
+      air_source:
+        technology: AirHeatExchanger
+        parameters:
+          nominal_power: 7.
+          air_temperatures: TIMESERIES:temp_air
+      hp0:
+        technology: HeatPump
+        parameters:
+          cop_0_35: 2.
+          thermal_power_limit: 0.1 # MW
+
+      heater:
+        technology: FixedTemperatureHeater
+        parameters:
+          nominal_value: 100.
+          flow_temperature: 60.
+          return_temperature: 35.
+
+      compressor0:
+        technology: GasCompressor
+        parameters:
+          nominal_power: 100.
+      electrolyser0:
+        technology: Electrolyser
+        parameters:
+          nominal_power: 100.
+          
+      

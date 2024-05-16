@@ -7,8 +7,11 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
-__version__ = "2.1.0"
+__version__ = "3.0.0a2"
 
-from . import layered_heat
-from . import physics
-from .meta_model import MetaModel
+from ._abstract_component import SolphLabel
+from ._location import Location
+from ._meta_model import Connection, MetaModel
+from ._solph_model import SolphModel
+
+__all__ = ["Connection", "Location", "MetaModel", "SolphLabel", "SolphModel"]

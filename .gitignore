@@ -6,4 +6,18 @@ __pycache__
 doc/mtress.wmf
 dist/
 build/
+.vscode/
+venv/
+
+.ipynb_checkpoints/
+*.ipynb
+
+# Individual obsolete files
+mtress/_meta_model_bak.py
+example/meta_model_config.yaml
+
+# results of examples
+examples/*/*.lp
+examples/*/*.png
+examples/*/*.gv
 

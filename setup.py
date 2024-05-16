@@ -7,7 +7,7 @@ def read(file_name):
 
 setup(
     name="mtress",
-    version="2.1.0",
+    version="3.0.0a2",
     url="https://github.com/mtress/mtress",
     author="Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)",
     author_email="patrik.schoenfeldt@dlr.de",
@@ -27,13 +27,9 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.10",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     zip_safe=False,
-    install_requires=[
-        "pyyaml >= 6.0",
-        "oemof.solph >= 0.4.4, <0.5",
-        "oemof.thermal >= 0.0.5",
-    ],
+    install_requires=read("requirements.txt"),
 )
