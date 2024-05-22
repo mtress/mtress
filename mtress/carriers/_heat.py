@@ -110,3 +110,17 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
 
             self.level_nodes[temperature] = bus
             higher_level = {bus: Flow()}
+
+    def get_connection_heat_transfer(self, max_temp, min_temp, reference_temp):
+
+        warm_level_heating, _ = self.get_surrounding_levels(max_temp)
+        _, cold_level_heating = self.get_surrounding_levels(min_temp)
+
+        ratio = (cold_level_heating - reference_temp) / (
+            warm_level_heating - reference_temp
+        )
+
+        heat_bus_warm = self.level_nodes[warm_level_heating]
+        heat_bus_cold = self.level_nodes[cold_level_heating]
+
+        return heat_bus_warm, heat_bus_cold, ratio
