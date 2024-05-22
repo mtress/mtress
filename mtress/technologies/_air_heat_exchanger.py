@@ -30,7 +30,7 @@ class AirHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
     def __init__(
         self,
         name: str,
-        air_temperatures: float,  # 30 °C
+        air_temperatures: float,
         # flow_temperature: float = None,
         minimum_temperature: float = 0,
         nominal_power: float = None,
