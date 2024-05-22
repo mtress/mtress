@@ -19,8 +19,8 @@ house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[15, 20, 30, 50],
-        reference_temperature=10,
+        temperature_levels=[-5, 0, 5, 15, 20, 30, 40],
+        reference_temperature=-10,
     )
 )
 
@@ -40,11 +40,37 @@ house_1.add(
         min_temp_secondary=30,
     )
 )
+
+house_1.add(
+    technologies.LayeredHeatStorage(
+        name="hst1",
+        diameter=3,
+        volume=10,
+        power_limit=None,
+        ambient_temperature=20,
+        u_value=None,
+        max_temperature=50,
+        min_temperature=20,
+    )
+)
+house_1.add(
+    technologies.LayeredHeatStorage(
+        name="hst2",
+        diameter=3,
+        volume=10,
+        power_limit=None,
+        ambient_temperature=20,
+        u_value=None,
+        max_temperature=15,
+        min_temperature=0,
+    )
+)
+
 house_1.add(
     demands.FixedTemperatureHeat(
         name="heating",
-        flow_temperature=50,
-        return_temperature=30,
+        flow_temperature=15,
+        return_temperature=0,
         time_series=[50, 50],
     )
 )
