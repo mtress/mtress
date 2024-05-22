@@ -72,7 +72,7 @@ def bar_to_pascal(arg):
     return arg * 100000
 
 
-def logarithmic_mean_temperature(t_high, t_low):
+def logarithmic_mean_temperature(temp_high, temp_low):
     """
     Logarithmic mean temperature difference as used by the
     Lorenz CIO Model
@@ -81,10 +81,10 @@ def logarithmic_mean_temperature(t_high, t_low):
     :param t_low: Low Temperature (in K)
     :return: Logarithmic Mean Temperature Difference (in K)
     """
-    return (t_low - t_high) / np.log(t_low / t_high)
+    return (temp_low - temp_high) / np.log(temp_low / temp_high)
 
 
-def lorenz_cop(temp_in, temp_out):
+def lorenz_cop(temp_low, temp_high):
     """
     Calculate the theoretical COP of a infinite number
     of heat pump processes acc. to Lorenz 1895
@@ -92,25 +92,50 @@ def lorenz_cop(temp_in, temp_out):
     (Lorenz, H, 1895. Die Ermittlung der Grenzwerte der
     thermodynamischen Energieumwandlung. Zeitschrift für
     die gesammte Kälte-Industrie, 2(1-3, 6-12).)
-    :param temp_in: Inlet Temperature (in K?)
-    :param temp_out: Outlet Temperature (in K?)
+    :param temp_low: Inlet Temperature (in K?)
+    :param temp_high: Outlet Temperature (in K?)
     :return: Ideal COP
     """
-    return temp_out / np.maximum(temp_out - temp_in, 1e-3)
+    return temp_high / np.maximum(temp_high - temp_low, 1e-3)
 
 
-def calc_cop(temp_input, temp_output, cop_0_35=4.6):
+def calc_cop(
+    temp_primary_in,
+    temp_secondary_out,
+    temp_primary_out=None,
+    temp_secondary_in=None,
+    cop_0_35=4.6,
+):
     """
     :param temp_input: Higher Temperature of the source (in K)
-    :param temp_output: Flow Temperature of the heating system (in K)
+    :param temp_highput: Flow Temperature of the heating system (in K)
     :param cop_0_35: COP for B0/W35
     :return: Scaled COP for the given temperatures
     """
+    if temp_primary_out is None or temp_primary_out == temp_primary_in:
+        temp_low = temp_primary_in
+    else:
+        temp_low = logarithmic_mean_temperature(
+            temp_high=temp_primary_in, temp_low=temp_primary_out
+        )
+
+    if temp_secondary_in is None or temp_secondary_out == temp_secondary_in:
+        temp_high = temp_secondary_out
+    else:
+        temp_high = logarithmic_mean_temperature(
+            temp_high=temp_secondary_out, temp_low=temp_secondary_in
+        )
+
     cpf = cop_0_35 / lorenz_cop(
-        temp_in=celsius_to_kelvin(0), temp_out=celsius_to_kelvin(35)
+        temp_low=logarithmic_mean_temperature(
+            temp_high=celsius_to_kelvin(0), temp_low=celsius_to_kelvin(-5)
+        ),
+        temp_high=logarithmic_mean_temperature(
+            temp_high=celsius_to_kelvin(35), temp_low=celsius_to_kelvin(30)
+        ),
     )
 
-    cop = cpf * lorenz_cop(temp_in=temp_input, temp_out=temp_output)
+    cop = cpf * lorenz_cop(temp_low=temp_low, temp_high=temp_high)
 
     return cop
 
