@@ -61,7 +61,6 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         name: str,
         thermal_power_limit: float = None,
         cop_0_35: float = 4.6,
-        energy_source=Optional[list],
         max_temp_primary: float = None,
         min_temp_primary: float = None,
         max_temp_secondary: float = None,
@@ -79,7 +78,6 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
 
         self.thermal_power_limit = thermal_power_limit
         self.cop_0_35 = cop_0_35
-        self.energy_source = energy_source
         self.max_temp_primary = max_temp_primary
         self.min_temp_primary = min_temp_primary
         self.max_temp_secondary = max_temp_secondary
@@ -120,8 +118,8 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         # Primary-side connection
         heat_bus_warm_primary, heat_bus_cold_primary, ratio_primary = (
             heat_carrier.get_connection_heat_transfer(
-                self.energy_source.max_temperatures,
-                self.energy_source.min_temperatures,
+                self.max_temp_primary,
+                self.min_temp_primary,
             )
         )
 
