@@ -50,24 +50,9 @@ class ResistiveHeater(AbstractTechnology, AbstractSolphRepresentation):
         # Add heat connection
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
-        warm_level, _ = heat_carrier.get_surrounding_levels(self.maximum_temperature)
-        _, cold_level = heat_carrier.get_surrounding_levels(self.minumum_temperature)
-
-        if cold_level not in heat_carrier.levels:
-            raise ValueError(
-                f"No suitable temperature level available for {cold_level}."
-            )
-        if warm_level not in heat_carrier.levels:
-            raise ValueError(
-                f"No suitable temperature level available for {warm_level}."
-            )
-
-        reference_temp = heat_carrier.reference
-
-        heat_bus_warm = heat_carrier.level_nodes[warm_level]
-        heat_bus_cold = heat_carrier.level_nodes[cold_level]
-
-        ratio = (cold_level - reference_temp) / (warm_level - reference_temp)
+        heat_bus_warm, heat_bus_cold, ratio = heat_carrier.get_connection_heat_transfer(
+            self.maximum_temperature, self.minumum_temperature
+        )
 
         self.create_solph_node(
             label="converter",

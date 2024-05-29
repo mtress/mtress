@@ -111,13 +111,22 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
             self.level_nodes[temperature] = bus
             higher_level = {bus: Flow()}
 
-    def get_connection_heat_transfer(self, max_temp, min_temp, reference_temp):
+    def get_connection_heat_transfer(self, max_temp, min_temp):
 
         warm_level_heating, _ = self.get_surrounding_levels(max_temp)
         _, cold_level_heating = self.get_surrounding_levels(min_temp)
 
-        ratio = (cold_level_heating - reference_temp) / (
-            warm_level_heating - reference_temp
+        if cold_level_heating not in self.levels:
+            raise ValueError(
+                f"No suitable temperature level available for {cold_level_heating}."
+            )
+        if warm_level_heating not in self.levels:
+            raise ValueError(
+                f"No suitable temperature level available for {warm_level_heating}."
+            )
+
+        ratio = (cold_level_heating - self.reference) / (
+            warm_level_heating - self.reference
         )
 
         heat_bus_warm = self.level_nodes[warm_level_heating]
