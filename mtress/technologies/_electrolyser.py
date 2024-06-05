@@ -45,7 +45,7 @@ class ElectrolyserTemplate:
 
     hydrogen_efficiency: float
     thermal_efficiency: float
-    waste_heat_temperature: float
+    maximum_temperature: float
     hydrogen_output_pressure: float
 
 
@@ -57,21 +57,21 @@ class ElectrolyserTemplate:
 PEM_ELECTROLYSER = ElectrolyserTemplate(
     hydrogen_efficiency=0.63,
     thermal_efficiency=0.25,
-    waste_heat_temperature=57,
+    maximum_temperature=57,
     hydrogen_output_pressure=30,
 )
 
 ALKALINE_ELECTROLYSER = ElectrolyserTemplate(
     hydrogen_efficiency=0.66,
     thermal_efficiency=0.20,
-    waste_heat_temperature=65,
+    maximum_temperature=65,
     hydrogen_output_pressure=30,
 )
 
 AEM_ELECTROLYSER = ElectrolyserTemplate(
     hydrogen_efficiency=0.625,
     thermal_efficiency=0.29,
-    waste_heat_temperature=50,
+    maximum_temperature=50,
     hydrogen_output_pressure=35,
 )
 
@@ -100,7 +100,8 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
         nominal_power: float,
         hydrogen_efficiency: float,
         thermal_efficiency: float,
-        waste_heat_temperature: float,
+        maximum_temperature: float,
+        minimum_temperature: float,
         hydrogen_output_pressure: float,
     ):
         """
@@ -112,7 +113,8 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
             i.e., the ratio of hydrogen output and electrical input
         :param thermal_efficiency: Thermal efficiency of the electrolyser,
             i.e., ratio of thermal output and electrical input
-        :param waste_heat_temperature: Waste heat temperature level (in °C).
+        :param maximum_temperature: Maximum waste heat temperature level (in °C).
+        :param minimum_temperature: Minimum return temperature level (in °C)
         :param hydrogen_output_pressure: Hydrogen output pressure (in bar)
         """
         super().__init__(name=name)
@@ -120,7 +122,8 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
         self.nominal_power = nominal_power
         self.hydrogen_efficiency = hydrogen_efficiency
         self.thermal_efficiency = thermal_efficiency
-        self.waste_heat_temperature = waste_heat_temperature
+        self.maximum_temperature = maximum_temperature
+        self.minimum_temperature = minimum_temperature
         self.hydrogen_output_pressure = hydrogen_output_pressure
 
     def build_core(self):
@@ -143,31 +146,27 @@ class Electrolyser(AbstractTechnology, AbstractSolphRepresentation):
 
         # Heat connection
         heat_carrier = self.location.get_carrier(HeatCarrier)
-
-        temp_level, _ = heat_carrier.get_surrounding_levels(self.waste_heat_temperature)
-        if np.isinf(temp_level):
-            ValueError("No suitable temperature level available")
-
-        if self.waste_heat_temperature - temp_level > 15:
-            LOGGER.info(
-                "Waste heat temperature significantly"
-                "higher than suitable temperature level"
-            )
-
-        heat_bus = heat_carrier.level_nodes[temp_level]
+        heat_bus_warm, heat_bus_cold, ratio = heat_carrier.get_connection_heat_transfer(
+            self.maximum_temperature,
+            self.minimum_temperature,
+        )
 
         # TODO: Minimal power implementieren
         self.create_solph_node(
             label="converter",
             node_type=Converter,
-            inputs={electrical_bus: Flow(nominal_value=self.nominal_power)},
+            inputs={
+                electrical_bus: Flow(nominal_value=self.nominal_power),
+                heat_bus_cold: Flow(),
+            },
             outputs={
                 h2_bus: Flow(),
-                heat_bus: Flow(),
+                heat_bus_warm: Flow(),
             },
             conversion_factors={
                 electrical_bus: 1,
+                heat_bus_cold: self.thermal_efficiency * ratio / (1 - ratio),
                 h2_bus: h2_output,
-                heat_bus: self.thermal_efficiency,
+                heat_bus_warm: self.thermal_efficiency / (1 - ratio),
             },
         )
