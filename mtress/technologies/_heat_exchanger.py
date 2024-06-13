@@ -55,10 +55,10 @@ class HeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        self.reservoir_temperature = self._solph_model.data.get_timeseries(
-            self.reservoir_temperature,
-            kind=TimeseriesType.INTERVAL,
-        )
+        # self.reservoir_temperature = self._solph_model.data.get_timeseries(
+        #     self.reservoir_temperature,
+        #     kind=TimeseriesType.INTERVAL,
+        # )
 
         heat_carrier = self.location.get_carrier(HeatCarrier)
 

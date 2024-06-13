@@ -27,6 +27,7 @@ from ._electrolyser import (
 from ._fuel_cell import AEMFC, AFC, PEMFC, FuelCell
 from ._geothermal_heat_exchanger import GeothermalHeatExchanger
 from ._heat_exchanger import HeatExchanger
+from ._heat_exchanger2 import HeatExchanger2
 from ._heat_pump import HeatPump
 from ._heat_storage import FullyMixedHeatStorage, LayeredHeatStorage
 from ._photovoltaics import Photovoltaics
@@ -65,4 +66,5 @@ __all__ = [
     "LayeredHeatStorage",
     "Photovoltaics",
     "RenewableElectricitySource",
+    "HeatExchanger2",
 ]
