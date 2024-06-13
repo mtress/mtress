@@ -33,6 +33,7 @@ class AirHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         air_temperatures: TimeseriesSpecifier,
         minimum_temperature: float = 0,
         nominal_power: float = None,
+        source: bool = True,
     ):
         """
         Initialize air heat exchanger for e.g. heat pumps.
@@ -46,16 +47,18 @@ class AirHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         self.air_temperatures = air_temperatures
         self.minimum_temperature = minimum_temperature
         self.nominal_power = nominal_power
+        self.source = source
 
         # Solph model interfaces
         self._bus_source = None
+        self._bus_sink = None
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        self.air_temperatures = self._solph_model.data.get_timeseries(
-            self.air_temperatures,
-            kind=TimeseriesType.INTERVAL,
-        )
+        # self.air_temperatures = self._solph_model.data.get_timeseries(
+        #     self.air_temperatures,
+        #     kind=TimeseriesType.INTERVAL,
+        # )
 
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
@@ -63,31 +66,60 @@ class AirHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             self.air_temperatures, self.minimum_temperature
         )
 
-        self._bus_source = _bus_source = self.create_solph_node(
-            label="input",
-            node_type=Bus,
-        )
+        if self.source == True:
+            self._bus_source = _bus_source = self.create_solph_node(
+                label="input",
+                node_type=Bus,
+            )
 
-        self.create_solph_node(
-            label="source",
-            node_type=Source,
-            outputs={_bus_source: Flow()},
-        )
+            self.create_solph_node(
+                label="source",
+                node_type=Source,
+                outputs={_bus_source: Flow()},
+            )
 
-        self.create_solph_node(
-            label="converter",
-            node_type=Converter,
-            inputs={
-                _bus_source: Flow(nominal_value=self.nominal_power),
-                heat_bus_cold: Flow(),
-            },
-            outputs={heat_bus_warm: Flow()},
-            conversion_factors={
-                _bus_source: (1 - ratio),
-                heat_bus_cold: ratio,
-                heat_bus_warm: 1,
-            },
-        )
+            self.create_solph_node(
+                label="converter",
+                node_type=Converter,
+                inputs={
+                    _bus_source: Flow(nominal_value=self.nominal_power),
+                    heat_bus_cold: Flow(),
+                },
+                outputs={heat_bus_warm: Flow()},
+                conversion_factors={
+                    _bus_source: (1 - ratio),
+                    heat_bus_cold: ratio,
+                    heat_bus_warm: 1,
+                },
+            )
+        else:
+            self._bus_sink = _bus_sink = self.create_solph_node(
+                label="output",
+                node_type=Bus,
+            )
+
+            self.create_solph_node(
+                label="sink",
+                node_type=Sink,
+                inputs={_bus_sink: Flow()},
+            )
+
+            self.create_solph_node(
+                label="converter",
+                node_type=Converter,
+                inputs={
+                    heat_bus_warm: Flow(),
+                },
+                outputs={
+                    heat_bus_cold: Flow(),
+                    _bus_sink: Flow(nominal_value=self.nominal_power),
+                },
+                conversion_factors={
+                    _bus_sink: (1 - ratio),
+                    heat_bus_cold: ratio,
+                    heat_bus_warm: 1,
+                },
+            )
 
     # @property
     # def temperature(self):
