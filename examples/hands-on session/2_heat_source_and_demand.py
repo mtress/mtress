@@ -22,32 +22,31 @@ house_1.add(
 
 # Add technologies
 house_1.add(
-    technologies.HeatExchanger2(
+    technologies.HeatSink(
         name="air_HE",
-        reservoir_temperature=25,
+        reservoir_temperature=30,
         maximum_working_temperature=40,
-        minimum_working_temperature=0,
+        minimum_working_temperature=5,
+        nominal_power=1e4,
     )
 )
 
 # Add demands
-
 house_1.add(
-    demands.FixedTemperatureHeatCool(
+    demands.FixedTemperatureHeating(
         name="Heating_demand",
         flow_temperature=20,
         return_temperature=10,
-        time_series=[50, 50],
+        time_series=[25, 25],
     )
 )
 
 house_1.add(
-    demands.FixedTemperatureHeatCool(
+    demands.FixedTemperatureCooling(
         name="Cooling_demand",
-        flow_temperature=10,
-        return_temperature=5,
+        flow_temperature=30,  #
+        return_temperature=20,
         time_series=[50, 50],
-        sink=False,
     )
 )
 
@@ -71,5 +70,3 @@ plot.render(outfile="heat_source_and_demand_simple.png")
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
-
-solved_model.write("heat.lp", io_options={"symbolic_solver_labels": True})

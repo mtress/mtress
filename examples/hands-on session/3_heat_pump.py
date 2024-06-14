@@ -28,8 +28,9 @@ house_1.add(
     technologies.HeatExchanger(
         name="Air_HE",
         reservoir_temperature=20,
-        maximum_temperature=30,
-        minimum_temperature=10,
+        maximum_working_temperature=40,
+        minimum_working_temperature=5,
+        nominal_power=1e4,
     )
 )
 
@@ -46,14 +47,23 @@ house_1.add(
 
 # Add demands
 house_1.add(
-    demands.FixedTemperatureHeatCool(
+    demands.FixedTemperatureCooling(
         name="Cooling_demand",
         flow_temperature=10,
         return_temperature=5,
         time_series=[50, 50],
-        sink=False,
     )
 )
+
+house_1.add(
+    demands.FixedTemperatureHeating(
+        name="Heating_demand",
+        flow_temperature=10,
+        return_temperature=5,
+        time_series=[50, 50],
+    )
+)
+
 
 solph_representation = SolphModel(
     energy_system,

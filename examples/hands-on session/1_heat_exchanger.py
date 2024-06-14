@@ -15,24 +15,25 @@ energy_system.add_location(house_1)
 # Add carriers
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[20, 30],
-        reference_temperature=10,
+        temperature_levels=[10, 20, 30],  # Introduce relevant temperature levels
+        reference_temperature=0,  # Energy content is equal to zero
     )
 )
 
 # Add technologies
 house_1.add(
-    technologies.HeatExchanger2(
+    technologies.HeatSource(
         name="air_HE",
-        reservoir_temperature=25,
+        reservoir_temperature=25,  # any possible source
         maximum_working_temperature=40,
-        minimum_working_temperature=0,
+        minimum_working_temperature=10,
+        nominal_power=1e4,
     )
 )
 
 # Add demands
 house_1.add(
-    demands.FixedTemperatureHeatCool(
+    demands.FixedTemperatureHeating(
         name="heat_demand",
         flow_temperature=20,
         return_temperature=10,
@@ -61,5 +62,3 @@ plot.render(outfile="air_heat_exchanger_source.png")
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
-
-solved_model.write("electricity_pv.lp", io_options={"symbolic_solver_labels": True})
