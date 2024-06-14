@@ -1,5 +1,7 @@
 """This module provides a class representing an air heat exchanger."""
 
+import numpy as np
+
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Source, Converter, Sink
 
@@ -9,7 +11,7 @@ from ._abstract_technology import AbstractTechnology, AbstractAnergySource
 from ..carriers import HeatCarrier
 
 
-class HeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
+class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
     """
     Air heat exchanger for e.g. heat pumps.
 
@@ -31,9 +33,10 @@ class HeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         self,
         name: str,
         reservoir_temperature: TimeseriesSpecifier,
-        minimum_temperature: float = 0,
-        maximum_temperature: float = 0,
+        minimum_working_temperature: float = 0,
+        maximum_working_temperature: float = 0,
         nominal_power: float = None,
+        minimum_delta: float = 1.0,
     ):
         """
         Initialize air heat exchanger for e.g. heat pumps.
@@ -45,26 +48,62 @@ class HeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         super().__init__(name=name)
 
         self.reservoir_temperature = reservoir_temperature
-        self.minimum_temperature = minimum_temperature
-        self.maximum_temperature = maximum_temperature
+        self.minimum_working_temperature = minimum_working_temperature
+        self.maximum_working_temperature = maximum_working_temperature
         self.nominal_power = nominal_power
+        self.minimum_delta = minimum_delta
+
+
+class HeatSource(AbstactHeatExchanger):
+
+    def __init__(
+        self,
+        name: str,
+        reservoir_temperature: TimeseriesSpecifier,
+        minimum_working_temperature: float = 0,
+        maximum_working_temperature: float = 0,
+        nominal_power: float = None,
+        minimum_delta: float = 1.0,
+    ):
+        """
+        Initialize air heat exchanger for e.g. heat pumps.
+
+        :param name: Name of the component.
+        :param nominal_power: Nominal power of the heat exchanger (in W), default to None.
+        :param air_temperatures: Reference to air temperature time series
+        """
+        super().__init__(
+            name=name,
+            reservoir_temperature=reservoir_temperature,
+            minimum_working_temperature=minimum_working_temperature,
+            maximum_working_temperature=maximum_working_temperature,
+            nominal_power=nominal_power,
+            minimum_delta=minimum_delta,
+        )
 
         # Solph model interfaces
         self._bus_source = None
-        self._bus_sink = None
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        # self.reservoir_temperature = self._solph_model.data.get_timeseries(
-        #     self.reservoir_temperature,
-        #     kind=TimeseriesType.INTERVAL,
-        # )
+        self.reservoir_temperature = self._solph_model.data.get_timeseries(
+            self.reservoir_temperature,
+            kind=TimeseriesType.INTERVAL,
+        )
 
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
-        heat_bus_warm_source, heat_bus_cold_source, ratio = (
-            heat_carrier.get_connection_heat_transfer(
-                self.reservoir_temperature, self.minimum_temperature
+        highest_warm_level_heating, _ = heat_carrier.get_surrounding_levels(
+            min(max(self.reservoir_temperature), self.maximum_working_temperature)
+        )
+
+        _, cold_level_heating = heat_carrier.get_surrounding_levels(
+            self.minimum_working_temperature
+        )
+        _, lowest_warm_level_heating = heat_carrier.get_surrounding_levels(
+            max(
+                min(min(self.reservoir_temperature), self.minimum_working_temperature),
+                (cold_level_heating + self.minimum_delta),
             )
         )
 
@@ -79,24 +118,105 @@ class HeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             outputs={_bus_source: Flow()},
         )
 
-        self.create_solph_node(
-            label="converter",
-            node_type=Converter,
-            inputs={
-                _bus_source: Flow(nominal_value=self.nominal_power),
-                heat_bus_cold_source: Flow(),
-            },
-            outputs={heat_bus_warm_source: Flow()},
-            conversion_factors={
-                _bus_source: (1 - ratio),
-                heat_bus_cold_source: ratio,
-                heat_bus_warm_source: 1,
-            },
+        active_levels = sorted(
+            heat_carrier.levels[
+                heat_carrier.levels.index(
+                    lowest_warm_level_heating
+                ) : heat_carrier.levels.index(highest_warm_level_heating)
+                + 1
+            ],
+            reverse=True,
         )
 
-        heat_bus_warm_sink, heat_bus_cold_sink, ratio = (
-            heat_carrier.get_connection_heat_transfer(
-                self.maximum_temperature, self.reservoir_temperature
+        for i, warm_temperature in enumerate(active_levels):
+
+            ratio = (cold_level_heating - heat_carrier.reference) / (
+                warm_temperature - heat_carrier.reference
+            )
+
+            heat_bus_warm_source = heat_carrier.level_nodes[warm_temperature]
+            heat_bus_cold_source = heat_carrier.level_nodes[cold_level_heating]
+
+            if i == 0:
+                internal_sequence = [
+                    1 if temp >= warm_temperature else 0
+                    for temp in self.reservoir_temperature
+                ]
+            else:
+                previous_level = active_levels[i - 1]
+                internal_sequence = [
+                    1 if warm_temperature <= temp < previous_level else 0
+                    for temp in self.reservoir_temperature
+                ]
+
+            self.create_solph_node(
+                label=f"converter_{warm_temperature}",
+                node_type=Converter,
+                inputs={
+                    _bus_source: Flow(
+                        max=internal_sequence, nominal_value=self.nominal_power
+                    ),
+                    heat_bus_cold_source: Flow(),
+                },
+                outputs={heat_bus_warm_source: Flow()},
+                conversion_factors={
+                    _bus_source: (1 - ratio),
+                    heat_bus_cold_source: ratio,
+                    heat_bus_warm_source: 1,
+                },
+            )
+
+
+class HeatSink(AbstactHeatExchanger):
+
+    def __init__(
+        self,
+        name: str,
+        reservoir_temperature: TimeseriesSpecifier,
+        minimum_working_temperature: float = 0,
+        maximum_working_temperature: float = 0,
+        nominal_power: float = None,
+        minimum_delta: float = 1.0,
+    ):
+        """
+        Initialize air heat exchanger for e.g. heat pumps.
+
+        :param name: Name of the component.
+        :param nominal_power: Nominal power of the heat exchanger (in W), default to None.
+        :param air_temperatures: Reference to air temperature time series
+        """
+        super().__init__(
+            name=name,
+            reservoir_temperature=reservoir_temperature,
+            minimum_working_temperature=minimum_working_temperature,
+            maximum_working_temperature=maximum_working_temperature,
+            nominal_power=nominal_power,
+            minimum_delta=minimum_delta,
+        )
+
+        # Solph model interfaces
+        self._bus_sink = None
+
+    def build_core(self):
+        """Build core structure of oemof.solph representation."""
+        self.reservoir_temperature = self._solph_model.data.get_timeseries(
+            self.reservoir_temperature,
+            kind=TimeseriesType.INTERVAL,
+        )
+
+        heat_carrier = self.location.get_carrier(HeatCarrier)
+
+        highest_warm_level_heating, _ = heat_carrier.get_surrounding_levels(
+            min(max(self.reservoir_temperature), self.maximum_working_temperature)
+        )
+
+        _, cold_level_heating = heat_carrier.get_surrounding_levels(
+            self.minimum_working_temperature
+        )
+        _, lowest_warm_level_heating = heat_carrier.get_surrounding_levels(
+            max(
+                min(min(self.reservoir_temperature), self.minimum_working_temperature),
+                (cold_level_heating + self.minimum_delta),
             )
         )
 
@@ -111,19 +231,218 @@ class HeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             inputs={_bus_sink: Flow()},
         )
 
-        self.create_solph_node(
-            label="converter1",
-            node_type=Converter,
-            inputs={
-                heat_bus_warm_sink: Flow(),
-            },
-            outputs={
-                heat_bus_cold_sink: Flow(),
-                _bus_sink: Flow(nominal_value=self.nominal_power),
-            },
-            conversion_factors={
-                _bus_sink: (1 - ratio),
-                heat_bus_cold_sink: ratio,
-                heat_bus_warm_sink: 1,
-            },
+        active_levels = sorted(
+            heat_carrier.levels[
+                heat_carrier.levels.index(
+                    lowest_warm_level_heating
+                ) : heat_carrier.levels.index(highest_warm_level_heating)
+                + 1
+            ],
+            reverse=True,
         )
+
+        for i, warm_temperature in enumerate(active_levels):
+
+            ratio = (cold_level_heating - heat_carrier.reference) / (
+                warm_temperature - heat_carrier.reference
+            )
+
+            heat_bus_warm_sink = heat_carrier.level_nodes[warm_temperature]
+            heat_bus_cold_sink = heat_carrier.level_nodes[cold_level_heating]
+
+            if i == 0:
+                internal_sequence = [
+                    1 if temp >= warm_temperature else 0
+                    for temp in self.reservoir_temperature
+                ]
+            else:
+                previous_level = active_levels[i - 1]
+                internal_sequence = [
+                    1 if warm_temperature <= temp < previous_level else 0
+                    for temp in self.reservoir_temperature
+                ]
+
+            self.create_solph_node(
+                label=f"converter_{warm_temperature}",
+                node_type=Converter,
+                inputs={
+                    heat_bus_warm_sink: Flow(),
+                },
+                outputs={
+                    heat_bus_cold_sink: Flow(),
+                    _bus_sink: Flow(
+                        max=internal_sequence, nominal_value=self.nominal_power
+                    ),
+                },
+                conversion_factors={
+                    _bus_sink: (1 - ratio),
+                    heat_bus_cold_sink: ratio,
+                    heat_bus_warm_sink: 1,
+                },
+            )
+
+
+class HeatExchanger(AbstactHeatExchanger):
+
+    def __init__(
+        self,
+        name: str,
+        reservoir_temperature: TimeseriesSpecifier,
+        minimum_working_temperature: float = 0,
+        maximum_working_temperature: float = 0,
+        nominal_power: float = None,
+        minimum_delta: float = 1.0,
+    ):
+        """
+        Initialize air heat exchanger for e.g. heat pumps.
+
+        :param name: Name of the component.
+        :param nominal_power: Nominal power of the heat exchanger (in W), default to None.
+        :param air_temperatures: Reference to air temperature time series
+        """
+        super().__init__(
+            name=name,
+            reservoir_temperature=reservoir_temperature,
+            minimum_working_temperature=minimum_working_temperature,
+            maximum_working_temperature=maximum_working_temperature,
+            nominal_power=nominal_power,
+            minimum_delta=minimum_delta,
+        )
+
+        # Solph model interfaces
+        self._bus_source = None
+        self._bus_sink = None
+
+    def build_core(self):
+        """Build core structure of oemof.solph representation."""
+
+        self.reservoir_temperature = self._solph_model.data.get_timeseries(
+            self.reservoir_temperature,
+            kind=TimeseriesType.INTERVAL,
+        )
+
+        heat_carrier = self.location.get_carrier(HeatCarrier)
+
+        highest_warm_level_heating, _ = heat_carrier.get_surrounding_levels(
+            min(max(self.reservoir_temperature), self.maximum_working_temperature)
+        )
+
+        _, cold_level_heating = heat_carrier.get_surrounding_levels(
+            self.minimum_working_temperature
+        )
+        _, lowest_warm_level_heating = heat_carrier.get_surrounding_levels(
+            max(
+                min(min(self.reservoir_temperature), self.minimum_working_temperature),
+                (cold_level_heating + self.minimum_delta),
+            )
+        )
+
+        self._bus_source = _bus_source = self.create_solph_node(
+            label="input",
+            node_type=Bus,
+        )
+
+        self.create_solph_node(
+            label="source",
+            node_type=Source,
+            outputs={_bus_source: Flow()},
+        )
+
+        self._bus_sink = _bus_sink = self.create_solph_node(
+            label="output",
+            node_type=Bus,
+        )
+
+        self.create_solph_node(
+            label="sink",
+            node_type=Sink,
+            inputs={_bus_sink: Flow()},
+        )
+
+        active_levels = sorted(
+            heat_carrier.levels[
+                heat_carrier.levels.index(
+                    lowest_warm_level_heating
+                ) : heat_carrier.levels.index(highest_warm_level_heating)
+                + 1
+            ],
+            reverse=True,
+        )
+
+        for i, warm_temperature in enumerate(active_levels):
+
+            ratio = (cold_level_heating - heat_carrier.reference) / (
+                warm_temperature - heat_carrier.reference
+            )
+
+            heat_bus_warm_source = heat_carrier.level_nodes[warm_temperature]
+            heat_bus_cold_source = heat_carrier.level_nodes[cold_level_heating]
+
+            if i == 0:
+                internal_sequence = [
+                    1 if temp >= warm_temperature else 0
+                    for temp in self.reservoir_temperature
+                ]
+            else:
+                previous_level = active_levels[i - 1]
+                internal_sequence = [
+                    1 if warm_temperature <= temp < previous_level else 0
+                    for temp in self.reservoir_temperature
+                ]
+
+            self.create_solph_node(
+                label=f"converter_so_{warm_temperature}",
+                node_type=Converter,
+                inputs={
+                    _bus_source: Flow(
+                        max=internal_sequence, nominal_value=self.nominal_power
+                    ),
+                    heat_bus_cold_source: Flow(),
+                },
+                outputs={heat_bus_warm_source: Flow()},
+                conversion_factors={
+                    _bus_source: (1 - ratio),
+                    heat_bus_cold_source: ratio,
+                    heat_bus_warm_source: 1,
+                },
+            )
+
+        for i, warm_temperature in enumerate(active_levels):
+
+            ratio = (cold_level_heating - heat_carrier.reference) / (
+                warm_temperature - heat_carrier.reference
+            )
+
+            heat_bus_warm_sink = heat_carrier.level_nodes[warm_temperature]
+            heat_bus_cold_sink = heat_carrier.level_nodes[cold_level_heating]
+
+            if i == 0:
+                internal_sequence = [
+                    1 if temp >= warm_temperature else 0
+                    for temp in self.reservoir_temperature
+                ]
+            else:
+                previous_level = active_levels[i - 1]
+                internal_sequence = [
+                    1 if warm_temperature <= temp < previous_level else 0
+                    for temp in self.reservoir_temperature
+                ]
+
+            self.create_solph_node(
+                label=f"converter_si_{warm_temperature}",
+                node_type=Converter,
+                inputs={
+                    heat_bus_warm_sink: Flow(),
+                },
+                outputs={
+                    heat_bus_cold_sink: Flow(),
+                    _bus_sink: Flow(
+                        max=internal_sequence, nominal_value=self.nominal_power
+                    ),
+                },
+                conversion_factors={
+                    _bus_sink: (1 - ratio),
+                    heat_bus_cold_sink: ratio,
+                    heat_bus_warm_sink: 1,
+                },
+            )
