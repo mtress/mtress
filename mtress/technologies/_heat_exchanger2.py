@@ -64,9 +64,6 @@ class HeatExchanger2(AbstractTechnology, AbstractSolphRepresentation):
             kind=TimeseriesType.INTERVAL,
         )
 
-        self.minimum_working_temperature = 0
-        self.maximum_working_temperature = 40
-
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
         highest_warm_level_heating, _ = heat_carrier.get_surrounding_levels(
@@ -94,16 +91,14 @@ class HeatExchanger2(AbstractTechnology, AbstractSolphRepresentation):
             outputs={_bus_source: Flow()},
         )
 
-        # self.reservoir_temperature = [10, 15, 18, 20, 21, 22, 25]
-        # Heat levels = [0, 5, 10, 20, 30, 40]
-        # highest_level = 20
-        # lowest_warm_level = 0
-
-        for warm_temperature in heat_carrier.levels[
+        active_levels = heat_carrier.levels[
             heat_carrier.levels.index(
                 highest_warm_level_heating
             ) : heat_carrier.levels.index(lowest_warm_level_heating) : -1
-        ]:
+        ]
+
+        for i, warm_temperature in enumerate(active_levels):
+
             ratio = (lowest_warm_level_heating - heat_carrier.reference) / (
                 warm_temperature - heat_carrier.reference
             )
@@ -111,11 +106,25 @@ class HeatExchanger2(AbstractTechnology, AbstractSolphRepresentation):
             heat_bus_warm_source = heat_carrier.level_nodes[warm_temperature]
             heat_bus_cold_source = heat_carrier.level_nodes[lowest_warm_level_heating]
 
+            if i == 0:
+                internal_sequence = [
+                    1 if temp >= warm_temperature else 0
+                    for temp in self.reservoir_temperature
+                ]
+            else:
+                previous_level = active_levels[i - 1]
+                internal_sequence = [
+                    1 if warm_temperature <= temp < previous_level else 0
+                    for temp in self.reservoir_temperature
+                ]
+
             self.create_solph_node(
                 label=f"converter_{warm_temperature}",
                 node_type=Converter,
                 inputs={
-                    _bus_source: Flow(nominal_value=self.nominal_power),
+                    _bus_source: Flow(
+                        max=internal_sequence, nominal_value=self.nominal_power
+                    ),
                     heat_bus_cold_source: Flow(),
                 },
                 outputs={heat_bus_warm_source: Flow()},
