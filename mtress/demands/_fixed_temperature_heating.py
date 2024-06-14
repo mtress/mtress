@@ -1,15 +1,18 @@
 """Room heating technologies."""
 
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Sink, Converter
+from oemof.solph.components import Source, Sink, Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesType
 from ..carriers import HeatCarrier
 from ._abstract_demand import AbstractDemand
+from ._abstract_fixed_temperature import AbstractFixedTemperature
 
 
-class FixedTemperatureHeat(AbstractDemand, AbstractSolphRepresentation):
+class FixedTemperatureHeating(
+    AbstractDemand, AbstractSolphRepresentation, AbstractFixedTemperature
+):
     """
     Space heating with a fixed flow and return temperature.
 
@@ -42,14 +45,13 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphRepresentation):
     """
 
     def __init__(
-        self, name: str, flow_temperature: float, return_temperature: float, time_series
+        self,
+        name: str,
+        flow_temperature: float,
+        return_temperature: float,
+        time_series,
     ):
-        """
-        Initialize space heater.
 
-        :param flow_temperature: Flow temperature
-        :param return_temperature: Return temperature
-        """
         super().__init__(name=name)
 
         if not flow_temperature > return_temperature:
@@ -68,55 +70,30 @@ class FixedTemperatureHeat(AbstractDemand, AbstractSolphRepresentation):
             raise ValueError("Flow temperature must be a temperature level")
 
         if self.return_temperature not in carrier.levels:
-            raise ValueError("Return must be a temperature level")
+            raise ValueError("Return temperature must be a temperature level")
+
+        temperature_ratio = 0
+        inputs = {}
+        outputs = {}
+        conversion_factors = {}
 
         output = self.create_solph_node(
             label="output",
             node_type=Bus,
         )
-        temperature_ratio = 0
-        inputs = {}
-        outputs = {output: Flow()}
-        conversion_factors = {}
+        outputs[output] = Flow()
 
-        if self.flow_temperature > carrier.reference:
-            inputs[carrier.level_nodes[self.flow_temperature]] = Flow()
-        elif self.flow_temperature < carrier.reference:
-            outputs[carrier.level_nodes[self.flow_temperature]] = Flow()
+        inputs[carrier.level_nodes[self.flow_temperature]] = Flow()
+        outputs[carrier.level_nodes[self.return_temperature]] = Flow()
 
-        if self.return_temperature > carrier.reference:
-            outputs[carrier.level_nodes[self.return_temperature]] = Flow()
-        elif self.return_temperature < carrier.reference:
-            inputs[carrier.level_nodes[self.return_temperature]] = Flow()
-
-        if self.return_temperature > carrier.reference:
-            temperature_ratio = (self.return_temperature - carrier.reference) / (
-                self.flow_temperature - carrier.reference
-            )
-            conversion_factors = {
-                carrier.level_nodes[self.flow_temperature]: 1,
-                output: 1 - temperature_ratio,
-                carrier.level_nodes[self.return_temperature]: temperature_ratio,
-            }
-        elif self.return_temperature < carrier.reference:
-            if self.flow_temperature < carrier.reference:
-                temperature_ratio = (self.flow_temperature - carrier.reference) / (
-                    self.return_temperature - carrier.reference
-                )
-                conversion_factors = {
-                    carrier.level_nodes[self.flow_temperature]: 1 - temperature_ratio,
-                    output: temperature_ratio,
-                    carrier.level_nodes[self.return_temperature]: 1,
-                }
-            elif self.flow_temperature > carrier.reference:
-                temperature_ratio = (self.flow_temperature - carrier.reference) / (
-                    self.flow_temperature - self.return_temperature
-                )
-                conversion_factors = {
-                    carrier.level_nodes[self.flow_temperature]: temperature_ratio,
-                    output: 1,
-                    carrier.level_nodes[self.return_temperature]: 1 - temperature_ratio,
-                }
+        temperature_ratio = (self.return_temperature - carrier.reference) / (
+            self.flow_temperature - carrier.reference
+        )
+        conversion_factors = {
+            carrier.level_nodes[self.flow_temperature]: 1,
+            output: 1 - temperature_ratio,
+            carrier.level_nodes[self.return_temperature]: temperature_ratio,
+        }
 
         self.create_solph_node(
             label="heat_exchanger",
