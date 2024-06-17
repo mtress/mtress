@@ -29,7 +29,7 @@ house_1.add(
         name="Air_HE",
         reservoir_temperature=20,
         maximum_working_temperature=40,
-        minimum_working_temperature=5,
+        minimum_working_temperature=10,
         nominal_power=1e4,
     )
 )
