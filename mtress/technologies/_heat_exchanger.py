@@ -146,14 +146,10 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             self.maximum_working_temperature
         )
 
-        _, cold_level = self.heat_carrier.get_surrounding_levels(
-            self.minimum_working_temperature
-        )
         _, lowest_warm_level = self.heat_carrier.get_surrounding_levels(
             max(
                 min(self.reservoir_temperature),
                 self.minimum_working_temperature,
-                (cold_level + self.minimum_delta),
             )
         )
 
@@ -178,29 +174,27 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             reverse=True,
         )
 
-        for i, warm_temperature in enumerate(active_levels):
+        for i in range(len(active_levels) - 1):
+
+            warm_level = active_levels[i]
+            cold_level = active_levels[i + 1]
 
             ratio = (cold_level - self.heat_carrier.reference) / (
-                warm_temperature - self.heat_carrier.reference
+                warm_level - self.heat_carrier.reference
             )
 
-            heat_bus_warm_sink = self.heat_carrier.level_nodes[warm_temperature]
+            heat_bus_warm_sink = self.heat_carrier.level_nodes[warm_level]
             heat_bus_cold_sink = self.heat_carrier.level_nodes[cold_level]
 
-            if i == 0:
-                internal_sequence = [
-                    1 if temp >= warm_temperature else 0
-                    for temp in self.reservoir_temperature
-                ]
-            else:
-                previous_level = active_levels[i - 1]
-                internal_sequence = [
-                    1 if warm_temperature <= temp < previous_level else 0
-                    for temp in self.reservoir_temperature
-                ]
+            no_level_below = active_levels.index(cold_level) == len(active_levels) - 1
+
+            internal_sequence = [
+                1 if temp < cold_level and temp < warm_level and no_level_below else 0
+                for temp in self.reservoir_temperature
+            ]
 
             self.create_solph_node(
-                label=f"sink_{warm_temperature}",
+                label=f"sink_{warm_level}",
                 node_type=Converter,
                 inputs={
                     heat_bus_warm_sink: Flow(),

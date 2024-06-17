@@ -40,8 +40,8 @@ house_1.add(
         thermal_power_limit=None,
         max_temp_primary=10,
         min_temp_primary=5,
-        max_temp_secondary=30,
-        min_temp_secondary=20,
+        max_temp_secondary=40,
+        min_temp_secondary=30,
     )
 )
 
@@ -58,7 +58,7 @@ house_1.add(
 house_1.add(
     demands.FixedTemperatureHeating(
         name="Heating_demand",
-        flow_temperature=10,
+        flow_temperature=30,
         return_temperature=5,
         time_series=[50, 50],
     )
