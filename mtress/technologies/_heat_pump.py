@@ -59,6 +59,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
     def __init__(
         self,
         name: str,
+        electrical_power_limit: float = None,
         thermal_power_limit: float = None,
         cop_0_35: float = 4.6,
         max_temp_primary: float = None,
@@ -76,6 +77,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         """
         super().__init__(name=name)
 
+        self.electrical_power_limit = electrical_power_limit
         self.thermal_power_limit = thermal_power_limit
         self.cop_0_35 = cop_0_35
         self.max_temp_primary = max_temp_primary
@@ -95,13 +97,13 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         self.electricity_bus = self.create_solph_node(
             label="electricity",
             node_type=Bus,
-            inputs={electricity_carrier.distribution: Flow()},
+            inputs={electricity_carrier.distribution: Flow(nominal_value=self.electrical_power_limit)},
         )
 
         # Create bus and source for a combined thermal power limit on all temperature
         # levels
         self.heat_budget_bus = heat_budget_bus = self.create_solph_node(
-            label="heat_budget_bus",
+            label="heat_budget",
             node_type=Bus,
         )
 
@@ -115,7 +117,6 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         """Add connections to anergy sources."""
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
-        # Primary-side connection
         heat_bus_warm_primary, heat_bus_cold_primary, ratio_primary = (
             heat_carrier.get_connection_heat_transfer(
                 self.max_temp_primary,
@@ -123,57 +124,12 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
             )
         )
 
-        primary_bus = self.create_solph_node(
-            label="primary_bus",
-            node_type=Bus,
-        )
-
-        self.create_solph_node(
-            label="Evaporator",
-            node_type=Converter,
-            inputs={
-                heat_bus_warm_primary: Flow(),
-            },
-            outputs={
-                primary_bus: Flow(),
-                heat_bus_cold_primary: Flow(),
-            },
-            conversion_factors={
-                heat_bus_cold_primary: ratio_primary,
-                heat_bus_warm_primary: 1,
-                primary_bus: (1 - ratio_primary),
-            },
-        )
-
-        # Secondary-side connection
         heat_bus_warm_secondary, heat_bus_cold_secondary, ratio_secondary = (
             heat_carrier.get_connection_heat_transfer(
                 self.max_temp_secondary, self.min_temp_secondary
             )
         )
 
-        secondary_bus = self.create_solph_node(
-            label="secondary_bus",
-            node_type=Bus,
-        )
-
-        self.create_solph_node(
-            label="Condenser",
-            node_type=Converter,
-            inputs={heat_bus_cold_secondary: Flow(), secondary_bus: Flow()},
-            outputs={
-                heat_bus_warm_secondary: Flow(),
-            },
-            conversion_factors={
-                heat_bus_cold_secondary: ratio_secondary,
-                heat_bus_warm_secondary: 1,
-                secondary_bus: (1 - ratio_secondary),
-            },
-        )
-
-        # HeatCarrier = [20, 30, 40, 60] -> by pairs -> Mentalnote
-        # secon_min = 15
-        # secon_max = 60
 
         # for lower_temperature, hight_temperature in zip(
         #             heat_carrier.level_nodes, heat_carrier.level_nodes[1:]
@@ -190,17 +146,21 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
             label=f"{self.max_temp_primary}_{self.max_temp_secondary:.0f}",
             node_type=Converter,
             inputs={
-                primary_bus: Flow(),
+                heat_bus_warm_primary: Flow(),
+                heat_bus_cold_secondary: Flow(),
                 self.electricity_bus: Flow(),
                 self.heat_budget_bus: Flow(),
             },
             outputs={
-                secondary_bus: Flow(),
+                heat_bus_cold_primary: Flow(),
+                heat_bus_warm_secondary: Flow(),
             },
             conversion_factors={
+                heat_bus_warm_primary: (cop-1)/cop/(1-ratio_primary),
+                heat_bus_cold_secondary: ratio_secondary/(1-ratio_secondary),
+                self.electricity_bus: 1/cop,
                 self.heat_budget_bus: 1,
-                primary_bus: (cop - 1) / cop,
-                self.electricity_bus: 1 / cop,
-                secondary_bus: 1,
+                heat_bus_cold_primary: (cop-1)/cop*ratio_primary/(1-ratio_primary),
+                heat_bus_warm_secondary: 1/(1-ratio_secondary),
             },
         )
