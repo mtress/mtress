@@ -137,7 +137,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         self,
         name: str,
         return_temperature: float,
-        flow_temperature_minimum: float,
+        max_flow_temperature: float,
         time_series,
         flow_temperature: float = None,
     ):
@@ -154,7 +154,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             time_series=time_series,
         )
 
-        self.flow_temperature_minimum = flow_temperature_minimum
+        self.max_flow_temperature = max_flow_temperature
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -165,7 +165,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         outputs = {}
         conversion_factors = {}
 
-        _, minimum_t = carrier.get_surrounding_levels(self.flow_temperature_minimum)
+        _, minimum_t = carrier.get_surrounding_levels(self.max_flow_temperature)
 
         input = self.create_solph_node(
             label="input",
