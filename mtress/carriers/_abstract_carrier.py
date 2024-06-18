@@ -22,11 +22,7 @@ class AbstractLayeredCarrier(AbstractCarrier):
     carriers, i.e. heat with multiple temperature levels.
     """
 
-    def __init__(
-            self, *,
-            levels,
-            reference,
-            **kwargs):
+    def __init__(self, *, levels, reference, **kwargs):
         """Initialize carrier.
 
         :param levels: Sorted (ascending) quality levels
@@ -55,6 +51,12 @@ class AbstractLayeredCarrier(AbstractCarrier):
     def levels(self):
         """Return levels of carrier."""
         return self._levels
+
+    def get_levels_between(self, minimum, maximum):
+        levels = np.concatenate(([np.NINF], self.levels, [np.PINF]))
+        min_index = np.searchsorted(levels, minimum) - 1
+        max_index = np.searchsorted(levels, maximum)
+        return self.levels[min_index:max_index]
 
     @property
     def reference(self):
