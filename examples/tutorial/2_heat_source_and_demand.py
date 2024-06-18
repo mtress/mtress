@@ -45,7 +45,7 @@ house_1.add(
     demands.FixedTemperatureCooling(
         name="Cooling_demand",
         return_temperature=30,
-        flow_temperature_minimum=10,
+        max_flow_temperature=10,
         time_series=[50, 50],
     )
 )
