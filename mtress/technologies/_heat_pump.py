@@ -147,59 +147,71 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         for (
             temp_primary_out,
             temp_primary_in,
-            temp_secondary_in,
-            temp_secondary_out,
         ) in zip(
             primary_out_levels,
             primary_in_levels,
-            secondary_in_levels,
-            secondary_out_levels,
         ):
-            (
-                heat_bus_warm_primary,
-                heat_bus_cold_primary,
-                ratio_primary,
-            ) = heat_carrier.get_connection_heat_transfer(
-                temp_primary_in, temp_primary_out
-            )
+            for (
+                temp_secondary_in,
+                temp_secondary_out,
+            ) in zip(
+                secondary_in_levels,
+                secondary_out_levels,
+            ):
+                self._create_converter_node(
+                    temp_primary_out,
+                    temp_primary_in,
+                    temp_secondary_in,
+                    temp_secondary_out,
+                )
 
-            (
-                heat_bus_warm_secondary,
-                heat_bus_cold_secondary,
-                ratio_secondary,
-            ) = heat_carrier.get_connection_heat_transfer(
-                temp_secondary_out, temp_secondary_in
-            )
-            cop = calc_cop(
-                temp_primary_in=celsius_to_kelvin(temp_primary_in),
-                temp_primary_out=celsius_to_kelvin(temp_primary_out),
-                temp_secondary_in=celsius_to_kelvin(temp_secondary_in),
-                temp_secondary_out=celsius_to_kelvin(temp_secondary_out),
-                cop_0_35=self.cop_0_35,
-            )
+    def _create_converter_node(
+        self, temp_primary_out, temp_primary_in, temp_secondary_in, temp_secondary_out
+    ):
+        heat_carrier = self.location.get_carrier(HeatCarrier)
+        (
+            heat_bus_warm_primary,
+            heat_bus_cold_primary,
+            ratio_primary,
+        ) = heat_carrier.get_connection_heat_transfer(temp_primary_in, temp_primary_out)
 
-            self.create_solph_node(
-                label=f"{self.max_temp_primary}_{self.max_temp_secondary:.0f}",
-                node_type=Converter,
-                inputs={
-                    heat_bus_warm_primary: Flow(),
-                    heat_bus_cold_secondary: Flow(),
-                    self.electricity_bus: Flow(),
-                    self.heat_budget_bus: Flow(),
-                },
-                outputs={
-                    heat_bus_cold_primary: Flow(),
-                    heat_bus_warm_secondary: Flow(),
-                },
-                conversion_factors={
-                    heat_bus_warm_primary: (cop - 1) / cop / (1 - ratio_primary),
-                    heat_bus_cold_secondary: ratio_secondary / (1 - ratio_secondary),
-                    self.electricity_bus: 1 / cop,
-                    self.heat_budget_bus: 1,
-                    heat_bus_cold_primary: (cop - 1)
-                    / cop
-                    * ratio_primary
-                    / (1 - ratio_primary),
-                    heat_bus_warm_secondary: 1 / (1 - ratio_secondary),
-                },
-            )
+        (
+            heat_bus_warm_secondary,
+            heat_bus_cold_secondary,
+            ratio_secondary,
+        ) = heat_carrier.get_connection_heat_transfer(
+            temp_secondary_out, temp_secondary_in
+        )
+        cop = calc_cop(
+            temp_primary_in=celsius_to_kelvin(temp_primary_in),
+            temp_primary_out=celsius_to_kelvin(temp_primary_out),
+            temp_secondary_in=celsius_to_kelvin(temp_secondary_in),
+            temp_secondary_out=celsius_to_kelvin(temp_secondary_out),
+            cop_0_35=self.cop_0_35,
+        )
+
+        self.create_solph_node(
+            label=f"{temp_primary_in:.0f}_{temp_secondary_out:.0f}",
+            node_type=Converter,
+            inputs={
+                heat_bus_warm_primary: Flow(),
+                heat_bus_cold_secondary: Flow(),
+                self.electricity_bus: Flow(),
+                self.heat_budget_bus: Flow(),
+            },
+            outputs={
+                heat_bus_cold_primary: Flow(),
+                heat_bus_warm_secondary: Flow(),
+            },
+            conversion_factors={
+                heat_bus_warm_primary: (cop - 1) / cop / (1 - ratio_primary),
+                heat_bus_cold_secondary: ratio_secondary / (1 - ratio_secondary),
+                self.electricity_bus: 1 / cop,
+                self.heat_budget_bus: 1,
+                heat_bus_cold_primary: (cop - 1)
+                / cop
+                * ratio_primary
+                / (1 - ratio_primary),
+                heat_bus_warm_secondary: 1 / (1 - ratio_secondary),
+            },
+        )
