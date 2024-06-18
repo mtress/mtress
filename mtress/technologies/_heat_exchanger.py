@@ -1,14 +1,13 @@
 """This module provides a class representing an air heat exchanger."""
 
 import numpy as np
-
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Source, Converter, Sink
+from oemof.solph.components import Converter, Sink, Source
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
-from ._abstract_technology import AbstractTechnology, AbstractAnergySource
 from ..carriers import HeatCarrier
+from ._abstract_technology import AbstractTechnology
 
 
 class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
@@ -20,11 +19,8 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
 
     Procedure: Create a simple heat exchanger by doing the following:
 
-        house_1.add_component(
+        house_1.add(
             technologies.HeatExchanger(air_temperatures=[3])
-
-    Further documentation regarding anergy found in the class
-    AbstractAnergysource.
 
     """
 
@@ -60,7 +56,7 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
 
         self.heat_carrier = self.location.get_carrier(HeatCarrier)
 
-    def define_soruce(self):
+    def _define_source(self):
         self._build_core()
 
         highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
@@ -92,8 +88,7 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             self.heat_carrier.levels[
                 self.heat_carrier.levels.index(
                     lowest_warm_level
-                ) : self.heat_carrier.levels.index(highest_warm_level)
-                + 1
+                ) : self.heat_carrier.levels.index(highest_warm_level) + 1
             ],
             reverse=True,
         )
@@ -135,7 +130,7 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
                 },
             )
 
-    def define_sink(self):
+    def _define_sink(self):
         self._build_core()
 
         highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
@@ -164,8 +159,7 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             self.heat_carrier.levels[
                 self.heat_carrier.levels.index(
                     lowest_warm_level
-                ) : self.heat_carrier.levels.index(highest_warm_level)
-                + 1
+                ) : self.heat_carrier.levels.index(highest_warm_level) + 1
             ],
             reverse=True,
         )
@@ -242,7 +236,7 @@ class HeatSource(AbstactHeatExchanger):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
 
-        self.define_soruce()
+        self._define_source()
 
 
 class HeatSink(AbstactHeatExchanger):
@@ -277,7 +271,7 @@ class HeatSink(AbstactHeatExchanger):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
 
-        self.define_sink()
+        self._define_sink()
 
 
 class HeatExchanger(AbstactHeatExchanger):
@@ -313,5 +307,5 @@ class HeatExchanger(AbstactHeatExchanger):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
 
-        self.define_soruce()
-        self.define_sink()
+        self._define_source()
+        self._define_sink()
