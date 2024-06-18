@@ -53,9 +53,6 @@ class AbstractFixedTemperature(AbstractDemand, AbstractSolphRepresentation):
         """
         super().__init__(name=name)
 
-        if not flow_temperature > return_temperature:
-            raise ValueError("Flow must be higher than return temperature")
-
         self.flow_temperature = flow_temperature
         self.return_temperature = return_temperature
 
@@ -78,6 +75,9 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             return_temperature=return_temperature,
             time_series=time_series,
         )
+
+        if not flow_temperature > return_temperature:
+            raise ValueError("Flow must be higher than return temperature")
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -139,9 +139,10 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
     def __init__(
         self,
         name: str,
-        flow_temperature: float,
         return_temperature: float,
+        flow_temperature_minimum: float,
         time_series,
+        flow_temperature: float = None,
     ):
         """
         Initialize space heater.
@@ -156,20 +157,18 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             time_series=time_series,
         )
 
+        self.flow_temperature_minimum = flow_temperature_minimum
+
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         carrier = self.location.get_carrier(HeatCarrier)
-
-        if self.flow_temperature not in carrier.levels:
-            raise ValueError("Flow temperature must be a temperature level")
-
-        if self.return_temperature not in carrier.levels:
-            raise ValueError("Return temperature must be a temperature level")
 
         temperature_ratio = 0
         inputs = {}
         outputs = {}
         conversion_factors = {}
+
+        _, minimum_t = carrier.get_surrounding_levels(self.flow_temperature_minimum)
 
         input = self.create_solph_node(
             label="input",
@@ -178,16 +177,17 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
 
         inputs[input] = Flow()
 
-        outputs[carrier.level_nodes[self.flow_temperature]] = Flow()
-        inputs[carrier.level_nodes[self.return_temperature]] = Flow()
+        outputs[carrier.level_nodes[self.return_temperature]] = Flow()
+        inputs[carrier.level_nodes[minimum_t]] = Flow()
 
-        temperature_ratio = (self.return_temperature - carrier.reference) / (
-            self.flow_temperature - carrier.reference
+        temperature_ratio = (minimum_t - carrier.reference) / (
+            self.return_temperature - carrier.reference
         )
+
         conversion_factors = {
-            carrier.level_nodes[self.flow_temperature]: 1,
+            carrier.level_nodes[self.return_temperature]: 1,
             input: 1 - temperature_ratio,
-            carrier.level_nodes[self.return_temperature]: temperature_ratio,
+            carrier.level_nodes[minimum_t]: temperature_ratio,
         }
 
         self.create_solph_node(
