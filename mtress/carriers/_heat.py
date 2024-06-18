@@ -100,19 +100,24 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
 
         # Thermal layers, starting from the highest
         for temperature in reversed(self._levels):
-            bus = self.create_solph_node(
-                label=f"T_{temperature:.0f}",
-                node_type=Bus,
-                inputs=higher_level,
-            )
             if temperature is self.reference:
-                bus.balanced = False
+                bus = self.create_solph_node(
+                    label=f"T_{temperature:.0f}",
+                    node_type=Bus,
+                    inputs={bus: Flow(variable_costs=1e9)},
+                    balanced=False,
+                )
+            else:
+                bus = self.create_solph_node(
+                    label=f"T_{temperature:.0f}",
+                    node_type=Bus,
+                    inputs=higher_level,
+                )
 
             self.level_nodes[temperature] = bus
             higher_level = {bus: Flow()}
 
     def get_connection_heat_transfer(self, max_temp, min_temp):
-
         warm_level_heating, _ = self.get_surrounding_levels(max_temp)
         _, cold_level_heating = self.get_surrounding_levels(min_temp)
 

@@ -42,5 +42,3 @@ class H2Storage(GasStorage):
             implementation=multiplexer_implementation,
             calc_density=calc_hydrogen_density,
         )
-
-

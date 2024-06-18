@@ -29,7 +29,6 @@ class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
             )
 
             if self.working_rate is not None:
-
                 self.create_solph_node(
                     label="source_import",
                     node_type=Source,

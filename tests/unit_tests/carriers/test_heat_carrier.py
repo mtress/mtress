@@ -5,7 +5,7 @@ Tests for the MTRESS heat carrier.
 
 import pytest
 
-from mtress.carriers import Heat as HeatCarrier
+from mtress.carriers import HeatCarrier
 
 
 def test_heat_carrier_with_reference():
@@ -24,6 +24,8 @@ def test_heat_carrier_with_reference():
 
     assert heat_carier.get_surrounding_levels(15) == (15, 15)
     assert heat_carier.get_surrounding_levels(20) == (15, 35)
+
+    assert heat_carier.get_levels_between(10, 35) == [10, 15, 35]
     
     reference_level = heat_carier.reference_level
     assert reference_level == 2  # [-10, 10, *15*, ...]
