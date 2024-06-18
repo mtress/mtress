@@ -19,7 +19,7 @@ house_1.add(
     )
 )
 house_1.add(
-    demands.FixedTemperatureHeat(
+    demands.FixedTemperatureHeating(
         name="space heating",
         flow_temperature=30,
         return_temperature=20,

@@ -8,7 +8,7 @@ import numpy as np
 from oemof import solph
 
 from mtress import carriers, Location, MetaModel, SolphModel
-from mtress.demands import FixedTemperatureHeat as HeatDemand
+from mtress.demands import FixedTemperatureHeating as HeatDemand
 
 def test_layered_heat_demand():
     house_1 = Location(name="house_1")
