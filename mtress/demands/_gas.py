@@ -32,7 +32,13 @@ class GasDemand(AbstractDemand, AbstractSolphRepresentation):
     pressure: in bar
     """
 
-    def __init__(self, name: str, gas_type: Gas, time_series: TimeseriesSpecifier, pressure: float):
+    def __init__(
+        self,
+        name: str,
+        gas_type: Gas,
+        time_series: TimeseriesSpecifier,
+        pressure: float,
+    ):
         """Initialize gas demand."""
         super().__init__(name=name)
 
@@ -57,7 +63,9 @@ class GasDemand(AbstractDemand, AbstractSolphRepresentation):
             inputs={
                 gas_bus: Flow(
                     nominal_value=1,
-                    fix=self._solph_model.data.get_timeseries(self._time_series, kind=TimeseriesType.INTERVAL),
+                    fix=self._solph_model.data.get_timeseries(
+                        self._time_series, kind=TimeseriesType.INTERVAL
+                    ),
                 )
             },
         )

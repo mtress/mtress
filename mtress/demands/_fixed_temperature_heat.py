@@ -63,7 +63,6 @@ class AbstractFixedTemperature(AbstractDemand, AbstractSolphRepresentation):
 
 
 class FixedTemperatureHeating(AbstractFixedTemperature):
-
     def __init__(
         self,
         name: str,
@@ -71,7 +70,6 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         return_temperature: float,
         time_series,
     ):
-
         super().__init__(
             name=name,
             flow_temperature=flow_temperature,
@@ -135,7 +133,6 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
 
 
 class FixedTemperatureCooling(AbstractFixedTemperature):
-
     def __init__(
         self,
         name: str,
