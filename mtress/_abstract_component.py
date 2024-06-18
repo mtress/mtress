@@ -153,10 +153,12 @@ class AbstractSolphRepresentation(AbstractComponent):
                         external_edges.add((str(origin.label), str(solph_node.label)))
                     else:
                         # Add edge from MTRESS component to MTRESS component
-                        external_edges.add((
-                            str(origin.mtress_component.identifier),
-                            str(self.identifier)
-                        ))
+                        external_edges.add(
+                            (
+                                str(origin.mtress_component.identifier),
+                                str(self.identifier),
+                            )
+                        )
 
         return graph, external_edges
 

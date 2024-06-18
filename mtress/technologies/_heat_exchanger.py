@@ -53,7 +53,6 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         self.minimum_delta = minimum_delta
 
     def _build_core(self):
-
         self.reservoir_temperature = self._solph_model.data.get_timeseries(
             self.reservoir_temperature,
             kind=TimeseriesType.INTERVAL,
@@ -62,7 +61,6 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         self.heat_carrier = self.location.get_carrier(HeatCarrier)
 
     def define_soruce(self):
-
         self._build_core()
 
         highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
@@ -101,7 +99,6 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         )
 
         for i, warm_temperature in enumerate(active_levels):
-
             ratio = (cold_level - self.heat_carrier.reference) / (
                 warm_temperature - self.heat_carrier.reference
             )
@@ -139,7 +136,6 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             )
 
     def define_sink(self):
-
         self._build_core()
 
         highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
@@ -175,7 +171,6 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         )
 
         for i in range(len(active_levels) - 1):
-
             warm_level = active_levels[i]
             cold_level = active_levels[i + 1]
 
@@ -216,7 +211,6 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
 
 
 class HeatSource(AbstactHeatExchanger):
-
     def __init__(
         self,
         name: str,
@@ -252,7 +246,6 @@ class HeatSource(AbstactHeatExchanger):
 
 
 class HeatSink(AbstactHeatExchanger):
-
     def __init__(
         self,
         name: str,
@@ -288,7 +281,6 @@ class HeatSink(AbstactHeatExchanger):
 
 
 class HeatExchanger(AbstactHeatExchanger):
-
     def __init__(
         self,
         name: str,
