@@ -94,13 +94,16 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             reverse=True,
         )
 
-        for i, warm_temperature in enumerate(active_levels):
-            ratio = (cold_level - self.heat_carrier.reference) / (
+        for (
+            cold_temperature,
+            warm_temperature,
+        ) in zip(active_levels[1:] + [cold_level], active_levels):
+            ratio = (cold_temperature - self.heat_carrier.reference) / (
                 warm_temperature - self.heat_carrier.reference
             )
 
             heat_bus_warm_source = self.heat_carrier.level_nodes[warm_temperature]
-            heat_bus_cold_source = self.heat_carrier.level_nodes[cold_level]
+            heat_bus_cold_source = self.heat_carrier.level_nodes[cold_temperature]
 
             internal_sequence = [
                 1 if temp >= warm_temperature else 0
