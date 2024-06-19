@@ -113,7 +113,7 @@ class AbstractSolphRepresentation(AbstractComponent):
     def add_constraints(self) -> None:
         """Add constraints to the model."""
 
-    def graph(self, detail: bool = False, flow_results = None) -> Tuple[Digraph, set]:
+    def graph(self, detail: bool = False, flow_results=None) -> Tuple[Digraph, set]:
         """
         Generate graphviz visualization of the MTRESS component.
 
@@ -148,12 +148,22 @@ class AbstractSolphRepresentation(AbstractComponent):
                     if detail:
                         flow = 0
                         if flow_results is not None:
-                            flow = (flow_results[(origin.label, solph_node.label)]).sum()
+                            flow = (
+                                flow_results[(origin.label, solph_node.label)]
+                            ).sum()
                             node_flow += flow
                             if flow > 0:
-                                graph.edge(str(origin.label), str(solph_node.label), label=f"{flow}")
+                                graph.edge(
+                                    str(origin.label),
+                                    str(solph_node.label),
+                                    label=f"{flow}",
+                                )
                             else:
-                                graph.edge(str(origin.label), str(solph_node.label), color="grey")
+                                graph.edge(
+                                    str(origin.label),
+                                    str(solph_node.label),
+                                    color="grey",
+                                )
                         else:
                             graph.edge(str(origin.label), str(solph_node.label))
                 else:
@@ -161,14 +171,32 @@ class AbstractSolphRepresentation(AbstractComponent):
                     if detail:
                         flow = 0
                         if flow_results is not None:
-                            flow = (flow_results[(origin.label, solph_node.label)]).sum()
+                            flow = (
+                                flow_results[(origin.label, solph_node.label)]
+                            ).sum()
 
-                            if flow  > 0:
-                                external_edges.add((str(origin.label), str(solph_node.label), f"{flow}", "black"))
+                            if flow > 0:
+                                external_edges.add(
+                                    (
+                                        str(origin.label),
+                                        str(solph_node.label),
+                                        f"{flow}",
+                                        "black",
+                                    )
+                                )
                             else:
-                                external_edges.add((str(origin.label), str(solph_node.label), "", "grey"))
+                                external_edges.add(
+                                    (
+                                        str(origin.label),
+                                        str(solph_node.label),
+                                        "",
+                                        "grey",
+                                    )
+                                )
                         else:
-                            external_edges.add((str(origin.label), str(solph_node.label), "", "black"))
+                            external_edges.add(
+                                (str(origin.label), str(solph_node.label), "", "black")
+                            )
                     else:
                         # Add edge from MTRESS component to MTRESS component
                         external_edges.add(

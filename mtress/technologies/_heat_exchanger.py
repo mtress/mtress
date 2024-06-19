@@ -88,7 +88,8 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             self.heat_carrier.levels[
                 self.heat_carrier.levels.index(
                     lowest_warm_level
-                ) : self.heat_carrier.levels.index(highest_warm_level) + 1
+                ) : self.heat_carrier.levels.index(highest_warm_level)
+                + 1
             ],
             reverse=True,
         )
@@ -152,7 +153,8 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             self.heat_carrier.levels[
                 self.heat_carrier.levels.index(
                     lowest_warm_level
-                ) : self.heat_carrier.levels.index(highest_warm_level) + 1
+                ) : self.heat_carrier.levels.index(highest_warm_level)
+                + 1
             ],
             reverse=True,
         )
@@ -169,8 +171,7 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             heat_bus_cold_sink = self.heat_carrier.level_nodes[cold_level]
 
             internal_sequence = [
-                1 if temp <= cold_level else 0
-                for temp in self.reservoir_temperature
+                1 if temp <= cold_level else 0 for temp in self.reservoir_temperature
             ]
 
             self.create_solph_node(
