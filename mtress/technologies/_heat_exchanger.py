@@ -101,17 +101,10 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             heat_bus_warm_source = self.heat_carrier.level_nodes[warm_temperature]
             heat_bus_cold_source = self.heat_carrier.level_nodes[cold_level]
 
-            if i == 0:
-                internal_sequence = [
-                    1 if temp >= warm_temperature else 0
-                    for temp in self.reservoir_temperature
-                ]
-            else:
-                previous_level = active_levels[i - 1]
-                internal_sequence = [
-                    1 if warm_temperature <= temp < previous_level else 0
-                    for temp in self.reservoir_temperature
-                ]
+            internal_sequence = [
+                1 if temp >= warm_temperature else 0
+                for temp in self.reservoir_temperature
+            ]
 
             self.create_solph_node(
                 label=f"source_{warm_temperature}",
@@ -175,10 +168,8 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             heat_bus_warm_sink = self.heat_carrier.level_nodes[warm_level]
             heat_bus_cold_sink = self.heat_carrier.level_nodes[cold_level]
 
-            no_level_below = active_levels.index(cold_level) == len(active_levels) - 1
-
             internal_sequence = [
-                1 if temp < cold_level and temp < warm_level and no_level_below else 0
+                1 if temp <= cold_level else 0
                 for temp in self.reservoir_temperature
             ]
 
