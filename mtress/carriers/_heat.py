@@ -102,7 +102,7 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
         for temperature in reversed(self._levels):
             if temperature is self.reference:
                 bus = self.create_solph_node(
-                    label=f"T_{temperature:.0f}",
+                    label="excess_heat",
                     node_type=components.Sink,
                     inputs={bus: Flow(variable_costs=1e9)},
                 )
@@ -115,6 +115,12 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
 
             self.level_nodes[temperature] = bus
             higher_level = {bus: Flow()}
+
+        self.create_solph_node(
+            label=f"missing_heat",
+            node_type=components.Source,
+            outputs={self.level_nodes[self._levels[-1]]: Flow(variable_costs=1e9)},
+        )
 
     def get_connection_heat_transfer(self, max_temp, min_temp):
         warm_level_heating, _ = self.get_surrounding_levels(max_temp)
