@@ -70,3 +70,6 @@ plot.render(outfile="heat_source_and_demand_simple.png")
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
+
+plot = solph_representation.graph(detail=True, flow_results=flows)
+plot.render(outfile="heat_source_and_demand_results.png")

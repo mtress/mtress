@@ -86,4 +86,5 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-solved_model.write("heat.lp", io_options={"symbolic_solver_labels": True})
+plot = solph_representation.graph(detail=True, flow_results=flows)
+plot.render(outfile="heat_pump_cooling_results.png")
