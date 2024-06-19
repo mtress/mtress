@@ -15,12 +15,20 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
     Heat exchanger
 
     Functionality: Holds a time series of both the temperature and the
-        power limit that can be drawn from the source.
+        power limit that can be drawn from the source and/or expelled to the sink.
 
-    Procedure: Create a simple heat exchanger by doing the following:
+    Procedure: Define the type of HE:
+        1. Source:
+            house_1.add(
+                technologies.HeatSource(.....)
 
-        house_1.add(
-            technologies.HeatExchanger(air_temperatures=[3])
+        2. Sink:
+            house_1.add(
+                technologies.HeatSink(.....)
+
+        3. Source and Sink:
+            house_1.add(
+                technologies.HeatExchanger(.....)
 
     """
 
@@ -34,11 +42,11 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         minimum_delta: float = 1.0,
     ):
         """
-        Initialize air heat exchanger for e.g. heat pumps.
+        Initialize heat exchanger to draw or expel energy from a source
 
         :param name: Name of the component.
         :param nominal_power: Nominal power of the heat exchanger (in W), default to None.
-        :param air_temperatures: Reference to air temperature time series
+        :param reservoir_temperature: Reference to air temperature time series
         """
         super().__init__(name=name)
 
@@ -209,13 +217,7 @@ class HeatSource(AbstactHeatExchanger):
         nominal_power: float = None,
         minimum_delta: float = 1.0,
     ):
-        """
-        Initialize air heat exchanger for e.g. heat pumps.
 
-        :param name: Name of the component.
-        :param nominal_power: Nominal power of the heat exchanger (in W), default to None.
-        :param air_temperatures: Reference to air temperature time series
-        """
         super().__init__(
             name=name,
             reservoir_temperature=reservoir_temperature,
@@ -244,13 +246,7 @@ class HeatSink(AbstactHeatExchanger):
         nominal_power: float = None,
         minimum_delta: float = 1.0,
     ):
-        """
-        Initialize air heat exchanger for e.g. heat pumps.
 
-        :param name: Name of the component.
-        :param nominal_power: Nominal power of the heat exchanger (in W), default to None.
-        :param air_temperatures: Reference to air temperature time series
-        """
         super().__init__(
             name=name,
             reservoir_temperature=reservoir_temperature,
@@ -279,13 +275,7 @@ class HeatExchanger(AbstactHeatExchanger):
         nominal_power: float = None,
         minimum_delta: float = 1.0,
     ):
-        """
-        Initialize air heat exchanger for e.g. heat pumps.
 
-        :param name: Name of the component.
-        :param nominal_power: Nominal power of the heat exchanger (in W), default to None.
-        :param air_temperatures: Reference to air temperature time series
-        """
         super().__init__(
             name=name,
             reservoir_temperature=reservoir_temperature,
