@@ -191,7 +191,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         )
 
         self.create_solph_node(
-            label=f"{temp_primary_in:.0f}_{temp_secondary_out:.0f}",
+            label=f"cop_{temp_primary_in:.0f}_{temp_secondary_out:.0f}",
             node_type=Converter,
             inputs={
                 heat_bus_warm_primary: Flow(),
