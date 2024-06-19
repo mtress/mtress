@@ -24,7 +24,6 @@ from ._electrolyser import (
     Electrolyser,
 )
 from ._fuel_cell import AEMFC, AFC, PEMFC, FuelCell
-from ._geothermal_heat_exchanger import GeothermalHeatExchanger
 from ._heat_exchanger import HeatSource, HeatSink, HeatExchanger
 from ._heat_pump import HeatPump
 from ._heat_storage import FullyMixedHeatStorage, LayeredHeatStorage
@@ -35,7 +34,6 @@ from .grid_connection import ElectricityGridConnection, GasGridConnection
 from ._resistive_heater import ResistiveHeater
 
 __all__ = [
-    "GeothermalHeatExchanger",
     "ElectricityGridConnection",
     "GasGridConnection",
     "FullyMixedHeatStorage",
