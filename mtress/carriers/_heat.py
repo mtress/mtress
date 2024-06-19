@@ -11,7 +11,7 @@ SPDX-FileCopyrightText: Lucas Schmeling
 SPDX-License-Identifier: MIT
 """
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Bus, Flow, components
 
 from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractLayeredCarrier
@@ -103,9 +103,8 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
             if temperature is self.reference:
                 bus = self.create_solph_node(
                     label=f"T_{temperature:.0f}",
-                    node_type=Bus,
+                    node_type=components.Sink,
                     inputs={bus: Flow(variable_costs=1e9)},
-                    balanced=False,
                 )
             else:
                 bus = self.create_solph_node(
