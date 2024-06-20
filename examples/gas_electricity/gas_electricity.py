@@ -83,18 +83,12 @@ house_1.add(
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[80],
+        temperature_levels=[20, 80],
         reference_temperature=10,
     )
 )
 
 
-house_1.add(
-    demands.HeatSink(
-        name="Excess Heat",
-        temperature_levels=80,
-    )
-)
 # Choose default CHP template (HYDROGEN_MIXED_CHP) and change gas
 # shares (vol %)
 
@@ -104,6 +98,16 @@ house_1.add(
         nominal_power=1e5,
         gas_type={NATURAL_GAS: 0.75, HYDROGEN: 0.25},
         template=HYDROGEN_MIXED_CHP,
+    )
+)
+
+# Add heat demands
+house_1.add(
+    demands.FixedTemperatureHeating(
+        name="heat_demand",
+        min_flow_temperature=80,
+        return_temperature=20,
+        time_series="FILE:../input_file.csv:heat",
     )
 )
 
