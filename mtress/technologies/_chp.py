@@ -65,6 +65,7 @@ class CHPTemplate:
 
     gas_type: dict[Gas, float]
     maximum_temperature: float
+    minimum_temperature: float
     input_pressure: float
     electric_efficiency: float
     thermal_efficiency: float
@@ -73,6 +74,7 @@ class CHPTemplate:
 NATURALGAS_CHP = CHPTemplate(
     gas_type={NATURAL_GAS: 1},
     maximum_temperature=85,
+    minimum_temperature=20,
     input_pressure=1,
     electric_efficiency=0.421,
     thermal_efficiency=0.454,
@@ -81,6 +83,7 @@ NATURALGAS_CHP = CHPTemplate(
 BIOGAS_CHP = CHPTemplate(
     gas_type={BIOGAS: 1},
     maximum_temperature=85,
+    minimum_temperature=20,
     input_pressure=1,
     electric_efficiency=0.427,
     thermal_efficiency=0.408,
@@ -89,6 +92,7 @@ BIOGAS_CHP = CHPTemplate(
 BIOMETHANE_CHP = CHPTemplate(
     gas_type={BIO_METHANE: 1},
     maximum_temperature=85,
+    minimum_temperature=20,
     input_pressure=1,
     electric_efficiency=0.427,
     thermal_efficiency=0.46,
@@ -97,6 +101,7 @@ BIOMETHANE_CHP = CHPTemplate(
 HYDROGEN_CHP = CHPTemplate(
     gas_type={HYDROGEN: 1},
     maximum_temperature=90,
+    minimum_temperature=20,
     input_pressure=1,
     electric_efficiency=0.39,
     thermal_efficiency=0.474,
@@ -105,6 +110,7 @@ HYDROGEN_CHP = CHPTemplate(
 HYDROGEN_MIXED_CHP = CHPTemplate(
     gas_type={NATURAL_GAS: 0.8, HYDROGEN: 0.2},
     maximum_temperature=85,
+    minimum_temperature=20,
     input_pressure=1,
     electric_efficiency=0.363,
     thermal_efficiency=0.557,
@@ -144,11 +150,11 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         name: str,
         gas_type: dict[Gas, float],
         maximum_temperature: float,
+        minimum_temperature: float,
         nominal_power: float,
         input_pressure: float,
         electric_efficiency: float,
         thermal_efficiency: float,
-        minimum_temperature: float,
     ):
         """
         Initialize CHP component.
