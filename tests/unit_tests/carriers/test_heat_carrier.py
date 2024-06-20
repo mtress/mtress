@@ -5,7 +5,7 @@ Tests for the MTRESS heat carrier.
 
 import pytest
 
-from mtress.carriers import Heat as HeatCarrier
+from mtress.carriers import HeatCarrier
 
 
 def test_heat_carrier_with_reference():
