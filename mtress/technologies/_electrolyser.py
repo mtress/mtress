@@ -46,6 +46,7 @@ class ElectrolyserTemplate:
     hydrogen_efficiency: float
     thermal_efficiency: float
     maximum_temperature: float
+    minimum_temperature: float
     hydrogen_output_pressure: float
 
 
@@ -58,6 +59,7 @@ PEM_ELECTROLYSER = ElectrolyserTemplate(
     hydrogen_efficiency=0.63,
     thermal_efficiency=0.25,
     maximum_temperature=57,
+    minimum_temperature=20,
     hydrogen_output_pressure=30,
 )
 
@@ -65,6 +67,7 @@ ALKALINE_ELECTROLYSER = ElectrolyserTemplate(
     hydrogen_efficiency=0.66,
     thermal_efficiency=0.20,
     maximum_temperature=65,
+    minimum_temperature=20,
     hydrogen_output_pressure=30,
 )
 
@@ -72,6 +75,7 @@ AEM_ELECTROLYSER = ElectrolyserTemplate(
     hydrogen_efficiency=0.625,
     thermal_efficiency=0.29,
     maximum_temperature=50,
+    minimum_temperature=20,
     hydrogen_output_pressure=35,
 )
 

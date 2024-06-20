@@ -16,8 +16,8 @@ def test_electrolyser():
     assert electrolyser.hydrogen_efficiency == ALKALINE_ELECTROLYSER.hydrogen_efficiency
     assert electrolyser.thermal_efficiency == ALKALINE_ELECTROLYSER.thermal_efficiency
     assert (
-        electrolyser.waste_heat_temperature
-        == ALKALINE_ELECTROLYSER.waste_heat_temperature
+        electrolyser.maximum_temperature
+        == ALKALINE_ELECTROLYSER.maximum_temperature
     )
     assert (
         electrolyser.hydrogen_output_pressure
