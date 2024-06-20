@@ -58,7 +58,7 @@ class GasStorage(AbstractHomogenousStorage, AbstractTechnology):
         :param pressure: Pressure inside the storage tank given in bar
         """
         return self.calc_density(pressure) * self.volume
-    
+
     def build_core(self) -> None:
         """Build the core structure of mtress representation."""
         gas_carrier = self.location.get_carrier(GasCarrier)

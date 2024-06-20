@@ -14,9 +14,9 @@ class Electricity(AbstractDemand, AbstractSolphRepresentation):
     """
     Class representing an electricity demand.
 
-    Functionality: Demands contain time series (in Wh) of energy that is 
-        needed. The electricity demand automatically connects to its 
-        corresponding electricity  carrier. A name identifying the demand 
+    Functionality: Demands contain time series (in Wh) of energy that is
+        needed. The electricity demand automatically connects to its
+        corresponding electricity  carrier. A name identifying the demand
         has to be given that is unique for the location, because multiple
         demands of one type can exist for one location.
 
@@ -54,7 +54,9 @@ class Electricity(AbstractDemand, AbstractSolphRepresentation):
             inputs={
                 bus: Flow(
                     nominal_value=1,
-                    fix=self._solph_model.data.get_timeseries(self._time_series, kind=TimeseriesType.INTERVAL),
+                    fix=self._solph_model.data.get_timeseries(
+                        self._time_series, kind=TimeseriesType.INTERVAL
+                    ),
                 )
             },
         )

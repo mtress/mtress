@@ -64,7 +64,7 @@ class CHPTemplate:
     """
 
     gas_type: dict[Gas, float]
-    thermal_temperature: float
+    maximum_temperature: float
     input_pressure: float
     electric_efficiency: float
     thermal_efficiency: float
@@ -72,7 +72,7 @@ class CHPTemplate:
 
 NATURALGAS_CHP = CHPTemplate(
     gas_type={NATURAL_GAS: 1},
-    thermal_temperature=85,
+    maximum_temperature=85,
     input_pressure=1,
     electric_efficiency=0.421,
     thermal_efficiency=0.454,
@@ -80,7 +80,7 @@ NATURALGAS_CHP = CHPTemplate(
 
 BIOGAS_CHP = CHPTemplate(
     gas_type={BIOGAS: 1},
-    thermal_temperature=85,
+    maximum_temperature=85,
     input_pressure=1,
     electric_efficiency=0.427,
     thermal_efficiency=0.408,
@@ -88,7 +88,7 @@ BIOGAS_CHP = CHPTemplate(
 
 BIOMETHANE_CHP = CHPTemplate(
     gas_type={BIO_METHANE: 1},
-    thermal_temperature=85,
+    maximum_temperature=85,
     input_pressure=1,
     electric_efficiency=0.427,
     thermal_efficiency=0.46,
@@ -96,7 +96,7 @@ BIOMETHANE_CHP = CHPTemplate(
 
 HYDROGEN_CHP = CHPTemplate(
     gas_type={HYDROGEN: 1},
-    thermal_temperature=90,
+    maximum_temperature=90,
     input_pressure=1,
     electric_efficiency=0.39,
     thermal_efficiency=0.474,
@@ -104,7 +104,7 @@ HYDROGEN_CHP = CHPTemplate(
 
 HYDROGEN_MIXED_CHP = CHPTemplate(
     gas_type={NATURAL_GAS: 0.8, HYDROGEN: 0.2},
-    thermal_temperature=85,
+    maximum_temperature=85,
     input_pressure=1,
     electric_efficiency=0.363,
     thermal_efficiency=0.557,
@@ -143,11 +143,12 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         self,
         name: str,
         gas_type: dict[Gas, float],
-        thermal_temperature: float,
+        maximum_temperature: float,
         nominal_power: float,
         input_pressure: float,
         electric_efficiency: float,
         thermal_efficiency: float,
+        minimum_temperature: float,
     ):
         """
         Initialize CHP component.
@@ -155,8 +156,9 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         :param name: Set the name of the component
         :param gas_type: (Dict) type of gas from gas carrier and its share in
                          vol %
-        :parma thermal_temperature: Temperature level (in °C) of the heat output
+        :parma maximum_temperature: Maximum temperature level (in °C) of the heat output
                                     from CHP that is recoverable.
+        :param minimum_temperature: Minimum return temperature level (in °C)
         :param nominal_power: Nominal electric output capacity of the CHP (in Watts)
         :param input_pressure: Input pressure of gas or gases (in bar).
         :param electric_efficiency: Electric conversion efficiency (LHV) of the CHP
@@ -166,7 +168,8 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         super().__init__(name=name)
 
         self.gas_type = gas_type
-        self.thermal_temperature = thermal_temperature
+        self.maximum_temperature = maximum_temperature
+        self.minimum_temperature = minimum_temperature
         self.nominal_power = nominal_power
         self.input_pressure = input_pressure
         self.electric_efficiency = electric_efficiency
@@ -204,19 +207,10 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
         # convert gas in kg to heat in Wh with thermal efficiency conversion
         heat_output = self.thermal_efficiency * gas_LHV
         heat_carrier = self.location.get_carrier(HeatCarrier)
-        temp_level, _ = heat_carrier.get_surrounding_levels(self.thermal_temperature)
-
-        if np.isinf(temp_level):
-            raise ValueError("No suitable temperature level available")
-
-        if self.thermal_temperature - temp_level > 15:
-            LOGGER.info(
-                "Waste heat temperature from CHP is significantly"
-                "higher than suitable temperature level"
-            )
-
-        heat_bus = heat_carrier.level_nodes[temp_level]
-
+        heat_bus_warm, heat_bus_cold, ratio = heat_carrier.get_connection_heat_transfer(
+            self.maximum_temperature,
+            self.minimum_temperature,
+        )
         # Add electrical connection
         electricity_carrier = self.location.get_carrier(Electricity)
         electrical_bus = electricity_carrier.distribution
@@ -230,18 +224,27 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
 
         # Conversion factors of the oemof converter
         conversion = {gas_bus[gas]: share for gas, share in self.gas_type.items()}
-        conversion.update({heat_bus: heat_output, electrical_bus: electrical_output})
+        conversion.update(
+            {
+                heat_bus_warm: heat_output / (1 - ratio),
+                heat_bus_cold: heat_output * ratio / (1 - ratio),
+                electrical_bus: electrical_output,
+            }
+        )
+
+        inputs = {
+            gas_bus[gas]: Flow(nominal_value=nominal_gas_consumption)
+            for gas, share in self.gas_type.items()
+        }
+        inputs.update({heat_bus_cold: Flow()})
 
         self.create_solph_node(
             label="converter",
             node_type=Converter,
-            inputs={
-                gas_bus[gas]: Flow(nominal_value=nominal_gas_consumption)
-                for gas, share in self.gas_type.items()
-            },
+            inputs=inputs,
             outputs={
                 electrical_bus: Flow(),
-                heat_bus: Flow(),
+                heat_bus_warm: Flow(),
             },
             conversion_factors=conversion,
         )

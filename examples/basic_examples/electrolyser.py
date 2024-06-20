@@ -6,6 +6,8 @@ from oemof.solph.processing import results
 
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 from mtress._helpers import get_flows
+from mtress.physics import HYDROGEN
+from mtress.technologies import PEM_ELECTROLYSER
 
 os.chdir(os.path.dirname(__file__))
 
@@ -18,28 +20,34 @@ house_1.add(carriers.Electricity())
 house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 house_1.add(
+    technologies.Electrolyser(
+        name="ELY",
+        nominal_power=100000,
+        minimum_temperature=20,
+        template=PEM_ELECTROLYSER,
+    )
+)
+
+house_1.add(
+    demands.HeatSink(
+        name="Excess Heat",
+        temperature_levels=50,
+    )
+)
+
+house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[20, 30, 50],
+        temperature_levels=[20, 50],
         reference_temperature=10,
     )
 )
+house_1.add(carriers.GasCarrier(gases={HYDROGEN: [30]}))
 house_1.add(
-    technologies.ResistiveHeater(
-        name="Resistive_Heater",
-        nominal_power=None,
-        maximum_temperature=50,
-        minumum_temperature=20,
-        efficiency=1,
+    demands.GasDemand(
+        name="H2_Dem", gas_type=HYDROGEN, pressure=30, time_series=[0.5, 0.5]
     )
 )
-house_1.add(
-    demands.FixedTemperatureHeating(
-        name="heating",
-        flow_temperature=50,
-        return_temperature=20,
-        time_series=[50, 50],
-    )
-)
+
 
 solph_representation = SolphModel(
     energy_system,
@@ -53,13 +61,13 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 plot = solph_representation.graph(detail=True)
-plot.render(outfile="heat_detail.png")
+plot.render(outfile="electrolyser_detail.png")
 
 plot = solph_representation.graph(detail=False)
-plot.render(outfile="heat_simple.png")
+plot.render(outfile="electrolyser_simple.png")
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-solved_model.write("heat.lp", io_options={"symbolic_solver_labels": True})
+solved_model.write("electrolyser.lp", io_options={"symbolic_solver_labels": True})

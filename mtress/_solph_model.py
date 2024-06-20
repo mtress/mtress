@@ -87,18 +87,19 @@ class SolphModel:
         for component in self._meta_model.components:
             component.add_constraints()
 
-    def graph(self, detail: bool = False) -> Digraph:
+    def graph(self, detail: bool = False, flow_results = None) -> Digraph:
         """Generate a graph representation of the energy system."""
         graph = Digraph(name="MTRESS model")
-        all_edges = set()
+        external_edges = set()
 
         for location in self._meta_model.locations:
-            subgraph, edges = location.graph(detail)
+            subgraph, external_edges = location.graph(detail, flow_results)
 
-            all_edges.update(edges)
+            external_edges.update(external_edges)
             graph.subgraph(subgraph)
 
-        graph.edges(all_edges)
+        for edge in external_edges:
+            graph.edge(edge[0], edge[1], label=edge[2], color=edge[3])
         return graph
 
     def solve(

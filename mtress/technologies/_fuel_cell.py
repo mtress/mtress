@@ -36,7 +36,7 @@ class FuelCellTemplate:
 
     electrical_efficiency: float
     thermal_efficiency: float
-    waste_heat_temperature: float
+    maximum_temperature: float
     gas_input_pressure: float
 
 
@@ -44,7 +44,7 @@ class FuelCellTemplate:
 PEMFC = FuelCellTemplate(
     electrical_efficiency=0.36,
     thermal_efficiency=0.50,
-    waste_heat_temperature=70,
+    maximum_temperature=70,
     gas_input_pressure=80,
 )
 
@@ -52,7 +52,7 @@ PEMFC = FuelCellTemplate(
 AFC = FuelCellTemplate(
     electrical_efficiency=0.37,
     thermal_efficiency=0.45,
-    waste_heat_temperature=65,
+    maximum_temperature=65,
     gas_input_pressure=60,
 )
 
@@ -60,7 +60,7 @@ AFC = FuelCellTemplate(
 AEMFC = FuelCellTemplate(
     electrical_efficiency=0.33,
     thermal_efficiency=0.42,
-    waste_heat_temperature=55,
+    maximum_temperature=55,
     gas_input_pressure=35,
 )
 
@@ -117,7 +117,8 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
         nominal_power: float,
         electrical_efficiency: float,
         thermal_efficiency: float,
-        waste_heat_temperature: float,
+        maximum_temperature: float,
+        minimum_temperature: float,
         gas_input_pressure: float,
         gas_type: Gas = HYDROGEN,
         inverter_efficiency: float = 0.98,
@@ -132,8 +133,9 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
             i.e. ratio of electrical output and gas input
         :param thermal_efficiency: Thermal efficiency of the Fuel Cell,
             i.e. ratio of thermal output and gas input
-        :param waste_heat_temperature: Temperature (in °C) at which heat could
+        :param maximum_temperature: Maximum temperature (in °C) at which heat could
             be extracted from FC.
+        :param minimum_temperature: Minimum return temperature level (in °C)
         :param gas_input_pressure: Pressure at which gas is injected to FC.
         :param gas_type: Input gas to FC, by default Hydrogen gas is used.
         :param inverter_efficiency: Efficiency for conversion from DC output
@@ -144,7 +146,8 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
         self.nominal_power = nominal_power
         self.electrical_efficiency = electrical_efficiency
         self.thermal_efficiency = thermal_efficiency
-        self.waste_heat_temperature = waste_heat_temperature
+        self.maximum_temperature = maximum_temperature
+        self.minimum_temperature = minimum_temperature
         self.gas_input_pressure = gas_input_pressure
         self.gas_type = gas_type
         self.inverter_efficiency = inverter_efficiency
@@ -178,35 +181,32 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
 
         # Heat connection for FC heat output
         heat_carrier = self.location.get_carrier(HeatCarrier)
-
-        temp_level, _ = heat_carrier.get_surrounding_levels(self.waste_heat_temperature)
-
-        if np.isinf(temp_level):
-            raise ValueError(
-                "No suitable temperature level available for fuel cell temperature"
-            )
-
-        if self.waste_heat_temperature - temp_level > 15:
-            LOGGER.info(
-                "Waste heat temperature from fuel cell is significantly"
-                "higher than suitable temperature level"
-            )
+        heat_bus_warm, heat_bus_cold, ratio = heat_carrier.get_connection_heat_transfer(
+            self.maximum_temperature,
+            self.minimum_temperature,
+        )
 
         # thermal efficiency with conversion from gas in kg to heat in W.
         heat_output = self.thermal_efficiency * self.gas_type.LHV
-        heat_bus = heat_carrier.level_nodes[temp_level]
+
+        # electricity bus connection
+        electricity_bus = electricity_carrier.distribution
 
         self.create_solph_node(
             label="converter",
             node_type=Converter,
-            inputs={gas_bus: Flow(nominal_value=nominal_gas_consumption)},
+            inputs={
+                gas_bus: Flow(nominal_value=nominal_gas_consumption),
+                heat_bus_cold: Flow(),
+            },
             outputs={
                 electricity_carrier.distribution: Flow(),
-                heat_bus: Flow(),
+                heat_bus_warm: Flow(),
             },
             conversion_factors={
                 gas_bus: 1,
-                electricity_carrier.distribution: electrical_output,
-                heat_bus: heat_output,
+                heat_bus_cold: self.thermal_efficiency * ratio / (1 - ratio),
+                electricity_bus: electrical_output,
+                heat_bus_warm: heat_output / (1 - ratio),
             },
         )

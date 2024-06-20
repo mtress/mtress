@@ -9,7 +9,7 @@ from oemof import solph
 import pytest
 
 from mtress import carriers, Location, MetaModel, SolphModel
-from mtress.demands import FixedTemperatureHeat as HeatDemand
+from mtress.demands import FixedTemperatureHeating as HeatDemand
 
 @pytest.mark.skip(reason="Not adjusted to new HeatCarrier.")
 def test_layered_heat_demand():

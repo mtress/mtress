@@ -11,7 +11,7 @@ SPDX-FileCopyrightText: Lucas Schmeling
 SPDX-License-Identifier: MIT
 """
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Bus, Flow, components
 
 from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractLayeredCarrier
@@ -100,19 +100,29 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
 
         # Thermal layers, starting from the highest
         for temperature in reversed(self._levels):
-            bus = self.create_solph_node(
-                label=f"T_{temperature:.0f}",
-                node_type=Bus,
-                inputs=higher_level,
-            )
             if temperature is self.reference:
-                bus.balanced = False
+                bus = self.create_solph_node(
+                    label="excess_heat",
+                    node_type=components.Sink,
+                    inputs={bus: Flow(variable_costs=1e9)},
+                )
+            else:
+                bus = self.create_solph_node(
+                    label=f"T_{temperature:.0f}",
+                    node_type=Bus,
+                    inputs=higher_level,
+                )
 
             self.level_nodes[temperature] = bus
             higher_level = {bus: Flow()}
 
-    def get_connection_heat_transfer(self, max_temp, min_temp):
+        self.create_solph_node(
+            label=f"missing_heat",
+            node_type=components.Source,
+            outputs={self.level_nodes[self._levels[-1]]: Flow(variable_costs=1e9)},
+        )
 
+    def get_connection_heat_transfer(self, max_temp, min_temp):
         warm_level_heating, _ = self.get_surrounding_levels(max_temp)
         _, cold_level_heating = self.get_surrounding_levels(min_temp)
 

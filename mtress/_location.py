@@ -104,7 +104,7 @@ class Location(NamedElement):
         for component in self._components:
             yield component
 
-    def graph(self, detail: bool = True) -> Tuple[Digraph, set]:
+    def graph(self, detail: bool = True, flow_results = None) -> Tuple[Digraph, set]:
         """
         Generate graphviz visualization of the MTRESS location.
 
@@ -113,12 +113,12 @@ class Location(NamedElement):
         graph = Digraph(name=f"cluster_{self.identifier}")
         graph.attr("graph", label=self.name)
 
-        all_edges = set()
+        external_edges = set()
 
         for component in self.components:
-            subgraph, edges = component.graph(detail)
+            subgraph, edges = component.graph(detail, flow_results)
 
-            all_edges.update(edges)
+            external_edges.update(edges)
             graph.subgraph(subgraph)
 
-        return graph, all_edges
+        return graph, external_edges
