@@ -27,24 +27,6 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
     Connects any input to any output using Converter
     with shared resources, see https://arxiv.org/abs/2012.12664
 
-    Flows:
-    E --> HP1,         E --> HP2,       E --> HP3
-    A --> HP1,         A --> HP2,       A --> HP3
-    1HP --> HP1,     1HP --> HP2,     1HP --> HP3
-    HP0 --> Qin(T1), HP1 --> Qin(T2), HP2 --> Qin(T3)
-
-    Sketch:
-        Resources     | Technologies |  Layer Inputs
-
-               ┏━━━━━━━━━━━━━━┓
-         ┌─────╂───────→[HP3]─╂────────→(Qin(T3))
-         │     ┃  ┌─────↗     ┃            ↓
-       (E,A)───╂──┼────→[HP2]─╂────────→(Qin(T2))
-         │     ┃  │┌─────↗    ┃            ↓
-         └─────╂──┼┼───→[HP1]─╂────────→(Qin(T1))
-               ┃ [1HP]────↗   ┃
-               ┗━━━━━━━━━━━━━━┛
-
     The heat pump is modelled as an array of virtual heat pumps,
     each with the correct COP for the corresponding temperatures.
     To not allow producing more heat than the real heat pump,
@@ -70,12 +52,16 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         min_delta_temp_secondary: float = 5.0,
     ):
         """
-        # Initialize heat pump component.
+        Initialize heat pump component.
 
-        # :param thermal_power_limit: Thermal power limit on all temperature ranges
-        # :param cop_0_35: COP for the temperature rise 0°C to 35°C
-        # :param anergy_sources: Anergy sources (names) to connect to, defaults to all
-        # :param max_temp_primary: This is a float
+        :param thermal_power_limit: Thermal power limit on all temperature ranges
+        :param cop_0_35: COP for the temperature rise 0°C to 35°C
+        :param max_temp_primary: Maximum inlet temperature (°C) at the cold side.
+        :param min_temp_primary: Minimum outlet temperature (°C) at the cold side.
+        :param min_delta_temp_primary: Minumum delta (°C) at the cold side.
+        :param max_temp_secondary: Maximum outlet temperature (°C) at the warm side.
+        :param min_temp_secondary: Minimum inlet temperature (°C) at the warm side.
+        :param min_delta_temp_secondary: Minumum delta (°C) at the warm side.
         """
         super().__init__(name=name)
 

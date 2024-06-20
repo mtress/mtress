@@ -31,7 +31,7 @@ def test_layered_heat_demand():
     for flow_temperature, return_temperature in demand_levels:
         house_1.add(HeatDemand(
             name=f"{flow_temperature}_{return_temperature}",
-            flow_temperature=flow_temperature,
+            min_flow_temperature=flow_temperature,
             return_temperature=return_temperature,
             time_series=demand_series,
         ))

@@ -12,24 +12,16 @@ from ._abstract_demand import AbstractDemand
 
 class AbstractFixedTemperature(AbstractDemand, AbstractSolphRepresentation):
     """
-    Space heating with a fixed flow and return temperature.
+    Superclass for heating or coolig with a fixed return temperature.
 
-    Takes energy from the flow temperature level and returns energy at the lower return
+    Takes energy from the flow temperature level and returns energy at the return
     temperature level.
-
-      (Q(T2))
-              ↘
-              [heater1,2] ───→ (Qdemand)
-              ↙
-      (Q(T1))
-
 
     Functionality: Demands contain time series of energy that is needed.
         The heat demand automatically connects to its corresponding
         heat  carrier. A name identifying the demand has to be given that
         is unique for the location, because multiple demands of one type
-        can exist for one location. Also, the heat demand needs a
-        specified temperature level.
+        can exist for one location.
 
     Procedure: Create a simple heat demand by doing the following:
 
@@ -63,18 +55,26 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
     def __init__(
         self,
         name: str,
-        flow_temperature: float,
+        min_flow_temperature: float,
         return_temperature: float,
         time_series,
-    ):
+    ):  
+        """
+        Heating demand with a fixed return temperature.
+
+        :param min_flow_temperature: minimum temperature
+            that can be used for heating 
+        :param return_temperature: return temperature
+        :param time_series: demand time series (in W)
+        """
         super().__init__(
             name=name,
-            flow_temperature=flow_temperature,
+            flow_temperature=min_flow_temperature,
             return_temperature=return_temperature,
             time_series=time_series,
         )
 
-        if not flow_temperature > return_temperature:
+        if not min_flow_temperature > return_temperature:
             raise ValueError("Flow must be higher than return temperature")
 
     def build_core(self):
@@ -142,10 +142,12 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         flow_temperature: float = None,
     ):
         """
-        Initialize space heater.
+        Cooling demand with a fixed return temperature.
 
-        :param flow_temperature: Flow temperature
-        :param return_temperature: Return temperature
+        :param max_flow_temperature: maximum temperature
+            that can be used for cooling 
+        :param return_temperature: return temperature
+        :param time_series: demand time series (in W)
         """
         super().__init__(
             name=name,
