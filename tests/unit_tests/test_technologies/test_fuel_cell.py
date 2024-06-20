@@ -23,8 +23,8 @@ def test_fuelcell():
     assert fuelcell.electrical_efficiency == PEMFC.electrical_efficiency
     assert fuelcell.thermal_efficiency == PEMFC.thermal_efficiency
     assert (
-        fuelcell.waste_heat_temperature
-        == PEMFC.waste_heat_temperature
+        fuelcell.maximum_temperature
+        == PEMFC.maximum_temperature
     )
     assert (
         fuelcell.gas_input_pressure

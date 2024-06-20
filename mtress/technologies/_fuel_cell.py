@@ -37,6 +37,7 @@ class FuelCellTemplate:
     electrical_efficiency: float
     thermal_efficiency: float
     maximum_temperature: float
+    minimum_temperature: float
     gas_input_pressure: float
 
 
@@ -45,6 +46,7 @@ PEMFC = FuelCellTemplate(
     electrical_efficiency=0.36,
     thermal_efficiency=0.50,
     maximum_temperature=70,
+    minimum_temperature=20,
     gas_input_pressure=80,
 )
 
@@ -53,6 +55,7 @@ AFC = FuelCellTemplate(
     electrical_efficiency=0.37,
     thermal_efficiency=0.45,
     maximum_temperature=65,
+    minimum_temperature=20,
     gas_input_pressure=60,
 )
 
@@ -61,6 +64,7 @@ AEMFC = FuelCellTemplate(
     electrical_efficiency=0.33,
     thermal_efficiency=0.42,
     maximum_temperature=55,
+    minimum_temperature=20,
     gas_input_pressure=35,
 )
 
