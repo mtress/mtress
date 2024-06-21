@@ -27,7 +27,7 @@ house_1.add(technologies.ElectricityGridConnection(working_rate=0.70))
 house_1.add(
     carriers.GasCarrier(
         gases={
-            HYDROGEN: [20, 30, 355],
+            HYDROGEN: [20, 30, 60, 350],
         }
     )
 )
@@ -44,7 +44,7 @@ house_1.add(
     technologies.Photovoltaics(
         "pv0",
         (52.729, 8.181),
-        nominal_power=2e6,
+        nominal_power=8e6,
         weather=weather,
         surface_azimuth=180,
         surface_tilt=35,
@@ -64,7 +64,7 @@ house_1.add(
         name="H2_demand",
         gas_type=HYDROGEN,
         time_series="FILE:../input_file.csv:h2_demand",
-        pressure=350,
+        pressure=60,
     )
 )
 
@@ -72,14 +72,14 @@ house_1.add(
 house_1.add(
     technologies.H2Storage(
         name="H2_Storage",
-        volume=8.5,
+        volume=15,
         power_limit=10,
     )
 )
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[20, 57, 65],
+        temperature_levels=[20, 40],
         reference_temperature=10,
     )
 )
@@ -87,27 +87,20 @@ house_1.add(
 house_1.add(
     demands.FixedTemperatureHeating(
         name="hot water",
-        min_flow_temperature=65,
+        min_flow_temperature=40,
         return_temperature=20,
         time_series="FILE:../input_file.csv:heat",
     )
 )
 
 house_1.add(
-    demands.HeatSink(
-        name="Excess Heat",
-        temperature_levels=65,
-    )
-)
-
-house_1.add(
     technologies.Electrolyser(
-        name="PEM_Ely", nominal_power=6e5, template=PEM_ELECTROLYSER
+        name="PEM_Ely", nominal_power=10e5, template=PEM_ELECTROLYSER
     )
 )
 house_1.add(
     technologies.FuelCell(
-        name="AFC", nominal_power=5e4, gas_input_pressure=20, template=AFC
+        name="AFC", nominal_power=5e5, gas_input_pressure=20, template=AFC
     )
 )
 house_1.add(
@@ -118,7 +111,7 @@ solph_representation = SolphModel(
     energy_system,
     timeindex={
         "start": "2022-06-01 08:00:00",
-        "end": "2022-06-06 18:00:00",
+        "end": "2022-06-01 18:00:00",
         "freq": "15T",
         "tz": "Europe/Berlin",
     },
