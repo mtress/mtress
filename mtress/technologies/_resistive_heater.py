@@ -22,7 +22,7 @@ class ResistiveHeater(AbstractTechnology, AbstractSolphRepresentation):
         name: str,
         nominal_power: float,
         maximum_temperature: float,
-        minumum_temperature: float = 0,
+        minimum_temperature: float = 0,
         efficiency: float = 1,
     ):
         """
@@ -38,7 +38,7 @@ class ResistiveHeater(AbstractTechnology, AbstractSolphRepresentation):
 
         self.nominal_power = nominal_power
         self.maximum_temperature = maximum_temperature
-        self.minumum_temperature = minumum_temperature
+        self.minimum_temperature = minimum_temperature
         self.efficiency = efficiency
 
     def build_core(self):
@@ -52,7 +52,7 @@ class ResistiveHeater(AbstractTechnology, AbstractSolphRepresentation):
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
         heat_bus_warm, heat_bus_cold, ratio = heat_carrier.get_connection_heat_transfer(
-            self.maximum_temperature, self.minumum_temperature
+            self.maximum_temperature, self.minimum_temperature
         )
 
         self.create_solph_node(
