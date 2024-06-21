@@ -28,7 +28,7 @@ house_1.add(
         name="Resistive_Heater",
         nominal_power=None,
         maximum_temperature=50,
-        minumum_temperature=20,
+        minimum_temperature=20,
         efficiency=1,
     )
 )
