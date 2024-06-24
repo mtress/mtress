@@ -7,7 +7,6 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
-from ._air_heat_exchanger import AirHeatExchanger
 from ._battery_storage import BatteryStorage
 from ._chp import (
     CHP,
@@ -25,21 +24,23 @@ from ._electrolyser import (
     Electrolyser,
 )
 from ._fuel_cell import AEMFC, AFC, PEMFC, FuelCell
-from ._geothermal_heat_exchanger import GeothermalHeatExchanger
+from ._heat_exchanger import HeatSource, HeatSink, HeatExchanger
 from ._heat_pump import HeatPump
 from ._heat_storage import FullyMixedHeatStorage, LayeredHeatStorage
 from ._photovoltaics import Photovoltaics
 from ._pressure_storage import H2Storage
 from ._renewable_electricity_source import RenewableElectricitySource
 from .grid_connection import ElectricityGridConnection, GasGridConnection
-from ._heating_rod import HeatingRod
+from ._resistive_heater import ResistiveHeater
+
 __all__ = [
-    "AirHeatExchanger",
-    "GeothermalHeatExchanger",
     "ElectricityGridConnection",
     "GasGridConnection",
     "FullyMixedHeatStorage",
     "Electrolyser",
+    "HeatExchanger",
+    "HeatSource",
+    "HeatSink",
     "PEM_ELECTROLYSER",
     "ALKALINE_ELECTROLYSER",
     "AEM_ELECTROLYSER",
@@ -50,7 +51,7 @@ __all__ = [
     "BatteryStorage",
     "HeatPump",
     "CHP",
-    "HeatingRod",
+    "ResistiveHeater",
     "NATURALGAS_CHP",
     "BIOGAS_CHP",
     "BIOMETHANE_CHP",

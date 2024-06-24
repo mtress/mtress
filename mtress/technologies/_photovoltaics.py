@@ -144,24 +144,32 @@ class Photovoltaics(RenewableElectricitySource):
             if col not in self.weather:
                 raise KeyError(f"{col} data missing")
 
-            weather[col] = self._solph_model.data.get_timeseries(self.weather[col], kind=TimeseriesType.INTERVAL)
+            weather[col] = self._solph_model.data.get_timeseries(
+                self.weather[col], kind=TimeseriesType.INTERVAL
+            )
 
         if "dni" not in weather:
             for col in ["temp_air", "temp_dew", "pressure"]:
                 if col not in self.weather:
                     raise KeyError(f"{col} required if dni is not provided missing")
 
-                weather[col] = self._solph_model.data.get_timeseries(self.weather[col], kind=TimeseriesType.INTERVAL)
+                weather[col] = self._solph_model.data.get_timeseries(
+                    self.weather[col], kind=TimeseriesType.INTERVAL
+                )
 
             weather["dni"] = calculate_dni(weather, self.geo_location)
         else:
-            weather["dni"] = self._solph_model.data.get_timeseries(self.weather["dni"], kind=TimeseriesType.INTERVAL)
+            weather["dni"] = self._solph_model.data.get_timeseries(
+                self.weather["dni"], kind=TimeseriesType.INTERVAL
+            )
 
         for col in ["temp_air", "wind_speed"]:
             if col not in self.weather:
                 _LOGGER.warning("{col} not provided, using pvlib defaults")
             else:
-                weather[col] = self._solph_model.data.get_timeseries(self.weather[col], kind=TimeseriesType.INTERVAL)
+                weather[col] = self._solph_model.data.get_timeseries(
+                    self.weather[col], kind=TimeseriesType.INTERVAL
+                )
 
         return weather
 

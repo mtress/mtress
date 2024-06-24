@@ -7,8 +7,9 @@ SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 
 SPDX-License-Identifier: MIT
 """
+
 from mtress._data_handler import TimeseriesSpecifier
-from mtress.carriers import Heat
+from mtress.carriers import HeatCarrier
 from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR
 
 from .._abstract_homogenous_storage import AbstractHomogenousStorage, Implementation
@@ -55,17 +56,17 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
             u_value=u_value,
             implementation=multiplexer_implementation,
         )
-        self.capacity_per_unit = self.volume * (H2O_DENSITY * H2O_HEAT_CAPACITY) / SECONDS_PER_HOUR
+        self.capacity_per_unit = (
+            self.volume * (H2O_DENSITY * H2O_HEAT_CAPACITY) / SECONDS_PER_HOUR
+        )
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        carrier: Heat = self.location.get_carrier(Heat)
+        carrier: HeatCarrier = self.location.get_carrier(HeatCarrier)
         empty_level = carrier.reference
 
         solph_storage_arguments = {
-            "nominal_storage_capacity": (
-                max(carrier.levels) - carrier.reference_level
-            )
+            "nominal_storage_capacity": (max(carrier.levels) - carrier.reference_level)
             * self.capacity_per_unit
         }
 
@@ -84,8 +85,8 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
 
         self.build_multiplexer_structure(
             levels=carrier.levels_above_reference,
-            inputs=carrier.inputs,
-            outputs=carrier.outputs,
+            inputs=carrier.levels,
+            outputs=carrier.levels,
             power_limit=self.power_limit,
             empty_level=empty_level,
             solph_storage_arguments=solph_storage_arguments,

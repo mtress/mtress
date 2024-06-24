@@ -1,5 +1,5 @@
-
 from mtress._abstract_component import AbstractComponent
+
 
 class AbstractGridConnection(AbstractComponent):
     """Abstract carrier class to ensure a unified interface."""

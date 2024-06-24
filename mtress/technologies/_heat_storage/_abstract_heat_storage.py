@@ -25,6 +25,8 @@ class AbstractHeatStorage(AbstractTechnology, AbstractSolphRepresentation):
         power_limit: float,
         ambient_temperature: TimeseriesSpecifier,
         u_value: float | None = None,
+        max_temperature: float | None = None,
+        min_temperature: float | None = None,
         **kwargs,
     ):
         """
@@ -44,6 +46,8 @@ class AbstractHeatStorage(AbstractTechnology, AbstractSolphRepresentation):
         self.volume = volume
         self.power_limit = power_limit
         self.ambient_temperature = ambient_temperature
+        self.max_temperature = max_temperature
+        self.min_temperature = min_temperature
 
         # TODO: Why do we check the u_value but not the other parameters?
         if u_value is None or u_value > 0:

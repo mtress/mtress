@@ -9,6 +9,7 @@ build/
 .vscode/
 .venv/
 venv/
+.venv/
 
 .ipynb_checkpoints/
 *.ipynb

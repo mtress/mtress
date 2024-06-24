@@ -1,4 +1,5 @@
 """Example to illustrate hydrogen production to meet hydrogen demand."""
+
 import os
 
 from oemof.solph.processing import results
@@ -77,16 +78,16 @@ house_1.add(
 )
 
 house_1.add(
-    carriers.Heat(
-        temperature_levels=[55],
-        reference_temperature=10,
+    carriers.HeatCarrier(
+        temperature_levels=[5, 10, 20, 30, 40, 55],
+        reference_temperature=0,
     )
 )
 
 house_1.add(
-    demands.FixedTemperatureHeat(
+    demands.FixedTemperatureHeating(
         name="hot water",
-        flow_temperature=55,
+        min_flow_temperature=55,
         return_temperature=10,
         time_series=[155e3, 125e3, 185e3, 213e3],
     )
@@ -101,18 +102,29 @@ house_1.add(
 )
 
 house_1.add(
-    demands.HeatSink(
-        name="Excess Heat",
-        temperature_levels=55,
+    technologies.HeatPump(
+        name="HP",
+        thermal_power_limit=None,
+        max_temp_primary=10,
+        min_temp_primary=5,
+        max_temp_secondary=55,
+        min_temp_secondary=20,
+    )
+)
+house_1.add(
+    technologies.HeatSource(
+        name="AHE",
+        nominal_power=100e3,
+        reservoir_temperature=[10, 20, 25, 30],
+        minimum_working_temperature=10,
+        maximum_working_temperature=30,
     )
 )
 
-house_1.add(technologies.HeatPump(name="hp0", thermal_power_limit=None))
 house_1.add(
     technologies.GasCompressor(name="H2Compr", nominal_power=5e4, gas_type=HYDROGEN)
 )
 
-house_1.add(technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6, 13, 12]))
 solph_representation = SolphModel(
     energy_system,
     timeindex={

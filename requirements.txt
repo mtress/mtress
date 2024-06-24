@@ -3,6 +3,6 @@ oemof.solph>=0.5.1,<0.6
 oemof.thermal>=0.0.6.dev1
 pandas>=1.3.4
 PyYAML>=6.0
-numpy>=1.21.4
+numpy>=1.21.4,<2.0.0
 setuptools>=59.1.1
 pvlib

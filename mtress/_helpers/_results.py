@@ -1,5 +1,6 @@
 """Utility functions for the analysis of solph results."""
 
+
 def get_flows(results):
     """
     Extract flows from results dictionary.
@@ -50,4 +51,3 @@ def get_variables(results):
     }
 
     return variables
-

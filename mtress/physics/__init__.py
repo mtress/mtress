@@ -10,7 +10,6 @@ SPDX-License-Identifier: MIT
 """
 
 from ._constants import (
-
     H2O_DENSITY,
     H2O_HEAT_CAPACITY,
     H2O_HEAT_FUSION,
@@ -32,9 +31,9 @@ from ._helper_functions import (
     kilo_to_mega,
     kJ_to_MWh,
     lorenz_cop,
-    mean_logarithmic_temperature,
+    logarithmic_mean_temperature,
     mega_to_one,
-    one_to_mega
+    one_to_mega,
 )
 
 from ._gas_definition import (
@@ -55,7 +54,7 @@ __all__ = [
     "kelvin_to_celsius",
     "kJ_to_MWh",
     "bar_to_pascal",
-    "mean_logarithmic_temperature",
+    "logarithmic_mean_temperature",
     "lorenz_cop",
     "calc_cop",
     "ZERO_CELSIUS",
@@ -78,5 +77,5 @@ __all__ = [
     "BIO_METHANE",
     "BIOGAS",
     "mega_to_one",
-    "one_to_mega"
+    "one_to_mega",
 ]
