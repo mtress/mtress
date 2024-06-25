@@ -1,18 +1,19 @@
 """
 Basic working 'electricity' example.
 """
+
 import os
 
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 
-os.chdir(os.path.dirname (__file__))
+os.chdir(os.path.dirname(__file__))
 
 energy_system = MetaModel()
 
 house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
-house_1.add(carriers.Electricity())
+house_1.add(carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 weather = {
@@ -39,7 +40,7 @@ house_1.add(
 
 house_2 = Location(name="house_2")
 energy_system.add_location(house_2)
-house_2.add(carriers.Electricity())
+house_2.add(carriers.ElectricityCarrier())
 house_2.add(technologies.ElectricityGridConnection(working_rate=50))
 house_2.add(demands.Electricity(name="demand0", time_series=10))
 

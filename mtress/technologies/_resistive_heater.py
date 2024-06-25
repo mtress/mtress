@@ -6,7 +6,7 @@ from oemof.solph import Flow
 from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, HeatCarrier
+from ..carriers import ElectricityCarrier, HeatCarrier
 from ._abstract_technology import AbstractTechnology
 
 LOGGER = logging.getLogger(__file__)
@@ -45,7 +45,7 @@ class ResistiveHeater(AbstractTechnology, AbstractSolphRepresentation):
         """Build core structure of oemof.solph representation."""
 
         # Add electrical connection
-        electricity_carrier = self.location.get_carrier(Electricity)
+        electricity_carrier = self.location.get_carrier(ElectricityCarrier)
         electrical_bus = electricity_carrier.distribution
 
         # Add heat connection

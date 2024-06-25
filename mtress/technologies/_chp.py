@@ -9,7 +9,7 @@ from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._helpers._util import enable_templating
-from ..carriers import Electricity, GasCarrier, HeatCarrier
+from ..carriers import ElectricityCarrier, GasCarrier, HeatCarrier
 from ..physics import BIO_METHANE, BIOGAS, HYDROGEN, NATURAL_GAS, Gas
 from ._abstract_technology import AbstractTechnology
 
@@ -218,7 +218,7 @@ class CHP(AbstractTechnology, AbstractSolphRepresentation):
             self.minimum_temperature,
         )
         # Add electrical connection
-        electricity_carrier = self.location.get_carrier(Electricity)
+        electricity_carrier = self.location.get_carrier(ElectricityCarrier)
         electrical_bus = electricity_carrier.distribution
         # convert gas in kg to electricity in Wh with thermal efficiency conversion
         electrical_output = self.electric_efficiency * gas_LHV
