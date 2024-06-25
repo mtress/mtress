@@ -3,9 +3,9 @@ Basic working 'electricity and heat' example.
 
 Basic working 'electricity and heat' example which includes a location (house),
 electricity wise: an electricity carrier which acts as a electricity
-source/supply from the official grid (working price of 35 ct/kWh) as well as
+source/supply from the official grid (working price of 0.035 ct/Wh) as well as
 a demand (consumer) with a demand time series.
-And heat wise: a heat carrier, a heat pump, an air heat exchanger as well as
+And heat wise: a heat carrier, a heat pump, an heat exchanger as well as
 a heat demand time series.
 
 At first an energy system (here meta_model) is defined with a time series (index).
@@ -14,7 +14,7 @@ electricity carrier and electricity demand (time series) are added to the
 energysystem. Furthermore a heat carrier is defined with specific temp-
 erature level(s) and a reference temperature. Then  a heat demand (time series)
 is added with a certain flow and return temperature. Lastly, a heat pump with
-a possible thermal power limit and an air heat exchanger with a certain air
+a possible thermal power limit and heat exchanger with a certain air
 temperature are added to the energy system.
 
 Finally, the energy system is optimised/solved via meta_model.solve, a plot is
@@ -33,7 +33,7 @@ house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
 house_1.add(carriers.Electricity())
-house_1.add(technologies.ElectricityGridConnection(working_rate=35))
+house_1.add(technologies.ElectricityGridConnection(working_rate=0.035))
 
 house_1.add(
     demands.Electricity(
@@ -44,42 +44,40 @@ house_1.add(
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[20, 30, 55],
-        reference_temperature=10,
+        temperature_levels=[10, 20, 30, 40, 55],
+        reference_temperature=0,
     )
 )
 house_1.add(
     demands.FixedTemperatureHeating(
-        name="space heating",
+        name="space_heating",
         min_flow_temperature=30,
         return_temperature=20,
         time_series=[50, 60],
     )
 )
+
 house_1.add(
-    demands.FixedTemperatureHeating(
-        name="hot water",
-        min_flow_temperature=55,
-        return_temperature=10,
-        time_series=[3, 0],
+    technologies.HeatPump(
+        name="HeatPump",
+        thermal_power_limit=None,
+        max_temp_primary=18,
+        min_temp_primary=10,
+        max_temp_secondary=40,
+        min_temp_secondary=30,
     )
 )
 
 house_1.add(
-    technologies.HeatPump(name="hp1", thermal_power_limit=None, anergy_sources=["ahe"])
-)
-
-house_1.add(technologies.AirHeatExchanger(name="ahe", air_temperatures=[3, 6]))
-
-house_1.add(
-    technologies.FullyMixedHeatStorage(
-        name="heat storage",
-        diameter=0.4,
-        volume=0.8,
-        ambient_temperature=15,
-        power_limit=10,
+    technologies.HeatSource(
+        name="Air_HE",
+        reservoir_temperature=20,
+        maximum_working_temperature=40,
+        minimum_working_temperature=10,
+        nominal_power=1e4,
     )
 )
+
 
 solph_representation = SolphModel(
     energy_system,
@@ -99,6 +97,5 @@ plot = solph_representation.graph(detail=False)
 plot.render(outfile="electricity_heat_simple.png")
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-
 
 solved_model.write("electricity_heat.lp", io_options={"symbolic_solver_labels": True})
