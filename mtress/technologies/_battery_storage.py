@@ -1,9 +1,10 @@
 """This module provides Battery Storage"""
+
 from oemof.solph import Flow
 from oemof.solph.components import GenericStorage
 from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_technology import AbstractTechnology
-from ..carriers import Electricity
+from ..carriers import ElectricityCarrier
 
 
 class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
@@ -50,7 +51,7 @@ class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-        electricity = self.location.get_carrier(Electricity)
+        electricity = self.location.get_carrier(ElectricityCarrier)
 
         self.create_solph_node(
             label="Battery_Storage",

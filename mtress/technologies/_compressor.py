@@ -4,7 +4,7 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, GasCarrier
+from ..carriers import ElectricityCarrier, GasCarrier
 from ..physics import Gas
 from ..physics import calc_isothermal_compression_energy, IDEAL_GAS_CONSTANT
 from ._abstract_technology import AbstractTechnology
@@ -37,7 +37,7 @@ class GasCompressor(AbstractTechnology, AbstractSolphRepresentation):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         gas_carrier = self.location.get_carrier(GasCarrier)
-        electricity_carrier = self.location.get_carrier(Electricity)
+        electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
         electrical_input = self.create_solph_node(
             label="electrical_input",

@@ -7,7 +7,7 @@ from typing import Optional
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Sink, Source
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
-from mtress.carriers import Electricity
+from mtress.carriers import ElectricityCarrier
 from mtress._abstract_component import AbstractSolphRepresentation
 from ._abstract_grid_connection import AbstractGridConnection
 
@@ -33,7 +33,7 @@ class ElectricityGridConnection(AbstractGridConnection, AbstractSolphRepresentat
         self.grid_import = None
 
     def build_core(self):
-        electricity_carrier = self.location.get_carrier(Electricity)
+        electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
         self.grid_export = b_grid_export = self.create_solph_node(
             label="grid_export",

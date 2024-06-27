@@ -20,23 +20,23 @@ def test_add_carrier():
     name = "house_1"
     house_1 = Location(name=name)
 
-    carrier1 = carriers.Electricity()
-    carrier2 = carriers.Electricity()
+    carrier1 = carriers.ElectricityCarrier()
+    carrier2 = carriers.ElectricityCarrier()
 
     house_1.add(carrier1)
-    assert house_1.get_carrier(carriers.Electricity) == carrier1
+    assert house_1.get_carrier(carriers.ElectricityCarrier) == carrier1
 
     # carrier2 replaces carrier1
     house_1.add(carrier2)
-    assert house_1.get_carrier(carriers.Electricity) == carrier2
+    assert house_1.get_carrier(carriers.ElectricityCarrier) == carrier2
 
 
 def test_add_component():
     name = "house_1"
     house_1 = Location(name=name)
 
-    carrier0 = carriers.Electricity()
-    carrier1 = carriers.Electricity()
+    carrier0 = carriers.ElectricityCarrier()
+    carrier1 = carriers.ElectricityCarrier()
     demand1 = demands.Electricity(name="demand1", time_series=[0, 1, 2])
     demand2 = demands.Electricity(name="demand2", time_series=[1, 2, 3])
 
@@ -46,8 +46,8 @@ def test_add_component():
     house_1.add(demand2)
 
     # carriers are not returned by get_technology
-    assert carrier0 not in house_1.get_technology(carriers.Electricity)
-    assert carrier1 not in house_1.get_technology(carriers.Electricity)
+    assert carrier0 not in house_1.get_technology(carriers.ElectricityCarrier)
+    assert carrier1 not in house_1.get_technology(carriers.ElectricityCarrier)
 
     # demands are returned by get_technology
     assert demand1 in house_1.get_technology(demands.Electricity)

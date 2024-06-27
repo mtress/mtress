@@ -16,7 +16,7 @@ from oemof.solph.components import Source
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
-from ..carriers import Electricity
+from ..carriers import ElectricityCarrier
 from ._abstract_technology import AbstractTechnology
 
 
@@ -47,7 +47,7 @@ class RenewableElectricitySource(AbstractTechnology, AbstractSolphRepresentation
 
     def build_core(self):
         """Build oemof solph core structure."""
-        electricity_carrier = self.location.get_carrier(Electricity)
+        electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
         if self.fixed:
             flow = Flow(

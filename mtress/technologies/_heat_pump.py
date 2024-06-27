@@ -15,7 +15,7 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import Source, Converter
 
 from .._abstract_component import AbstractSolphRepresentation
-from ..carriers import Electricity, HeatCarrier
+from ..carriers import ElectricityCarrier, HeatCarrier
 from ..physics import calc_cop, celsius_to_kelvin
 from ._abstract_technology import AbstractAnergySource, AbstractTechnology
 
@@ -82,7 +82,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         # Add electrical connection
-        electricity_carrier = self.location.get_carrier(Electricity)
+        electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
         self.electricity_bus = self.create_solph_node(
             label="electricity",

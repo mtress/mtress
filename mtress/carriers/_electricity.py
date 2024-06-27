@@ -6,7 +6,7 @@ from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractCarrier
 
 
-class Electricity(AbstractCarrier, AbstractSolphRepresentation):
+class ElectricityCarrier(AbstractCarrier, AbstractSolphRepresentation):
     """
     Electricity energy carrier.
 

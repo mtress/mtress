@@ -12,6 +12,7 @@ electricity carrier and demand (time series) are added to the energysystem.
 Finally, the energy system is optimised/solved via meta_model.solve and the 
 solver output is written to an .lp file.   
 """
+
 import os
 from oemof import solph
 
@@ -19,13 +20,13 @@ from oemof import solph
 from mtress import Location, MetaModel, SolphModel, carriers, demands, technologies
 from mtress._helpers import get_flows
 
-os.chdir(os.path.dirname (__file__))
+os.chdir(os.path.dirname(__file__))
 meta_model = MetaModel()
 
 house_1 = Location(name="house_1")
 meta_model.add_location(house_1)
 
-house_1.add(carriers.Electricity())
+house_1.add(carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 house_1.add(
@@ -59,7 +60,9 @@ solved_model.write("electricity_only.lp", io_options={"symbolic_solver_labels": 
 myresults = solph.processing.results(solved_model)
 flows = get_flows(myresults)
 
-print(flows[
-    ('house_1', 'electricity demand', 'input'),
-    ('house_1', 'electricity demand', 'sink')
-])
+print(
+    flows[
+        ("house_1", "electricity demand", "input"),
+        ("house_1", "electricity demand", "sink"),
+    ]
+)

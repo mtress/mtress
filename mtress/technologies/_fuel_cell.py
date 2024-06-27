@@ -9,7 +9,7 @@ from oemof.solph.components import Converter
 
 from .._abstract_component import AbstractSolphRepresentation
 from .._helpers._util import enable_templating
-from ..carriers import Electricity, GasCarrier, HeatCarrier
+from ..carriers import ElectricityCarrier, GasCarrier, HeatCarrier
 from ..physics import HYDROGEN, Gas
 from ._abstract_technology import AbstractTechnology
 
@@ -175,7 +175,7 @@ class FuelCell(AbstractTechnology, AbstractSolphRepresentation):
         )
 
         # Electrical connection for FC electrical output
-        electricity_carrier = self.location.get_carrier(Electricity)
+        electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
         # Electrical efficiency with conversion from gas in kg to electricity in W, also
         # includes inverter efficiency.
