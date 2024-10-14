@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Optional
 
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Converter, Sink, Source
+from oemof.solph.components import Converter, Source
 
 from mtress._abstract_component import AbstractSolphRepresentation
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
