@@ -32,11 +32,16 @@ from ._heater import GasBoiler, ResistiveHeater
 from ._photovoltaics import Photovoltaics
 from ._pressure_storage import H2Storage
 from ._renewable_electricity_source import RenewableElectricitySource
-from .grid_connection import ElectricityGridConnection, GasGridConnection
+from .grid_connection import (
+    ElectricityGridConnection,
+    GasGridConnection,
+    HeatGridConnection,
+)
 
 __all__ = [
     "ElectricityGridConnection",
     "GasGridConnection",
+    "HeatGridConnection",
     "FullyMixedHeatStorage",
     "Electrolyser",
     "OffsetElectrolyser",
