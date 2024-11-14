@@ -36,6 +36,7 @@ class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
         self.maximum_working_temperature = maximum_working_temperature
         self.minimum_working_temperature = minimum_working_temperature
         self._bus_source = None
+        self._bus_export = None
 
     def build_core(self):
 
@@ -43,6 +44,11 @@ class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
 
         self._bus_source = _bus_source = self.create_solph_node(
             label="grid_import",
+            node_type=Bus,
+        )
+
+        self._bus_export = _bus_export = self.create_solph_node(
+            label="grid_export",
             node_type=Bus,
         )
 
@@ -58,7 +64,7 @@ class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
                 heat_carrier.get_connection_heat_transfer(temp_out, temp_in)
             )
             self.create_solph_node(
-                label=f"heat_{temp_out:.0f}_{temp_in:.0f}",
+                label=f"import_{temp_out:.0f}_{temp_in:.0f}",
                 node_type=Converter,
                 inputs={
                     bus_cold: Flow(),
@@ -74,6 +80,27 @@ class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
                 },
             )
 
+        for temp_in, temp_out in zip(in_levels, out_levels):
+            bus_warm, bus_cold, ratio = (
+                heat_carrier.get_connection_heat_transfer(temp_out, temp_in)
+            )
+            self.create_solph_node(
+                label=f"export_{temp_out:.0f}_{temp_in:.0f}",
+                node_type=Converter,
+                inputs={
+                    bus_warm: Flow(),
+                },
+                outputs={
+                    bus_cold: Flow(),
+                    _bus_export: Flow(),
+                },
+                conversion_factors={
+                    bus_warm: 1,
+                    bus_cold: ratio,
+                    _bus_export: 1 - ratio,
+                },
+            )
+
         if self.working_rate is not None:
             self.create_solph_node(
                 label="source_import",
@@ -86,3 +113,16 @@ class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
                     )
                 },
             )
+
+    def connect(
+        self,
+        other: HeatGridConnection,
+    ):
+        self._bus_export.outputs[other._bus_source] = Flow()
+        # if self.maximum_temperature < other.maximum_temperature:
+        #     raise ValueError(
+        #         "Maximum temperature level of the exporting HeatGridConnection must be "
+        #         "higher than or equal to importing GasGridConnection at another location"
+        #         "(destination). Alternative is to use heat rise to raise the temperature"
+        #         " level, which is not yet implemented."
+        #     )
