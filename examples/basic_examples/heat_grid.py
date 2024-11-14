@@ -29,7 +29,46 @@ house_1.add(
         reference_temperature=0,
     )
 )
+
+# house_1.add(
+#     technologies.HeatSource(
+#         name="air_HE",
+#         reservoir_temperature=30,  # any possible source
+#         maximum_working_temperature=55,
+#         minimum_working_temperature=10,
+#         nominal_power=1e4,
+#     )
+# )
+
 house_1.add(
+    technologies.HeatGridConnection(
+        working_rate=10,
+        maximum_working_temperature=30,
+        minimum_working_temperature=20,
+        revenue=0,
+    )
+)
+
+house_2 = Location(name="house_2")
+energy_system.add_location(house_2)
+
+house_2.add(
+    carriers.HeatCarrier(
+        temperature_levels=[10, 20, 30, 55],
+        reference_temperature=0,
+    )
+)
+
+house_2.add(
+    technologies.HeatGridConnection(
+        working_rate=1e10,
+        maximum_working_temperature=30,
+        minimum_working_temperature=20,
+        revenue=0,
+    )
+)
+
+house_2.add(
     demands.FixedTemperatureHeating(
         name="space heating",
         min_flow_temperature=30,
@@ -38,15 +77,25 @@ house_1.add(
     )
 )
 
+house_3 = Location(name="Heat Plant")
+energy_system.add_location(house_3)
 
-house_1.add(
+house_3.add(
+    carriers.HeatCarrier(
+        temperature_levels=[10, 20, 30, 55],
+        reference_temperature=0,
+    )
+)
+
+house_3.add(
     technologies.HeatGridConnection(
-        working_rate=10,
-        maximum_working_temperature=55,
-        minimum_working_temperature=10,
+        working_rate=0,
+        maximum_working_temperature=30,
+        minimum_working_temperature=20,
         revenue=0,
     )
 )
+
 
 solph_representation = SolphModel(
     energy_system,
@@ -55,6 +104,13 @@ solph_representation = SolphModel(
         "end": "2021-07-10 02:00:00",
         "freq": "60T",
     },
+)
+
+house_3.connect(
+    connection=technologies.HeatGridConnection, destination=house_1
+)
+house_1.connect(
+    connection=technologies.HeatGridConnection, destination=house_2
 )
 
 solph_representation.build_solph_model()
