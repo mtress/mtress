@@ -15,61 +15,21 @@ from mtress import (
 
 class TestFuelCell:
 
-    def test_fc_template_aem(self):
+    def _check_fc_obj(self, fc, template, name="fc", nominal_power=100e3):
+        assert fc.name == name
+        assert fc.nominal_power == nominal_power
+        assert fc.full_load_electrical_efficiency == template.full_load_electrical_efficiency
+        assert fc.full_load_thermal_efficiency == template.full_load_thermal_efficiency
+        assert fc.maximum_temperature == template.maximum_temperature
+        assert fc.gas_input_pressure == template.gas_input_pressure
 
-        # Considering AEMFC template type
-        fc = FuelCell(
-            name="fc-aem", 
-            nominal_power=100e3, 
-            template=AEMFC
-            )
-
-        assert fc.name == "fc-aem"
-        assert fc.nominal_power == 100e3
-        assert fc.full_load_electrical_efficiency == AEMFC.full_load_electrical_efficiency
-        assert fc.full_load_thermal_efficiency == AEMFC.full_load_thermal_efficiency
-        assert fc.maximum_temperature == AEMFC.maximum_temperature
-        assert fc.gas_input_pressure == AEMFC.gas_input_pressure
-        # assert fc.gas_type == AEMFC.gas_type
-        # assert type(AEMFC.gas_type) is dict
-
-    def test_fc_template_pem(self):
-
-        # Considering PEMFC template type
-        fc = FuelCell(
-            name="fc-pem", 
-            nominal_power=100e3, 
-            template=PEMFC
-            )
-
-        assert fc.name == "fc-pem"
-        assert fc.nominal_power == 100e3
-        assert fc.full_load_electrical_efficiency == PEMFC.full_load_electrical_efficiency
-        assert fc.full_load_thermal_efficiency == PEMFC.full_load_thermal_efficiency
-        assert fc.maximum_temperature == PEMFC.maximum_temperature
-        assert fc.gas_input_pressure == PEMFC.gas_input_pressure
-        # assert fc.gas_type == PEMFC.gas_type
-        # assert type(fc.gas_type) is dict
-
-    def test_fc_template_afc(self):
-
-        # Considering PEMFC template type
-        fc = FuelCell(
-            name="fc-afc", 
-            nominal_power=100e3, 
-            template=AFC
-            )
-
-        assert fc.name == "fc-afc"
-        assert fc.nominal_power == 100e3
-        assert fc.full_load_electrical_efficiency == AFC.full_load_electrical_efficiency
-        assert fc.full_load_thermal_efficiency == AFC.full_load_thermal_efficiency
-        assert fc.maximum_temperature == AFC.maximum_temperature
-        assert fc.gas_input_pressure == AFC.gas_input_pressure
-        # assert fc.gas_type == AFC.gas_type
-        # assert type(fc.gas_type) is dict
-
-    def test_fc(self):
+    @pytest.mark.parametrize(
+         "template, expected_result", 
+         [(AFC, 0.342255559),
+          (PEMFC, 0.314030005),
+          (AEMFC, 0.3678928605)]
+         )
+    def test_fc(self, template, expected_result):
 
         os.chdir(os.path.dirname(__file__))
         energy_system = MetaModel()
@@ -82,30 +42,29 @@ class TestFuelCell:
         house_1.add(
             carriers.GasCarrier(
                 gases={
-                    HYDROGEN: [AEMFC.gas_input_pressure],
+                    HYDROGEN: [template.gas_input_pressure],
                 }
             )
         )
 
         house_1.add(
             carriers.HeatCarrier(
-                temperature_levels=[20, 55],
+                temperature_levels=[20, template.maximum_temperature],
                 reference_temperature=10,
             )
         )
 
-        house_1.add(
-            FuelCell(
-                "fc-aem", 
-                nominal_power=10e3,
-                template=AEMFC
-                )
-        )
+        fc = FuelCell(
+            "fc", 
+            nominal_power=10e3,
+            template=template
+            )
+        house_1.add(fc)
 
         house_1.add(
             technologies.GasGridConnection(
                 gas_type=HYDROGEN,
-                grid_pressure=AEMFC.gas_input_pressure,
+                grid_pressure=template.gas_input_pressure,
                 working_rate=5,
             )
         )
@@ -114,8 +73,8 @@ class TestFuelCell:
         house_1.add(
             demands.FixedTemperatureHeating(
                 name="heat_demand",
-                min_flow_temperature=55,
-                return_temperature=20,
+                min_flow_temperature=template.maximum_temperature,
+                return_temperature=template.minimum_temperature,
                 time_series=[1000],
             )
         )
@@ -140,77 +99,30 @@ class TestFuelCell:
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = meta_results(solved_model)
-        pyomo_objective = 0.3678928605
-        assert math.isclose(pyomo_objective, mr["objective"], abs_tol=3e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
         
 class TestOffsetFuelCell:
-
-    def test_ofc_template_aem(self):
-
-        # Considering AEMFC template type
-        fc = OffsetFuelCell(
-            name="fc-aem", 
-            nominal_power=100e3, 
-            template=AEMFC
-            )
-
-        assert fc.name == "fc-aem"
-        assert fc.nominal_power == 100e3
-        assert fc.full_load_electrical_efficiency == AEMFC.full_load_electrical_efficiency
-        assert fc.full_load_thermal_efficiency == AEMFC.full_load_thermal_efficiency
-        assert fc.min_load_electrical_efficiency == AEMFC.min_load_electrical_efficiency
-        assert fc.min_load_thermal_efficiency == AEMFC.min_load_thermal_efficiency
-        assert fc.maximum_temperature == AEMFC.maximum_temperature
-        assert fc.gas_input_pressure == AEMFC.gas_input_pressure
-        # assert fc.gas_type == AEMFC.gas_type
-        # assert type(AEMFC.gas_type) is dict
-
-    def test_ofc_template_pem(self):
-
-        # Considering PEMFC template type
-        fc = OffsetFuelCell(
-            name="fc-pem", 
-            nominal_power=100e3, 
-            template=PEMFC
-            )
-
-        assert fc.name == "fc-pem"
-        assert fc.nominal_power == 100e3
-        assert fc.full_load_electrical_efficiency == PEMFC.full_load_electrical_efficiency
-        assert fc.full_load_thermal_efficiency == PEMFC.full_load_thermal_efficiency
-        assert fc.min_load_electrical_efficiency == PEMFC.min_load_electrical_efficiency
-        assert fc.min_load_thermal_efficiency == PEMFC.min_load_thermal_efficiency
-        assert fc.maximum_temperature == PEMFC.maximum_temperature
-        assert fc.gas_input_pressure == PEMFC.gas_input_pressure
-        # assert fc.gas_type == PEMFC.gas_type
-        # assert type(fc.gas_type) is dict
-
-    def test_ofc_template_afc(self):
-
-        # Considering PEMFC template type
-        fc = OffsetFuelCell(
-            name="fc-afc", 
-            nominal_power=100e3, 
-            template=AFC
-            )
-
-        assert fc.name == "fc-afc"
-        assert fc.nominal_power == 100e3
-        assert fc.full_load_electrical_efficiency == AFC.full_load_electrical_efficiency
-        assert fc.full_load_thermal_efficiency == AFC.full_load_thermal_efficiency
-        assert fc.min_load_electrical_efficiency == AFC.min_load_electrical_efficiency
-        assert fc.min_load_thermal_efficiency == AFC.min_load_thermal_efficiency
-        assert fc.maximum_temperature == AFC.maximum_temperature
-        assert fc.gas_input_pressure == AFC.gas_input_pressure
-        # assert fc.gas_type == AFC.gas_type
-        # assert type(fc.gas_type) is dict
+    
+    def _check_fc_obj(self, fc, template, name="fc", nominal_power=100e3):
+        assert fc.name == name
+        assert fc.nominal_power == nominal_power
+        assert fc.full_load_electrical_efficiency == template.full_load_electrical_efficiency
+        assert fc.full_load_thermal_efficiency == template.full_load_thermal_efficiency
+        assert fc.min_load_electrical_efficiency == template.min_load_electrical_efficiency
+        assert fc.min_load_thermal_efficiency == template.min_load_thermal_efficiency
+        assert fc.maximum_temperature == template.maximum_temperature
+        assert fc.gas_input_pressure == template.gas_input_pressure
 
     @pytest.mark.parametrize(
-        "norm_min_power, expected_result", 
-        [(0, 0.3678928605),
-         (0.5, 1571428590000.05)]
+        "template, norm_min_power, expected_result",
+        [(AFC, 0, 0.342255559),
+         (PEMFC, 0, 0.314030005),
+         (AEMFC, 0, 0.3678928605),
+         (AFC, AFC.minimum_load, 1444444420000.05),
+         (PEMFC, PEMFC.minimum_load, 1400000000000.05),
+         (AEMFC, AEMFC.minimum_load, 1571428590000.05)]
         )
-    def test_ofc(self, norm_min_power, expected_result):
+    def test_ofc(self, template, norm_min_power, expected_result):
 
         os.chdir(os.path.dirname(__file__))
         energy_system = MetaModel()
@@ -223,31 +135,34 @@ class TestOffsetFuelCell:
         house_1.add(
             carriers.GasCarrier(
                 gases={
-                    HYDROGEN: [AEMFC.gas_input_pressure],
+                    HYDROGEN: [template.gas_input_pressure],
                 }
             )
         )
 
         house_1.add(
             carriers.HeatCarrier(
-                temperature_levels=[20, 55],
+                temperature_levels=[
+                    template.minimum_temperature, 
+                    template.maximum_temperature
+                    ],
                 reference_temperature=10,
             )
         )
-
-        house_1.add(
-            OffsetFuelCell(
-                "fc-aem", 
-                nominal_power=10e3,
-                minimum_load=norm_min_power,
-                template=AEMFC
-                )
-        )
+        
+        fc = OffsetFuelCell(
+            "fc", 
+            nominal_power=100e3,
+            minimum_load=norm_min_power,
+            template=template
+            )
+        self._check_fc_obj(fc, template)
+        house_1.add(fc)
 
         house_1.add(
             technologies.GasGridConnection(
                 gas_type=HYDROGEN,
-                grid_pressure=AEMFC.gas_input_pressure,
+                grid_pressure=template.gas_input_pressure,
                 working_rate=5,
             )
         )
@@ -256,8 +171,8 @@ class TestOffsetFuelCell:
         house_1.add(
             demands.FixedTemperatureHeating(
                 name="heat_demand",
-                min_flow_temperature=55,
-                return_temperature=20,
+                min_flow_temperature=template.maximum_temperature,
+                return_temperature=template.minimum_temperature,
                 time_series=[1000],
             )
         )
