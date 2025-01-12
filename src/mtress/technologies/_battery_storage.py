@@ -45,8 +45,8 @@ PowerWallGenII = BatteryStorageTemplate(
     nominal_capacity=13.5e3,        # 1.5 kWh
     charging_C_Rate=5/13.5,         # 5 kW
     discharging_C_Rate=5/13.5,      # 5 kW
-    charging_efficiency=0.90,       # 90% round trip
-    discharging_efficiency=0.90,    # 90% round trip
+    charging_efficiency=0.95,       # 90% round trip = sqrt(0.9)*sqrt(0.9)
+    discharging_efficiency=0.95,    # 90% round trip = sqrt(0.9)*sqrt(0.9)
     loss_rate=0                     # ?
     )
 

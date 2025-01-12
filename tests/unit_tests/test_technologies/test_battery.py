@@ -36,8 +36,8 @@ class TestBatteryStorage:
         "template, renewable_generation, expected_result",
         [(PowerWallGenI, False, 1466.5878210550002), 
          (PowerWallGenI, True, 966.562821055), 
-         (PowerWallGenII, False, 0.609876545), 
-         (PowerWallGenII, True, 0.578703705)],
+         (PowerWallGenII, False, 0.5883656500000001), 
+         (PowerWallGenII, True, 0.557825485)],
     )
     def test_bs(self, template, renewable_generation, expected_result):
 
