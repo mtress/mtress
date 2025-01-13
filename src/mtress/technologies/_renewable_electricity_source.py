@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-basic heat layer functionality
+Renewable energy source
 
 SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 SPDX-FileCopyrightText: Patrik Schönfeldt
@@ -23,13 +23,14 @@ from ._abstract_technology import AbstractTechnology
 class RenewableElectricitySource(
     AbstractTechnology, AbstractSolphRepresentation
 ):
-    """A generic electricity source."""
+    """A generic renewable electricity source."""
 
     def __init__(
         self,
         name: str,
         nominal_power: float,
         specific_generation: TimeseriesSpecifier,
+        working_rate: TimeseriesSpecifier = 0,
         fixed: bool = True,
     ):
         """
@@ -38,6 +39,7 @@ class RenewableElectricitySource(
         :param nominal_power: Nominal power of the source (in W).
         :param specific_generation: Timeseries of generated power
             (values in [0,1]).
+        :param working rate: Timeseries or fixed cost, default to 0
         :param fixed: Indicate if the generation is fixed to the values
             defined by nominal_power and specific_generation or bounded
             by these values.
@@ -46,7 +48,7 @@ class RenewableElectricitySource(
 
         self.nominal_power = nominal_power
         self.specific_generation = specific_generation
-
+        self.working_rate = working_rate
         self.fixed = fixed
 
     def build_core(self):
@@ -56,6 +58,9 @@ class RenewableElectricitySource(
         if self.fixed:
             flow = Flow(
                 nominal_value=self.nominal_power,
+                variable_costs=self._solph_model.data.get_timeseries(
+                    self.working_rate, kind=TimeseriesType.INTERVAL
+                ),
                 fix=self._solph_model.data.get_timeseries(
                     self.specific_generation, kind=TimeseriesType.INTERVAL
                 ),
@@ -63,6 +68,9 @@ class RenewableElectricitySource(
         else:
             flow = Flow(
                 nominal_value=self.nominal_power,
+                variable_costs=self._solph_model.data.get_timeseries(
+                    self.working_rate, kind=TimeseriesType.INTERVAL
+                ),
                 max=self._solph_model.data.get_timeseries(
                     self.specific_generation, kind=TimeseriesType.INTERVAL
                 ),
