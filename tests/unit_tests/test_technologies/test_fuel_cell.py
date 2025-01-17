@@ -60,6 +60,7 @@ class TestFuelCell:
         )
 
         fc = FuelCell("fc", nominal_power=10e3, template=template)
+        self._check_fc_obj(fc, template, nominal_power=fc.nominal_power)
         house_1.add(fc)
 
         house_1.add(
