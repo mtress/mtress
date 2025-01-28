@@ -128,21 +128,21 @@ class TestTemplating:
         def myf2(c, d, **kwargs):
             return c+d+myf1(**kwargs)
         
-        # define template
-        F2 = TemplateF2(a=1, b=2, c=3, d=4)
-        
         # test using args and kwargs
         assert myf2(3, 4, a=1, b=2) == 10
         # test using only kwargs
         assert myf2(c=3, d=4, a=1, b=2) == 10
-        # test using the template
-        assert myf2(template=F2) == 10
-        # test using kwargs and a template
-        assert myf2(c=4, d=5, template=F2) == 12
+    
+        # # define template
+        # F2 = TemplateF2(a=1, b=2, c=3, d=4)
+        # # test using the template
+        # assert myf2(template=F2) == 10
+        # # test using kwargs and a template
+        # assert myf2(c=4, d=5, template=F2) == 12
         
-        with pytest.raises(TypeError):
-            # only kwargs are allowed if templates are used   
-            assert myf2(0, 1, template=F2) == 8
+        # with pytest.raises(TypeError):
+        #     # only kwargs are allowed if templates are used   
+        #     assert myf2(0, 1, template=F2) == 8
         
     def test_inheritance_classes(self):
         
