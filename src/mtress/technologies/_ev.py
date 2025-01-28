@@ -159,4 +159,4 @@ class ElectricVehicle(GenericElectricVehicle):
         # prepare a list from the performance data and the profile
         self._static_discharging_profile = [
             d*consumption_per_distance for d in distance_travelled
-            ]
+            ] if distance_travelled is not None else None
