@@ -1,4 +1,4 @@
-from mtress.technologies import ElectricVehicle, EV1, EV2
+from mtress.technologies import ElectricVehicle, ZoeEV50135HP, LeafEtekna24
 from mtress.technologies._ev import ElectricVehicleTemplate
 from mtress.technologies import RenewableElectricitySource
 # from mtress.physics import HYDROGEN
@@ -36,13 +36,16 @@ class TestElectricVehicle:
         assert bs.charging_efficiency == template.charging_efficiency
         assert bs.discharging_efficiency == template.discharging_efficiency
         assert bs.loss_rate == template.loss_rate
+        assert bs.consumption_per_distance == template.consumption_per_distance
+        
+    # TODO: implement EV specific tests
 
     @pytest.mark.parametrize(
         "template, renewable_generation, expected_result",
-        [(EV1, False, 1466.5878210550002), 
-         (EV1, True, 966.562821055), 
-         (EV2, False, 0.5883656500000001), 
-         (EV2, True, 0.557825485)],
+        [(ZoeEV50135HP, False, 1466.5878210550002), 
+         (ZoeEV50135HP, True, 966.562821055), 
+         (LeafEtekna24, False, 0.5883656500000001), 
+         (LeafEtekna24, True, 0.557825485)],
     )
     def test_ev(self, template, renewable_generation, expected_result):
 

@@ -86,6 +86,8 @@ class GenericElectricVehicle(BatteryStorage):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        
+        # TODO: implement model and constraints
                 
         # carrier
         electricity = self.location.get_carrier(ElectricityCarrier)
@@ -155,7 +157,7 @@ class ElectricVehicle(GenericElectricVehicle):
             )
         
         # performance data
-        self._consumption_per_distance = consumption_per_distance
+        self.consumption_per_distance = consumption_per_distance
         # prepare a list from the performance data and the profile
         self._static_discharging_profile = [
             d*consumption_per_distance for d in distance_travelled
