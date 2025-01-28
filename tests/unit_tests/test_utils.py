@@ -242,18 +242,6 @@ class TestTemplating:
                 
             def myf2(self):
                 return self.c+self.d+self.myf1()
-            
-        class class3(class1):
-            
-            # @enable_templating(TemplateF2)
-            def __init__(self, c, d, **kwargs):
-                
-                super().__init__(**kwargs)
-                self.c = c
-                self.d = d
-                
-            def myf2(self):
-                return self.c+self.d+self.myf1()
         
         # test using args and kwargs
         I1 = class2(3, 4, a=1, b=2)
