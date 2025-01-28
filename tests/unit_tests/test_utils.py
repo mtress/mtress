@@ -176,9 +176,9 @@ class TestTemplating:
         class class2(class1):
             
             @enable_templating(TemplateF2)
-            def __init__(self, c, d, **kwargs):
+            def __init__(self, a, b, c, d):
                 
-                super().__init__(**kwargs)
+                super().__init__(a, b)
                 self.c = c
                 self.d = d
                 
@@ -186,22 +186,80 @@ class TestTemplating:
                 return self.c+self.d+self.myf1()
         
         # test using args and kwargs
-        I1 = class2(3, 4, a=1, b=2)
+        I1 = class2(1, 2, c=3, d=4)
         assert I1.myf2() == 10
         # test using only kwargs
         I1 = class2(c=3, d=4, a=1, b=2)
         assert I1.myf2() == 10
         
-        # # define template
-        # F2 = TemplateF2(a=1, b=2, c=3, d=4)
-        # # test using the template
-        # I1 = class2(template=F2)
-        # assert I1.myf2() == 10
-        # # test using kwargs and a template
-        # I1 = class2(c=4, d=5, template=F2)
-        # assert I1.myf2() == 12
+        # define template
+        F2 = TemplateF2(a=1, b=2, c=3, d=4)
+        # test using the template
+        I1 = class2(template=F2)
+        assert I1.myf2() == 10
+        # test using kwargs and a template
+        I1 = class2(c=4, d=5, template=F2)
+        assert I1.myf2() == 12
         
-        # with pytest.raises(TypeError):
-        #     # only kwargs are allowed if templates are used 
-        #     I1 = class2(0, 1, template=F2)
-        #     assert I1.myf2() == 8
+        with pytest.raises(TypeError):
+            # only kwargs are allowed if templates are used 
+            I1 = class2(0, 1, template=F2)
+            assert I1.myf2() == 8
+            
+            
+        
+    # def test_inheritance_classes_alternative(self):
+        
+    #     # test using templates with classes
+        
+    #     @dataclass(frozen=True)
+    #     class TemplateF1:
+    #         a: float 
+    #         b: float 
+        
+    #     class class1:
+    #         @enable_templating(TemplateF1)
+    #         def __init__(self, a, b=-4):
+    #             self.a = a
+    #             self.b = b
+                
+    #         def myf1(self):
+    #             return self.a+self.b
+            
+    #     @dataclass(frozen=True)
+    #     class TemplateF2(TemplateF1):
+    #         c: float 
+    #         d: float
+
+    #     class class2(class1):
+            
+    #         @enable_templating(TemplateF2)
+    #         def __init__(self, c, d, **kwargs):
+                
+    #             super().__init__(**kwargs)
+    #             self.c = c
+    #             self.d = d
+                
+    #         def myf2(self):
+    #             return self.c+self.d+self.myf1()
+        
+    #     # test using args and kwargs
+    #     I1 = class2(3, 4, a=1, b=2)
+    #     assert I1.myf2() == 10
+    #     # test using only kwargs
+    #     I1 = class2(c=3, d=4, a=1, b=2)
+    #     assert I1.myf2() == 10
+        
+    #     # define template
+    #     F2 = TemplateF2(a=1, b=2, c=3, d=4)
+    #     # test using the template
+    #     I1 = class2(template=F2)
+    #     assert I1.myf2() == 10
+    #     # test using kwargs and a template
+    #     I1 = class2(c=4, d=5, template=F2)
+    #     assert I1.myf2() == 12
+        
+    #     with pytest.raises(TypeError):
+    #         # only kwargs are allowed if templates are used 
+    #         I1 = class2(0, 1, template=F2)
+    #         assert I1.myf2() == 8
