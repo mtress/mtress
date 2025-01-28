@@ -93,18 +93,24 @@ class TestTemplating:
         def myfunction(a, b=3):
             return a+b
             
-        # test without template
+        # test without template and with default
         assert myfunction(a=2) == 5
+        # test without template
+        assert myfunction(a=2, b=4) == 6
         # define template
         F1 = Template(a=1, b=2)
         # test it (overrides default)
         assert myfunction(template=F1) == 3
-        # override template
+        # override template for a and uses template for b
         assert myfunction(a=2, template=F1) == 4
-        # override template
+        # overrides b but not a
         assert myfunction(b=3, template=F1) == 4
-        # override template
-        assert myfunction(a=2, b=3, template=F1) == 5
+        # pointless but possible
+        assert myfunction(a=2, b=4, template=F1) == 6
+        
+        with pytest.raises(TypeError):
+            # only kwargs are allowed if templates are used   
+            assert myfunction(2, 4, template=F1) == 5
         
     def test_inheritance_methods(self):
         
