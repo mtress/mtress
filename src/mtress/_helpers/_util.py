@@ -117,11 +117,11 @@ def enable_templating(template_class):
         ]
         func_signature = inspect.signature(func)
         func_params = func_signature.parameters
+        # check if kw arguments have been provided
         kwargs_present = any(
             param.kind==inspect.Parameter.VAR_KEYWORD
             for param_str, param in func_params.items()
             )
-        # kwargs_present = False
         def _wrapper(*args, template=None, **kwargs):
             if template is not None:
                 if not isinstance(template, template_class):
