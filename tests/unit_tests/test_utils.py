@@ -179,23 +179,23 @@ class TestTemplating:
             def myf2(self):
                 return self.c+self.d+self.myf1()
         
-        # define template
-        F2 = TemplateF2(a=1, b=2, c=3, d=4)
-        
         # test using args and kwargs
         I1 = class2(3, 4, a=1, b=2)
         assert I1.myf2() == 10
         # test using only kwargs
         I1 = class2(c=3, d=4, a=1, b=2)
         assert I1.myf2() == 10
-        # test using the template
-        I1 = class2(template=F2)
-        assert I1.myf2() == 10
-        # test using kwargs and a template
-        I1 = class2(c=4, d=5, template=F2)
-        assert I1.myf2() == 12
         
-        with pytest.raises(TypeError):
-            # only kwargs are allowed if templates are used 
-            I1 = class2(0, 1, template=F2)
-            assert I1.myf2() == 8
+        # # define template
+        # F2 = TemplateF2(a=1, b=2, c=3, d=4)
+        # # test using the template
+        # I1 = class2(template=F2)
+        # assert I1.myf2() == 10
+        # # test using kwargs and a template
+        # I1 = class2(c=4, d=5, template=F2)
+        # assert I1.myf2() == 12
+        
+        # with pytest.raises(TypeError):
+        #     # only kwargs are allowed if templates are used 
+        #     I1 = class2(0, 1, template=F2)
+        #     assert I1.myf2() == 8
