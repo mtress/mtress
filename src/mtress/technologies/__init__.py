@@ -24,6 +24,7 @@ from ._electrolyser import (
     Electrolyser,
     OffsetElectrolyser,
 )
+from ._ev import ElectricVehicle, EV1, EV2
 from ._fuel_cell import AEMFC, AFC, PEMFC, FuelCell, OffsetFuelCell
 from ._heat_exchanger import HeatExchanger, HeatSink, HeatSource
 from ._heat_pump import HeatPump, COPReference
@@ -51,6 +52,9 @@ __all__ = [
     "PEMFC",
     "AEMFC",
     "AFC",
+    "ElectricVehicle",
+    "EV1",
+    "EV2",
     "BatteryStorage",
     "PowerWallGenI",
     "PowerWallGenII",
