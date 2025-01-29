@@ -22,8 +22,8 @@ from ._abstract_technology import AbstractTechnology
 class Slack(AbstractTechnology, AbstractSolphRepresentation):
     """A component that provides sink and source slack nodes"""
 
-    def __init__(self, name: str = "slack", penalty: float = 1e9):
-        super().__init__(name=name)
+    def __init__(self, penalty: float = 1e9):
+        super().__init__(name=self.__class__.__name__)
         self.penalty = penalty
 
     def build_core(self):
