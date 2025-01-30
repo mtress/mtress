@@ -145,8 +145,8 @@ NATURAL_GAS = Gas(
 
 BIOGAS = Gas(
     name="Biogas",
-    LHV=calc_biogas_heating_value(),
-    HHV=calc_biogas_heating_value(),
+    LHV=calc_biogas_heating_value(heating_value=CH4_LHV),
+    HHV=calc_biogas_heating_value(heating_value=CH4_HHV),
     molar_mass=calc_biogas_molar_mass(),
 )
 
