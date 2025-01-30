@@ -11,6 +11,7 @@ from mtress import (
     demands,
     technologies,
 )
+
 # from mtress.physics import NATURAL_GAS, BIOGAS, BIO_METHANE, HYDROGEN
 from mtress.technologies._chp import CHPTemplate
 from mtress.technologies import (
@@ -23,6 +24,7 @@ from mtress.technologies import (
     HYDROGEN_CHP,
     HYDROGEN_MIXED_CHP,
 )
+
 
 class TestCHP:
 
@@ -44,11 +46,13 @@ class TestCHP:
 
     @pytest.mark.parametrize(
         "template, expected_result",
-        [(NATURALGAS_CHP, 0.8508048112500001), 
-         (BIOGAS_CHP, 58187714401.612885), 
-         (BIOMETHANE_CHP,  0.7855700564999999), 
-         (HYDROGEN_CHP,  0.32534810449999996), 
-         (HYDROGEN_MIXED_CHP,  1307692350000.05)],
+        [
+            (NATURALGAS_CHP, 0.8508048112500001),
+            (BIOGAS_CHP, 58187714401.612885),
+            (BIOMETHANE_CHP, 0.7855700564999999),
+            (HYDROGEN_CHP, 0.32534810449999996),
+            (HYDROGEN_MIXED_CHP, 1307692350000.05),
+        ],
     )
     def test_chp(self, template: CHPTemplate, expected_result: float):
 
@@ -116,15 +120,16 @@ class TestCHP:
         )
 
         solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})        
+        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
-        
+
         # TODO: make sure gas is being imported
         # TODO: make sure electricity is being produced
         # TODO: make sure electricity is not being imported
         # TODO: make sure heat is being produced
-        
+
+
 # class TestOffsetCHP:
 
 #     def check_chp_template(self, chp: CHP, template: CHPTemplate):
@@ -141,10 +146,10 @@ class TestCHP:
 
 #     @pytest.mark.parametrize(
 #         "template, expected_result",
-#         [(NATURALGAS_CHP, 1466.5878210550002), 
-#          (BIOGAS_CHP, 966.562821055), 
-#          (BIOMETHANE_CHP, 0.5883656500000001), 
-#          (HYDROGEN_CHP, 0.5883656500000001), 
+#         [(NATURALGAS_CHP, 1466.5878210550002),
+#          (BIOGAS_CHP, 966.562821055),
+#          (BIOMETHANE_CHP, 0.5883656500000001),
+#          (HYDROGEN_CHP, 0.5883656500000001),
 #          (HYDROGEN_MIXED_CHP,  0.557825485)],
 #     )
 #     def test_chp(self, template, expected_result):
