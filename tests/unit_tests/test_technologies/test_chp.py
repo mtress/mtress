@@ -32,12 +32,18 @@ class TestCHP:
 
         assert chp.electric_efficiency == template.electric_efficiency
         assert chp.thermal_efficiency == template.thermal_efficiency
-        # assert chp.min_load_electrical_efficiency == template.min_load_electrical_efficiency
-        # assert chp.min_load_thermal_efficiency == template.min_load_thermal_efficiency
-        # assert chp.full_load_electrical_efficiency == template.full_load_electrical_efficiency
-        # assert chp.full_load_thermal_efficiency == template.full_load_thermal_efficiency
-        # assert chp.min_load_electrical_efficiency == template.min_load_electrical_efficiency
-        # assert chp.min_load_thermal_efficiency == template.min_load_thermal_efficiency
+        # assert chp.min_load_electrical_efficiency ==
+        # template.min_load_electrical_efficiency
+        # assert chp.min_load_thermal_efficiency ==
+        # template.min_load_thermal_efficiency
+        # assert chp.full_load_electrical_efficiency ==
+        # template.full_load_electrical_efficiency
+        # assert chp.full_load_thermal_efficiency ==
+        # template.full_load_thermal_efficiency
+        # assert chp.min_load_electrical_efficiency ==
+        # template.min_load_electrical_efficiency
+        # assert chp.min_load_thermal_efficiency ==
+        # template.min_load_thermal_efficiency
         assert chp.maximum_temperature == template.maximum_temperature
         assert chp.minimum_temperature == template.minimum_temperature
         assert chp.input_pressure == template.input_pressure
@@ -134,10 +140,14 @@ class TestCHP:
 
 #     def check_chp_template(self, chp: CHP, template: CHPTemplate):
 
-#         assert chp.full_load_electrical_efficiency == template.full_load_electrical_efficiency
-#         assert chp.full_load_thermal_efficiency == template.full_load_thermal_efficiency
-#         assert chp.min_load_electrical_efficiency == template.min_load_electrical_efficiency
-#         assert chp.min_load_thermal_efficiency == template.min_load_thermal_efficiency
+#         assert chp.full_load_electrical_efficiency ==
+# template.full_load_electrical_efficiency
+#         assert chp.full_load_thermal_efficiency ==
+#  template.full_load_thermal_efficiency
+#         assert chp.min_load_electrical_efficiency ==
+#  template.min_load_electrical_efficiency
+#         assert chp.min_load_thermal_efficiency ==
+# template.min_load_thermal_efficiency
 #         assert chp.maximum_temperature == template.maximum_temperature
 #         assert chp.minimum_temperature == template.minimum_temperature
 #         assert chp.input_pressure == template.input_pressure
@@ -160,7 +170,7 @@ class TestCHP:
 #         energy_system.add_location(house_1)
 
 #         house_1.add(carriers.ElectricityCarrier())
-#         house_1.add(technologies.ElectricityGridConnection(working_rate=50e-6))
+#      house_1.add(technologies.ElectricityGridConnection(working_rate=50e-6))
 
 #         house_1.add(
 #             carriers.GasCarrier(
@@ -217,6 +227,6 @@ class TestCHP:
 #         )
 
 #         solph_representation.build_solph_model()
-#         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+#       solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 #         mr = meta_results(solved_model)
 #         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
