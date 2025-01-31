@@ -88,6 +88,7 @@ house_1.add(
     )
 )
 
+house_1.add(technologies.Slack())
 
 house_2.add(
     carriers.GasCarrier(
