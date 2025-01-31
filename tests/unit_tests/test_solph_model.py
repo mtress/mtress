@@ -188,8 +188,6 @@ def test_graph_detail():
         temperature_levels=[10, 20, 30],
         reference_temperature=0,
     )
-    nodes.append(("house_1", "HeatCarrier", "missing_heat"))
-    nodes.append(("house_1", "HeatCarrier", "excess_heat"))
     nodes.append(("house_1", "HeatCarrier", "T_10"))
     nodes.append(("house_1", "HeatCarrier", "T_20"))
     nodes.append(("house_1", "HeatCarrier", "T_30"))

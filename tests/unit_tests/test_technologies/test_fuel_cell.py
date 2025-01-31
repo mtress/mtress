@@ -201,6 +201,8 @@ class TestOffsetFuelCell:
             )
         )
 
+        house_1.add(technologies.Slack())
+
         solph_representation = SolphModel(
             energy_system,
             timeindex={
