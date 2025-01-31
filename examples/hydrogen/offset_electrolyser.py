@@ -73,6 +73,9 @@ house_1.add(
         time_series=[3000, 3000, 3000],
     )
 )
+
+house_1.add(technologies.Slack())
+
 solph_representation = SolphModel(
     energy_system,
     timeindex={

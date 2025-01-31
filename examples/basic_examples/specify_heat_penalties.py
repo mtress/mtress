@@ -14,6 +14,7 @@ from mtress import (
     SolphModel,
     carriers,
     demands,
+    technologies,
 )
 from mtress._helpers import get_flows
 
@@ -40,6 +41,8 @@ house_1.add(
         time_series=[50],
     )
 )
+
+house_1.add(technologies.Slack())
 
 solph_representation = SolphModel(
     energy_system,
