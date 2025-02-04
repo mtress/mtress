@@ -1,7 +1,6 @@
 from mtress.technologies import ElectricVehicle, ZoeEV50135HP, LeafEtekna24
 from mtress.technologies._ev import ElectricVehicleTemplate
 from mtress.technologies import RenewableElectricitySource
-# from mtress.physics import HYDROGEN
 import math
 import pytest
 import os
@@ -38,14 +37,15 @@ class TestElectricVehicle:
         assert bs.loss_rate == template.loss_rate
         assert bs.consumption_per_distance == template.consumption_per_distance
         
-    # TODO: implement EV specific tests
+    # TODO: test availability
+    # TODO: test fixed profile
 
     @pytest.mark.parametrize(
         "template, renewable_generation, expected_result",
-        [(ZoeEV50135HP, False, 1466.5878210550002), 
-         (ZoeEV50135HP, True, 966.562821055), 
-         (LeafEtekna24, False, 0.5883656500000001), 
-         (LeafEtekna24, True, 0.557825485)],
+        [(ZoeEV50135HP, False, 176508.86842105), 
+         (ZoeEV50135HP, True, 176008.84342105), 
+         (LeafEtekna24, False, 152759.13157895), 
+         (LeafEtekna24, True, 152259.10657895)],
     )
     def test_ev(self, template, renewable_generation, expected_result):
 
@@ -68,7 +68,7 @@ class TestElectricVehicle:
         house_1.add(
             demands.Electricity(
                 name="electricity_demand",
-                time_series=[3000, 5000, 3400],
+                time_series=[30000, 120000, 60000],
             )
         )
         
