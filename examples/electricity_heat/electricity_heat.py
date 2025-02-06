@@ -32,6 +32,7 @@ from mtress import (
     carriers,
     demands,
     technologies,
+    SolphLabel,
 )
 from mtress._helpers import get_flows
 
@@ -54,8 +55,7 @@ house_1.add(
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[10, 20, 30, 40, 55],
-        reference_temperature=0,
+        temperature_levels=[10, 15, 20, 30, 40, 55],
     )
 )
 house_1.add(
@@ -67,26 +67,12 @@ house_1.add(
     )
 )
 
-house_1.add(
-    technologies.HeatPump(
-        name="HeatPump",
-        thermal_power_limit=None,
-        max_temp_primary=20,
-        min_temp_primary=10,
-        max_temp_secondary=40,
-        min_temp_secondary=30,
-    )
+heat_pump = technologies.ResistiveHeater(
+    name="HeatPump",
+    thermal_power_limit=None,
+    maximum_temperature=100,
 )
-
-house_1.add(
-    technologies.HeatSource(
-        name="Air_HE",
-        reservoir_temperature=20,
-        maximum_working_temperature=40,
-        minimum_working_temperature=10,
-        nominal_power=1e4,
-    )
-)
+house_1.add(heat_pump)
 
 
 solph_representation = SolphModel(
@@ -112,7 +98,3 @@ flows = get_flows(myresults)
 
 plot = solph_representation.graph(detail=True, flow_results=flows)
 plot.render(outfile="electricity_heat_results.png")
-
-solved_model.write(
-    "electricity_heat.lp", io_options={"symbolic_solver_labels": True}
-)

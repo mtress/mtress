@@ -50,9 +50,8 @@ class AbstractHeater(AbstractTechnology, AbstractSolphRepresentation):
         )
 
         for temp_in, temp_out in zip(in_levels, out_levels):
-            bus_warm, bus_cold, ratio = (
-                heat_carrier.get_connection_heat_transfer(temp_out, temp_in)
-            )
+            bus_cold = heat_carrier.level_nodes[temp_in]
+            bus_warm = heat_carrier.level_nodes[temp_out]
             self.create_solph_node(
                 label=f"heat_{temp_in:.0f}_{temp_out:.0f}",
                 node_type=Converter,
@@ -65,10 +64,14 @@ class AbstractHeater(AbstractTechnology, AbstractSolphRepresentation):
                 },
                 conversion_factors={
                     bus_warm: 1,
-                    bus_cold: ratio,
-                    heat_bus: 1 - ratio,
+                    bus_cold: 1,
+                    heat_bus: (temp_out - temp_in)
+                    * heat_carrier.specific_heat_capacity,
                 },
             )
+
+    def establish_interconnections(self) -> None:
+        pass
 
 
 class ResistiveHeater(AbstractHeater):
@@ -81,7 +84,7 @@ class ResistiveHeater(AbstractHeater):
         name: str,
         maximum_temperature: float,
         minimum_temperature: float = 0,
-        heating_power: float = None,
+        thermal_power_limit: float = None,
         efficiency: float = 1,
     ):
         """
@@ -91,7 +94,7 @@ class ResistiveHeater(AbstractHeater):
         :param maximum_temperature: Temperature (in °C) of the heat output.
         :param minimum_temperature: Lowest possible temperature (in °C)
             of the inlet.
-        :param heating_power: Nominal heating capacity of the heating rod
+        :param thermal_power_limit: Nominal heating capacity of the heating rod
             (in W).
         :param efficiency: Thermal conversion efficiency.
         """
@@ -101,7 +104,7 @@ class ResistiveHeater(AbstractHeater):
             minimum_temperature=minimum_temperature,
         )
 
-        self.heating_power = heating_power
+        self.thermal_power_limit = thermal_power_limit
         self.efficiency = efficiency
 
     def build_core(self):
@@ -117,7 +120,9 @@ class ResistiveHeater(AbstractHeater):
             label="heater",
             node_type=Converter,
             inputs={electrical_bus: Flow()},
-            outputs={self.heat_bus: Flow(nominal_value=self.heating_power)},
+            outputs={
+                self.heat_bus: Flow(nominal_value=self.thermal_power_limit)
+            },
             conversion_factors={
                 electrical_bus: 1,
                 self.heat_bus: self.efficiency,
@@ -136,7 +141,7 @@ class GasBoiler(AbstractHeater):
         gas_type: Gas,
         maximum_temperature: float,
         minimum_temperature: float,
-        heating_power: float,
+        thermal_power_limit: float,
         efficiency: float,
         input_pressure: float,
     ):
@@ -149,7 +154,7 @@ class GasBoiler(AbstractHeater):
         :parma maximum_temperature: Temperature (in °C) of the heat output
         :parma minimum_temperature: Lowest possible temperature (in °C)
             of the inlet.
-        :param heating_power: Nominal heat output capacity (in Watts).
+        :param thermal_power_limit: Nominal heat output capacity (in Watts).
         :param input_pressure: Input pressure of gas or gases (in bar).
         :param efficiency: Thermal conversion efficiency (LHV).
 
@@ -163,7 +168,7 @@ class GasBoiler(AbstractHeater):
         self.gas_type = gas_type
         self.maximum_temperature = maximum_temperature
         self.minimum_temperature = minimum_temperature
-        self.heating_power = heating_power
+        self.thermal_power_limit = thermal_power_limit
         self.input_pressure = input_pressure
         self.efficiency = efficiency
 
@@ -185,7 +190,7 @@ class GasBoiler(AbstractHeater):
                 gas_bus: Flow(),
             },
             outputs={
-                self.heat_bus: Flow(nominal_value=self.heating_power),
+                self.heat_bus: Flow(nominal_value=self.thermal_power_limit),
             },
             conversion_factors={
                 self.heat_bus: self.efficiency * self.gas_type.LHV,
