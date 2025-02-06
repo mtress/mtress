@@ -53,10 +53,6 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
 
         :param temperature_levels: list of temperatures (in °C)
         :param reference_temperature: Reference temperature (in °C)
-        :param missing_heat_penalty: assigns a cost for each unit of missing
-            heat produced (in any currency)
-        :param excess_heat_penalty: assigns a cost for each unit of excess
-            heat produced (in any currency)
         """
         if reference_temperature in temperature_levels:
             raise ValueError(
