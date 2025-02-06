@@ -59,11 +59,20 @@ class Slack(AbstractTechnology, AbstractSolphRepresentation):
             slack_sink[node] = Flow(variable_costs=self.penalty)
 
         # heat: all T_?? nodes
-        for h_node in heat_carrier.level_nodes.values():
-            slack_source[h_node] = Flow(variable_costs=self.penalty)
-            slack_sink[h_node] = Flow(variable_costs=self.penalty)
+        if heat_carrier is not None:
+            for h_node in heat_carrier.level_nodes.values():
+                slack_source[h_node] = Flow(variable_costs=self.penalty)
+                slack_sink[h_node] = Flow(variable_costs=self.penalty)
 
         # gas: highest (missing) and lowest (excess) pressure per gas
+        if gas_carrier is not None:
+            for gas in gas_carrier.distribution.values():
+                gas_nodes = list(gas.values())  # always sorted
+                gas_high = gas_nodes[-1]
+                slack_source[gas_high] = Flow(variable_costs=self.penalty)
+
+                gas_low = gas_nodes[0]
+                slack_sink[gas_low] = Flow(variable_costs=self.penalty)
 
         # create slack nodes
         self.create_solph_node(
