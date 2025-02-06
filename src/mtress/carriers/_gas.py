@@ -21,8 +21,8 @@ class GasCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
 
     def __init__(self, *, gases, **kwargs):
         """Initialize carrier."""
-        referennce = {gas: 0 for gas in gases}
-        super().__init__(levels=gases, reference=referennce, **kwargs)
+        reference = {gas: 0 for gas in gases}
+        super().__init__(levels=gases, reference=reference, **kwargs)
 
         self.distribution = {}
 
