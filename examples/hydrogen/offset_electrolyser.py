@@ -45,7 +45,7 @@ house_1.add(
     demands.GasDemand(
         name="H2_demand",
         gas_type=HYDROGEN,
-        time_series=[0.5, 2.5, 1.5],
+        time_series=[0.48, 0.42, 0.56],
         pressure=30,
     )
 )
