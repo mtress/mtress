@@ -23,6 +23,12 @@ class Slack(AbstractTechnology, AbstractSolphRepresentation):
     """A component that provides sink and source slack nodes"""
 
     def __init__(self, penalty: float = 1e9):
+        """
+        Initialize slack component with infinite source and sink
+
+        :param penalty: assign a cost for each unit of missing / excess
+            energy (in any currency)
+        """
         super().__init__(name=self.__class__.__name__)
         self.penalty = penalty
 

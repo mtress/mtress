@@ -47,8 +47,6 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
         self,
         temperature_levels: list[float],
         reference_temperature: float = 0,
-        missing_heat_penalty: float = 1e9,
-        excess_heat_penalty: float = 1e9,
     ):
         """
         Initialize heat energy carrier and add components.
@@ -68,8 +66,6 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
             levels=sorted(temperature_levels),
             reference=reference_temperature,
         )
-        self.missing_heat_penalty = missing_heat_penalty
-        self.excess_heat_penalty = excess_heat_penalty
 
         self._reference_index = np.searchsorted(
             self.levels, reference_temperature

@@ -29,8 +29,6 @@ house_1.add(
     carriers.HeatCarrier(
         temperature_levels=[10, 20, 30, 40, 55],
         reference_temperature=0,
-        missing_heat_penalty=10,
-        excess_heat_penalty=10,
     )
 )
 house_1.add(
@@ -42,7 +40,8 @@ house_1.add(
     )
 )
 
-house_1.add(technologies.Slack())
+# set penalty here
+house_1.add(technologies.Slack(penalty=10))
 
 solph_representation = SolphModel(
     energy_system,
