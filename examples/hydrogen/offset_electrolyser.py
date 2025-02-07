@@ -31,7 +31,7 @@ energy_system.add_location(house_1)
 
 
 house_1.add(carriers.ElectricityCarrier())
-house_1.add(technologies.ElectricityGridConnection(working_rate=70e-6))
+house_1.add(technologies.ElectricityGridConnection(working_rate=0))
 
 house_1.add(
     carriers.GasCarrier(
@@ -45,7 +45,7 @@ house_1.add(
     demands.GasDemand(
         name="H2_demand",
         gas_type=HYDROGEN,
-        time_series=[0.48, 0.42, 0.56],
+        time_series=[0.5, 2.5, 1.5],
         pressure=30,
     )
 )
@@ -74,7 +74,12 @@ house_1.add(
     )
 )
 
-house_1.add(technologies.Slack())
+# add infinite source and sink for heat carrier
+house_1.add(
+    technologies.Slack(
+        {carriers.HeatCarrier: 1e9},
+    )
+)
 
 solph_representation = SolphModel(
     energy_system,
