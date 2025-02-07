@@ -33,11 +33,11 @@ class Slack(AbstractTechnology, AbstractSolphRepresentation):
             (CarrierClass[AbstractCarrier]: penalty[float])
         """
         super().__init__(name=self.__class__.__name__)
-        if type(penalty) == float:
+        if isinstance(penalty, (float, int)):
             # set same penalty for all presen carriers
             self.penalty = penalty
             self.auto_connect = True
-        elif type(penalty) == dict:
+        elif isinstance(penalty, dict):
             # check for correct dict structure
             if all(
                 issubclass(k, AbstractCarrier) and type(v) == float
