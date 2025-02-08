@@ -67,13 +67,33 @@ house_1.add(
     )
 )
 
-heat_pump = technologies.ResistiveHeater(
-    name="HeatPump",
+electric_heater = technologies.ResistiveHeater(
+    name="ResistiveHeater",
     thermal_power_limit=None,
     maximum_temperature=100,
 )
-house_1.add(heat_pump)
+house_1.add(electric_heater)
 
+house_1.add(
+    technologies.HeatPump(
+        name="HeatPump",
+        thermal_power_limit=None,
+        max_temp_primary=20,
+        min_temp_primary=10,
+        max_temp_secondary=40,
+        min_temp_secondary=30,
+    )
+)
+
+house_1.add(
+    technologies.HeatSource(
+        name="Air_HE",
+        reservoir_temperature=20,
+        maximum_working_temperature=40,
+        minimum_working_temperature=10,
+        nominal_power=1e4,
+    )
+)
 
 solph_representation = SolphModel(
     energy_system,
