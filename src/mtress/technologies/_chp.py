@@ -3,7 +3,7 @@
 import logging
 from dataclasses import dataclass
 
-from oemof.solph import Flow
+from oemof.solph import Flow, Bus
 from oemof.solph.components import Converter
 
 from .._helpers._util import enable_templating
@@ -227,59 +227,97 @@ class CHP(AbstractHeater):
             for gas, vol_fraction in self.gas_type.items()
         )
         # Convert volume fractions to mass fractions in the gas_type dictionary
-        self.gas_type = {
+        # self.gas_type = {
+        #     gas: (vol_fraction * gas.molar_mass) / denominator
+        #     for gas, vol_fraction in self.gas_type.items()
+        # }
+        mass_fractions = {
             gas: (vol_fraction * gas.molar_mass) / denominator
             for gas, vol_fraction in self.gas_type.items()
-        }
+            }
+            
+        # *********************************************************************
+        # *********************************************************************
 
-        gas_bus = {}  # gas bus for each gas type
-        gas_LHV = 0  # Calculate LHV of gas or gas-mixtures
-
-        for gas, share in self.gas_type.items():
+        # Add gas connections
+        gas_buses = {}  # gas bus for each gas type
+        for gas, mass_fraction in mass_fractions.items():
+            # gas bus
             gas_carrier = self.location.get_carrier(GasCarrier)
             _, pressure_level = gas_carrier.get_surrounding_levels(
                 gas, self.input_pressure
             )
-            gas_bus[gas] = gas_carrier.distribution[gas][pressure_level]
-
-            # Calculate LHV of gas or gas-mixture
-            gas_LHV += gas.LHV * share
-
-        # convert gas in kg to heat in Wh with thermal efficiency conversion
-        heat_output = self.thermal_efficiency * gas_LHV
+            gas_buses[gas] = gas_carrier.distribution[gas][pressure_level]
+        
         # Add electrical connection
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
-        electrical_bus = electricity_carrier.distribution
-        # convert gas in kg to electricity in Wh with thermal
-        # efficiency conversion
-        electrical_output = self.electric_efficiency * gas_LHV
-        # convert nominal electrical capacity in watts to nominal
-        # gas consumption in kg
-        nominal_gas_consumption = self.nominal_power / (
-            self.electric_efficiency * gas_LHV
+        self.electricity_bus = electricity_carrier.distribution
+        
+        # Add heat connection? probably done in super().build_core()
+        # self.heat_bus
+        
+        # *********************************************************************
+        # *********************************************************************
+                
+        gas_mix_LHV = sum(
+            gas.LHV * mass_fraction
+            for gas, mass_fraction in mass_fractions.items()
+            )
+        
+        # nominal gas mix consumption
+        nominal_gas_mix_consumption = self.nominal_power/(
+            self.electric_efficiency*gas_mix_LHV
+            )
+        
+        # Electrical efficiency with conversion from gas in kg
+        # to electricity in W
+        gas_to_elec_cf = (
+            self.electric_efficiency * gas_mix_LHV
         )
-
-        # Conversion factors for the converter
-        conversion = {
-            gas_bus[gas]: share for gas, share in self.gas_type.items()
-        }
-        conversion.update(
-            {
-                self.heat_bus: heat_output,
-                electrical_bus: electrical_output,
-            }
+        
+        # thermal efficiency with conversion from gas in kg to heat in W.
+        gas_to_heat_cf = (
+            self.thermal_efficiency * gas_mix_LHV
         )
-
+        
+        # *********************************************************************
+        # *********************************************************************
+        
+        # node declaration?
+        self.gas_mix_bus = self.create_solph_node(
+            label='CHP_link', 
+            node_type=Bus
+            )
+        
+        # entry node: gases come in, gas mix goes out
         self.create_solph_node(
-            label="CHP",
+            label="CHP_in",
             node_type=Converter,
             inputs={
-                gas_bus[gas]: Flow(nominal_value=nominal_gas_consumption)
-                for gas, share in self.gas_type.items()
+                gas_bus: Flow()
+                for gas, gas_bus in gas_buses.items()
             },
             outputs={
-                electrical_bus: Flow(),
-                self.heat_bus: Flow(),
+                self.gas_mix_bus: Flow(),
             },
-            conversion_factors=conversion,
+        )
+        
+        # final node: gas mix goes in, heat and electricity come out        
+        self.create_solph_node(
+            label="CHP_out",
+            node_type=Converter,
+            inputs={
+                self.gas_mix_bus: Flow(
+                    nominal_value=nominal_gas_mix_consumption
+                    )
+            },
+            outputs={
+                self.heat_bus: Flow(),
+                self.electricity_bus: Flow(),
+            },
+            conversion_factors={
+                self.gas_mix_bus: 1,
+                self.heat_bus: gas_to_heat_cf,
+                self.electricity_bus: gas_to_elec_cf,
+            },
         )
