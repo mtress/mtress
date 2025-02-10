@@ -133,6 +133,16 @@ AET100NG_CHP = CHPTemplate(
     nominal_power=100e3 # W (electrical)
     )
 
+# AET100BG_CHP = CHPTemplate(
+#     gas_type={BIOGAS: 1},
+#     maximum_temperature=110, # Celsius (LUT data)
+#     minimum_temperature=20, # Celsius (LUT data)
+#     input_pressure=8, # 6-8 bar 
+#     electric_efficiency=0.3, # 30% +/- 2%
+#     thermal_efficiency=0.489, # average of LUT data
+#     nominal_power=105e3 # W (electrical)
+#     )
+
 class CHP(AbstractHeater):
     """
     Combined heat and power (CHP) technology, also known as cogeneration,
