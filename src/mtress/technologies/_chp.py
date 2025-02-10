@@ -3,8 +3,12 @@
 import logging
 from dataclasses import dataclass
 
-from oemof.solph import Flow, Bus
-from oemof.solph.components import Converter
+from oemof.solph import Flow, Bus, NonConvex
+from oemof.solph.components import ( 
+    Converter, 
+    OffsetConverter,
+    slope_offset_from_nonconvex_input
+    )
 
 from .._helpers._util import enable_templating
 from ..carriers import ElectricityCarrier, GasCarrier
@@ -343,6 +347,8 @@ class CHP(AbstractHeater):
             },
         )
         
+# TODO: retrieve docstrings from previous MR
+        
 class OffsetCHP(AbstractHeater):
     """
     asdasd
@@ -353,99 +359,163 @@ class OffsetCHP(AbstractHeater):
     def __init__(
         self,
         name: str,
-        nominal_power: float,
-        full_load_electrical_efficiency: float,
-        min_load_electrical_efficiency: float,
-        full_load_thermal_efficiency: float,
-        min_load_thermal_efficiency: float,
-        minimum_load: float,
+        gas_type: dict[Gas, float],
         maximum_temperature: float,
         minimum_temperature: float,
-        gas_input_pressure: float,
-        gas_type: Gas = HYDROGEN,
-        maximum_load: float = 1,
+        nominal_power: float,
+        input_pressure: float,
+        nominal_electrical_efficiency: float,
+        nominal_thermal_efficiency: float,
+        min_load_electrical_efficiency: float,
+        min_load_thermal_efficiency: float,
+        normalised_min_load: float,
+        normalised_max_load: float = 1
     ):
         """
-        Initialize Fuel Cell (FC)
-
-        :param name: Name of the component
-        :param nominal_power: Nominal electrical power output of Fuel Cell (FC)
-            (in W)
-        :param full_load_electrical_efficiency: Electrical efficiency at
-            max/nom load, i.e. ratio of electrical output and gas input
-        :param min_load_electrical_efficiency: Electrical efficiency at
-            minimum load
-        :param full_load_thermal_efficiency: Thermal efficiency at the max/nom
-            load, i.e. ratio of thermal output and gas input
-        :param min_load_thermal_efficiency: Thermal efficiency at the
-            minimum load
-        :param maximum_temperature: Maximum temperature (in °C) at which heat
-            could be extracted from FC.
-        :param minimum_temperature: Minimum return temperature level (in °C)
-        :param gas_input_pressure: Pressure at which gas is injected to FC.
-        :param gas_type: Input gas to FC, by default Hydrogen gas is used.
-
-        :param min_load_thermal_efficiency: Thermal efficiency at minimum load
-        :param minimum_load: Minimum load level
-            (fraction of the nominal/maximum load)
-        :param maximum_load: Maximum load level, default is 1
+        
         """
         super().__init__(
             name=name,
-            nominal_power=nominal_power,
-            full_load_electrical_efficiency=full_load_electrical_efficiency,
-            full_load_thermal_efficiency=full_load_thermal_efficiency,
             maximum_temperature=maximum_temperature,
             minimum_temperature=minimum_temperature,
-            gas_input_pressure=gas_input_pressure,
-            gas_type=gas_type,
         )
 
+        self.gas_type = gas_type
+        self.nominal_power = nominal_power
+        self.input_pressure = input_pressure
+        self.nominal_electrical_efficiency = nominal_electrical_efficiency
+        self.nominal_thermal_efficiency = nominal_thermal_efficiency
         self.min_load_electrical_efficiency = min_load_electrical_efficiency
         self.min_load_thermal_efficiency = min_load_thermal_efficiency
-        self.minimum_load = minimum_load
-        self.maximum_load = maximum_load
+        self.normalised_min_load = normalised_min_load
+        self.normalised_max_load = normalised_max_load
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-
         super().build_core()
 
+        # Convert volume (vol% )fraction into mass fraction (%) as unit
+        # of gases in MTRESS are considered in mass (kg).
+        # W(i) =
+        # Vol. fraction(i) * molar_mass(i)/ ∑(Vol. fraction(i) * molar_mass(i))
+        # Calculate the denominator first
+        denominator = sum(
+            vol_fraction * gas.molar_mass
+            for gas, vol_fraction in self.gas_type.items()
+        )
+        # Convert volume fractions to mass fractions in the gas_type dictionary
+        # self.gas_type = {
+        #     gas: (vol_fraction * gas.molar_mass) / denominator
+        #     for gas, vol_fraction in self.gas_type.items()
+        # }
+        mass_fractions = {
+            gas: (vol_fraction * gas.molar_mass) / denominator
+            for gas, vol_fraction in self.gas_type.items()
+            }
+            
+        # *********************************************************************
+        # *********************************************************************
+
+        # Add gas connections
+        gas_buses = {}  # gas bus for each gas type
+        for gas, mass_fraction in mass_fractions.items():
+            # gas bus
+            gas_carrier = self.location.get_carrier(GasCarrier)
+            _, pressure_level = gas_carrier.get_surrounding_levels(
+                gas, self.input_pressure
+            )
+            gas_buses[gas] = gas_carrier.distribution[gas][pressure_level]
+        
+        # Add electrical connection
+        electricity_carrier = self.location.get_carrier(ElectricityCarrier)
+        self.electricity_bus = electricity_carrier.distribution
+        
+        # Add heat connection? probably done in super().build_core()
+        # self.heat_bus
+        
+        # *********************************************************************
+        # *********************************************************************
+                
+        gas_mix_LHV = sum(
+            gas.LHV * mass_fraction
+            for gas, mass_fraction in mass_fractions.items()
+            )
+        
+        # nominal gas mix consumption
+        nominal_gas_mix_consumption = self.nominal_power/(
+            self.nominal_electrical_efficiency*gas_mix_LHV
+            )
+        
+        # Electrical efficiency with conversion from gas in kg
+        # to electricity in W
+        gas_to_elec_cf = (
+            self.nominal_electrical_efficiency * gas_mix_LHV
+        )
+        
+        # thermal efficiency with conversion from gas in kg to heat in W.
+        gas_to_heat_cf = (
+            self.nominal_thermal_efficiency * gas_mix_LHV
+        )
+        
+        # *********************************************************************
+        # *********************************************************************
+        
+        # node declaration?
+        self.gas_mix_bus = self.create_solph_node(
+            label='CHP_link', 
+            node_type=Bus
+            )
+        
+        # entry node: gases come in, gas mix goes out
+        self.create_solph_node(
+            label="CHP_in",
+            node_type=Converter,
+            inputs={
+                gas_bus: Flow()
+                for gas, gas_bus in gas_buses.items()
+            },
+            outputs={
+                self.gas_mix_bus: Flow(),
+            },
+        )
+        
+        # final node: gas mix goes in, heat and electricity come out
+        
         min_load_electrical_output = (
-            self.min_load_electrical_efficiency * self.gas_type.LHV
+            self.min_load_electrical_efficiency * gas_mix_LHV
         )
         min_load_heat_output = (
-            self.min_load_thermal_efficiency * self.gas_type.LHV
+            self.min_load_thermal_efficiency * gas_mix_LHV
         )
 
         # offset mode
         slope_el, offset_el = (
-            solph.components.slope_offset_from_nonconvex_input(
-                self.maximum_load,
-                self.minimum_load,
-                self.full_load_electrical_output,
+            slope_offset_from_nonconvex_input(
+                self.normalised_max_load,
+                self.normalised_min_load,
+                gas_to_elec_cf,
                 min_load_electrical_output,
             )
         )
 
         slope_ht, offset_ht = (
-            solph.components.slope_offset_from_nonconvex_input(
-                self.maximum_load,
-                self.minimum_load,
-                self.full_load_heat_output,
+            slope_offset_from_nonconvex_input(
+                self.normalised_max_load,
+                self.normalised_min_load,
+                gas_to_heat_cf,
                 min_load_heat_output,
             )
         )
 
         self.create_solph_node(
-            label="fuel_cell",
+            label="CHP_out",
             node_type=OffsetConverter,
             inputs={
-                self.gas_bus: Flow(
-                    nominal_value=self.nominal_gas_consumption,
-                    max=self.maximum_load,
-                    min=self.minimum_load,
-                    nonconvex=solph.NonConvex(),
+                self.gas_mix_bus: Flow(
+                    nominal_value=nominal_gas_mix_consumption,
+                    max=self.normalised_max_load,
+                    min=self.normalised_min_load,
+                    nonconvex=NonConvex(),
                 ),
             },
             outputs={

@@ -16,7 +16,7 @@ from mtress import (
 from mtress.technologies._chp import CHPTemplate
 from mtress.technologies import (
     CHP,
-    # OffsetCHP,
+    OffsetCHP,
     # templates
     NATURALGAS_CHP,
     BIOGAS_CHP,
@@ -34,18 +34,6 @@ class TestCHP:
         assert chp.nominal_power == template.nominal_power
         assert chp.nominal_electrical_efficiency == template.nominal_electrical_efficiency
         assert chp.nominal_thermal_efficiency == template.nominal_thermal_efficiency
-        # assert chp.min_load_electrical_efficiency ==
-        # template.min_load_electrical_efficiency
-        # assert chp.min_load_nominal_thermal_efficiency ==
-        # template.min_load_nominal_thermal_efficiency
-        # assert chp.full_load_electrical_efficiency ==
-        # template.full_load_electrical_efficiency
-        # assert chp.full_load_nominal_thermal_efficiency ==
-        # template.full_load_nominal_thermal_efficiency
-        # assert chp.min_load_electrical_efficiency ==
-        # template.min_load_electrical_efficiency
-        # assert chp.min_load_nominal_thermal_efficiency ==
-        # template.min_load_nominal_thermal_efficiency
         assert chp.maximum_temperature == template.maximum_temperature
         assert chp.minimum_temperature == template.minimum_temperature
         assert chp.input_pressure == template.input_pressure
@@ -139,97 +127,129 @@ class TestCHP:
         # TODO: make sure heat is being produced
 
 
-# class TestOffsetCHP:
+class TestOffsetCHP:
 
-#     def check_chp_template(self, chp: CHP, template: CHPTemplate):
+    def check_offset_chp_template(
+            self, 
+            chp: CHP,
+            template: CHPTemplate,
+            normalised_min_load: float = None
+            ):
+        
+        if normalised_min_load is None:
+            assert chp.normalised_min_load == template.normalised_min_load
+        else: 
+            assert chp.normalised_min_load == normalised_min_load
+        assert chp.nominal_power == template.nominal_power
+        assert chp.nominal_electrical_efficiency == template.nominal_electrical_efficiency
+        assert chp.nominal_thermal_efficiency == template.nominal_thermal_efficiency
+        assert chp.min_load_electrical_efficiency == template.min_load_electrical_efficiency
+        assert chp.min_load_thermal_efficiency == template.min_load_thermal_efficiency
+        assert chp.maximum_temperature == template.maximum_temperature
+        assert chp.minimum_temperature == template.minimum_temperature
+        assert chp.input_pressure == template.input_pressure
+        assert chp.gas_type == template.gas_type
+        assert type(chp.gas_type) is dict
 
-#         assert chp.full_load_electrical_efficiency ==
-# template.full_load_electrical_efficiency
-#         assert chp.full_load_nominal_thermal_efficiency ==
-#  template.full_load_nominal_thermal_efficiency
-#         assert chp.min_load_electrical_efficiency ==
-#  template.min_load_electrical_efficiency
-#         assert chp.min_load_nominal_thermal_efficiency ==
-# template.min_load_nominal_thermal_efficiency
-#         assert chp.maximum_temperature == template.maximum_temperature
-#         assert chp.minimum_temperature == template.minimum_temperature
-#         assert chp.input_pressure == template.input_pressure
-#         assert chp.gas_type == template.gas_type
-#         assert type(chp.gas_type) is dict
+    @pytest.mark.parametrize(
+        "template, expected_result, normalised_min_load",
+        [
+            # ignore min load: should match results for CHP class
+            (NATURALGAS_CHP, 0.8508048112500001, 0.0),
+            (BIOGAS_CHP, 58187714401.612885, 0.0),
+            (BIOMETHANE_CHP, 0.7855700564999999, 0.0),
+            (HYDROGEN_CHP, 0.32534810449999996, 0.0),
+            (HYDROGEN_MIXED_CHP, 1307692350000.05, 0.0),
+            (AET100NG_CHP, 0.8077001939999999, 0.0),
+            # use min load from template
+            (NATURALGAS_CHP, 1307692350000.05, None),
+            (BIOGAS_CHP, 1307692350000.05, None),
+            (BIOMETHANE_CHP, 1307692350000.05, None),
+            (HYDROGEN_CHP, 1285714240000.05, None),
+            (HYDROGEN_MIXED_CHP, 1307692350000.05, None),
+            (AET100NG_CHP,  1222222210000.05, None),
+        ],
+    )
+    def test_chp(
+            self, template: CHPTemplate, 
+            expected_result: float, 
+            normalised_min_load: float,
+            ):
 
-#     @pytest.mark.parametrize(
-#         "template, expected_result",
-#         [(NATURALGAS_CHP, 1466.5878210550002),
-#          (BIOGAS_CHP, 966.562821055),
-#          (BIOMETHANE_CHP, 0.5883656500000001),
-#          (HYDROGEN_CHP, 0.5883656500000001),
-#          (HYDROGEN_MIXED_CHP,  0.557825485)],
-#     )
-#     def test_chp(self, template, expected_result):
+        os.chdir(os.path.dirname(__file__))
+        energy_system = MetaModel()
+        house_1 = Location(name="house_1")
+        energy_system.add_location(house_1)
 
-#         os.chdir(os.path.dirname(__file__))
-#         energy_system = MetaModel()
-#         house_1 = Location(name="house_1")
-#         energy_system.add_location(house_1)
+        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(technologies.ElectricityGridConnection(working_rate=50e-6))
 
-#         house_1.add(carriers.ElectricityCarrier())
-#      house_1.add(technologies.ElectricityGridConnection(working_rate=50e-6))
+        house_1.add(
+            carriers.GasCarrier(
+                gases={
+                    gas: [template.input_pressure]
+                    for gas, share in template.gas_type.items()
+                }
+            )
+        )
+        for gas, share in template.gas_type.items():
+            house_1.add(
+                technologies.GasGridConnection(
+                    gas_type=gas,
+                    grid_pressure=template.input_pressure,
+                    working_rate=5,
+                )
+            )
 
-#         house_1.add(
-#             carriers.GasCarrier(
-#                 gases={
-#                     HYDROGEN: [template.input_pressure],
-#                 }
-#             )
-#         )
+        house_1.add(
+            carriers.HeatCarrier(
+                temperature_levels=[20, template.maximum_temperature],
+                reference_temperature=10,
+            )
+        )
+        if normalised_min_load is None:
+            # normalised minimum power was not specified: use template
+            chp = OffsetCHP("chp", template=template)
+            # check template, no exceptions
+            self.check_offset_chp_template(chp, template)
+        else: # normalised minimum power was specified: override template
+            chp = OffsetCHP(
+                "chp", 
+                normalised_min_load=normalised_min_load, 
+                template=template
+                )
+            # check template but ignore normalised minimum power
+            self.check_offset_chp_template(chp, template, normalised_min_load)
+        house_1.add(chp)
 
-#         house_1.add(
-#             carriers.HeatCarrier(
-#                 temperature_levels=[20, template.maximum_temperature],
-#                 reference_temperature=10,
-#             )
-#         )
+        # Add heat demands
+        house_1.add(
+            demands.FixedTemperatureHeating(
+                name="heat_demand",
+                min_flow_temperature=template.maximum_temperature,
+                return_temperature=template.minimum_temperature,
+                time_series=[1000],
+            )
+        )
 
-#         fc = CHP("chp", nominal_power=10e3, template=template)
-#         self.check_chp_template(fc, template)
-#         house_1.add(fc)
+        house_1.add(
+            demands.Electricity(
+                name="electricity_demand",
+                time_series=[1000],
+            )
+        )
 
-#         house_1.add(
-#             technologies.GasGridConnection(
-#                 gas_type=HYDROGEN,
-#                 grid_pressure=template.input_pressure,
-#                 working_rate=5,
-#             )
-#         )
+        solph_representation = SolphModel(
+            energy_system,
+            timeindex={
+                "start": "2022-06-01 08:00:00",
+                "end": "2022-06-01 09:00:00",
+                "freq": "60T",
+                "tz": "Europe/Berlin",
+            },
+        )
 
-#         # Add heat demands
-#         house_1.add(
-#             demands.FixedTemperatureHeating(
-#                 name="heat_demand",
-#                 min_flow_temperature=template.maximum_temperature,
-#                 return_temperature=template.minimum_temperature,
-#                 time_series=[1000],
-#             )
-#         )
-
-#         house_1.add(
-#             demands.Electricity(
-#                 name="electricity_demand",
-#                 time_series=[1000],
-#             )
-#         )
-
-#         solph_representation = SolphModel(
-#             energy_system,
-#             timeindex={
-#                 "start": "2022-06-01 08:00:00",
-#                 "end": "2022-06-01 09:00:00",
-#                 "freq": "60T",
-#                 "tz": "Europe/Berlin",
-#             },
-#         )
-
-#         solph_representation.build_solph_model()
-#       solved_model = solph_representation.solve(solve_kwargs={"tee": False})
-#         mr = meta_results(solved_model)
-#         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        solph_representation.build_solph_model()
+        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        mr = meta_results(solved_model)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
