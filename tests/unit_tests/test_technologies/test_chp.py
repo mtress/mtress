@@ -23,6 +23,7 @@ from mtress.technologies import (
     BIOMETHANE_CHP,
     HYDROGEN_CHP,
     HYDROGEN_MIXED_CHP,
+    AET100NG_CHP
 )
 
 
@@ -30,6 +31,7 @@ class TestCHP:
 
     def check_chp_template(self, chp: CHP, template: CHPTemplate):
 
+        assert chp.nominal_power == template.nominal_power
         assert chp.electric_efficiency == template.electric_efficiency
         assert chp.thermal_efficiency == template.thermal_efficiency
         # assert chp.min_load_electrical_efficiency ==
@@ -58,6 +60,7 @@ class TestCHP:
             (BIOMETHANE_CHP, 0.7855700564999999),
             (HYDROGEN_CHP, 0.32534810449999996),
             (HYDROGEN_MIXED_CHP, 1307692350000.05),
+            (AET100NG_CHP, 0.8077001939999999),
         ],
     )
     def test_chp(self, template: CHPTemplate, expected_result: float):
@@ -94,7 +97,7 @@ class TestCHP:
             )
         )
 
-        chp = CHP("chp", nominal_power=100e3, template=template)
+        chp = CHP("chp", template=template)
         self.check_chp_template(chp, template)
         house_1.add(chp)
 

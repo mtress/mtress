@@ -15,6 +15,7 @@ from ._chp import (
     HYDROGEN_CHP,
     HYDROGEN_MIXED_CHP,
     NATURALGAS_CHP,
+    AET100NG_CHP
 )
 from ._compressor import GasCompressor
 from ._electrolyser import (
@@ -59,6 +60,7 @@ __all__ = [
     "CHP",
     "ResistiveHeater",
     "GasBoiler",
+    "AET100NG_CHP",
     "NATURALGAS_CHP",
     "BIOGAS_CHP",
     "BIOMETHANE_CHP",

@@ -67,6 +67,7 @@ class CHPTemplate:
     input_pressure: float
     electric_efficiency: float
     thermal_efficiency: float
+    nominal_power: float
 
 
 NATURALGAS_CHP = CHPTemplate(
@@ -76,6 +77,7 @@ NATURALGAS_CHP = CHPTemplate(
     input_pressure=1,
     electric_efficiency=0.421,
     thermal_efficiency=0.454,
+    nominal_power=500e3 # W (electrical)
 )
 
 BIOGAS_CHP = CHPTemplate(
@@ -85,6 +87,7 @@ BIOGAS_CHP = CHPTemplate(
     input_pressure=1,
     electric_efficiency=0.427,
     thermal_efficiency=0.408,
+    nominal_power=500e3 # W (electrical)
 )
 
 BIOMETHANE_CHP = CHPTemplate(
@@ -94,6 +97,7 @@ BIOMETHANE_CHP = CHPTemplate(
     input_pressure=1,
     electric_efficiency=0.427,
     thermal_efficiency=0.46,
+    nominal_power=500e3 # W (electrical)
 )
 
 HYDROGEN_CHP = CHPTemplate(
@@ -103,6 +107,7 @@ HYDROGEN_CHP = CHPTemplate(
     input_pressure=1,
     electric_efficiency=0.39,
     thermal_efficiency=0.474,
+    nominal_power=500e3 # W (electrical)
 )
 
 HYDROGEN_MIXED_CHP = CHPTemplate(
@@ -112,8 +117,21 @@ HYDROGEN_MIXED_CHP = CHPTemplate(
     input_pressure=1,
     electric_efficiency=0.363,
     thermal_efficiency=0.557,
+    nominal_power=500e3 # W (electrical)
 )
 
+# Ansaldo Energia's T100 MGT
+# source: https://www.ansaldoenergia.com/offering/equipment/turbomachinery/microturbines/ae-t-100
+# i.e.: https://www.ansaldoenergia.com/fileadmin/Brochure/AnsaldoEnergia-Microturbine-AE-T100NG-20220907.pdf
+AET100NG_CHP = CHPTemplate(
+    gas_type={NATURAL_GAS: 1},
+    maximum_temperature=110, # Celsius (LUT data)
+    minimum_temperature=20, # Celsius (LUT data)
+    input_pressure=0.1, # 0.02-0.1 bar 
+    electric_efficiency=0.282, # average of LUT data
+    thermal_efficiency=0.489, # average of LUT data
+    nominal_power=100e3 # W (electrical)
+    )
 
 class CHP(AbstractHeater):
     """
