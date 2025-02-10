@@ -67,6 +67,9 @@ class CHPTemplate:
     input_pressure: float
     nominal_electrical_efficiency: float
     nominal_thermal_efficiency: float
+    min_load_electrical_efficiency: float
+    min_load_thermal_efficiency: float
+    normalised_min_load: float
     nominal_power: float
 
 
@@ -77,6 +80,9 @@ NATURALGAS_CHP = CHPTemplate(
     input_pressure=1,
     nominal_electrical_efficiency=0.421,
     nominal_thermal_efficiency=0.454,
+    min_load_electrical_efficiency=0.421,
+    min_load_thermal_efficiency=0.454,
+    normalised_min_load=0.1,
     nominal_power=500e3 # W (electrical)
 )
 
@@ -87,6 +93,9 @@ BIOGAS_CHP = CHPTemplate(
     input_pressure=1,
     nominal_electrical_efficiency=0.427,
     nominal_thermal_efficiency=0.408,
+    min_load_electrical_efficiency=0.427,
+    min_load_thermal_efficiency=0.408,
+    normalised_min_load=0.1,
     nominal_power=500e3 # W (electrical)
 )
 
@@ -97,6 +106,9 @@ BIOMETHANE_CHP = CHPTemplate(
     input_pressure=1,
     nominal_electrical_efficiency=0.427,
     nominal_thermal_efficiency=0.46,
+    min_load_electrical_efficiency=0.427,
+    min_load_thermal_efficiency=0.46,
+    normalised_min_load=0.1,
     nominal_power=500e3 # W (electrical)
 )
 
@@ -107,6 +119,9 @@ HYDROGEN_CHP = CHPTemplate(
     input_pressure=1,
     nominal_electrical_efficiency=0.39,
     nominal_thermal_efficiency=0.474,
+    min_load_electrical_efficiency=0.39,
+    min_load_thermal_efficiency=0.474,
+    normalised_min_load=0.1,
     nominal_power=500e3 # W (electrical)
 )
 
@@ -117,6 +132,9 @@ HYDROGEN_MIXED_CHP = CHPTemplate(
     input_pressure=1,
     nominal_electrical_efficiency=0.363,
     nominal_thermal_efficiency=0.557,
+    min_load_electrical_efficiency=0.363,
+    min_load_thermal_efficiency=0.557,
+    normalised_min_load=0.1,
     nominal_power=500e3 # W (electrical)
 )
 
@@ -130,6 +148,9 @@ AET100NG_CHP = CHPTemplate(
     input_pressure=0.1, # 0.02-0.1 bar 
     nominal_electrical_efficiency=0.282, # average of LUT data
     nominal_thermal_efficiency=0.489, # average of LUT data
+    min_load_electrical_efficiency=0.282,
+    min_load_thermal_efficiency=0.489,
+    normalised_min_load=0.1,
     nominal_power=100e3 # W (electrical)
     )
 
@@ -319,5 +340,124 @@ class CHP(AbstractHeater):
                 self.gas_mix_bus: 1,
                 self.heat_bus: gas_to_heat_cf,
                 self.electricity_bus: gas_to_elec_cf,
+            },
+        )
+        
+class OffsetCHP(AbstractHeater):
+    """
+    asdasd
+
+    """
+
+    @enable_templating(CHPTemplate)
+    def __init__(
+        self,
+        name: str,
+        nominal_power: float,
+        full_load_electrical_efficiency: float,
+        min_load_electrical_efficiency: float,
+        full_load_thermal_efficiency: float,
+        min_load_thermal_efficiency: float,
+        minimum_load: float,
+        maximum_temperature: float,
+        minimum_temperature: float,
+        gas_input_pressure: float,
+        gas_type: Gas = HYDROGEN,
+        maximum_load: float = 1,
+    ):
+        """
+        Initialize Fuel Cell (FC)
+
+        :param name: Name of the component
+        :param nominal_power: Nominal electrical power output of Fuel Cell (FC)
+            (in W)
+        :param full_load_electrical_efficiency: Electrical efficiency at
+            max/nom load, i.e. ratio of electrical output and gas input
+        :param min_load_electrical_efficiency: Electrical efficiency at
+            minimum load
+        :param full_load_thermal_efficiency: Thermal efficiency at the max/nom
+            load, i.e. ratio of thermal output and gas input
+        :param min_load_thermal_efficiency: Thermal efficiency at the
+            minimum load
+        :param maximum_temperature: Maximum temperature (in °C) at which heat
+            could be extracted from FC.
+        :param minimum_temperature: Minimum return temperature level (in °C)
+        :param gas_input_pressure: Pressure at which gas is injected to FC.
+        :param gas_type: Input gas to FC, by default Hydrogen gas is used.
+
+        :param min_load_thermal_efficiency: Thermal efficiency at minimum load
+        :param minimum_load: Minimum load level
+            (fraction of the nominal/maximum load)
+        :param maximum_load: Maximum load level, default is 1
+        """
+        super().__init__(
+            name=name,
+            nominal_power=nominal_power,
+            full_load_electrical_efficiency=full_load_electrical_efficiency,
+            full_load_thermal_efficiency=full_load_thermal_efficiency,
+            maximum_temperature=maximum_temperature,
+            minimum_temperature=minimum_temperature,
+            gas_input_pressure=gas_input_pressure,
+            gas_type=gas_type,
+        )
+
+        self.min_load_electrical_efficiency = min_load_electrical_efficiency
+        self.min_load_thermal_efficiency = min_load_thermal_efficiency
+        self.minimum_load = minimum_load
+        self.maximum_load = maximum_load
+
+    def build_core(self):
+        """Build core structure of oemof.solph representation."""
+
+        super().build_core()
+
+        min_load_electrical_output = (
+            self.min_load_electrical_efficiency * self.gas_type.LHV
+        )
+        min_load_heat_output = (
+            self.min_load_thermal_efficiency * self.gas_type.LHV
+        )
+
+        # offset mode
+        slope_el, offset_el = (
+            solph.components.slope_offset_from_nonconvex_input(
+                self.maximum_load,
+                self.minimum_load,
+                self.full_load_electrical_output,
+                min_load_electrical_output,
+            )
+        )
+
+        slope_ht, offset_ht = (
+            solph.components.slope_offset_from_nonconvex_input(
+                self.maximum_load,
+                self.minimum_load,
+                self.full_load_heat_output,
+                min_load_heat_output,
+            )
+        )
+
+        self.create_solph_node(
+            label="fuel_cell",
+            node_type=OffsetConverter,
+            inputs={
+                self.gas_bus: Flow(
+                    nominal_value=self.nominal_gas_consumption,
+                    max=self.maximum_load,
+                    min=self.minimum_load,
+                    nonconvex=solph.NonConvex(),
+                ),
+            },
+            outputs={
+                self.electricity_bus: Flow(),
+                self.heat_bus: Flow(),
+            },
+            conversion_factors={
+                self.electricity_bus: slope_el,
+                self.heat_bus: slope_ht,
+            },
+            normed_offsets={
+                self.electricity_bus: offset_el,
+                self.heat_bus: offset_ht,
             },
         )
