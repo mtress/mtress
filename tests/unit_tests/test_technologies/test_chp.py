@@ -1,7 +1,6 @@
 import math
 import pytest
 import os
-import pyomo.environ as pyo
 from oemof.solph.processing import meta_results
 from mtress import (
     Location,
@@ -32,8 +31,14 @@ class TestCHP:
     def check_chp_template(self, chp: CHP, template: CHPTemplate):
 
         assert chp.nominal_power == template.nominal_power
-        assert chp.nominal_electrical_efficiency == template.nominal_electrical_efficiency
-        assert chp.nominal_thermal_efficiency == template.nominal_thermal_efficiency
+        assert ( 
+            chp.nominal_electrical_efficiency == 
+            template.nominal_electrical_efficiency
+            )
+        assert ( 
+            chp.nominal_thermal_efficiency == 
+            template.nominal_thermal_efficiency
+            )
         assert chp.maximum_temperature == template.maximum_temperature
         assert chp.minimum_temperature == template.minimum_temperature
         assert chp.input_pressure == template.input_pressure
@@ -141,10 +146,22 @@ class TestOffsetCHP:
         else: 
             assert chp.normalised_min_load == normalised_min_load
         assert chp.nominal_power == template.nominal_power
-        assert chp.nominal_electrical_efficiency == template.nominal_electrical_efficiency
-        assert chp.nominal_thermal_efficiency == template.nominal_thermal_efficiency
-        assert chp.min_load_electrical_efficiency == template.min_load_electrical_efficiency
-        assert chp.min_load_thermal_efficiency == template.min_load_thermal_efficiency
+        assert (
+            chp.nominal_electrical_efficiency == 
+            template.nominal_electrical_efficiency
+            )
+        assert (
+            chp.nominal_thermal_efficiency == 
+            template.nominal_thermal_efficiency
+            )
+        assert (
+            chp.min_load_electrical_efficiency == 
+            template.min_load_electrical_efficiency
+            )
+        assert (
+            chp.min_load_thermal_efficiency == 
+            template.min_load_thermal_efficiency
+            )
         assert chp.maximum_temperature == template.maximum_temperature
         assert chp.minimum_temperature == template.minimum_temperature
         assert chp.input_pressure == template.input_pressure
