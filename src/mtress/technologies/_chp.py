@@ -65,8 +65,8 @@ class CHPTemplate:
     maximum_temperature: float
     minimum_temperature: float
     input_pressure: float
-    electric_efficiency: float
-    thermal_efficiency: float
+    nominal_electrical_efficiency: float
+    nominal_thermal_efficiency: float
     nominal_power: float
 
 
@@ -75,8 +75,8 @@ NATURALGAS_CHP = CHPTemplate(
     maximum_temperature=85,
     minimum_temperature=20,
     input_pressure=1,
-    electric_efficiency=0.421,
-    thermal_efficiency=0.454,
+    nominal_electrical_efficiency=0.421,
+    nominal_thermal_efficiency=0.454,
     nominal_power=500e3 # W (electrical)
 )
 
@@ -85,8 +85,8 @@ BIOGAS_CHP = CHPTemplate(
     maximum_temperature=85,
     minimum_temperature=20,
     input_pressure=1,
-    electric_efficiency=0.427,
-    thermal_efficiency=0.408,
+    nominal_electrical_efficiency=0.427,
+    nominal_thermal_efficiency=0.408,
     nominal_power=500e3 # W (electrical)
 )
 
@@ -95,8 +95,8 @@ BIOMETHANE_CHP = CHPTemplate(
     maximum_temperature=85,
     minimum_temperature=20,
     input_pressure=1,
-    electric_efficiency=0.427,
-    thermal_efficiency=0.46,
+    nominal_electrical_efficiency=0.427,
+    nominal_thermal_efficiency=0.46,
     nominal_power=500e3 # W (electrical)
 )
 
@@ -105,8 +105,8 @@ HYDROGEN_CHP = CHPTemplate(
     maximum_temperature=90,
     minimum_temperature=20,
     input_pressure=1,
-    electric_efficiency=0.39,
-    thermal_efficiency=0.474,
+    nominal_electrical_efficiency=0.39,
+    nominal_thermal_efficiency=0.474,
     nominal_power=500e3 # W (electrical)
 )
 
@@ -115,8 +115,8 @@ HYDROGEN_MIXED_CHP = CHPTemplate(
     maximum_temperature=85,
     minimum_temperature=20,
     input_pressure=1,
-    electric_efficiency=0.363,
-    thermal_efficiency=0.557,
+    nominal_electrical_efficiency=0.363,
+    nominal_thermal_efficiency=0.557,
     nominal_power=500e3 # W (electrical)
 )
 
@@ -128,8 +128,8 @@ AET100NG_CHP = CHPTemplate(
     maximum_temperature=110, # Celsius (LUT data)
     minimum_temperature=20, # Celsius (LUT data)
     input_pressure=0.1, # 0.02-0.1 bar 
-    electric_efficiency=0.282, # average of LUT data
-    thermal_efficiency=0.489, # average of LUT data
+    nominal_electrical_efficiency=0.282, # average of LUT data
+    nominal_thermal_efficiency=0.489, # average of LUT data
     nominal_power=100e3 # W (electrical)
     )
 
@@ -138,8 +138,8 @@ AET100NG_CHP = CHPTemplate(
 #     maximum_temperature=110, # Celsius (LUT data)
 #     minimum_temperature=20, # Celsius (LUT data)
 #     input_pressure=8, # 6-8 bar 
-#     electric_efficiency=0.3, # 30% +/- 2%
-#     thermal_efficiency=0.489, # average of LUT data
+#     nominal_electrical_efficiency=0.3, # 30% +/- 2%
+#     nominal_thermal_efficiency=0.489, # average of LUT data
 #     nominal_power=105e3 # W (electrical)
 #     )
 
@@ -180,8 +180,8 @@ class CHP(AbstractHeater):
         minimum_temperature: float,
         nominal_power: float,
         input_pressure: float,
-        electric_efficiency: float,
-        thermal_efficiency: float,
+        nominal_electrical_efficiency: float,
+        nominal_thermal_efficiency: float,
     ):
         """
         Initialize CHP component.
@@ -195,9 +195,9 @@ class CHP(AbstractHeater):
         :param nominal_power: Nominal electric output capacity of the CHP
             (in Watts)
         :param input_pressure: Input pressure of gas or gases (in bar).
-        :param electric_efficiency: Electric conversion efficiency
+        :param nominal_electrical_efficiency: Electric conversion efficiency
             (LHV) of the CHP
-        :param thermal_efficiency: Thermal conversion efficiency
+        :param nominal_thermal_efficiency: Thermal conversion efficiency
             (LHV) of the CHP
 
         """
@@ -210,8 +210,8 @@ class CHP(AbstractHeater):
         self.gas_type = gas_type
         self.nominal_power = nominal_power
         self.input_pressure = input_pressure
-        self.electric_efficiency = electric_efficiency
-        self.thermal_efficiency = thermal_efficiency
+        self.nominal_electrical_efficiency = nominal_electrical_efficiency
+        self.nominal_thermal_efficiency = nominal_thermal_efficiency
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -266,18 +266,18 @@ class CHP(AbstractHeater):
         
         # nominal gas mix consumption
         nominal_gas_mix_consumption = self.nominal_power/(
-            self.electric_efficiency*gas_mix_LHV
+            self.nominal_electrical_efficiency*gas_mix_LHV
             )
         
         # Electrical efficiency with conversion from gas in kg
         # to electricity in W
         gas_to_elec_cf = (
-            self.electric_efficiency * gas_mix_LHV
+            self.nominal_electrical_efficiency * gas_mix_LHV
         )
         
         # thermal efficiency with conversion from gas in kg to heat in W.
         gas_to_heat_cf = (
-            self.thermal_efficiency * gas_mix_LHV
+            self.nominal_thermal_efficiency * gas_mix_LHV
         )
         
         # *********************************************************************
