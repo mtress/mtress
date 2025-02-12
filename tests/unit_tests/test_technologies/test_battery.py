@@ -1,4 +1,8 @@
-from mtress.technologies import BatteryStorage, GenericBatteryModelI, GenericBatteryModelII
+from mtress.technologies import (
+    BatteryStorage, 
+    GenericBatteryModelI, 
+    GenericBatteryModelII
+    )
 from mtress.technologies._battery_storage import BatteryStorageTemplate
 from mtress.technologies import RenewableElectricitySource
 
