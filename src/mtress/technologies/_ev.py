@@ -79,6 +79,14 @@ class GenericElectricVehicle(BatteryStorage):
         :param min_soc: Minimum state of charge of a battery, default to 0.1.
         """
 
+
+        # if the EV is discharging, it cannot charge
+        # if the EV is not plugged in, it cannot charge 
+        # if the EV is plugged in, it can charge or discharge
+        # therefore, there might be a conflict between the profiles
+        # (plugged_in_profile and static_discharging_profile) which needs to be
+        # sorted out
+
         BatteryStorage.__init__(self, **kwargs)
 
         # profiles

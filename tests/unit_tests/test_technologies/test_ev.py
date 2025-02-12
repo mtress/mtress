@@ -36,6 +36,7 @@ class TestElectricVehicle:
         assert bs.discharging_efficiency == template.discharging_efficiency
         assert bs.loss_rate == template.loss_rate
         assert bs.consumption_per_distance == template.consumption_per_distance
+        assert bs.fixed_losses_absolute == 0.0
         
     # TODO: test availability
     # TODO: test fixed profile
@@ -64,7 +65,7 @@ class TestElectricVehicle:
         ev = ElectricVehicle(name="ev", template=template)
         self.check_ev_obj(ev, template)
         house_1.add(ev)
-
+        # ev1 = ElectricVehicle(n)
         house_1.add(
             demands.Electricity(
                 name="electricity_demand",
@@ -81,6 +82,61 @@ class TestElectricVehicle:
                     specific_generation=[1, 0, 0.2]
                     )
                 )
+        
+        solph_representation = SolphModel(
+            energy_system,
+            timeindex={
+                "start": "2022-06-01 08:00:00",
+                "end": "2022-06-01 11:00:00",
+                "freq": "60T",
+                "tz": "Europe/Berlin",
+            },
+        )
+
+        solph_representation.build_solph_model()
+        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        mr = meta_results(solved_model)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        
+        
+
+    @pytest.mark.parametrize(
+        "template, static_discharge, expected_result",
+        [(ZoeEV50135HP, 1e3, 176508.86842105), 
+         (ZoeEV50135HP, 1e4, 176008.84342105), 
+         (LeafEtekna24, 1e3, 152759.13157895), 
+         (LeafEtekna24, 1e4, 152259.10657895)],
+    )
+    def test_ev_profile(self, template, static_discharge, expected_result):
+
+        os.chdir(os.path.dirname(__file__))
+        energy_system = MetaModel()
+        house_1 = Location(name="house_1")
+        energy_system.add_location(house_1)
+
+        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(
+            technologies.ElectricityGridConnection(
+                working_rate=[50e-6, 50e-6, 5]
+                )
+            )
+        
+        ev = ElectricVehicle(
+            name="ev", 
+            fixed_losses_absolute=[
+                static_discharge,
+                static_discharge,
+                static_discharge
+                ],
+            template=template
+            )
+        house_1.add(ev)
+        house_1.add(
+            demands.Electricity(
+                name="electricity_demand",
+                time_series=[30000, 120000, 60000],
+            )
+        )
         
         solph_representation = SolphModel(
             energy_system,

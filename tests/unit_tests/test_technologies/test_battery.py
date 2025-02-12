@@ -95,9 +95,9 @@ class TestBatteryStorage:
     @pytest.mark.parametrize(
         "template, fixed_load, expected_result",
         [
-            (GenericBatteryModelI, 1e2, 1952.03524737), # worse than 1466.5878210550002
+            (GenericBatteryModelI, 1e2, 1952.03524737), # worse than 1466.58...
             (GenericBatteryModelI, 1e3, 6321.06218421), # worser
-            (GenericBatteryModelII, 1e2, 0.604155125), # worse than 0.5883656500000001
+            (GenericBatteryModelII, 1e2, 0.604155125), # worse than 0.588365...
             (GenericBatteryModelII, 1e3, 0.74626039), # worser
         ],
     )

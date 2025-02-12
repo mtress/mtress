@@ -7,7 +7,11 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
-from ._battery_storage import BatteryStorage, GenericBatteryModelI, GenericBatteryModelII
+from ._battery_storage import ( 
+    BatteryStorage, 
+    GenericBatteryModelI, 
+    GenericBatteryModelII
+    )
 from ._chp import (
     BIOGAS_CHP,
     BIOMETHANE_CHP,
