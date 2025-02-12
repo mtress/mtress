@@ -7,7 +7,7 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
-from ._battery_storage import BatteryStorage, PowerWallGenI, PowerWallGenII
+from ._battery_storage import BatteryStorage, GenericBatteryModelI, GenericBatteryModelII
 from ._chp import (
     BIOGAS_CHP,
     BIOMETHANE_CHP,
@@ -56,8 +56,8 @@ __all__ = [
     "LeafEtekna24",
     "ZoeEV50135HP", 
     "BatteryStorage",
-    "PowerWallGenI",
-    "PowerWallGenII",
+    "GenericBatteryModelI",
+    "GenericBatteryModelII",
     "HeatPump",
     "COPReference",
     "CHP",

@@ -33,8 +33,8 @@ class BatteryStorageTemplate:
     loss_rate: float
 
 
-# PowerWallGenI (source: https://doi.org/10.1109/SEST.2019.8849064)
-PowerWallGenI = BatteryStorageTemplate(
+# GenericBatteryModelI (source: https://doi.org/10.1109/SEST.2019.8849064)
+GenericBatteryModelI = BatteryStorageTemplate(
     nominal_capacity=6.4e3,  # 6.4 kWh
     charging_C_Rate=3.3 / 6.4,  # 3.3 kW
     discharging_C_Rate=3.3 / 6.4,  # 3.3 kW
@@ -43,8 +43,8 @@ PowerWallGenI = BatteryStorageTemplate(
     loss_rate=0,  # ?
 )
 
-# PowerWallGenII (source: PowerWall 2 datasheet)
-PowerWallGenII = BatteryStorageTemplate(
+# GenericBatteryModelII (source: PowerWall 2 datasheet)
+GenericBatteryModelII = BatteryStorageTemplate(
     nominal_capacity=13.5e3,  # 1.5 kWh
     charging_C_Rate=5 / 13.5,  # 5 kW
     discharging_C_Rate=5 / 13.5,  # 5 kW
