@@ -330,7 +330,7 @@ class CHP(AbstractHeater):
                 },
             )
             
-            # final node: gas mix goes in, heat and electricity come out        
+            # final node: gas mix goes in, heat and electricity come out
             self.create_solph_node(
                 label="CHP",
                 node_type=Converter,
@@ -361,7 +361,7 @@ class CHP(AbstractHeater):
                 },
             )
             
-            # final node: gas mix goes in, heat and electricity come out        
+            # final node: gas mix goes in, heat and electricity come out
             self.create_solph_node(
                 label="CHP",
                 node_type=Converter,

@@ -190,7 +190,7 @@ class TestOffsetCHP:
     #         # # exports are not allowed
     #         # # ignore min load: should match results for CHP class
     #         # (NATURALGAS_CHP, 0.8508048112500001, 0.0, False),
-    #         # (BIOGAS_CHP, 58187714401.612885, 0.0, False), # 58187713401.612885
+    #         # (BIOGAS_CHP, 58187714401.612885, 0.0, False), # 58187713401.612
     #         # (BIOMETHANE_CHP, 0.7855700564999999, 0.0, False),
     #         # (HYDROGEN_CHP, 0.32534810449999996, 0.0, False),
     #         # (HYDROGEN_MIXED_CHP, 0.6963973715, 0.0, False),
@@ -282,7 +282,8 @@ class TestOffsetCHP:
     #             template=template
     #             )
     #         # check template but ignore normalised minimum power
-    #         self.check_offset_chp_template(chp, template, normalised_min_load)
+    #         self.check_offset_chp_template(
+    #           chp, template, normalised_min_load)
     #     house_1.add(chp)
 
     #     # Add heat demands
@@ -313,6 +314,7 @@ class TestOffsetCHP:
     #     )
 
     #     solph_representation.build_solph_model()
-    #     solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+    #     solved_model = solph_representation.solve(
+    #       solve_kwargs={"tee": False})
     #     mr = meta_results(solved_model)
     #     assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
