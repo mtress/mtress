@@ -129,7 +129,7 @@ class TestOffsetFuelCell:
         assert fc.gas_input_pressure == template.gas_input_pressure
 
     @pytest.mark.parametrize(
-        "template, norm_min_power, expected_result",
+        "template, minimum_load, expected_result",
         [
             (AFC, 0, 0.342255559),
             (PEMFC, 0, 0.314030005),
@@ -139,7 +139,7 @@ class TestOffsetFuelCell:
             (AEMFC, AEMFC.minimum_load, 1571428590000.05),
         ],
     )
-    def test_ofc(self, template, norm_min_power, expected_result):
+    def test_ofc(self, template, minimum_load, expected_result):
 
         os.chdir(os.path.dirname(__file__))
         energy_system = MetaModel()
@@ -170,7 +170,7 @@ class TestOffsetFuelCell:
         fc = OffsetFuelCell(
             "fc",
             nominal_power=100e3,
-            minimum_load=norm_min_power,
+            minimum_load=minimum_load,
             template=template,
         )
         self._check_fc_obj(fc, template)
@@ -215,3 +215,195 @@ class TestOffsetFuelCell:
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+    
+    @pytest.mark.parametrize(
+        "nominal_power, template, elec_demand, expected_result",
+        [
+            # reference: nominal power matches demand
+            (1000, PEMFC, 1000, 8.3341668e-05),
+            # maximum power cannot be exceeded (imports are needed)
+            (1000, PEMFC, 1500, 8.3341668e-05+500*50e-6),
+            # minimum power has to be observed (=leads to penalties)
+            (1000, PEMFC, 50, 50*50e-6),
+        ],
+    )
+    def test_power_limits(self, nominal_power, template, elec_demand, expected_result):
+        
+        os.chdir(os.path.dirname(__file__))
+        energy_system = MetaModel()
+        house_1 = Location(name="house_1")
+        energy_system.add_location(house_1)
+
+        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(
+            technologies.ElectricityGridConnection(
+                working_rate=50e-6,
+                revenue=50e-6
+                )
+            )
+
+        house_1.add(
+            carriers.GasCarrier(
+                gases={
+                    HYDROGEN: [template.gas_input_pressure],
+                }
+            )
+        )
+
+        house_1.add(
+            carriers.HeatCarrier(
+                temperature_levels=[
+                    template.minimum_temperature,
+                    template.maximum_temperature,
+                ],
+                reference_temperature=10,
+                # heat does not matter
+                missing_heat_penalty=0,
+                excess_heat_penalty=0
+            )
+        )
+
+        fc = OffsetFuelCell(
+            name="fc",
+            nominal_power=nominal_power,
+            template=template,
+        )
+        house_1.add(fc)
+
+        house_1.add(
+            technologies.GasGridConnection(
+                gas_type=HYDROGEN,
+                grid_pressure=template.gas_input_pressure,
+                working_rate=1e-3,
+            )
+        )
+
+        # Add heat demands
+        house_1.add(
+            demands.FixedTemperatureHeating(
+                name="heat_demand",
+                min_flow_temperature=template.maximum_temperature,
+                return_temperature=template.minimum_temperature,
+                time_series=[500],
+            )
+        )
+
+        house_1.add(
+            demands.Electricity(
+                name="electricity_demand",
+                time_series=[elec_demand],
+            )
+        )
+
+        solph_representation = SolphModel(
+            energy_system,
+            timeindex={
+                "start": "2022-06-01 08:00:00",
+                "end": "2022-06-01 09:00:00",
+                "freq": "60T",
+                "tz": "Europe/Berlin",
+            },
+        )
+
+        solph_representation.build_solph_model()
+        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        mr = meta_results(solved_model)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+        
+    # @pytest.mark.parametrize(
+    #     "nominal_power, template, heat_demand_multiplier, expected_result",
+    #     [
+    #         # reference: nominal power matches demand
+    #         (1000, PEMFC, 1, 8.3341668e-05),
+    #         # maximum power cannot be exceeded (imports are needed)
+    #         (1000, PEMFC, 1.5, 8.3341668e-05+500*50e-6),
+    #         # minimum power has to be observed (=leads to penalties)
+    #         (1000, PEMFC, (PEMFC.minimum_load/2), 50*50e-6),
+    #     ],
+    # )
+    # def test_heat_limits(self, nominal_power, template, heat_demand_multiplier, expected_result):
+        
+    #     os.chdir(os.path.dirname(__file__))
+    #     energy_system = MetaModel()
+    #     house_1 = Location(name="house_1")
+    #     energy_system.add_location(house_1)
+
+    #     house_1.add(carriers.ElectricityCarrier())
+    #     house_1.add(
+    #         technologies.ElectricityGridConnection(
+    #             working_rate=50e-3,
+    #             revenue=50e-3
+    #             )
+    #         )
+
+    #     house_1.add(
+    #         carriers.GasCarrier(
+    #             gases={
+    #                 HYDROGEN: [template.gas_input_pressure],
+    #             }
+    #         )
+    #     )
+
+    #     house_1.add(
+    #         carriers.HeatCarrier(
+    #             temperature_levels=[
+    #                 template.minimum_temperature,
+    #                 template.maximum_temperature,
+    #             ],
+    #             reference_temperature=10,
+    #             # missing_heat_penalty=0,
+    #             # excess_heat_penalty=0
+    #         )
+    #     )
+    #     fc = OffsetFuelCell(
+    #         name="fc",
+    #         nominal_power=nominal_power,
+    #         template=template,
+    #     )
+    #     house_1.add(fc)
+
+    #     house_1.add(
+    #         technologies.GasGridConnection(
+    #             gas_type=HYDROGEN,
+    #             grid_pressure=template.gas_input_pressure,
+    #             working_rate=1e-3,
+    #         )
+    #     )
+
+    #     # Add heat demands
+    #     house_1.add(
+    #         demands.FixedTemperatureHeating(
+    #             name="heat_demand",
+    #             min_flow_temperature=template.maximum_temperature,
+    #             return_temperature=template.minimum_temperature,
+    #             time_series=[ 
+    #                 (nominal_power/
+    #                   template.full_load_electrical_efficiency)*
+    #                 template.full_load_thermal_efficiency*
+    #                 heat_demand_multiplier
+    #                 ],
+    #         )
+    #     )
+
+    #     house_1.add(
+    #         demands.Electricity(
+    #             name="electricity_demand",
+    #             time_series=[0],
+    #         )
+    #     )
+
+    #     solph_representation = SolphModel(
+    #         energy_system,
+    #         timeindex={
+    #             "start": "2022-06-01 08:00:00",
+    #             "end": "2022-06-01 09:00:00",
+    #             "freq": "60T",
+    #             "tz": "Europe/Berlin",
+    #         },
+    #     )
+
+    #     solph_representation.build_solph_model()
+    #     solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+    #     mr = meta_results(solved_model)
+    #     assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+    
