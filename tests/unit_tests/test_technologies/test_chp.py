@@ -334,7 +334,8 @@ class TestOffsetCHP:
             # reference: nominal power matches demand
             (NATURALGAS_CHP, 1, 0.09135757400000062),
             # maximum power cannot be exceeded, nominal production + imports
-            (NATURALGAS_CHP, 1.5, 0.09135757400000062+NATURALGAS_CHP.nominal_power*0.5*50e-6),
+            (NATURALGAS_CHP, 
+             1.5, 0.09135757400000062+NATURALGAS_CHP.nominal_power*0.5*50e-6),
             # CHP cannot be used, electricity must be imported
             (NATURALGAS_CHP, 0.05, NATURALGAS_CHP.nominal_power*0.05*50e-6),
         ],
@@ -427,6 +428,8 @@ class TestOffsetCHP:
         
     # *************************************************************************
     # *************************************************************************
+    
+    # TODO: make sure the efficiencies are being correctly used
         
     # @pytest.mark.parametrize(
     #     "min_load_thermal_efficiency, "+
