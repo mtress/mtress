@@ -327,34 +327,151 @@ class TestOffsetCHP:
     
     # *************************************************************************
     # *************************************************************************
+    
+    @pytest.mark.parametrize(
+        "template, load_multiplier, expected_result",
+        [
+            # reference: nominal power matches demand
+            (NATURALGAS_CHP, 1, 0.09135757400000062),
+            # maximum power cannot be exceeded, nominal production + imports
+            (NATURALGAS_CHP, 1.5, 0.09135757400000062+NATURALGAS_CHP.nominal_power*0.5*50e-6),
+            # CHP cannot be used, electricity must be imported
+            (NATURALGAS_CHP, 0.05, NATURALGAS_CHP.nominal_power*0.05*50e-6),
+        ],
+    )
+    def test_power_limits(self,  template, load_multiplier, expected_result):
+        
+        energy_system = MetaModel()
+        house_1 = Location(name="house_1")
+        energy_system.add_location(house_1)
+
+        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(
+            technologies.ElectricityGridConnection(
+                working_rate=50e-6,
+                revenue=50e-6
+                )
+            )
+
+        house_1.add(
+            carriers.GasCarrier(
+                gases={
+                    gas: [template.input_pressure]
+                    for gas, share in template.gas_type.items()
+                }
+            )
+        )
+
+        house_1.add(
+            carriers.HeatCarrier(
+                temperature_levels=[
+                    template.minimum_temperature,
+                    template.maximum_temperature,
+                ],
+                reference_temperature=10,
+                # heat does not matter
+                missing_heat_penalty=0,
+                excess_heat_penalty=0
+            )
+        )
+        
+        chp = OffsetCHP(
+            name="chp", 
+            allow_electricity_feed_in=False,
+            template=template
+            )
+        house_1.add(chp)
+
+        for gas, share in template.gas_type.items():
+            house_1.add(
+                technologies.GasGridConnection(
+                    gas_type=gas,
+                    grid_pressure=template.input_pressure,
+                    working_rate=1e-3,
+                )
+            )
+
+        # Add heat demands
+        house_1.add(
+            demands.FixedTemperatureHeating(
+                name="heat_demand",
+                min_flow_temperature=template.maximum_temperature,
+                return_temperature=template.minimum_temperature,
+                time_series=[template.nominal_power/2],
+            )
+        )
+
+        house_1.add(
+            demands.Electricity(
+                name="electricity_demand",
+                time_series=[
+                    template.nominal_power*load_multiplier
+                    ],
+            )
+        )
+
+        solph_representation = SolphModel(
+            energy_system,
+            timeindex={
+                "start": "2022-06-01 08:00:00",
+                "end": "2022-06-01 09:00:00",
+                "freq": "60T",
+                "tz": "Europe/Berlin",
+            },
+        )
+
+        solph_representation.build_solph_model()
+        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        mr = meta_results(solved_model)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+        
+    # *************************************************************************
+    # *************************************************************************
         
     # @pytest.mark.parametrize(
-    #     "nominal_thermal_efficiency, " +
     #     "min_load_thermal_efficiency, "+
-    #     "nominal_electrical_efficiency, "+
+    #     "nominal_thermal_efficiency, " +
     #     "min_load_electrical_efficiency, "+
+    #     "nominal_electrical_efficiency, "+
     #     "test_factor, "+
     #     "expected_result",
     #     [
     #         # constant thermal efficiency, constant electrical efficiency
-    #         (0.45, 0.45, 0.35, 0.35, 1.5, 34),
-    #         (0.45, 0.45, 0.35, 0.35, 0.99, 34),
-    #         # thermal efficiency increases, electrical efficiency increases
-    #         # (0.4, 0.45, 0.3, 0.35, 1.45, 34),
-    #         # (0.4, 0.45, 0.3, 0.35, 0.99, 34),
-    #         # thermal efficiency decreases, electrical efficiency increases
-    #         # (0.45, 0.35, 0.3, 0.35, 1.45, 34),
-    #         # (0.45, 0.35, 0.3, 0.35, 0.99, 34),
-    #         # thermal efficiency increases, electrical efficiency decreases
-    #         # thermal efficiency decreases, electrical efficiency decreases
+    #         (0.45, 0.45, 0.35, 0.35, 1, 1.20879121),
+    #         (0.45, 0.45, 0.35, 0.35, 0.99, 1681318701.2087913),
+    #         # constant thermal efficiency, increasing electrical efficiency
+    #         (0.45, 0.45, 0.30, 0.35, 1, 1.22697395487),
+    #         (0.45, 0.45, 0.30, 0.35, 0.99, 1.225751159125),
+    #         # constant thermal efficiency, decreasing electrical efficiency
+    #         (0.45, 0.45, 0.35, 0.30, 1, 28021978301.409424),
+    #         (0.45, 0.45, 0.35, 0.30, 0.99, 29703296501.409424),
+    #         # # increasing thermal efficiency, constant electrical efficiency
+    #         # (0.40, 0.45, 0.35, 0.35, 1, 1.22697395487),
+    #         # (0.40, 0.45, 0.35, 0.35, 0.99, 1.225751159125),
+    #         # # decreasing thermal efficiency, constant electrical efficiency
+    #         # (0.45, 0.40, 0.35, 0.35, 1, 1.22697395487),
+    #         # (0.45, 0.40, 0.35, 0.35, 0.99, 1.225751159125),
+            
+    #         # # thermal efficiency increases, electrical efficiency increases
+    #         # (0.40, 0.45, 0.30, 0.35, 1, 28021978301.409424),
+    #         # (0.40, 0.45, 0.30, 0.35, 0.99, 29703296501.409424),
+    #         # # thermal efficiency decreases, electrical efficiency increases
+    #         # (0.45, 0.35, 0.30, 0.35, 1, 21794871601.409424),
+    #         # (0.45, 0.35, 0.30, 0.35, 0.99, 23102563701.409424),
+    #         # # thermal efficiency increases, electrical efficiency decreases
+    #         # (0.40, 0.45, 0.35, 0.30, 1, 1.229434300945),
+    #         # (0.40, 0.45, 0.35, 0.30, 0.99, 1.22803928158),
+    #         # # thermal efficiency decreases, electrical efficiency decreases
+    #         # (0.45, 0.35, 0.35, 0.30, 1, 1.222764685435),
+    #         # (0.45, 0.35, 0.35, 0.30, 0.99, 1.221836545355),
     #     ],
     # )
     # def test_variable_efficiency(
     #         self,
-    #         nominal_thermal_efficiency: float,
     #         min_load_thermal_efficiency: float,
-    #         nominal_electrical_efficiency: float,
+    #         nominal_thermal_efficiency: float,
     #         min_load_electrical_efficiency: float,
+    #         nominal_electrical_efficiency: float,
     #         test_factor: float,
     #         expected_result: float
     #         ):
@@ -424,13 +541,12 @@ class TestOffsetCHP:
     #             min_flow_temperature=template.maximum_temperature,
     #             return_temperature=template.minimum_temperature,
     #             time_series=[
-    #                 (nominal_power/template.nominal_electrical_efficiency)*
-    #                 template.nominal_thermal_efficiency,
-    #                 # the factor 0.99 is meant to force a demand below
-    # the min.
+    #                 (nominal_power/nominal_electrical_efficiency)*
+    #                 nominal_thermal_efficiency,
+    #                 # the test factor is meant to adjust the demand
     #                 (nominal_power*template.normalised_min_load/
-    #                   template.min_load_electrical_efficiency)*
-    #                 template.min_load_thermal_efficiency*test_factor,
+    #                  min_load_electrical_efficiency)*
+    #                 min_load_thermal_efficiency*test_factor,
     #                 ],
     #         )
     #     )
@@ -449,7 +565,6 @@ class TestOffsetCHP:
     #         energy_system,
     #         timeindex={
     #             "start": "2022-06-01 08:00:00",
-    #             # "end": "2022-06-01 9:00:00",
     #             "end": "2022-06-01 10:00:00",
     #             "freq": "60T",
     #             "tz": "Europe/Berlin",
