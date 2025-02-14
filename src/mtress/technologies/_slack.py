@@ -11,11 +11,10 @@ SPDX-License-Identifier: MIT
 """
 from typing import Dict
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Flow
 from oemof.solph.components import Source, Sink
 
 from .._abstract_component import AbstractSolphRepresentation
-from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers._abstract_carrier import AbstractCarrier
 from ..carriers import ElectricityCarrier, HeatCarrier, GasCarrier
 from ._abstract_technology import AbstractTechnology
