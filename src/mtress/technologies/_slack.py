@@ -27,9 +27,11 @@ class Slack(AbstractTechnology, AbstractSolphRepresentation):
     Slack nodes are infinte sources of energy.
 
     Usage:
-        1. One may specify only a penalty. The slack component auto connects
-            to all present carrieres. All flows have the same, specified, penalty.
-        2. One may specify a penalty for each desired carrier in the following format:
+        1. One may specify only a penalty.
+            The slack component auto connects to all present carrieres.
+            All flows have the same, specified, penalty.
+        2. One may specify a penalty for each desired carrier
+            in the following format:
             {CarrierClass[AbstractCarrier]: penalty[float]}
     """
 
