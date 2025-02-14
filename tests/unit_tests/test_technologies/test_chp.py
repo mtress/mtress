@@ -426,7 +426,8 @@ class TestOffsetCHP:
     #             time_series=[
     #                 (nominal_power/template.nominal_electrical_efficiency)*
     #                 template.nominal_thermal_efficiency,
-    #                 # the factor 0.99 is meant to force a demand below the min.
+    #                 # the factor 0.99 is meant to force a demand below
+    # the min.
     #                 (nominal_power*template.normalised_min_load/
     #                   template.min_load_electrical_efficiency)*
     #                 template.min_load_thermal_efficiency*test_factor,
@@ -456,7 +457,8 @@ class TestOffsetCHP:
     #     )
 
     #     solph_representation.build_solph_model()
-    #     solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+    #     solved_model = solph_representation.solve(solve_kwargs={"tee": False}
+    # )
     #     mr = meta_results(solved_model)
     #     assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
 
