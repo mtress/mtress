@@ -104,7 +104,11 @@ myresults = results(solved_model)
 flows = get_flows(myresults)
 
 # indicate usage of slack with a rainbow-colored scheme
-rainbow = "firebrick1:darkorange:gold2:chartreuse3:deepskyblue:cornflowerblue:darkslateblue"
+rainbow = (
+    "firebrick1:darkorange:gold2:"
+    + "chartreuse3:deepskyblue:cornflowerblue:"
+    + "darkslateblue"
+)
 flow_color = {
     ("house_1", "Slack", "missing_energy"): {
         (
