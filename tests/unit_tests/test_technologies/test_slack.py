@@ -1,4 +1,4 @@
-from mtress.technologies import Slack
+from mtress.technologies import SlackNode
 from mtress import MetaModel, Location, SolphModel, carriers, demands
 from mtress.physics import HYDROGEN
 
@@ -6,14 +6,14 @@ import pytest
 
 
 def test_slack_penalty():
-    slack = Slack()
+    slack = SlackNode()
     assert slack.penalty == 1e9
 
-    slack = Slack(10)
+    slack = SlackNode(10)
     assert slack.penalty == 10
 
     penalty = {carriers.ElectricityCarrier: 1e5, carriers.HeatCarrier: 1e7}
-    slack = Slack(penalty)
+    slack = SlackNode(penalty)
     assert type(slack.penalty) == dict
     assert slack.penalty == penalty
 
@@ -22,7 +22,7 @@ def test_slack_penalty():
             carriers.ElectricityCarrier: "banana",
             carriers.HeatCarrier: 1e7,
         }
-        Slack(penalty)
+        SlackNode(penalty)
 
 
 def test_slack_build():
@@ -35,7 +35,7 @@ def test_slack_build():
     location1.add(
         demands.Electricity(name="electricity_demand1", time_series=[0, 1, 2])
     )
-    location1.add(Slack())
+    location1.add(SlackNode())
 
     solph_representation1 = SolphModel(
         meta_model1,
@@ -83,7 +83,7 @@ def test_slack_build():
     )
 
     location2.add(
-        Slack(
+        SlackNode(
             {
                 carriers.ElectricityCarrier: 1e3,
                 carriers.HeatCarrier: 1e5,

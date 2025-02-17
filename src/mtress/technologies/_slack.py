@@ -9,7 +9,7 @@ SPDX-FileCopyrightText: Julius Ellermann
 
 SPDX-License-Identifier: MIT
 """
-from typing import Dict
+import numbers
 
 from oemof.solph import Flow
 from oemof.solph.components import Source, Sink
@@ -20,30 +20,30 @@ from ..carriers import ElectricityCarrier, HeatCarrier, GasCarrier
 from ._abstract_technology import AbstractTechnology
 
 
-class Slack(AbstractTechnology, AbstractSolphRepresentation):
+class SlackNode(AbstractTechnology, AbstractSolphRepresentation):
     """
     A component that provides sink and source slack nodes.
     Slack nodes are infinte sources of energy.
 
     Usage:
         1. One may specify only a penalty.
-            The slack component auto connects to all present carrieres.
+            The SlackNode component auto connects to all present carrieres.
             All flows have the same, specified, penalty.
         2. One may specify a penalty for each desired carrier
             in the following format:
             {CarrierClass[AbstractCarrier]: penalty[float]}
     """
 
-    def __init__(self, penalty: float | Dict[type, AbstractCarrier] = 1e9):
+    def __init__(self, penalty: float | dict[AbstractCarrier, float] = 1e9):
         """
-        Initialize slack component with infinite source and sink.
+        Initialize SlackNode component with infinite source and sink.
 
         :param penalty: assign a cost for each unit of missing / excess
             energy (in any currency) | per carrier
             {CarrierClass[AbstractCarrier]: penalty[float]}
         """
         super().__init__(name=self.__class__.__name__)
-        if isinstance(penalty, (float, int)):
+        if isinstance(penalty, numbers.Real):
             # set same penalty for all present carriers
             self.penalty = penalty
             self.auto_connect = True

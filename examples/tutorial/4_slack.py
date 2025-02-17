@@ -1,10 +1,10 @@
 """
-This example shows how to use the Slack technology.
+This example shows how to use the SlackNode technology.
 First a basic energy system is created.
-Next, the Slack technology is created with different 
+Next, the SlackNode technology is created with different 
     penalties per energy carrier.
 Lastly, after the model is build and solved,
-    flows from and to the slack node are strongly highlighted
+    flows from and to the SlackNode are strongly highlighted
     in the results plot.
 """
 
@@ -80,7 +80,7 @@ house_1.add(
 )
 
 # Add slack
-house_1.add(technologies.Slack())
+house_1.add(technologies.SlackNode())
 
 solph_representation = SolphModel(
     energy_system,
@@ -103,14 +103,14 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-# indicate usage of slack with a rainbow-colored scheme
+# indicate usage of SlackNode with a rainbow-colored scheme
 rainbow = (
     "firebrick1:darkorange:gold2:"
     + "chartreuse3:deepskyblue:cornflowerblue:"
     + "darkslateblue"
 )
 flow_color = {
-    ("house_1", "Slack", "missing_energy"): {
+    ("house_1", "SlackNode", "missing_energy"): {
         (
             "house_1",
             "ElectricityCarrier",
@@ -123,22 +123,22 @@ flow_color = {
         ("house_1", "HeatCarrier", "T_40"): rainbow,
     },
     ("house_1", "ElectricityCarrier", "distribution"): {
-        ("house_1", "Slack", "excess_energy"): rainbow
+        ("house_1", "SlackNode", "excess_energy"): rainbow
     },
     ("house_1", "HeatCarrier", "T_5"): {
-        ("house_1", "Slack", "excess_energy"): rainbow
+        ("house_1", "SlackNode", "excess_energy"): rainbow
     },
     ("house_1", "HeatCarrier", "T_10"): {
-        ("house_1", "Slack", "excess_energy"): rainbow
+        ("house_1", "SlackNode", "excess_energy"): rainbow
     },
     ("house_1", "HeatCarrier", "T_20"): {
-        ("house_1", "Slack", "excess_energy"): rainbow
+        ("house_1", "SlackNode", "excess_energy"): rainbow
     },
     ("house_1", "HeatCarrier", "T_30"): {
-        ("house_1", "Slack", "excess_energy"): rainbow
+        ("house_1", "SlackNode", "excess_energy"): rainbow
     },
     ("house_1", "HeatCarrier", "T_40"): {
-        ("house_1", "Slack", "excess_energy"): rainbow
+        ("house_1", "SlackNode", "excess_energy"): rainbow
     },
 }
 

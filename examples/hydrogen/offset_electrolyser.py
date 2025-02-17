@@ -76,7 +76,7 @@ house_1.add(
 
 # add infinite source and sink for heat carrier
 house_1.add(
-    technologies.Slack(
+    technologies.SlackNode(
         {carriers.HeatCarrier: 1e9},
     )
 )

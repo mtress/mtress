@@ -41,7 +41,7 @@ house_1.add(
 )
 
 # set penalty here
-house_1.add(technologies.Slack(penalty=10))
+house_1.add(technologies.SlackNode(penalty=10))
 
 solph_representation = SolphModel(
     energy_system,
