@@ -73,6 +73,14 @@ house_1.add(
         time_series=[3000, 3000, 3000],
     )
 )
+
+# add infinite source and sink for heat carrier
+house_1.add(
+    technologies.SlackNode(
+        {carriers.HeatCarrier: 1e9},
+    )
+)
+
 solph_representation = SolphModel(
     energy_system,
     timeindex={

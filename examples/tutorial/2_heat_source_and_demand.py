@@ -111,14 +111,14 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 plot = solph_representation.graph(detail=True)
-plot.render(outfile="heat_source_and_demand_detail.png")
+plot.render(outfile="2_heat_source_and_demand_detail.png", cleanup=True)
 
 plot = solph_representation.graph(detail=False)
-plot.render(outfile="heat_source_and_demand_simple.png")
+plot.render(outfile="2_heat_source_and_demand_simple.png", cleanup=True)
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
 plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="heat_source_and_demand_results.png")
+plot.render(outfile="2_heat_source_and_demand_results.png", cleanup=True)
