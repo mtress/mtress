@@ -123,6 +123,7 @@ class AbstractSolphRepresentation(AbstractComponent):
     def build_core(self) -> None:
         """Build the core structure of the component."""
 
+    @abstractmethod
     def establish_interconnections(self) -> None:
         """Build interconnections with other nodes."""
 

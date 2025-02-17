@@ -70,6 +70,9 @@ class AbstractHeater(AbstractTechnology, AbstractSolphRepresentation):
                 },
             )
 
+    def establish_interconnections(self) -> None:
+        pass
+
 
 class ResistiveHeater(AbstractHeater):
     """
