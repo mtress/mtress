@@ -381,13 +381,31 @@ class CHP(AbstractHeater):
                 },
                 )
         
-# TODO: retrieve docstrings from previous MR
-        
 class OffsetCHP(AbstractHeater):
     """
-    asdasd
-
+    Combined heat and power (CHP) technology, also known as cogeneration,
+    produces electricity and heat on-site. CHP systems increase energy
+    security by producing energy at the point of use, and significantly
+    improve energy efficiency. Depending on design, they can typically,
+    accepts different types of gas or gas-mixtures as fuel input. The
+    alternator connected to the gas engine, reciprocating engine or steam
+    generator (boiler) produces electricity. For heat recovery, usually,
+    the cooling water circuits of the engine are first linked to a plate
+    heat exchanger which facilitates the transfer of hot water to an external
+    hot-water circuit, typically on a 90°C/70°C flow/return basis. Any excess
+    heat should be dumped using adjacent heat dump radiators to facilitate
+    the correct operation of the engine. Heat extracted from CHP could be
+    utilized for various applications, including, hot water, space heating,
+    industrial processes, etc.
+    
+    This class allows users to characterise the nominal and part-load
+    performance of a CHP unit using two setpoints. The performance variation
+    between these two setpoints is assumed to be linear. If the maximum load is
+    expected to exceed the nominal capacity (normalised_max_load >= 1) the
+    efficiency values will be extrapolated based on the linear curves.
+    
     """
+
 
     @enable_templating(CHPTemplate)
     def __init__(
@@ -440,10 +458,6 @@ class OffsetCHP(AbstractHeater):
             for gas, vol_fraction in self.gas_type.items()
         )
         # Convert volume fractions to mass fractions in the gas_type dictionary
-        # self.gas_type = {
-        #     gas: (vol_fraction * gas.molar_mass) / denominator
-        #     for gas, vol_fraction in self.gas_type.items()
-        # }
         mass_fractions = {
             gas: (vol_fraction * gas.molar_mass) / denominator
             for gas, vol_fraction in self.gas_type.items()
@@ -481,15 +495,29 @@ class OffsetCHP(AbstractHeater):
             self.nominal_electrical_efficiency*gas_mix_LHV
             )
         
+        # nominal_fuel_consumption = (
+        #     self.nominal_power/self.nominal_electrical_efficiency
+        #     )
+        # min_load_fuel_consumption = (
+        #     self.normalised_min_load*nominal_fuel_consumption
+        #     )
+        
         # Electrical efficiency with conversion from gas in kg
         # to electricity in W
-        gas_to_elec_cf = (
+        nominal_electrical_output = (
             self.nominal_electrical_efficiency * gas_mix_LHV
         )
         
         # thermal efficiency with conversion from gas in kg to heat in W.
-        gas_to_heat_cf = (
+        nominal_heat_output = (
             self.nominal_thermal_efficiency * gas_mix_LHV
+        )
+        
+        min_load_electrical_output = (
+            self.min_load_electrical_efficiency * gas_mix_LHV
+        )
+        min_load_heat_output = (
+            self.min_load_thermal_efficiency * gas_mix_LHV
         )
         
         # *********************************************************************
@@ -517,20 +545,13 @@ class OffsetCHP(AbstractHeater):
             )
             
             # final node: gas mix goes in, heat and electricity come out
-            
-            min_load_electrical_output = (
-                self.min_load_electrical_efficiency * gas_mix_LHV
-            )
-            min_load_heat_output = (
-                self.min_load_thermal_efficiency * gas_mix_LHV
-            )
     
             # offset mode
             slope_el, offset_el = (
                 slope_offset_from_nonconvex_input(
                     self.normalised_max_load,
                     self.normalised_min_load,
-                    gas_to_elec_cf,
+                    nominal_electrical_output,
                     min_load_electrical_output,
                 )
             )
@@ -539,7 +560,7 @@ class OffsetCHP(AbstractHeater):
                 slope_offset_from_nonconvex_input(
                     self.normalised_max_load,
                     self.normalised_min_load,
-                    gas_to_heat_cf,
+                    nominal_heat_output,
                     min_load_heat_output,
                 )
             )
@@ -583,19 +604,12 @@ class OffsetCHP(AbstractHeater):
             
             # final node: gas mix goes in, heat and electricity come out
             
-            min_load_electrical_output = (
-                self.min_load_electrical_efficiency * gas_mix_LHV
-            )
-            min_load_heat_output = (
-                self.min_load_thermal_efficiency * gas_mix_LHV
-            )
-    
             # offset mode
             slope_el, offset_el = (
                 slope_offset_from_nonconvex_input(
                     self.normalised_max_load,
                     self.normalised_min_load,
-                    gas_to_elec_cf,
+                    nominal_electrical_output,
                     min_load_electrical_output,
                 )
             )
@@ -604,7 +618,7 @@ class OffsetCHP(AbstractHeater):
                 slope_offset_from_nonconvex_input(
                     self.normalised_max_load,
                     self.normalised_min_load,
-                    gas_to_heat_cf,
+                    nominal_heat_output,
                     min_load_heat_output,
                 )
             )
