@@ -24,6 +24,7 @@ class AbstractHeatStorage(AbstractTechnology, AbstractSolphRepresentation):
         volume: float,
         power_limit: float,
         ambient_temperature: TimeseriesSpecifier,
+        reference_temperature: float,
         u_value: float | None = None,
         max_temperature: float | None = None,
         min_temperature: float | None = None,
@@ -46,6 +47,7 @@ class AbstractHeatStorage(AbstractTechnology, AbstractSolphRepresentation):
         self.volume = volume
         self.power_limit = power_limit
         self.ambient_temperature = ambient_temperature
+        self.reference_temperature = reference_temperature
         self.max_temperature = max_temperature
         self.min_temperature = min_temperature
 

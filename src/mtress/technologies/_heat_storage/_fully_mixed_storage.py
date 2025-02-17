@@ -34,6 +34,7 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
         volume: float,
         power_limit: float,
         ambient_temperature: TimeseriesSpecifier,
+        reference_temperature: float = 0,
         u_value: float | None = None,
         multiplexer_implementation: (
             Implementation | str
@@ -59,6 +60,7 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
             diameter=diameter,
             volume=volume,
             power_limit=power_limit,
+            reference_temperature=reference_temperature,
             ambient_temperature=ambient_temperature,
             u_value=u_value,
             implementation=multiplexer_implementation,

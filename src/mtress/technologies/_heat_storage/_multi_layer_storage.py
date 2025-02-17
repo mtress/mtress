@@ -37,6 +37,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
         volume: float,
         power_limit: float,
         ambient_temperature: TimeseriesSpecifier,
+        reference_temperature: float = 0,
         u_value: float | None = None,
         max_temperature: float | None = None,
         min_temperature: float | None = None,
@@ -50,6 +51,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
         :param volume: Volume of the storage in m³
         :param power_limit: power in W
         :param ambient_temperature: Ambient temperature in °C
+        :param reference_temperature: Reference temperature in °C
         :param u_value: Thermal transmittance in W/m²/K
         """
         super().__init__(
@@ -58,6 +60,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
             volume=volume,
             power_limit=power_limit,
             ambient_temperature=ambient_temperature,
+            reference_temperature=reference_temperature,
             u_value=u_value,
             max_temperature=max_temperature,
             min_temperature=min_temperature,
