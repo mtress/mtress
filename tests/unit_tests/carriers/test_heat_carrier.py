@@ -10,7 +10,7 @@ import pytest
 from mtress.carriers import HeatCarrier
 
 
-def test_heat_carrier_with_reference():
+def test_heat_carrier_initialisation():
     with pytest.raises(TypeError):
         # temperatures need to be defined
         HeatCarrier()
