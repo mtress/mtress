@@ -16,12 +16,7 @@ from pyomo import environ as po
 
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import HeatCarrier
-from mtress.physics import (
-    H2O_DENSITY,
-    H2O_HEAT_CAPACITY,
-    SECONDS_PER_HOUR,
-    mega_to_one,
-)
+from mtress.physics import mega_to_one
 
 from ._abstract_heat_storage import AbstractHeatStorage
 
@@ -102,15 +97,6 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 else:
                     initial_storage_level = None
 
-                capacity = (
-                    self.volume
-                    * (
-                        (temperature - reference_temperature)
-                        * H2O_DENSITY
-                        * H2O_HEAT_CAPACITY
-                    )
-                    / SECONDS_PER_HOUR
-                )
                 if self.u_value is None:
                     loss_rate = 0
                     fixed_losses_relative = 0
@@ -154,7 +140,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                     node_type=GenericStorage,
                     inputs={bus: Flow()},
                     outputs={bus: Flow()},
-                    nominal_storage_capacity=capacity,
+                    nominal_storage_capacity=1e3 * self.volume,  # liters
                     loss_rate=loss_rate,
                     balanced=self.balanced,
                     initial_storage_level=initial_storage_level,
@@ -168,25 +154,6 @@ class LayeredHeatStorage(AbstractHeatStorage):
 
     def add_constraints(self):
         """Add constraints to the model."""
-        reference_temperature = self.location.get_carrier(
-            HeatCarrier
-        ).reference
-
-        components, weights = zip(
-            *[
-                (
-                    component,
-                    SECONDS_PER_HOUR
-                    / (
-                        H2O_HEAT_CAPACITY
-                        * H2O_DENSITY
-                        * (temperature - reference_temperature)
-                    ),
-                )
-                for temperature, component in self.storage_components.items()
-            ]
-        )
-
         model = self._solph_model.model
 
         # >= && <= should be replaced by ==
@@ -194,8 +161,8 @@ class LayeredHeatStorage(AbstractHeatStorage):
             model=model,
             quantity=model.GenericStorageBlock.storage_content,
             limit_name=str(self.create_label("storage_limit")),
-            components=components,
-            weights=weights,
+            components=self.storage_components.values(),
+            weights=1e3,
             upper_limit=self.volume,
             lower_limit=self.volume,
         )
@@ -208,11 +175,10 @@ class LayeredHeatStorage(AbstractHeatStorage):
         for lower_temperature, upper_temperature in zip(
             temperatures, temperatures[1:]
         ):
-            ratio = (lower_temperature - reference_temperature) / (
-                upper_temperature - reference_temperature
-            )
-
             def equate_variables_rule(_, t):
+                ratio = (lower_temperature - self.ambient_temperature[t]) / (
+                    upper_temperature - self.ambient_temperature[t]
+                )
                 return (
                     (ratio / (1 - ratio))
                     * (
