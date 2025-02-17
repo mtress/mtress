@@ -86,17 +86,17 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 plot = solph_representation.graph(detail=False)
-plot.render(outfile="heat_pump_cooling_simple.png")
+plot.render(outfile="3_heat_pump_simple.png", cleanup=True)
 
 plot = solph_representation.graph(detail=True)
-plot.render(outfile="heat_pump_cooling_detail.png")
+plot.render(outfile="3_heat_pump_detail.png", cleanup=True)
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
 plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="heat_pump_cooling_results.png")
+plot.render(outfile="3_heat_pump_results.png", cleanup=True)
 
 plot_series = solph_representation.graph_series(
     flow_results=flows,
@@ -104,4 +104,4 @@ plot_series = solph_representation.graph_series(
     # stop=pd.Timestamp("2021-07-10 03:00:00"),
     step=pd.Timedelta("60min"),
 )
-render_series(plot_series, "heat_pump_cooling_series", 2500)
+render_series(plot_series, "3_heat_pump_series", 2500)

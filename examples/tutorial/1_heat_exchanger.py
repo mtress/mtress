@@ -65,14 +65,14 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 plot = solph_representation.graph(detail=False)
-plot.render(outfile="air_heat_exchanger_simple.png")
+plot.render(outfile="1_heat_exchanger_simple.png", cleanup=True)
 
 plot = solph_representation.graph(detail=True)
-plot.render(outfile="air_heat_exchanger_detail.png")
+plot.render(outfile="1_heat_exchanger_detail.png", cleanup=True)
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
 plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="air_heat_exchanger_results.png")
+plot.render(outfile="1_heat_exchanger_results.png", cleanup=True)
