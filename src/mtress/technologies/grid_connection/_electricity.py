@@ -83,9 +83,6 @@ class ElectricityGridConnection(
                 },
             )
 
-    def establish_interconnections(self) -> None:
-        pass
-
     def connect(
         self,
         other: ElectricityGridConnection,

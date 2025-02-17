@@ -50,6 +50,3 @@ class ElectricityCarrier(AbstractCarrier, AbstractSolphRepresentation):
             label="feed_in",
             node_type=Bus,
         )
-
-    def establish_interconnections(self) -> None:
-        pass

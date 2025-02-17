@@ -131,9 +131,6 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             },
         )
 
-    def establish_interconnections(self) -> None:
-        pass
-
 
 class FixedTemperatureCooling(AbstractFixedTemperature):
     def __init__(
@@ -214,6 +211,3 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
                 )
             },
         )
-
-    def establish_interconnections(self) -> None:
-        pass
