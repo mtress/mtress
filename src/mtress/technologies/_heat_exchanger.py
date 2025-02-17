@@ -224,8 +224,8 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
             warm_level = active_levels[i]
             cold_level = active_levels[i + 1]
 
-            ratio = (cold_level - self.heat_carrier.reference) / (
-                warm_level - self.heat_carrier.reference
+            heat_content = self.heat_carrier.specific_heat_capacity * (
+                warm_level - cold_level
             )
 
             heat_bus_warm_sink = self.heat_carrier.level_nodes[warm_level]
@@ -249,8 +249,8 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
                     ),
                 },
                 conversion_factors={
-                    _bus_sink: (1 - ratio),
-                    heat_bus_cold_sink: ratio,
+                    _bus_sink: heat_content,
+                    heat_bus_cold_sink: 1,
                     heat_bus_warm_sink: 1,
                 },
             )
