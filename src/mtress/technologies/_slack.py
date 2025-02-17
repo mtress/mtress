@@ -130,3 +130,6 @@ class SlackNode(AbstractTechnology, AbstractSolphRepresentation):
             node_type=Sink,
             inputs=slack_sink,
         )
+
+    def establish_interconnections(self) -> None:
+        pass

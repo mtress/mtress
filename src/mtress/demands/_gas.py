@@ -72,3 +72,6 @@ class GasDemand(AbstractDemand, AbstractSolphRepresentation):
                 )
             },
         )
+
+    def establish_interconnections(self) -> None:
+        pass

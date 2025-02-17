@@ -82,3 +82,6 @@ class GasStorage(AbstractHomogenousStorage, AbstractTechnology):
             capacity_at_level=self._storage_content,
             solph_storage_arguments=solph_storage_arguments,
         )
+
+    def establish_interconnections(self) -> None:
+        pass

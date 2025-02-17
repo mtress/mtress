@@ -129,3 +129,6 @@ class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
             outflow_conversion_factor=self.discharging_efficiency,
             fixed_losses_absolute=self.fixed_losses_absolute,
         )
+
+    def establish_interconnections(self) -> None:
+        pass
