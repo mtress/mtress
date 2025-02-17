@@ -54,8 +54,7 @@ class TestFuelCell:
 
         house_1.add(
             carriers.HeatCarrier(
-                temperature_levels=[20, template.maximum_temperature],
-                reference_temperature=10,
+                temperature_levels=[20, template.maximum_temperature]
             )
         )
 
@@ -163,7 +162,6 @@ class TestOffsetFuelCell:
                     template.minimum_temperature,
                     template.maximum_temperature,
                 ],
-                reference_temperature=10,
             )
         )
 

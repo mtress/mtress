@@ -59,7 +59,6 @@ def test_heat_pump_example():
     house_1.add(
         carriers.HeatCarrier(
             temperature_levels=[5, 10, 20, 30, 40],
-            reference_temperature=0,
         )
     )
 

@@ -87,8 +87,7 @@ house_1.add(
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[5, 10, 20, 30, 40, 55],
-        reference_temperature=0,
+        temperature_levels=[5, 10, 20, 30, 40, 55]
     )
 )
 

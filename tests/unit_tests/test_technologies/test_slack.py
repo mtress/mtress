@@ -60,7 +60,7 @@ def test_slack_build():
 
     location2.add(
         carriers.HeatCarrier(
-            temperature_levels=[10, 20], reference_temperature=0
+            temperature_levels=[10, 20],
         )
     )
     location2.add(

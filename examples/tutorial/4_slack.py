@@ -33,8 +33,7 @@ energy_system.add_location(house_1)
 house_1.add(carriers.ElectricityCarrier())
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[5, 10, 20, 30, 40],
-        reference_temperature=0,
+        temperature_levels=[5, 10, 20, 30, 40]
     )
 )
 

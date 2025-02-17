@@ -124,8 +124,7 @@ def test_graph_simple():
     nodes.append(("house_1", "ElectricityCarrier"))
 
     carrier1 = carriers.HeatCarrier(
-        temperature_levels=[10, 20, 30],
-        reference_temperature=0,
+        temperature_levels=[10, 20, 30]
     )
     nodes.append(
         (
@@ -185,8 +184,7 @@ def test_graph_detail():
     nodes.append(("house_1", "ElectricityCarrier", "feed_in"))
 
     carrier1 = carriers.HeatCarrier(
-        temperature_levels=[10, 20, 30],
-        reference_temperature=0,
+        temperature_levels=[10, 20, 30]
     )
     nodes.append(("house_1", "HeatCarrier", "T_10"))
     nodes.append(("house_1", "HeatCarrier", "T_20"))

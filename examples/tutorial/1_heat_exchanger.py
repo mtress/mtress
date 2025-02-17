@@ -27,7 +27,6 @@ house_1.add(
             20,
             30,
         ],  # Introduce relevant temperature levels
-        reference_temperature=0,  # Energy content is equal to zero
     )
 )
 

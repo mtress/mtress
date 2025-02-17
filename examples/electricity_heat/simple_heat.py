@@ -26,8 +26,7 @@ house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[20, 30, 50],
-        reference_temperature=10,
+        temperature_levels=[20, 30, 50]
     )
 )
 house_1.add(

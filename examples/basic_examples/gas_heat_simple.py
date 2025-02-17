@@ -39,8 +39,7 @@ house_1.add(carriers.GasCarrier(gases={NATURAL_GAS: [10]}))
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[20, 30, 50],
-        reference_temperature=0,
+        temperature_levels=[20, 30, 50]
     )
 )
 
