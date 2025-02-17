@@ -27,7 +27,6 @@ def test_layered_heat_storage():
     house_1.add(
         carriers.HeatCarrier(
             temperature_levels=[10, 20, 30],
-            reference_temperature=0,
         )
     )
 
