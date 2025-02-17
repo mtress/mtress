@@ -57,6 +57,7 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
         super().__init__(
             levels=sorted(temperature_levels),
         )
+        self.specific_heat_capacity = specific_heat_capacity
 
         # Properties for solph interfaces
         self.level_nodes = {}
