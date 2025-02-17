@@ -140,7 +140,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
             },
         )
 
-    def establish_interconnections(self):
+    def establish_interconnections(self) -> None:
         """Add connections to anergy sources."""
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
@@ -204,7 +204,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
     def _create_he_node(self, temp_heigh, temp_low, side):
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
-        flow_weight = heat_carrier.specific_heat_capacity * (
+        heat_content = heat_carrier.specific_heat_capacity * (
             temp_heigh - temp_low
         )
 
@@ -238,7 +238,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
             node_type=Converter,
             inputs=inputs,
             outputs=outputs,
-            conversion_factors={q_side: flow_weight},
+            conversion_factors={q_side: heat_content},
         )
 
     def _create_converter_node(
