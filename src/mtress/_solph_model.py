@@ -35,8 +35,8 @@ class SolphModel:
         """
         Initialize model.
 
+        :param meta_model: mtress MetaModel
         :param timeindex:  time index definition for the soph model
-        :param locations: configuration dictionary for locations
         """
         self._meta_model = meta_model
         self._solph_representations: Dict[

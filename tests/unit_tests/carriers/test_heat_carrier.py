@@ -18,13 +18,9 @@ def test_heat_carrier_with_reference():
     # temperature levels will be sorted internally
     temperatures = [10, 80, 35, -10, 75]
     ref_temperature = 15
-    missing_heat_penalty = 1e9
-    excess_heat_penalty = 1e9
     heat_carrier = HeatCarrier(
         temperature_levels=temperatures,
         reference_temperature=ref_temperature,
-        missing_heat_penalty=missing_heat_penalty,
-        excess_heat_penalty=excess_heat_penalty,
     )
     assert heat_carrier.levels == sorted(temperatures)
 
@@ -70,10 +66,6 @@ def test_heat_carrier_with_reference():
 
     assert heat_carrier.levels_below_reference == [-10, 10]
     assert heat_carrier.levels_above_reference == [35, 75, 80]
-
-    # test penalty
-    assert heat_carrier.missing_heat_penalty == missing_heat_penalty
-    assert heat_carrier.excess_heat_penalty == excess_heat_penalty
 
 
 def test_heat_carrier_without_reference():
