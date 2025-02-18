@@ -42,11 +42,6 @@ class AbstractComponent(NamedElement):
         self._location = None
 
     @property
-    def identifier(self) -> list[str]:
-        """Return identifier of this component."""
-        return self.location.identifier + [self.name]
-
-    @property
     def location(self):
         """Return location this component belongs to."""
         return self._location
@@ -56,6 +51,7 @@ class AbstractComponent(NamedElement):
         if self._location is not None:
             raise KeyError("Location already registered")
 
+        self._nesting_element = location
         self._location = location
 
     @abstractmethod
