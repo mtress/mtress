@@ -53,14 +53,14 @@ class TestCHP:
             (BIOMETHANE_CHP, 0.7855700564999999, True),
             (HYDROGEN_CHP, 0.32534810449999996, True),
             (HYDROGEN_MIXED_CHP, 0.6963973715, True),
-            (AET100NG_CHP, 0.8077001939999999, True),
+            (AET100NG_CHP, 0.7897307499999999, True),
             # exports off: electricity production determines the rest
             (NATURALGAS_CHP, 0.8508048112500001, False),
             (BIOGAS_CHP, 58187714401.612885, False), # mismatched production!
             (BIOMETHANE_CHP, 0.7855700564999999, False),
             (HYDROGEN_CHP, 0.32534810449999996, False),
             (HYDROGEN_MIXED_CHP, 0.6963973715, False),
-            (AET100NG_CHP, 0.8077001939999999, False),
+            (AET100NG_CHP, 0.7897307499999999, False),
         ],
     )
     def test_chp(
@@ -192,34 +192,34 @@ class TestOffsetCHP:
             # exports are not allowed: makes no difference because the 
             # electrical loads match the nominal and minimum ones
             # ignore min load: should match results for CHP class
-            (NATURALGAS_CHP, 0.9185757499999999, 0.0, False),
-            (BIOGAS_CHP, 1.6178827, 0.0, False), # 
-            (BIOMETHANE_CHP, 0.8481486449, 0.0, False),
-            (HYDROGEN_CHP, 0.38965384999999997, 0.0, True),
-            (HYDROGEN_MIXED_CHP, 1.04685495, 0.0, False),
-            (AET100NG_CHP, 1.3688843499999999, 0.0, False),
-            # # use min load from template (!= 0): penalties cannot be avoided
+            (NATURALGAS_CHP, 0.9135757499999999, 0.0, False),
+            (BIOGAS_CHP, 1.6128827000000001, 0.0, False), # 
+            (BIOMETHANE_CHP, 0.8431486449, 0.0, False),
+            (HYDROGEN_CHP, 0.38465384999999996, 0.0, True),
+            (HYDROGEN_MIXED_CHP, 1.04185495, 0.0, False),
+            (AET100NG_CHP, 1.30378095, 0.0, False),
+            # use min load from template (!= 0): penalties cannot be avoided
             (NATURALGAS_CHP, 1410195551.004933, None, False),
             (BIOGAS_CHP, 1249504641.7741709, None, False),
             (BIOMETHANE_CHP, 1408755200.926659, None, False),
             (HYDROGEN_CHP, 1562637370.4231193, None, False),
             (HYDROGEN_MIXED_CHP, 2006569161.1460404, None, False),
-            (AET100NG_CHP, 2119385291.500273, None, False),
+            (AET100NG_CHP, 9135593171.890484, None, False),
             # exports on @ net metering: marginal impact due to huge penalties
             # min load = 0: no (major) penalties
-            (NATURALGAS_CHP, 0.9185757499999999, 0.0, True),
-            (BIOGAS_CHP, 1.6178827, 0.0, True), # 
-            (BIOMETHANE_CHP, 0.8481486449, 0.0, True),
-            (HYDROGEN_CHP, 0.38965384999999997, 0.0, True),
-            (HYDROGEN_MIXED_CHP, 1.04685495, 0.0, True),
-            (AET100NG_CHP, 1.3688843499999999, 0.0, True),
+            (NATURALGAS_CHP, 0.9135757499999999, 0.0, True),
+            (BIOGAS_CHP, 1.6128827000000001, 0.0, True), # 
+            (BIOMETHANE_CHP, 0.8431486449, 0.0, True),
+            (HYDROGEN_CHP, 0.38465384999999996, 0.0, True),
+            (HYDROGEN_MIXED_CHP, 1.04185495, 0.0, True),
+            (AET100NG_CHP, 1.30378095, 0.0, True),
             # use min load from template (!= 0): penalties cannot be avoided
             (NATURALGAS_CHP, 1410195551.004933, None, True),
             (BIOGAS_CHP, 1249504641.7741709, None, True),
             (BIOMETHANE_CHP, 1408755200.926659, None, True),
             (HYDROGEN_CHP, 1562637370.4231193, None, True),
             (HYDROGEN_MIXED_CHP, 2006569161.1460404, None, True),
-            (AET100NG_CHP, 2119385291.500273, None, True),
+            (AET100NG_CHP, 9135593171.890484, None, True),
         ],
     )
     def test_min_power(
@@ -229,8 +229,21 @@ class TestOffsetCHP:
             normalised_min_load: float,
             allow_exports: bool
             ):
+        
+        nominal_power = 1000
+        normalised_min_load = ( 
+            template.normalised_min_load 
+            if normalised_min_load is None else 
+            0.0
+            )
+        
+        max_fuel_power = nominal_power/template.nominal_electrical_efficiency
+        min_fuel_power = max_fuel_power*normalised_min_load
+        max_heat_power = max_fuel_power*template.nominal_thermal_efficiency
+        min_heat_power = min_fuel_power*template.min_load_thermal_efficiency
+        max_elec_power = nominal_power
+        min_elec_power = min_fuel_power*template.min_load_electrical_efficiency
 
-        os.chdir(os.path.dirname(__file__))
         energy_system = MetaModel()
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
@@ -267,12 +280,7 @@ class TestOffsetCHP:
             )
         )
         # 
-        nominal_power = 1000
-        normalised_min_load = ( 
-            template.normalised_min_load 
-            if normalised_min_load is None else 
-            0.0
-            )
+        
         chp = OffsetCHP(
             "chp", 
             nominal_power=nominal_power,
@@ -289,12 +297,9 @@ class TestOffsetCHP:
                 min_flow_temperature=template.maximum_temperature,
                 return_temperature=template.minimum_temperature,
                 time_series=[
-                    (nominal_power/template.nominal_electrical_efficiency)*
-                    template.nominal_thermal_efficiency,
+                    max_heat_power,
                     # the factor 0.99 is meant to force a demand below the min.
-                    (nominal_power*normalised_min_load/
-                      template.min_load_electrical_efficiency)*
-                    template.min_load_thermal_efficiency*0.99,
+                    min_heat_power*0.99,
                     ],
             )
         )
@@ -303,8 +308,8 @@ class TestOffsetCHP:
             demands.Electricity(
                 name="electricity_demand",
                 time_series=[
-                    nominal_power, 
-                    nominal_power*template.normalised_min_load
+                    max_elec_power, 
+                    min_elec_power
                     ],
             )
         )

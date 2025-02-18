@@ -150,23 +150,13 @@ AET100NG_CHP = CHPTemplate(
     maximum_temperature=110, # Celsius (LUT data)
     minimum_temperature=20, # Celsius (LUT data)
     input_pressure=0.1, # 0.02-0.1 bar 
-    nominal_electrical_efficiency=0.282, # average of LUT data
-    nominal_thermal_efficiency=0.489, # average of LUT data
-    min_load_electrical_efficiency=0.282,
-    min_load_thermal_efficiency=0.489,
-    normalised_min_load=0.1,
+    nominal_electrical_efficiency=0.295, # average @ nom. load
+    nominal_thermal_efficiency=0.500, # average @ nom. load
+    min_load_electrical_efficiency=0.239, # average @ min. load
+    min_load_thermal_efficiency=0.490, # average @ min. load
+    normalised_min_load=0.45,
     nominal_power=100e3 # W (electrical)
     )
-
-# AET100BG_CHP = CHPTemplate(
-#     gas_type={BIOGAS: 1},
-#     maximum_temperature=110, # Celsius (LUT data)
-#     minimum_temperature=20, # Celsius (LUT data)
-#     input_pressure=8, # 6-8 bar 
-#     nominal_electrical_efficiency=0.3, # 30% +/- 2%
-#     nominal_thermal_efficiency=0.489, # average of LUT data
-#     nominal_power=105e3 # W (electrical)
-#     )
 
 class CHP(AbstractHeater):
     """
