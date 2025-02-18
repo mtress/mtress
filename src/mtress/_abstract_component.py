@@ -59,12 +59,6 @@ class AbstractComponent(NamedElement):
         """Draw a graph representation of the component."""
 
 
-class SolphLabel(NamedTuple):
-    location: str
-    mtress_component: str
-    solph_node: str
-
-
 class AbstractSolphRepresentation(AbstractComponent):
     """Interface for components which can be represented in `oemof.solph`."""
 
@@ -84,7 +78,7 @@ class AbstractSolphRepresentation(AbstractComponent):
 
     def create_solph_node(self, label: str, node_type: Callable, **kwargs):
         """Create a solph node and add it to the solph model."""
-        _full_label = SolphLabel(*self.create_label(label))
+        _full_label = tuple(self.create_label(label))
 
         if label in self._solph_nodes:
             raise KeyError(
