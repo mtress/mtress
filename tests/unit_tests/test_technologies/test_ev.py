@@ -1,4 +1,8 @@
-from mtress.technologies import ElectricVehicle, ZoeEV50135HP, LeafEtekna24
+from mtress.technologies import (
+    ElectricVehicle, 
+    GenericSegmentB_EV, 
+    GenericSegmentC_EV
+    )
 from mtress.technologies._ev import ElectricVehicleTemplate
 from mtress.technologies import RenewableElectricitySource
 import math
@@ -43,10 +47,10 @@ class TestElectricVehicle:
 
     @pytest.mark.parametrize(
         "template, renewable_generation, expected_result",
-        [(ZoeEV50135HP, False, 176508.86842105), 
-         (ZoeEV50135HP, True, 176008.84342105), 
-         (LeafEtekna24, False, 152759.13157895), 
-         (LeafEtekna24, True, 152259.10657895)],
+        [(GenericSegmentB_EV, False, 176508.86842105), 
+         (GenericSegmentB_EV, True, 176008.84342105), 
+         (GenericSegmentC_EV, False, 152759.13157895), 
+         (GenericSegmentC_EV, True, 152259.10657895)],
     )
     def test_ev(self, template, renewable_generation, expected_result):
 
@@ -102,10 +106,10 @@ class TestElectricVehicle:
 
     @pytest.mark.parametrize(
         "template, static_discharge, expected_result",
-        [(ZoeEV50135HP, 1e3, 176508.86842105), 
-         (ZoeEV50135HP, 1e4, 176008.84342105), 
-         (LeafEtekna24, 1e3, 152759.13157895), 
-         (LeafEtekna24, 1e4, 152259.10657895)],
+        [(GenericSegmentB_EV, 1e3, 181258.97368415), 
+         (GenericSegmentB_EV, 1e4, 224009.92105285), 
+         (GenericSegmentC_EV, 1e3, 157509.23684205), 
+         (GenericSegmentC_EV, 1e4, 200260.18421075)],
     )
     def test_ev_profile(self, template, static_discharge, expected_result):
 

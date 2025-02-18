@@ -26,10 +26,9 @@ class ElectricVehicleTemplate(BatteryStorageTemplate):
 
     consumption_per_distance: float  # unit: energy/distance
 
-
 # Renault Zoe EV50 135HP
 # source: https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/renault/zoe/1generation-facelift/325571/
-ZoeEV50135HP = ElectricVehicleTemplate(
+GenericSegmentB_EV = ElectricVehicleTemplate(
     nominal_capacity=52e3,  # 52 kWh
     charging_C_Rate=50 / 52,  # 50 kW
     discharging_C_Rate=50 / 52,  # 50 kW
@@ -41,7 +40,7 @@ ZoeEV50135HP = ElectricVehicleTemplate(
 
 # Nissan Leaf
 # source: https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/nissan/leaf/ze1/296708/
-LeafEtekna24 = ElectricVehicleTemplate(
+GenericSegmentC_EV = ElectricVehicleTemplate(
     nominal_capacity=62e3,  # 62 kWh
     charging_C_Rate=100 / 62,  # 100 kW
     discharging_C_Rate=100 / 62,  # 100 kW
@@ -96,41 +95,8 @@ class GenericElectricVehicle(BatteryStorage):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
 
+        super().build_core()
         # TODO: implement model and constraints
-
-        # carrier
-        electricity = self.location.get_carrier(ElectricityCarrier)
-
-        # create fixed demand profile
-        self.create_solph_node(
-            label="Electric_Vehicle",
-            node_type=GenericStorage,
-            inputs={
-                electricity.distribution: Flow(
-                    nominal_value=self.nominal_capacity * self.charging_C_Rate,
-                    # max=self._solph_model.data.get_timeseries(
-                    #     self.charging_availability*self.nominal_capacity,
-                    #     kind=TimeseriesType.INTERVAL
-                    # ),
-                )
-            },
-            outputs={
-                electricity.distribution: Flow(
-                    nominal_value=self.nominal_capacity
-                    * self.discharging_C_Rate,
-                    # max=self._solph_model.data.get_timeseries(
-                    #     self.discharging_availability*self.nominal_capacity,
-                    #     kind=TimeseriesType.INTERVAL
-                    # ),
-                )
-            },
-            nominal_storage_capacity=self.nominal_capacity,
-            loss_rate=self.loss_rate,
-            min_storage_level=self.min_soc,
-            initial_storage_level=self.initial_soc,
-            inflow_conversion_factor=self.charging_efficiency,
-            outflow_conversion_factor=self.discharging_efficiency,
-        )
 
 
 class ElectricVehicle(GenericElectricVehicle):

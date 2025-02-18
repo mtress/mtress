@@ -28,7 +28,7 @@ from ._electrolyser import (
     Electrolyser,
     OffsetElectrolyser,
 )
-from ._ev import ElectricVehicle, ZoeEV50135HP, LeafEtekna24
+from ._ev import ElectricVehicle, GenericSegmentB_EV, GenericSegmentC_EV
 from ._fuel_cell import AEMFC, AFC, PEMFC, FuelCell, OffsetFuelCell
 from ._heat_exchanger import HeatExchanger, HeatSink, HeatSource
 from ._heat_pump import HeatPump, COPReference
@@ -57,8 +57,8 @@ __all__ = [
     "AEMFC",
     "AFC",
     "ElectricVehicle",
-    "LeafEtekna24",
-    "ZoeEV50135HP", 
+    "GenericSegmentB_EV",
+    "GenericSegmentC_EV", 
     "BatteryStorage",
     "GenericBatteryModelI",
     "GenericBatteryModelII",
