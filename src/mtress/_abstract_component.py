@@ -46,10 +46,6 @@ class AbstractComponent(NamedElement):
         """Return identifier of this component."""
         return self.location.identifier + [self.name]
 
-    def assign_location(self, location):
-        """Assign component to a location."""
-        self._location = location
-
     @property
     def location(self):
         """Return location this component belongs to."""
