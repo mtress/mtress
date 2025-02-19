@@ -186,7 +186,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         conversion_factors = {
             carrier.level_nodes[self.return_temperature]: 1,
             input: carrier.specific_heat_capacity * (
-                minimum_t - self.return_temperature
+                self.return_temperature - minimum_t
             ),
             carrier.level_nodes[minimum_t]: 1,
         }
