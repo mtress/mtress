@@ -6,7 +6,10 @@ Tests for the MTRESS heat carrier.
 import math
 
 import pytest
+import pandas as pd
 
+from mtress import MetaModel
+from mtress import SolphModel
 from mtress.carriers import HeatCarrier
 
 
@@ -57,3 +60,14 @@ def test_heat_carrier_initialisation():
     with pytest.raises(ValueError):
         heat_carrier.get_levels_between(35, 10)
 
+def test_heat_carrier_build():
+    solph_model = SolphModel(
+        meta_model=MetaModel(),
+        timeindex=pd.date_range("2025-01-01", periods=3, freq="h"),
+    )
+
+    hc = HeatCarrier(temperature_levels=[10, 20])  # two levels -> two nodes
+    hc.register_solph_model(solph_model=solph_model)
+    hc.build_core()
+
+    assert len(solph_model.energy_system.node) == 2  # model has two nodes

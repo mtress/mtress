@@ -47,15 +47,6 @@ class AbstractComponent(NamedElement):
         self._location = None
 
     @property
-    def identifier(self) -> list[str]:
-        """Return identifier of this component."""
-        return self.location.identifier + [self.name]
-
-    def assign_location(self, location):
-        """Assign component to a location."""
-        self._location = location
-
-    @property
     def location(self):
         """Return location this component belongs to."""
         return self._location
@@ -65,17 +56,12 @@ class AbstractComponent(NamedElement):
         if self._location is not None:
             raise KeyError("Location already registered")
 
+        self._nesting_element = location
         self._location = location
 
     @abstractmethod
     def graph(self, detail: bool = False) -> Tuple[Digraph, set]:
         """Draw a graph representation of the component."""
-
-
-class SolphLabel(NamedTuple):
-    location: str
-    mtress_component: str
-    solph_node: str
 
 
 class AbstractSolphRepresentation(AbstractComponent):
@@ -97,7 +83,7 @@ class AbstractSolphRepresentation(AbstractComponent):
 
     def create_solph_node(self, label: str, node_type: Callable, **kwargs):
         """Create a solph node and add it to the solph model."""
-        _full_label = SolphLabel(*self.create_label(label))
+        _full_label = tuple(self.create_label(label))
 
         if label in self._solph_nodes:
             raise KeyError(
