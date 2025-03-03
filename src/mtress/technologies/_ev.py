@@ -9,6 +9,7 @@ from ..carriers import ElectricityCarrier
 from .._helpers._util import enable_templating
 from ._battery_storage import BatteryStorage, BatteryStorageTemplate
 from pandas import Series
+from numbers import Real
 
 @dataclass(frozen=True)
 class ElectricVehicleTemplate(BatteryStorageTemplate):
@@ -57,8 +58,8 @@ class GenericElectricVehicle(BatteryStorage):
     @enable_templating(ElectricVehicleTemplate)
     def __init__(
         self,
-        plugged_in_profile: TimeseriesSpecifier = None,
-        static_discharging_profile: TimeseriesSpecifier = None,
+        plugged_in_profile: TimeseriesSpecifier = 1,
+        static_discharge_profile: TimeseriesSpecifier = 0.0,
         **kwargs,
     ):
         """
@@ -77,7 +78,47 @@ class GenericElectricVehicle(BatteryStorage):
             default to 0.5.
         :param min_soc: Minimum state of charge of a battery, default to 0.1.
         """
+        
+        # call super class constructor
+        BatteryStorage.__init__(self, **kwargs)
 
+        # make sure the inputs are okay
+        (self. plugged_in_profile, 
+         self.static_discharge_profile) = self._check_inputs(
+             plugged_in_profile, 
+             static_discharge_profile
+             )
+        
+        # combine the static_discharge_profile and the fixed_losses_absolute
+        if (type(self.static_discharge_profile) != 
+            type(self.fixed_losses_absolute)):
+            raise TypeError('Profiles should be defined using the same type.')
+        if isinstance(self.static_discharge_profile, Real):
+            self.final_discharge_profile = (
+                self.static_discharge_profile+self.fixed_losses_absolute
+                )
+        elif type(self.static_discharge_profile) in [tuple, list]:
+            self.final_discharge_profile = [
+                a+b
+                for a, b in zip(
+                        self.static_discharge_profile, 
+                        self.fixed_losses_absolute
+                        )
+                ]
+        elif type(self.static_discharge_profile) == Series:
+            self.final_discharge_profile = (
+                self.static_discharge_profile+self.fixed_losses_absolute
+                )
+        else:
+            raise NotImplementedError
+             
+        # TODO: process the discharge profile as if it is a grid-side load
+        
+        # TODO: check for sign errors
+        
+    def _check_inputs(self, plugged_in_profile, static_discharge_profile):
+        
+        # things to keep in mind:
         # 1) mutually-exclusive charging and discharging:
         # - if the EV is discharging, it cannot charge
         # - if the EV is charging, it cannot discharge
@@ -90,44 +131,26 @@ class GenericElectricVehicle(BatteryStorage):
         # - if the EV is plugged in, it can charge or discharge
         # - if the EV is plugged in, the fixed discharge has to be zero
         
-        BatteryStorage.__init__(self, **kwargs)
-        
-        # TODO: process the discharge profile as if it is a grid-side load
-
-        # profiles
-        # plugged-in status
-        self.plugged_in_profile = ( 
-            1 
-            if plugged_in_profile is None else 
-            plugged_in_profile
-            )
-        # discharge profile
-        self.static_discharging_profile = ( 
-            0
-            if static_discharging_profile is None else 
-            static_discharging_profile
-            ) 
-        
-        if type(self.plugged_in_profile) == int:
+        if type(plugged_in_profile) == int:
             
-            if type(self.static_discharging_profile) in [int, float]:
+            if type(static_discharge_profile) in [int, float]:
                 # if the EV is plugged in, the fixed discharge has to be zero
-                if (self.plugged_in_profile and 
-                    self.static_discharging_profile > 0):
+                if (plugged_in_profile and 
+                    static_discharge_profile > 0):
                     raise ValueError(
                         'If the EV is plugged in, there can be no static '+
                         'discharge.'
                         )
-                if (self.static_discharging_profile > 
+                if (static_discharge_profile > 
                     self.nominal_capacity * self.discharging_C_Rate):
                     raise ValueError(
                         'The static discharge cannot exceed the maximum '+
                         'discharge rate.'
                         )
-            elif type(self.static_discharging_profile) in [list,tuple]:
+            elif type(static_discharge_profile) in [list,tuple]:
                 # if the EV is plugged in, the fixed discharge has to be zero
-                for _sdp in self.static_discharging_profile:
-                    if self.plugged_in_profile == 1 and _sdp > 0:
+                for _sdp in static_discharge_profile:
+                    if plugged_in_profile == 1 and _sdp > 0:
                         raise ValueError(
                             'If the EV is plugged in, there can be no static '+
                             'discharge.'
@@ -137,16 +160,16 @@ class GenericElectricVehicle(BatteryStorage):
                             'The static discharge cannot exceed the maximum '+
                             'discharge rate.'
                             )
-            elif type(self.static_discharging_profile) == Series:
+            elif type(static_discharge_profile) == Series:
                 # if the EV is plugged in, the fixed discharge has to be zero
-                for idx in self.static_discharging_profile.index:
-                    if (self.plugged_in_profile == 1 and 
-                        self.static_discharging_profile.loc[idx] > 0):
+                for idx in static_discharge_profile.index:
+                    if (plugged_in_profile == 1 and 
+                        static_discharge_profile.loc[idx] > 0):
                         raise ValueError(
                             'If the EV is plugged in, there can be no static '+
                             'discharge.'
                             )
-                    if (self.static_discharging_profile.loc[idx] > 
+                    if (static_discharge_profile.loc[idx] > 
                         self.nominal_capacity * self.discharging_C_Rate):
                         raise ValueError(
                             'The static discharge cannot exceed the maximum '+
@@ -155,31 +178,31 @@ class GenericElectricVehicle(BatteryStorage):
             else:
                 raise NotImplementedError
             
-        elif type(self.plugged_in_profile) in [list, tuple]:
+        elif type(plugged_in_profile) in [list, tuple]:
             
-            if type(self.static_discharging_profile) in [int, float]:
+            if type(static_discharge_profile) in [int, float]:
                 # if the EV is plugged in, the fixed discharge has to be zero
-                for _pip in self.plugged_in_profile:
-                    if _pip == 1 and self.static_discharging_profile > 0:
+                for _pip in plugged_in_profile:
+                    if _pip == 1 and static_discharge_profile > 0:
                         raise ValueError(
                             'If the EV is plugged in, there can be no static '+
                             'discharge.'
                             )
-                    if (self.static_discharging_profile > 
+                    if (static_discharge_profile > 
                         self.nominal_capacity * self.discharging_C_Rate):
                         raise ValueError(
                             'The static discharge cannot exceed the maximum '+
                             'discharge rate.'
                             )
-            elif type(self.static_discharging_profile) in [list,tuple]:
+            elif type(static_discharge_profile) in [list,tuple]:
                 # size
-                if (len(self.plugged_in_profile) != 
-                    len(self.static_discharging_profile)):
+                if (len(plugged_in_profile) != 
+                    len(static_discharge_profile)):
                     raise ValueError('The profiles have different sizes.') 
                 # if the EV is plugged in, the fixed discharge has to be zero
                 for _sdp, _pip in zip(
-                        self.static_discharging_profile, 
-                        self.plugged_in_profile
+                        static_discharge_profile, 
+                        plugged_in_profile
                         ):
                     if _pip == 1 and _sdp > 0:
                         raise ValueError(
@@ -191,21 +214,21 @@ class GenericElectricVehicle(BatteryStorage):
                             'The static discharge cannot exceed the maximum '+
                             'discharge rate.'
                             )
-            elif type(self.static_discharging_profile) == Series:
+            elif type(static_discharge_profile) == Series:
                 # size
-                if (len(self.plugged_in_profile) != 
-                    len(self.static_discharging_profile)):
+                if (len(plugged_in_profile) != 
+                    len(static_discharge_profile)):
                     raise ValueError('The profiles have different sizes.') 
                 # if the EV is plugged in, the fixed discharge has to be zero
-                for i, _pip in enumerate(self.plugged_in_profile):
+                for i, _pip in enumerate(plugged_in_profile):
                     if (_pip == 1 and
-                        self.static_discharging_profile.iloc[i] > 0):
+                        static_discharge_profile.iloc[i] > 0):
                         raise ValueError(
                             'If the EV is plugged in, there can be no static '+
                             'discharge.'
                             )
                     
-                    if (self.static_discharging_profile.iloc[i] > 
+                    if (static_discharge_profile.iloc[i] > 
                         self.nominal_capacity * self.discharging_C_Rate):
                         raise ValueError(
                             'The static discharge cannot exceed the maximum '+
@@ -214,32 +237,32 @@ class GenericElectricVehicle(BatteryStorage):
             else:
                 raise NotImplementedError
     
-        elif type(self.plugged_in_profile) == Series:
+        elif type(plugged_in_profile) == Series:
             
-            if type(self.static_discharging_profile) in [int, float]:
+            if type(static_discharge_profile) in [int, float]:
                 # if the EV is plugged in, the fixed discharge has to be zero
-                for idx in self.plugged_in_profile.index:
-                    if (self.plugged_in_profile.loc[idx] == 1 and
-                        self.static_discharging_profile > 0):
+                for idx in plugged_in_profile.index:
+                    if (plugged_in_profile.loc[idx] == 1 and
+                        static_discharge_profile > 0):
                         raise ValueError(
                             'If the EV is plugged in, there can be no static '+
                             'discharge.'
                             )
-                    if (self.static_discharging_profile > 
+                    if (static_discharge_profile > 
                         self.nominal_capacity * self.discharging_C_Rate):
                         raise ValueError(
                             'The static discharge cannot exceed the maximum '+
                             'discharge rate.'
                             )
             
-            elif type(self.static_discharging_profile) in [list, tuple]:
+            elif type(static_discharge_profile) in [list, tuple]:
                 # sizes
-                if (len(self.plugged_in_profile) != 
-                    len(self.static_discharging_profile)):
+                if (len(plugged_in_profile) != 
+                    len(static_discharge_profile)):
                     raise ValueError('The profiles have different sizes.')
                 # if the EV is plugged in, the fixed discharge has to be zero
-                for i, _sdp in enumerate(self.static_discharging_profile):
-                    if (self.plugged_in_profile.iloc[i] == 1 and
+                for i, _sdp in enumerate(static_discharge_profile):
+                    if (plugged_in_profile.iloc[i] == 1 and
                         _sdp > 0):
                         raise ValueError(
                             'If the EV is plugged in, there can be no static '+
@@ -251,26 +274,27 @@ class GenericElectricVehicle(BatteryStorage):
                             'discharge rate.'
                             )
                 
-            elif type(self.static_discharging_profile) == Series:
+            elif type(static_discharge_profile) == Series:
                 # sizes
-                if (len(self.plugged_in_profile) != 
-                    len(self.static_discharging_profile)):
+                if (len(plugged_in_profile) != 
+                    len(static_discharge_profile)):
                     raise ValueError('The profiles have different sizes.')
                 # if the EV is plugged in, the fixed discharge has to be zero
-                for idx in self.plugged_in_profile.index:
-                    if (self.plugged_in_profile.loc[idx] == 1 and 
-                        self.static_discharging_profile.loc[idx] > 0):
+                for idx in plugged_in_profile.index:
+                    if (plugged_in_profile.loc[idx] == 1 and 
+                        static_discharge_profile.loc[idx] > 0):
                         raise ValueError(
                             'If the EV is plugged in, there can be no static '+
                             'discharge.'
                             )
                     
-                    if (self.static_discharging_profile.loc[idx] > 
+                    if (static_discharge_profile.loc[idx] > 
                         self.nominal_capacity * self.discharging_C_Rate):
                         raise ValueError(
                             'The static discharge cannot exceed the maximum '+
                             'discharge rate.'
                             )
+        return plugged_in_profile, static_discharge_profile
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -308,7 +332,7 @@ class GenericElectricVehicle(BatteryStorage):
             initial_storage_level=self.initial_soc,
             inflow_conversion_factor=self.charging_efficiency,
             outflow_conversion_factor=self.discharging_efficiency,
-            fixed_losses_absolute=self.fixed_losses_absolute,
+            fixed_losses_absolute=self.final_discharge_profile
         )
 
 
@@ -319,7 +343,7 @@ class ElectricVehicle(GenericElectricVehicle):
     def __init__(
         self,
         consumption_per_distance: float,
-        distance_travelled: list = None,
+        distance_travelled: TimeseriesSpecifier = 0.0,
         **kwargs,
     ):
         """
@@ -338,15 +362,36 @@ class ElectricVehicle(GenericElectricVehicle):
             default to 0.5.
         :param min_soc: Minimum state of charge of a battery, default to 0.1.
         """
-
-        # call super class constructor
-        GenericElectricVehicle.__init__(self, **kwargs)
-
+        
         # performance data
         self.consumption_per_distance = consumption_per_distance
-        # prepare a list from the performance data and the profile
-        self._static_discharging_profile = (
-            [d * consumption_per_distance for d in distance_travelled]
-            if distance_travelled is not None
-            else None
-        )
+        
+        if isinstance(distance_travelled, Real):
+            static_discharge_profile = (
+                consumption_per_distance*distance_travelled
+                )
+        elif type(distance_travelled) in [list, tuple]:
+            static_discharge_profile = [
+                consumption_per_distance*d
+                for d in distance_travelled
+                ]
+        elif type(distance_travelled) == Series:
+            static_discharge_profile = (
+                distance_travelled*consumption_per_distance
+                )
+        else:
+            raise TypeError('The inputs were not correctly specified.')
+        
+        # if 'static_discharge_profile' in kwargs:
+        #     raise Warning(
+        #         'The value for the static discharge profile is '+
+        #         'being overwritten.'
+        #         )
+        
+        kwargs['static_discharge_profile'] = static_discharge_profile
+        # call super class constructor
+        GenericElectricVehicle.__init__(
+            self, 
+            **kwargs
+            )
+

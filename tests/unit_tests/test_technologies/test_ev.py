@@ -213,7 +213,7 @@ class TestElectricVehicle:
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
         
     @pytest.mark.parametrize(
-        "plugged_in_profile, static_discharging_profile",
+        "plugged_in_profile, static_discharge_profile",
         [
          # error: plugged-in and with static discharge
          # 1) int and int
@@ -281,7 +281,7 @@ class TestElectricVehicle:
     def test_trigger_profile_errors(
             self, 
             plugged_in_profile,
-            static_discharging_profile
+            static_discharge_profile
             ):
 
         os.chdir(os.path.dirname(__file__))
@@ -299,7 +299,7 @@ class TestElectricVehicle:
         with pytest.raises(ValueError):
             ElectricVehicle(
                 name="ev", 
-                static_discharging_profile=static_discharging_profile,
+                static_discharge_profile=static_discharge_profile,
                 plugged_in_profile=plugged_in_profile,
                 template=GenericSegmentB_EV
                 )
