@@ -17,7 +17,7 @@ from mtress import (
     demands,
     technologies
 )
-
+from pandas import Series
 
 class TestElectricVehicle:
 
@@ -41,9 +41,6 @@ class TestElectricVehicle:
         assert bs.loss_rate == template.loss_rate
         assert bs.consumption_per_distance == template.consumption_per_distance
         assert bs.fixed_losses_absolute == 0.0
-        
-    # TODO: test availability
-    # TODO: test fixed profile
 
     @pytest.mark.parametrize(
         "template, renewable_generation, expected_result",
@@ -156,3 +153,156 @@ class TestElectricVehicle:
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        
+    @pytest.mark.parametrize(
+        "template, status, expected_result",
+        [# reference result for GenericSegmentB_EV
+         (GenericSegmentB_EV, [1, 1, 1], 181258.97368415), 
+         # not being connected worsens results
+         (GenericSegmentB_EV,  [1, 0, 1], 186008.92105265), 
+         # reference result for GenericSegmentC_EV
+         (GenericSegmentC_EV,  [1, 1, 1], 157509.23684205), 
+         # not being connected worsens results
+         (GenericSegmentC_EV,  [1, 0, 1], 162259.18421055)],
+    )    
+    def test_ev_status(self, template, status, expected_result):
+
+        os.chdir(os.path.dirname(__file__))
+        energy_system = MetaModel()
+        house_1 = Location(name="house_1")
+        energy_system.add_location(house_1)
+
+        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(
+            technologies.ElectricityGridConnection(
+                working_rate=[50e-6, 50e-6, 5]
+                )
+            )
+        static_discharge = 1e3
+        ev = ElectricVehicle(
+            name="ev", 
+            fixed_losses_absolute=[
+                static_discharge,
+                static_discharge,
+                static_discharge
+                ],
+            plugged_in_profile=status,
+            template=template
+            )
+        house_1.add(ev)
+        house_1.add(
+            demands.Electricity(
+                name="electricity_demand",
+                time_series=[30000, 120000, 60000],
+            )
+        )
+        
+        solph_representation = SolphModel(
+            energy_system,
+            timeindex={
+                "start": "2022-06-01 08:00:00",
+                "end": "2022-06-01 11:00:00",
+                "freq": "60T",
+                "tz": "Europe/Berlin",
+            },
+        )
+
+        solph_representation.build_solph_model()
+        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        mr = meta_results(solved_model)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        
+    @pytest.mark.parametrize(
+        "plugged_in_profile, static_discharging_profile",
+        [
+         # error: plugged-in and with static discharge
+         # 1) int and int
+         (1, 1), 
+         # 2) int and list
+         (None, [0, 0, 1000]),
+         (1, [1000, 1000, 1000]), 
+         # 3) int and Series
+         (None, Series(data=[0, 0, 1000])),
+         (1, Series(data=[1000, 1000, 1000])),
+         # 4) list and int
+         ([1], 1), 
+         # 5) list and list
+         ([1, 1, 1], [1000, 1000, 1000]), 
+         ([0, 0, 1], [0, 1000, 1000]), 
+         # 6) list and Series
+         ([1, 1, 1], Series(data=[1000, 1000, 1000])), 
+         ([0, 0, 1], Series(data=[0, 1000, 1000])), 
+         # 7) Series and int
+         (Series(data=[1, 1, 1]), 1), 
+         (Series(data=[0, 0, 1]), 1), 
+         # 8) Series and list
+         (Series(data=[1, 1, 1]), [1000, 1000, 1000]), 
+         (Series(data=[0, 0, 1]), [0, 1000, 1000]), 
+         # 9) Series and Series
+         (Series(data=[1, 1, 1]), Series(data=[0, 0, 1000])), 
+         (Series(data=[0, 0, 1]), Series(data=[1000, 1000, 1000])),
+         
+         # error: sizes do not match
+         # 5) list and list
+         ([1, 1, 1, 1], [1000, 1000, 1000]), 
+         ([0, 0, 1, 1], [0, 1000, 1000]), 
+         # 6) list and Series
+         ([1, 1, 1, 1], Series(data=[1000, 1000, 1000])), 
+         ([0, 0, 1, 1], Series(data=[0, 1000, 1000])), 
+         # 8) Series and list
+         (Series(data=[1, 1, 1, 1]), [1000, 1000, 1000]), 
+         (Series(data=[0, 0, 1, 1]), [0, 1000, 1000]), 
+         # 9) Series and Series
+         (Series(data=[1, 1, 1, 1]), Series(data=[0, 0, 1000])), 
+         (Series(data=[0, 0, 1, 1]), Series(data=[1000, 1000, 1000])),
+         
+         # error: discharge rates exceed the maximum discharge rate
+         # max rate: template.nominal_capacity*template.discharging_C_Rate
+         # int, int
+         (0, 1+52e3*50 / 52), 
+         # int, list
+         (0, [0, 1+52e3*50 / 52]), 
+         # int, Series
+         (0, Series(data=[0, 1+52e3*50 / 52])), 
+         # list, int,
+         ([0, 0], 1+52e3*50 / 52), 
+         # list, list
+         ([0, 0], [0, 1+52e3*50 / 52]), 
+         # list, Series
+         ([0, 0], Series(data=[0, 1+52e3*50 / 52])), 
+         # Series, int
+         (Series(data=[0, 0]), 1+52e3*50 / 52), 
+         # Series, list
+         (Series(data=[0, 0]), [0, 1+52e3*50 / 52]), 
+         # Series, Series
+         (Series(data=[0, 0]), Series(data=[0, 1+52e3*50 / 52])), 
+         ],
+    )    
+    def test_trigger_profile_errors(
+            self, 
+            plugged_in_profile,
+            static_discharging_profile
+            ):
+
+        os.chdir(os.path.dirname(__file__))
+        energy_system = MetaModel()
+        house_1 = Location(name="house_1")
+        energy_system.add_location(house_1)
+
+        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(
+            technologies.ElectricityGridConnection(
+                working_rate=50e-6
+                )
+            )
+        
+        with pytest.raises(ValueError):
+            ElectricVehicle(
+                name="ev", 
+                static_discharging_profile=static_discharging_profile,
+                plugged_in_profile=plugged_in_profile,
+                template=GenericSegmentB_EV
+                )
+            
+# *****************************************************************************
+# *****************************************************************************
