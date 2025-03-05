@@ -37,7 +37,9 @@ pytest:
   extends: .base_environment
   stage: test
   script:
-    # run tox using the settings defined in tox.ini
+    # install tox
+    - pip install tox
+      # run tox using the settings defined in tox.ini
     - tox
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
