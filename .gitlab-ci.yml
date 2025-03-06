@@ -38,9 +38,9 @@ pytest:
   stage: test
   script:
     # install tox
-    - pip install tox
+    - python -m pip install tox
     # run tox using the settings defined in tox.ini
-    - tox
+    - python -m tox
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     paths:

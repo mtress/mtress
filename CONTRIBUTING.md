@@ -11,7 +11,7 @@ Please read this document to familiarise yourself with these processes.
 ## Providing feeback
 
 Feedback helps us to keep MTRESS working well and to improve it. If you think
-you found a bug, had an idea about how MTRESS could be improve, consider
+you found a bug, had an idea about how MTRESS could be improved, consider
 raising an issue on [our gitlab page](https://gitlab.dlr.de/mtress-ecosystem/mtress/-/issues).
 
 We prepared issue templates to prevent contributors from raising the same issue
