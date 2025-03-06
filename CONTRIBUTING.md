@@ -10,7 +10,7 @@ Please read this document to familiarise yourself with these processes.
 
 ## Providing feeback
 
-Feedback is helps to keep MTRESS working well and to improve it. If you think
+Feedback helps us to keep MTRESS working well and to improve it. If you think
 you found a bug, had an idea about how MTRESS could be improve, consider
 raising an issue on [our gitlab page](https://gitlab.dlr.de/mtress-ecosystem/mtress/-/issues).
 
@@ -48,8 +48,9 @@ tox
 
 ## Enhancing
 
-Enhancing the code is arguably the most demanding contribution. For reasons of
-economy, please consider the following protocol before attempting something:
+Enhancing the code is arguably the most demanding type of contribution. For
+reasons of economy, please consider the following steps before spending time on
+ a contribution:
 
 - Check if the enhancement has not been proposed already [here](https://gitlab.dlr.de/mtress-ecosystem/mtress/-/issues) 
 - If it has not, raise an issue and wait for feedback
