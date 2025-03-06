@@ -1,5 +1,6 @@
 from mtress.technologies import (
     ElectricVehicle, 
+    GenericElectricVehicle,
     GenericSegmentB_EV, 
     GenericSegmentC_EV
     )
@@ -129,6 +130,11 @@ class TestElectricVehicle:
                 static_discharge,
                 static_discharge
                 ],
+            plugged_in_profile=[
+                1 if static_discharge > 0 else 0,
+                1 if static_discharge > 0 else 0,
+                1 if static_discharge > 0 else 0,
+                ],
             template=template
             )
         house_1.add(ev)
@@ -219,10 +225,10 @@ class TestElectricVehicle:
          # 1) int and int
          (1, 1), 
          # 2) int and list
-         (None, [0, 0, 1000]),
+         (1, [0, 0, 1000]),
          (1, [1000, 1000, 1000]), 
          # 3) int and Series
-         (None, Series(data=[0, 0, 1000])),
+         (1, Series(data=[0, 0, 1000])),
          (1, Series(data=[1000, 1000, 1000])),
          # 4) list and int
          ([1], 1), 
@@ -297,12 +303,18 @@ class TestElectricVehicle:
             )
         
         with pytest.raises(ValueError):
-            ElectricVehicle(
+            GenericElectricVehicle(
                 name="ev", 
                 static_discharge_profile=static_discharge_profile,
                 plugged_in_profile=plugged_in_profile,
-                template=GenericSegmentB_EV
+                nominal_capacity=52e3,  # 52 kWh
+                charging_C_Rate=50 / 52,  # 50 kW
+                discharging_C_Rate=50 / 52,  # 50 kW
+                charging_efficiency=0.95,
+                discharging_efficiency=0.95, 
+                loss_rate=0
                 )
+            # ElectricVehicle(consumption_per_distance, kwargs)
             
 # *****************************************************************************
 # *****************************************************************************

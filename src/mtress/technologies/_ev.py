@@ -59,7 +59,7 @@ class GenericElectricVehicle(BatteryStorage):
     def __init__(
         self,
         plugged_in_profile: TimeseriesSpecifier = 1,
-        static_discharge_profile: TimeseriesSpecifier = 0.0,
+        static_discharge_profile: TimeseriesSpecifier = 0,
         **kwargs,
     ):
         """
@@ -83,7 +83,7 @@ class GenericElectricVehicle(BatteryStorage):
         BatteryStorage.__init__(self, **kwargs)
 
         # make sure the inputs are okay
-        (self. plugged_in_profile, 
+        (self.plugged_in_profile, 
          self.static_discharge_profile) = self._check_inputs(
              plugged_in_profile, 
              static_discharge_profile
@@ -92,8 +92,15 @@ class GenericElectricVehicle(BatteryStorage):
         # combine the static_discharge_profile and the fixed_losses_absolute
         if (type(self.static_discharge_profile) != 
             type(self.fixed_losses_absolute)):
-            raise TypeError('Profiles should be defined using the same type.')
-        if isinstance(self.static_discharge_profile, Real):
+            if self.static_discharge_profile == 0:
+                self.final_discharge_profile = self.fixed_losses_absolute
+            elif self.fixed_losses_absolute == 0:
+                self.final_discharge_profile = self.static_discharge_profile
+            else:
+                raise TypeError(
+                    'Profiles should be defined using the same type.'
+                    )
+        elif isinstance(self.static_discharge_profile, Real):
             self.final_discharge_profile = (
                 self.static_discharge_profile+self.fixed_losses_absolute
                 )
