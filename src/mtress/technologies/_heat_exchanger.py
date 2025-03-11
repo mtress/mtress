@@ -68,12 +68,16 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         self.heat_carrier = self.location.get_carrier(HeatCarrier)
 
     def _define_source(self):
-        usable_temperature = np.array([
-            self.maximum_working_temperature
-            if temp >= self.maximum_working_temperature
-            else temp
-            for temp in self.reservoir_temperature
-        ])
+        usable_temperature = np.array(
+            [
+                (
+                    self.maximum_working_temperature
+                    if temp >= self.maximum_working_temperature
+                    else temp
+                )
+                for temp in self.reservoir_temperature
+            ]
+        )
 
         self._bus_source = _bus_source = self.create_solph_node(
             label="heat_source",

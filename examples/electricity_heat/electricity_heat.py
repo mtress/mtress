@@ -8,8 +8,8 @@ a demand (consumer) with a demand time series.
 And heat wise: a heat carrier, a heat pump, an heat exchanger as well as
 a heat demand time series.
 
-At first an energy system (here meta_model) is defined with a time series 
-(index). Afterwards a location is defined and added to the energysystem. Then 
+At first an energy system (here meta_model) is defined with a time series
+(index). Afterwards a location is defined and added to the energysystem. Then
 the electricity carrier and electricity demand (time series) are added to the
 energysystem. Furthermore a heat carrier is defined with specific temp-
 erature level(s) and a reference temperature. Then  a heat demand (time series)

@@ -75,7 +75,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
             initial_storage_levels = {}
 
         self.initial_storage_levels = initial_storage_levels
-        self.reference_temperature=reference_temperature
+        self.reference_temperature = reference_temperature
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -178,10 +178,11 @@ class LayeredHeatStorage(AbstractHeatStorage):
             for lower_temperature, upper_temperature in zip(
                 temperatures, temperatures[1:]
             ):
+
                 def equate_variables_rule(_, t):
-                    ratio = (lower_temperature - self.ambient_temperature[t]) / (
-                        upper_temperature - self.ambient_temperature[t]
-                    )
+                    ratio = (
+                        lower_temperature - self.ambient_temperature[t]
+                    ) / (upper_temperature - self.ambient_temperature[t])
                     return (
                         (ratio / (1 - ratio))
                         * (

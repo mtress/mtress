@@ -24,11 +24,7 @@ energy_system.add_location(house_1)
 house_1.add(carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
-house_1.add(
-    carriers.HeatCarrier(
-        temperature_levels=[20, 30, 50]
-    )
-)
+house_1.add(carriers.HeatCarrier(temperature_levels=[20, 30, 50]))
 house_1.add(
     technologies.ResistiveHeater(
         name="Resistive_Heater",

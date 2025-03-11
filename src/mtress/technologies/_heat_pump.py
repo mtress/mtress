@@ -23,7 +23,7 @@ from ._abstract_technology import AbstractTechnology
 @dataclass
 class COPReference:
     """
-    :param cold_side_in: Reference inlet temperature (°C) at cold side 
+    :param cold_side_in: Reference inlet temperature (°C) at cold side
         of the HP, e.g., evaporator.
     :param cold_side_out: Reference outlet temperature (°C) at cold side
         of the HP, e.g., evaporator.
@@ -80,7 +80,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         :param cop_0_35: COP for the temperature rise 0°C to 35°C
         :param max_temp_primary: Maximum inlet temperature (°C)
             at the cold side.
-        :param min_temp_primary: Minimum outlet temperature (°C) 
+        :param min_temp_primary: Minimum outlet temperature (°C)
             at the cold side.
         :param min_delta_temp_primary: Minumum delta (°C) at the cold side.
         :param max_temp_secondary: Maximum outlet temperature (°C)
@@ -211,7 +211,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         heat_bus_warm = heat_carrier.level_nodes[temp_heigh]
         heat_bus_cold = heat_carrier.level_nodes[temp_low]
 
-        if (side == "in"):
+        if side == "in":
             q_side = self.create_solph_node(
                 label=f"Qin_{temp_heigh:.0f}",
                 node_type=Bus,

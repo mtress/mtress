@@ -63,11 +63,7 @@ house_1.add(
 )
 
 house_1.add(carriers.GasCarrier(gases={HYDROGEN: [60, 30]}))
-house_1.add(
-    carriers.HeatCarrier(
-        temperature_levels=[20, 50]
-    )
-)
+house_1.add(carriers.HeatCarrier(temperature_levels=[20, 50]))
 house_1.add(
     technologies.GasGridConnection(
         name="H2-Grid",

@@ -13,7 +13,7 @@ from mtress import (
     SolphModel,
     carriers,
     demands,
-    technologies
+    technologies,
 )
 from mtress._helpers import get_flows
 

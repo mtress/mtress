@@ -15,6 +15,7 @@ from mtress import (
 
 from mtress.technologies import LayeredHeatStorage
 
+
 def test_heat_carrier_initilisation():
 
     hs_args = {
@@ -74,7 +75,6 @@ def test_layered_heat_losses():
 
 if __name__ == "__main__":
     results = test_layered_heat_losses()
-
 
     for key, result in results.items():
         if key[1] is None:

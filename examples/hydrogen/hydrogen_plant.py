@@ -86,11 +86,7 @@ house_1.add(
     )
 )
 
-house_1.add(
-    carriers.HeatCarrier(
-        temperature_levels=[20, 40]
-    )
-)
+house_1.add(carriers.HeatCarrier(temperature_levels=[20, 40]))
 
 house_1.add(
     technologies.Electrolyser(

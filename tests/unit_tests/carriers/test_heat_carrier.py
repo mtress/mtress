@@ -60,6 +60,7 @@ def test_heat_carrier_initialisation():
     with pytest.raises(ValueError):
         heat_carrier.get_levels_between(35, 10)
 
+
 def test_heat_carrier_build():
     solph_model = SolphModel(
         meta_model=MetaModel(),

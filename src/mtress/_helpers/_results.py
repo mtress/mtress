@@ -17,6 +17,7 @@ def get_flows(results):
 
     return flows
 
+
 def get_storage_content(results):
     """
     Extract storage content from results dictionary.
@@ -54,7 +55,7 @@ def get_status(results):
 def get_variables(results):
     """
     Extract variables from results dictionary.
-    
+
     :param results: Results from oemof optimization
     """
     # To access the data you might want to use the xs function, i.e.
