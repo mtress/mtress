@@ -32,7 +32,7 @@ house_1.add(
 house_1.add(
     technologies.ResistiveHeater(
         name="Resistive_Heater",
-        heating_power=None,
+        thermal_power_limit=None,
         maximum_temperature=50,
         minimum_temperature=20,
         efficiency=0.8,
@@ -52,7 +52,7 @@ solph_representation = SolphModel(
     timeindex={
         "start": "2021-07-10 00:00:00",
         "end": "2021-07-10 02:00:00",
-        "freq": "60T",
+        "freq": "60min",
     },
 )
 
@@ -64,7 +64,7 @@ plot.render(outfile="heat_detail.png")
 plot = solph_representation.graph(detail=False)
 plot.render(outfile="heat_simple.png")
 
-solved_model = solph_representation.solve(solve_kwargs={"tee": True})
+solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 

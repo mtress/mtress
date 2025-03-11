@@ -32,7 +32,6 @@ from mtress import (
     carriers,
     demands,
     technologies,
-    SolphLabel,
 )
 from mtress._helpers import get_flows
 
@@ -100,7 +99,7 @@ solph_representation = SolphModel(
     timeindex={
         "start": "2021-07-10 00:00:00",
         "end": "2021-07-10 02:00:00",
-        "freq": "60T",
+        "freq": "60min",
     },
 )
 
@@ -112,7 +111,7 @@ plot.render(outfile="electricity_heat_detail.png")
 plot = solph_representation.graph(detail=False)
 plot.render(outfile="electricity_heat_simple.png")
 
-solved_model = solph_representation.solve(solve_kwargs={"tee": True})
+solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
