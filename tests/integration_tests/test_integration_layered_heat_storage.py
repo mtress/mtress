@@ -54,7 +54,7 @@ def test_layered_heat_storage():
     )
 
     heat_demand = np.zeros(n_days * 24)
-    heat_demand[7 * 24] = 5e3
+    heat_demand[7 * 24 : 7 * 24 + 12] = 5e3
     house_1.add(
         demands.FixedTemperatureHeating(
             name="HD",
@@ -74,7 +74,10 @@ def test_layered_heat_storage():
             power_limit=None,
             max_temperature=30,
             min_temperature=10,
-            initial_storage_levels={30: 0.9},
+            initial_storage_levels={
+                10: 0.1,
+                30: 0.8,
+            },
             balanced=False,
         )
     )
@@ -91,7 +94,7 @@ def test_layered_heat_storage():
 
     solph_representation.build_solph_model()
 
-    solved_model = solph_representation.solve(solve_kwargs={"tee": True})
+    solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 
     return solph_representation, solved_model
 
@@ -115,13 +118,15 @@ if __name__ == "__main__":
     for key, result in myresults.items():
         if "storage_content" in result["sequences"]:
             plt.plot(
-                result["sequences"]["storage_content"] * 1e-3,
+                result["sequences"]["storage_content"],
                 label=str(key[0].label[-1]),
             )
             total_content += result["sequences"]["storage_content"]
             index = result["sequences"].index
-    plt.plot(index, total_content * 1e-3, label="total")
-    plt.ylabel("Content (m³)")
+    plt.plot(index, total_content, label="total")
+    plt.ylim(0, 12e3)
+    plt.ylabel("Content (kg)")
+    plt.grid()
 
     plt.legend()
 
