@@ -33,9 +33,11 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
         diameter: float,
         volume: float,
         power_limit: float,
+        max_temperature: float,
+        min_temperature: float,
         ambient_temperature: TimeseriesSpecifier,
-        reference_temperature: float = 0,
         u_value: float | None = None,
+        initial_storage_temperature: float | None = None,
         multiplexer_implementation: (
             Implementation | str
         ) = Implementation.STRICT,
@@ -60,14 +62,15 @@ class FullyMixedHeatStorage(AbstractHeatStorage, AbstractHomogenousStorage):
             diameter=diameter,
             volume=volume,
             power_limit=power_limit,
-            reference_temperature=reference_temperature,
             ambient_temperature=ambient_temperature,
             u_value=u_value,
             implementation=multiplexer_implementation,
         )
-        self.capacity_per_unit = (
-            self.volume * (H2O_DENSITY * H2O_HEAT_CAPACITY) / SECONDS_PER_HOUR
-        )
+        self.capacity_per_unit = self.volume * H2O_DENSITY
+
+        self.max_temperature = max_temperature
+        self.min_temperature = min_temperature
+        self.initial_storage_temperature = initial_storage_temperature
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
