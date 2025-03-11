@@ -60,7 +60,6 @@ class LayeredHeatStorage(AbstractHeatStorage):
             volume=volume,
             power_limit=power_limit,
             ambient_temperature=ambient_temperature,
-            reference_temperature=reference_temperature,
             u_value=u_value,
             max_temperature=max_temperature,
             min_temperature=min_temperature,
@@ -76,6 +75,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
             initial_storage_levels = {}
 
         self.initial_storage_levels = initial_storage_levels
+        self.reference_temperature=reference_temperature
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -83,7 +83,6 @@ class LayeredHeatStorage(AbstractHeatStorage):
         # by the heat carrier object
 
         heat_carrier = self.location.get_carrier(HeatCarrier)
-        reference_temperature = heat_carrier.reference
 
         temperature_levels = heat_carrier.levels
 
@@ -113,7 +112,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         u_value=self.u_value,
                         diameter=self.diameter,
                         temp_h=temperature,
-                        temp_c=reference_temperature,
+                        temp_c=self.reference_temperature,
                         temp_env=self._solph_model.data.get_timeseries(
                             self.ambient_temperature,
                             kind=TimeseriesType.INTERVAL,
@@ -165,7 +164,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
             quantity=model.GenericStorageBlock.storage_content,
             limit_name=str(self.create_label("storage_limit")),
             components=self.storage_components.values(),
-            weights=1e3,
+            weights=len(self.storage_components) * [1e3],
             upper_limit=self.volume,
             lower_limit=self.volume,
         )

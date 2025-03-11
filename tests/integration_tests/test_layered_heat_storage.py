@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tests for MTRESS FixedTemperatureHeat Demand.
+Tests for MTRESS LayeredHeatStorage
 """
 import os
 
