@@ -173,8 +173,8 @@ class LayeredHeatStorage(AbstractHeatStorage):
             temperatures = list(self.storage_components.keys())
 
             # When a storage loses energy, in reality it will not direktly go
-            # to the lowest temperature. We mimic this by (additional) step-wise
-            # downshifting of the remaining heat.
+            # to the lowest temperature. We mimic this by (additional)
+            # step-wise downshifting of the remaining heat.
             for lower_temperature, upper_temperature in zip(
                 temperatures, temperatures[1:]
             ):
