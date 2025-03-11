@@ -69,8 +69,8 @@ def test_layered_heat_storage():
             name="HS",
             diameter=1,
             volume=10,
-            ambient_temperature=0,
-            u_value=0.1,
+            ambient_temperature=n_days * 24 * [0],
+            u_value=None,
             power_limit=None,
             max_temperature=30,
             min_temperature=10,
@@ -116,12 +116,12 @@ if __name__ == "__main__":
         if "storage_content" in result["sequences"]:
             plt.plot(
                 result["sequences"]["storage_content"] * 1e-3,
-                label=str(key[0].label.solph_node),
+                label=str(key[0].label[-1]),
             )
             total_content += result["sequences"]["storage_content"]
             index = result["sequences"].index
     plt.plot(index, total_content * 1e-3, label="total")
-    plt.ylabel("Energy (kWh)")
+    plt.ylabel("Content (m³)")
 
     plt.legend()
 

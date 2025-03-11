@@ -16,7 +16,7 @@ from pyomo import environ as po
 
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import HeatCarrier
-from mtress.physics import mega_to_one
+from mtress.physics import H2O_DENSITY
 
 from ._abstract_heat_storage import AbstractHeatStorage
 
@@ -119,7 +119,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         ),
                     )
                     fixed_losses_relative = fixed_losses_relative
-                    fixed_losses_absolute = mega_to_one(fixed_losses_absolute)
+                    fixed_losses_absolute = fixed_losses_absolute
 
                 # losses to the upper side of the storage will just leave the
                 # storage for the uppermost level.
@@ -142,7 +142,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                     node_type=GenericStorage,
                     inputs={bus: Flow()},
                     outputs={bus: Flow()},
-                    nominal_storage_capacity=1e3 * self.volume,  # liters
+                    nominal_storage_capacity=self.volume * H2O_DENSITY,
                     loss_rate=loss_rate,
                     balanced=self.balanced,
                     initial_storage_level=initial_storage_level,
@@ -152,7 +152,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
 
                 self.storage_components[temperature] = storage
 
-                loss_flow = {bus: Flow(bidirectional=True)}
+                loss_flow = {}
 
     def add_constraints(self):
         """Add constraints to the model."""
@@ -164,38 +164,39 @@ class LayeredHeatStorage(AbstractHeatStorage):
             quantity=model.GenericStorageBlock.storage_content,
             limit_name=str(self.create_label("storage_limit")),
             components=self.storage_components.values(),
-            weights=len(self.storage_components) * [1e3],
-            upper_limit=self.volume,
-            lower_limit=self.volume,
+            weights=len(self.storage_components) * [1],
+            upper_limit=self.volume * H2O_DENSITY,
+            lower_limit=self.volume * H2O_DENSITY,
         )
 
-        temperatures = list(self.storage_components.keys())
+        if self.u_value is not None:
+            temperatures = list(self.storage_components.keys())
 
-        # When a storage loses energy, in reality it will not direktly go
-        # to the lowest temperature. We mimic this by (additional) step-wise
-        # downshifting of the remaining heat.
-        for lower_temperature, upper_temperature in zip(
-            temperatures, temperatures[1:]
-        ):
-            def equate_variables_rule(_, t):
-                ratio = (lower_temperature - self.ambient_temperature[t]) / (
-                    upper_temperature - self.ambient_temperature[t]
-                )
-                return (
-                    (ratio / (1 - ratio))
-                    * (
-                        model.GenericStorageBlock.storage_losses[
-                            self.storage_components[upper_temperature], t
-                        ]
+            # When a storage loses energy, in reality it will not direktly go
+            # to the lowest temperature. We mimic this by (additional) step-wise
+            # downshifting of the remaining heat.
+            for lower_temperature, upper_temperature in zip(
+                temperatures, temperatures[1:]
+            ):
+                def equate_variables_rule(_, t):
+                    ratio = (lower_temperature - self.ambient_temperature[t]) / (
+                        upper_temperature - self.ambient_temperature[t]
                     )
-                ) <= model.flow[
-                    self.buses[upper_temperature],
-                    self.buses[lower_temperature],
-                    t,
-                ]
+                    return (
+                        (ratio / (1 - ratio))
+                        * (
+                            model.GenericStorageBlock.storage_losses[
+                                self.storage_components[upper_temperature], t
+                            ]
+                        )
+                    ) <= model.flow[
+                        self.buses[upper_temperature],
+                        self.buses[lower_temperature],
+                        t,
+                    ]
 
-            setattr(
-                model,
-                str(self.create_label(f"losses_{upper_temperature}")),
-                po.Constraint(model.TIMESTEPS, rule=equate_variables_rule),
-            )
+                setattr(
+                    model,
+                    str(self.create_label(f"losses_{upper_temperature}")),
+                    po.Constraint(model.TIMESTEPS, rule=equate_variables_rule),
+                )
