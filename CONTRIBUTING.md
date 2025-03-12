@@ -28,7 +28,7 @@ tutorials. For the former, we rely on the reStructuredText (reST) style.
 ## Testing
 
 We divide our tests into two phases:
-- linting (using ruff)
+- linting (using ruff or black)
 - testing (using tox and pytest)
 
 The CI pipeline will check the code for compliance but some checks can also be 
@@ -37,10 +37,16 @@ performed locally.
 Linting checks can be performed locally using:
 
 ```bash 
+python -m ruff check .
+``` 
+
+Alternatively, checks can also be done using black: 
+
+```bash 
 python -m black -l 79 --preview --enable-unstable-feature=string_processing .
 ``` 
 
-The code can also be tested locally with:
+The code itself can be tested locally with:
 
 ```bash 
 tox
