@@ -5,7 +5,7 @@ from mtress.technologies import (
     )
 from mtress.technologies._battery_storage import BatteryStorageTemplate
 from mtress.technologies import RenewableElectricitySource
-
+from pandas import Series
 # from mtress.physics import HYDROGEN
 import math
 import pytest
@@ -97,15 +97,33 @@ class TestBatteryStorage:
     
 
     @pytest.mark.parametrize(
-        "template, fixed_load, expected_result",
+        "template, fixed_load, _type, expected_result",
         [
-            (GenericBatteryModelI, 1e2, 1952.03524737), # worse than 1466.58...
-            (GenericBatteryModelI, 1e3, 6321.06218421), # worser
-            (GenericBatteryModelII, 1e2, 0.604155125), # worse than 0.588365...
-            (GenericBatteryModelII, 1e3, 0.74626039), # worser
+            (GenericBatteryModelI, 1e2, float, 1952.03524737), # worse than 1466.58...
+            (GenericBatteryModelI, 1e3, float, 6321.06218421), # worser
+            (GenericBatteryModelII, 1e2, float, 0.604155125), # worse than 0.588365...
+            (GenericBatteryModelII, 1e3, float, 0.74626039), # worser
+            # list
+            (GenericBatteryModelI, 1e2, list, 1952.03524737), # worse than 1466.58...
+            (GenericBatteryModelI, 1e3, list, 6321.06218421), # worser
+            (GenericBatteryModelII, 1e2, list, 0.604155125), # worse than 0.588365...
+            (GenericBatteryModelII, 1e3, list, 0.74626039), # worser
+            # Series            
+            (GenericBatteryModelI, 1e2, Series, 1952.03524737), # worse than 1466.58...
+            (GenericBatteryModelI, 1e3, Series, 6321.06218421), # worser
+            (GenericBatteryModelII, 1e2, Series, 0.604155125), # worse than 0.588365...
+            (GenericBatteryModelII, 1e3, Series, 0.74626039), # worser
         ],
     )
-    def test_bs_load(self, template, fixed_load, expected_result):
+    def test_bs_losses(self, template, fixed_load, _type, expected_result):
+        
+        # pick format
+        if _type == list:
+            _fix_losses = [fixed_load, fixed_load, fixed_load]
+        elif _type == Series:
+            _fix_losses = Series(data=[fixed_load, fixed_load, fixed_load])
+        else: # float
+            _fix_losses = fixed_load
 
         os.chdir(os.path.dirname(__file__))
         energy_system = MetaModel()
@@ -118,10 +136,10 @@ class TestBatteryStorage:
                 working_rate=[50e-6, 50e-6, 5]
             )
         )
-
+            
         bs = BatteryStorage(
             name="bs", 
-            fixed_losses_absolute=[fixed_load, fixed_load, fixed_load],
+            fixed_losses_absolute=_fix_losses,
             template=template
             )
         house_1.add(bs)

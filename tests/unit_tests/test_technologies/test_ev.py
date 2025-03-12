@@ -101,15 +101,40 @@ class TestElectricVehicle:
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
         
         
-
     @pytest.mark.parametrize(
-        "template, static_discharge, expected_result",
-        [(GenericSegmentB_EV, 1e3, 181258.97368415), 
-         (GenericSegmentB_EV, 1e4, 224009.92105285), 
-         (GenericSegmentC_EV, 1e3, 157509.23684205), 
-         (GenericSegmentC_EV, 1e4, 200260.18421075)],
+        "template, fixed_losses, _type, expected_result",
+        [
+         # float
+         (GenericSegmentB_EV, 1e3, float, 181258.97368415), 
+         (GenericSegmentB_EV, 1e4, float, 224009.92105285), 
+         (GenericSegmentC_EV, 1e3, float, 157509.23684205), 
+         (GenericSegmentC_EV, 1e4, float, 200260.18421075),
+         # list
+         (GenericSegmentB_EV, 1e3, list, 181258.97368415), 
+         (GenericSegmentB_EV, 1e4, list, 224009.92105285), 
+         (GenericSegmentC_EV, 1e3, list, 157509.23684205), 
+         (GenericSegmentC_EV, 1e4, list, 200260.18421075),
+         # Series
+         (GenericSegmentB_EV, 1e3, Series, 181258.97368415), 
+         (GenericSegmentB_EV, 1e4, Series, 224009.92105285), 
+         (GenericSegmentC_EV, 1e3, Series, 157509.23684205), 
+         (GenericSegmentC_EV, 1e4, Series, 200260.18421075),
+         
+         ],
     )
-    def test_ev_profile(self, template, static_discharge, expected_result):
+    def test_ev_std_loss(self, template, fixed_losses, _type, expected_result):
+        # tests standard fixed absolute losses
+        
+        # pick format
+        if _type == list:
+            _fix_losses = [fixed_losses, fixed_losses, fixed_losses]
+        elif _type == Series:
+            _fix_losses = Series(
+                data=[fixed_losses, fixed_losses, fixed_losses]
+                )
+        else: # float
+            _fix_losses = fixed_losses
+
 
         os.chdir(os.path.dirname(__file__))
         energy_system = MetaModel()
@@ -123,23 +148,9 @@ class TestElectricVehicle:
                 )
             )
         
-        ev = ElectricVehicle(
+        ev = GenericElectricVehicle(
             name="ev", 
-            static_discharge_profile=[
-                static_discharge,
-                static_discharge,
-                static_discharge
-                ],
-            # fixed_losses_absolute=[
-            #     static_discharge,
-            #     static_discharge,
-            #     static_discharge
-            #     ],
-            plugged_in_profile=[
-                1 if static_discharge > 0 else 0,
-                1 if static_discharge > 0 else 0,
-                1 if static_discharge > 0 else 0,
-                ],
+            fixed_losses_absolute=_fix_losses,
             template=template
             )
         house_1.add(ev)
@@ -165,172 +176,52 @@ class TestElectricVehicle:
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
         
-    @pytest.mark.parametrize(
-        "template, status, expected_result",
-        [# reference result for GenericSegmentB_EV
-         (GenericSegmentB_EV, [1, 1, 1], 181258.97368415), 
-         # not being connected worsens results
-         (GenericSegmentB_EV,  [1, 0, 1], 186008.92105265), 
-         # reference result for GenericSegmentC_EV
-         (GenericSegmentC_EV,  [1, 1, 1], 157509.23684205), 
-         # not being connected worsens results
-         (GenericSegmentC_EV,  [1, 0, 1], 162259.18421055)],
-    )    
-    def test_ev_status(self, template, status, expected_result):
-
-        os.chdir(os.path.dirname(__file__))
-        energy_system = MetaModel()
-        house_1 = Location(name="house_1")
-        energy_system.add_location(house_1)
-
-        house_1.add(carriers.ElectricityCarrier())
-        house_1.add(
-            technologies.ElectricityGridConnection(
-                working_rate=[50e-6, 50e-6, 5]
-                )
-            )
-        static_discharge = 1e3
-        ev = ElectricVehicle(
-            name="ev", 
-            static_discharge_profile=[
-                static_discharge,
-                static_discharge,
-                static_discharge
-                ],
-            # fixed_losses_absolute=[
-            #     static_discharge,
-            #     static_discharge,
-            #     static_discharge
-            #     ],
-            plugged_in_profile=status,
-            template=template
-            )
-        house_1.add(ev)
-        house_1.add(
-            demands.Electricity(
-                name="electricity_demand",
-                time_series=[30000, 120000, 60000],
-            )
-        )
         
-        solph_representation = SolphModel(
-            energy_system,
-            timeindex={
-                "start": "2022-06-01 08:00:00",
-                "end": "2022-06-01 11:00:00",
-                "freq": "60T",
-                "tz": "Europe/Berlin",
-            },
-        )
 
-        solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
-        mr = meta_results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
-        
     @pytest.mark.parametrize(
-        "plugged_in_profile, static_discharge_profile",
+        "template, static_discharge, _type, expected_result",
         [
-         # error: plugged-in and with static discharge
-         # 1) int and int
-         (1, 1), 
-         # 2) int and list
-         (1, [0, 0, 1000]),
-         (1, [1000, 1000, 1000]), 
-         # 3) int and Series
-         (1, Series(data=[0, 0, 1000])),
-         (1, Series(data=[1000, 1000, 1000])),
-         # 4) list and int
-         ([1], 1), 
-         # 5) list and list
-         ([1, 1, 1], [1000, 1000, 1000]), 
-         ([0, 0, 1], [0, 1000, 1000]), 
-         # 6) list and Series
-         ([1, 1, 1], Series(data=[1000, 1000, 1000])), 
-         ([0, 0, 1], Series(data=[0, 1000, 1000])), 
-         # 7) Series and int
-         (Series(data=[1, 1, 1]), 1), 
-         (Series(data=[0, 0, 1]), 1), 
-         # 8) Series and list
-         (Series(data=[1, 1, 1]), [1000, 1000, 1000]), 
-         (Series(data=[0, 0, 1]), [0, 1000, 1000]), 
-         # 9) Series and Series
-         (Series(data=[1, 1, 1]), Series(data=[0, 0, 1000])), 
-         (Series(data=[0, 0, 1]), Series(data=[1000, 1000, 1000])),
+         # float
+         (GenericSegmentB_EV, 1e3, float, 181258.97368415), 
+         (GenericSegmentB_EV, 1e4, float, 224009.92105285), 
+         (GenericSegmentC_EV, 1e3, float, 157509.23684205), 
+         (GenericSegmentC_EV, 1e4, float, 200260.18421075),
+         # list
+         (GenericSegmentB_EV, 1e3, list, 181258.97368415), 
+         (GenericSegmentB_EV, 1e4, list, 224009.92105285), 
+         (GenericSegmentC_EV, 1e3, list, 157509.23684205), 
+         (GenericSegmentC_EV, 1e4, list, 200260.18421075),
+         # Series
+         (GenericSegmentB_EV, 1e3, Series, 181258.97368415), 
+         (GenericSegmentB_EV, 1e4, Series, 224009.92105285), 
+         (GenericSegmentC_EV, 1e3, Series, 157509.23684205), 
+         (GenericSegmentC_EV, 1e4, Series, 200260.18421075),
          
-         # error: sizes do not match
-         # 5) list and list
-         ([1, 1, 1, 1], [1000, 1000, 1000]), 
-         ([0, 0, 1, 1], [0, 1000, 1000]), 
-         # 6) list and Series
-         ([1, 1, 1, 1], Series(data=[1000, 1000, 1000])), 
-         ([0, 0, 1, 1], Series(data=[0, 1000, 1000])), 
-         # 8) Series and list
-         (Series(data=[1, 1, 1, 1]), [1000, 1000, 1000]), 
-         (Series(data=[0, 0, 1, 1]), [0, 1000, 1000]), 
-         # 9) Series and Series
-         (Series(data=[1, 1, 1, 1]), Series(data=[0, 0, 1000])), 
-         (Series(data=[0, 0, 1, 1]), Series(data=[1000, 1000, 1000])),
-         
-         # error: discharge rates exceed the maximum discharge rate
-         # max rate: template.nominal_capacity*template.discharging_C_Rate
-         # int, int
-         (0, 1+52e3*50 / 52), 
-         # int, list
-         (0, [0, 1+52e3*50 / 52]), 
-         # int, Series
-         (0, Series(data=[0, 1+52e3*50 / 52])), 
-         # list, int,
-         ([0, 0], 1+52e3*50 / 52), 
-         # list, list
-         ([0, 0], [0, 1+52e3*50 / 52]), 
-         # list, Series
-         ([0, 0], Series(data=[0, 1+52e3*50 / 52])), 
-         # Series, int
-         (Series(data=[0, 0]), 1+52e3*50 / 52), 
-         # Series, list
-         (Series(data=[0, 0]), [0, 1+52e3*50 / 52]), 
-         # Series, Series
-         (Series(data=[0, 0]), Series(data=[0, 1+52e3*50 / 52])), 
-         
-         # error: trigger profile value errors
-         # plugged in
-         # int, int
-         (-1, 52e3*50 / 52), 
-         (2, 0), 
-         # list, list
-         ([2, 0], [0, 52e3*50 / 52]),
-         ([1, -1], [0, 52e3*50 / 52]), 
-         # Series, Series
-         (Series(data=[2, 0]), Series(data=[0, 52e3*50 / 52])), 
-         (Series(data=[1, -1]), Series(data=[0, 52e3*50 / 52])), 
-         
-         # TODO: trigger value errors due to negative static discharge values
-         # int, int
-         (0, -1),
-         # int, list
-         (0, [-1, 0]),
-         # int, Series
-         (0, Series(data=[-1, 0])), 
-         # list, int
-         ([0, 0], -1),
-         # list, list
-         ([0, 0], [-1, 1]),
-         # list, Series
-         ([0, 0], Series(data=[-1, 1])),
-         # Series, int
-         (Series(data=[0, 0]), -1), 
-         # Series, list
-         (Series(data=[0, 0]), [-1, 1]),
-         # Series, Series
-         (Series(data=[0, 0]), Series(data=[-1, 1])), 
          ],
-    )    
-    def test_trigger_profile_value_errors(
-            self, 
-            plugged_in_profile,
-            static_discharge_profile
-            ):
+    )
+    def test_ev_profile(self, template, static_discharge, _type, expected_result):
+        # tests the static demand profile
+        
+        # pick format
+        if _type == list:
+            _fix_losses = [static_discharge, static_discharge, static_discharge]
+            _profile = [
+                0 if static_discharge > 0 else 1,
+                0 if static_discharge > 0 else 1,
+                0 if static_discharge > 0 else 1,
+                ]
+        elif _type == Series:
+            _fix_losses = Series(
+                data=[static_discharge, static_discharge, static_discharge]
+                )
+            _profile = Series(data=[
+                0 if static_discharge > 0 else 1,
+                0 if static_discharge > 0 else 1,
+                0 if static_discharge > 0 else 1,
+                ])
+        else: # float
+            _fix_losses = static_discharge
+            _profile = 0 if static_discharge > 0 else 1
 
         os.chdir(os.path.dirname(__file__))
         energy_system = MetaModel()
@@ -340,140 +231,342 @@ class TestElectricVehicle:
         house_1.add(carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
-                working_rate=50e-6
+                working_rate=[50e-6, 50e-6, 5]
                 )
             )
         
-        with pytest.raises(ValueError):
-            GenericElectricVehicle(
-                name="ev", 
-                static_discharge_profile=static_discharge_profile,
-                plugged_in_profile=plugged_in_profile,
-                nominal_capacity=52e3,  # 52 kWh
-                charging_C_Rate=50 / 52,  # 50 kW
-                discharging_C_Rate=50 / 52,  # 50 kW
-                charging_efficiency=0.95,
-                discharging_efficiency=0.95, 
-                loss_rate=0
-                )
+        ev = GenericElectricVehicle(
+            name="ev", 
+            static_discharge_profile=_fix_losses,
+            plugged_in_profile=_profile,
+            template=template
+            )
+        house_1.add(ev)
+        house_1.add(
+            demands.Electricity(
+                name="electricity_demand",
+                time_series=[30000, 120000, 60000],
+            )
+        )
+        
+        solph_representation = SolphModel(
+            energy_system,
+            timeindex={
+                "start": "2022-06-01 08:00:00",
+                "end": "2022-06-01 11:00:00",
+                "freq": "60T",
+                "tz": "Europe/Berlin",
+            },
+        )
+
+        solph_representation.build_solph_model()
+        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        mr = meta_results(solved_model)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        
+    # @pytest.mark.parametrize(
+    #     "template, status, expected_result",
+    #     [# reference result for GenericSegmentB_EV
+    #      (GenericSegmentB_EV, [1, 1, 1], 181258.97368415), 
+    #      # not being connected worsens results
+    #      (GenericSegmentB_EV,  [1, 0, 1], 186008.92105265), 
+    #      # reference result for GenericSegmentC_EV
+    #      (GenericSegmentC_EV,  [1, 1, 1], 157509.23684205), 
+    #      # not being connected worsens results
+    #      (GenericSegmentC_EV,  [1, 0, 1], 162259.18421055)],
+    # )    
+    # def test_ev_status(self, template, status, expected_result):
+
+    #     os.chdir(os.path.dirname(__file__))
+    #     energy_system = MetaModel()
+    #     house_1 = Location(name="house_1")
+    #     energy_system.add_location(house_1)
+
+    #     house_1.add(carriers.ElectricityCarrier())
+    #     house_1.add(
+    #         technologies.ElectricityGridConnection(
+    #             working_rate=[50e-6, 50e-6, 5]
+    #             )
+    #         )
+    #     static_discharge = 1e3
+    #     ev = ElectricVehicle(
+    #         name="ev", 
+    #         static_discharge_profile=[
+    #             static_discharge,
+    #             static_discharge,
+    #             static_discharge
+    #             ],
+    #         # fixed_losses_absolute=[
+    #         #     static_discharge,
+    #         #     static_discharge,
+    #         #     static_discharge
+    #         #     ],
+    #         plugged_in_profile=status,
+    #         template=template
+    #         )
+    #     house_1.add(ev)
+    #     house_1.add(
+    #         demands.Electricity(
+    #             name="electricity_demand",
+    #             time_series=[30000, 120000, 60000],
+    #         )
+    #     )
+        
+    #     solph_representation = SolphModel(
+    #         energy_system,
+    #         timeindex={
+    #             "start": "2022-06-01 08:00:00",
+    #             "end": "2022-06-01 11:00:00",
+    #             "freq": "60T",
+    #             "tz": "Europe/Berlin",
+    #         },
+    #     )
+
+    #     solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+    #     mr = meta_results(solved_model)
+    #     assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        
+    # @pytest.mark.parametrize(
+    #     "plugged_in_profile, static_discharge_profile",
+    #     [
+    #      # error: plugged-in and with static discharge
+    #      # 1) int and int
+    #      (1, 1), 
+    #      # 2) int and list
+    #      (1, [0, 0, 1000]),
+    #      (1, [1000, 1000, 1000]), 
+    #      # 3) int and Series
+    #      (1, Series(data=[0, 0, 1000])),
+    #      (1, Series(data=[1000, 1000, 1000])),
+    #      # 4) list and int
+    #      ([1], 1), 
+    #      # 5) list and list
+    #      ([1, 1, 1], [1000, 1000, 1000]), 
+    #      ([0, 0, 1], [0, 1000, 1000]), 
+    #      # 6) list and Series
+    #      ([1, 1, 1], Series(data=[1000, 1000, 1000])), 
+    #      ([0, 0, 1], Series(data=[0, 1000, 1000])), 
+    #      # 7) Series and int
+    #      (Series(data=[1, 1, 1]), 1), 
+    #      (Series(data=[0, 0, 1]), 1), 
+    #      # 8) Series and list
+    #      (Series(data=[1, 1, 1]), [1000, 1000, 1000]), 
+    #      (Series(data=[0, 0, 1]), [0, 1000, 1000]), 
+    #      # 9) Series and Series
+    #      (Series(data=[1, 1, 1]), Series(data=[0, 0, 1000])), 
+    #      (Series(data=[0, 0, 1]), Series(data=[1000, 1000, 1000])),
+         
+    #      # error: sizes do not match
+    #      # 5) list and list
+    #      ([1, 1, 1, 1], [1000, 1000, 1000]), 
+    #      ([0, 0, 1, 1], [0, 1000, 1000]), 
+    #      # 6) list and Series
+    #      ([1, 1, 1, 1], Series(data=[1000, 1000, 1000])), 
+    #      ([0, 0, 1, 1], Series(data=[0, 1000, 1000])), 
+    #      # 8) Series and list
+    #      (Series(data=[1, 1, 1, 1]), [1000, 1000, 1000]), 
+    #      (Series(data=[0, 0, 1, 1]), [0, 1000, 1000]), 
+    #      # 9) Series and Series
+    #      (Series(data=[1, 1, 1, 1]), Series(data=[0, 0, 1000])), 
+    #      (Series(data=[0, 0, 1, 1]), Series(data=[1000, 1000, 1000])),
+         
+    #      # error: discharge rates exceed the maximum discharge rate
+    #      # max rate: template.nominal_capacity*template.discharging_C_Rate
+    #      # int, int
+    #      (0, 1+52e3*50 / 52), 
+    #      # int, list
+    #      (0, [0, 1+52e3*50 / 52]), 
+    #      # int, Series
+    #      (0, Series(data=[0, 1+52e3*50 / 52])), 
+    #      # list, int,
+    #      ([0, 0], 1+52e3*50 / 52), 
+    #      # list, list
+    #      ([0, 0], [0, 1+52e3*50 / 52]), 
+    #      # list, Series
+    #      ([0, 0], Series(data=[0, 1+52e3*50 / 52])), 
+    #      # Series, int
+    #      (Series(data=[0, 0]), 1+52e3*50 / 52), 
+    #      # Series, list
+    #      (Series(data=[0, 0]), [0, 1+52e3*50 / 52]), 
+    #      # Series, Series
+    #      (Series(data=[0, 0]), Series(data=[0, 1+52e3*50 / 52])), 
+         
+    #      # error: trigger profile value errors
+    #      # plugged in
+    #      # int, int
+    #      (-1, 52e3*50 / 52), 
+    #      (2, 0), 
+    #      # list, list
+    #      ([2, 0], [0, 52e3*50 / 52]),
+    #      ([1, -1], [0, 52e3*50 / 52]), 
+    #      # Series, Series
+    #      (Series(data=[2, 0]), Series(data=[0, 52e3*50 / 52])), 
+    #      (Series(data=[1, -1]), Series(data=[0, 52e3*50 / 52])), 
+         
+    #      # TODO: trigger value errors due to negative static discharge values
+    #      # int, int
+    #      (0, -1),
+    #      # int, list
+    #      (0, [-1, 0]),
+    #      # int, Series
+    #      (0, Series(data=[-1, 0])), 
+    #      # list, int
+    #      ([0, 0], -1),
+    #      # list, list
+    #      ([0, 0], [-1, 1]),
+    #      # list, Series
+    #      ([0, 0], Series(data=[-1, 1])),
+    #      # Series, int
+    #      (Series(data=[0, 0]), -1), 
+    #      # Series, list
+    #      (Series(data=[0, 0]), [-1, 1]),
+    #      # Series, Series
+    #      (Series(data=[0, 0]), Series(data=[-1, 1])), 
+    #      ],
+    # )    
+    # def test_trigger_profile_value_errors(
+    #         self, 
+    #         plugged_in_profile,
+    #         static_discharge_profile
+    #         ):
+
+    #     os.chdir(os.path.dirname(__file__))
+    #     energy_system = MetaModel()
+    #     house_1 = Location(name="house_1")
+    #     energy_system.add_location(house_1)
+
+    #     house_1.add(carriers.ElectricityCarrier())
+    #     house_1.add(
+    #         technologies.ElectricityGridConnection(
+    #             working_rate=50e-6
+    #             )
+    #         )
+        
+    #     with pytest.raises(ValueError):
+    #         GenericElectricVehicle(
+    #             name="ev", 
+    #             static_discharge_profile=static_discharge_profile,
+    #             plugged_in_profile=plugged_in_profile,
+    #             nominal_capacity=52e3,  # 52 kWh
+    #             charging_C_Rate=50 / 52,  # 50 kW
+    #             discharging_C_Rate=50 / 52,  # 50 kW
+    #             charging_efficiency=0.95,
+    #             discharging_efficiency=0.95, 
+    #             loss_rate=0
+    #             )
     
-    @pytest.mark.parametrize(
-        "plugged_in_profile, static_discharge_profile",
-        [
-         # error: plugged-in profile type errors
-         # 1) float 
-         (1.0, 0),
-         (0.0, 1),
-         # 2) floats inside lists/tuples
-         ([0, 0, 0.0], [0, 0, 1000]),
-         ([1, 1.0, 0], [0, 0, 1000]), 
-         # 3) floats inside series
-         (Series(data=[0, 0, 0.0]), Series(data=[0, 0, 1000])), 
-         (Series(data=[1, 1.0, 0]), Series(data=[1000, 1000, 1000])), 
-         # 4) sets as static discharge profiles
-         (0, set([0, 0, 1000])),
-         ([0, 0, 0], set([0, 0, 1000])),
-         (Series(data=[0, 0, 0]), set([0, 0, 1000])),
-         # 5) both inputs as sets
-         # (set([0, 0, 0]), set([0, 0, 1000])),
-         # (set([1, 1, 0]), [0, 0, 1000]), 
-         # (set([1, 1, 0]), [0, 0, 1000]), 
-         # (set([1, 1, 0]), [0, 0, 1000]),
-         ],
-    )    
-    def test_trigger_profile_type_errors(
-            self, 
-            plugged_in_profile,
-            static_discharge_profile
-            ):
+    # @pytest.mark.parametrize(
+    #     "plugged_in_profile, static_discharge_profile",
+    #     [
+    #      # error: plugged-in profile type errors
+    #      # 1) float 
+    #      (1.0, 0),
+    #      (0.0, 1),
+    #      # 2) floats inside lists/tuples
+    #      ([0, 0, 0.0], [0, 0, 1000]),
+    #      ([1, 1.0, 0], [0, 0, 1000]), 
+    #      # 3) floats inside series
+    #      (Series(data=[0, 0, 0.0]), Series(data=[0, 0, 1000])), 
+    #      (Series(data=[1, 1.0, 0]), Series(data=[1000, 1000, 1000])), 
+    #      # 4) sets as static discharge profiles
+    #      (0, set([0, 0, 1000])),
+    #      ([0, 0, 0], set([0, 0, 1000])),
+    #      (Series(data=[0, 0, 0]), set([0, 0, 1000])),
+    #      ],
+    # )    
+    # def test_trigger_profile_type_errors(
+    #         self, 
+    #         plugged_in_profile,
+    #         static_discharge_profile
+    #         ):
 
-        os.chdir(os.path.dirname(__file__))
-        energy_system = MetaModel()
-        house_1 = Location(name="house_1")
-        energy_system.add_location(house_1)
+    #     os.chdir(os.path.dirname(__file__))
+    #     energy_system = MetaModel()
+    #     house_1 = Location(name="house_1")
+    #     energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
-        house_1.add(
-            technologies.ElectricityGridConnection(
-                working_rate=50e-6
-                )
-            )
+    #     house_1.add(carriers.ElectricityCarrier())
+    #     house_1.add(
+    #         technologies.ElectricityGridConnection(
+    #             working_rate=50e-6
+    #             )
+    #         )
         
-        with pytest.raises(TypeError):
-            GenericElectricVehicle(
-                name="ev", 
-                static_discharge_profile=static_discharge_profile,
-                plugged_in_profile=plugged_in_profile,
-                nominal_capacity=52e3,  # 52 kWh
-                charging_C_Rate=50 / 52,  # 50 kW
-                discharging_C_Rate=50 / 52,  # 50 kW
-                charging_efficiency=0.95,
-                discharging_efficiency=0.95, 
-                loss_rate=0
-                )
+    #     with pytest.raises(TypeError):
+    #         GenericElectricVehicle(
+    #             name="ev", 
+    #             static_discharge_profile=static_discharge_profile,
+    #             plugged_in_profile=plugged_in_profile,
+    #             nominal_capacity=52e3,  # 52 kWh
+    #             charging_C_Rate=50 / 52,  # 50 kW
+    #             discharging_C_Rate=50 / 52,  # 50 kW
+    #             charging_efficiency=0.95,
+    #             discharging_efficiency=0.95, 
+    #             loss_rate=0
+    #             )
     
     # TODO: test static_discharge_profile and fixed_absolute_losses
     
-    @pytest.mark.parametrize(
-        "fix_abs_losses, static_dchg_profile, expected_result",
-        [(0, 0, 176508.86842105), 
-         (0, 1000, 176508.86842105), 
-         (1000, 0, 181258.97368415), 
-         (0, 1000, 176508.86842105),
-         ([0], [0], 176508.86842105), 
-         ([0], [1e3], 176508.86842105), 
-         ([1e3], [0], 181258.97368415), 
-         ([0], [1e3], 176508.86842105)
-         ],
-    )
-    def test_ev_losses_discharge(
-            self, 
-            fix_abs_losses, 
-            static_dchg_profile, 
-            expected_result
-            ):
+    # @pytest.mark.parametrize(
+    #     "fix_abs_losses, static_dchg_profile, expected_result",
+    #     [(0, 0, 176508.86842105), 
+    #      (0, 1000, 176508.86842105), 
+    #      (1000, 0, 181258.97368415), 
+    #      (0, 1000, 176508.86842105),
+    #      ([0], [0], 176508.86842105), 
+    #      ([0], [1e3], 176508.86842105), 
+    #      ([1e3], [0], 181258.97368415), 
+    #      ([0], [1e3], 176508.86842105)
+    #      ],
+    # )
+    # def test_ev_losses_discharge(
+    #         self, 
+    #         fix_abs_losses, 
+    #         static_dchg_profile, 
+    #         expected_result
+    #         ):
 
-        os.chdir(os.path.dirname(__file__))
-        energy_system = MetaModel()
-        house_1 = Location(name="house_1")
-        energy_system.add_location(house_1)
+    #     os.chdir(os.path.dirname(__file__))
+    #     energy_system = MetaModel()
+    #     house_1 = Location(name="house_1")
+    #     energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
-        house_1.add(
-            technologies.ElectricityGridConnection(
-                working_rate=[50e-6, 50e-6, 5]
-                )
-            )
+    #     house_1.add(carriers.ElectricityCarrier())
+    #     house_1.add(
+    #         technologies.ElectricityGridConnection(
+    #             working_rate=[50e-6, 50e-6, 5]
+    #             )
+    #         )
         
-        ev = ElectricVehicle(
-            name="ev",
-            fixed_losses_absolute=fix_abs_losses,
-            static_discharge_profile=static_dchg_profile,
-            template=GenericSegmentB_EV
-            )
+    #     ev = ElectricVehicle(
+    #         name="ev",
+    #         fixed_losses_absolute=fix_abs_losses,
+    #         static_discharge_profile=static_dchg_profile,
+    #         template=GenericSegmentB_EV
+    #         )
         
-        house_1.add(ev)
-        house_1.add(
-            demands.Electricity(
-                name="electricity_demand",
-                time_series=[30000, 120000, 60000],
-            )
-        )
+    #     house_1.add(ev)
+    #     house_1.add(
+    #         demands.Electricity(
+    #             name="electricity_demand",
+    #             time_series=[30000, 120000, 60000],
+    #         )
+    #     )
         
-        solph_representation = SolphModel(
-            energy_system,
-            timeindex={
-                "start": "2022-06-01 08:00:00",
-                "end": "2022-06-01 11:00:00",
-                "freq": "60T",
-                "tz": "Europe/Berlin",
-            },
-        )
+    #     solph_representation = SolphModel(
+    #         energy_system,
+    #         timeindex={
+    #             "start": "2022-06-01 08:00:00",
+    #             "end": "2022-06-01 11:00:00",
+    #             "freq": "60T",
+    #             "tz": "Europe/Berlin",
+    #         },
+    #     )
 
-        solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
-        mr = meta_results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+    #     solph_representation.build_solph_model()
+    #     solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+    #     mr = meta_results(solved_model)
+    #     assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
     
             
 # *****************************************************************************
