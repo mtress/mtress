@@ -92,19 +92,26 @@ class GenericElectricVehicle(BatteryStorage):
         # combine the static_discharge_profile and the fixed_losses_absolute
         if (type(self.static_discharge_profile) != 
             type(self.fixed_losses_absolute)):
+            # different types
             if self.static_discharge_profile == 0:
+                # no static discharge: just use the fixed losses
                 self.final_discharge_profile = self.fixed_losses_absolute
             elif self.fixed_losses_absolute == 0:
-                self.final_discharge_profile = self.static_discharge_profile
+                # no fixed losses: just use the static discharge profile
+                self.final_discharge_profile = (
+                    self.static_discharge_profile
+                    )
             else:
                 raise TypeError(
                     'Profiles should be defined using the same type.'
                     )
         elif isinstance(self.static_discharge_profile, Real):
+            # both are Real numbers: just sum them
             self.final_discharge_profile = (
                 self.static_discharge_profile+self.fixed_losses_absolute
                 )
         elif type(self.static_discharge_profile) in [tuple, list]:
+            # both are list/tuples: just sum their elements one by one
             self.final_discharge_profile = [
                 a+b
                 for a, b in zip(
@@ -113,6 +120,7 @@ class GenericElectricVehicle(BatteryStorage):
                         )
                 ]
         elif type(self.static_discharge_profile) == Series:
+            # both are Series: just sum their elements one by one
             self.final_discharge_profile = (
                 self.static_discharge_profile+self.fixed_losses_absolute
                 )
@@ -139,8 +147,18 @@ class GenericElectricVehicle(BatteryStorage):
         # - if the EV is plugged in, the fixed discharge has to be zero
         
         if type(plugged_in_profile) == int:
-            
+            # check the profile data
+            if plugged_in_profile not in [0, 1]:
+                raise ValueError(
+                    'The EV\'s plugged-in status has to be 0 or 1.'
+                    )
+            # check the data for logic
             if type(static_discharge_profile) in [int, float]:
+                # discharge values have to be non-negative
+                if static_discharge_profile < 0:
+                    raise ValueError(
+                        'Discharge profile values cannot be negative.'
+                        )
                 # if the EV is plugged in, the fixed discharge has to be zero
                 if (plugged_in_profile and 
                     static_discharge_profile > 0):
@@ -167,6 +185,10 @@ class GenericElectricVehicle(BatteryStorage):
                             'The static discharge cannot exceed the maximum '+
                             'discharge rate.'
                             )
+                    if _sdp < 0:
+                        raise ValueError(
+                            'Discharge profile values cannot be negative.'
+                            )
             elif type(static_discharge_profile) == Series:
                 # if the EV is plugged in, the fixed discharge has to be zero
                 for idx in static_discharge_profile.index:
@@ -182,12 +204,31 @@ class GenericElectricVehicle(BatteryStorage):
                             'The static discharge cannot exceed the maximum '+
                             'discharge rate.'
                             )
+                    if static_discharge_profile.loc[idx] < 0:
+                        raise ValueError(
+                            'Discharge profile values cannot be negative.'
+                            )
             else:
-                raise NotImplementedError
+                raise TypeError(
+                    'Unsupported type for the static discharge profile.'
+                    )
             
         elif type(plugged_in_profile) in [list, tuple]:
-            
+            # check the profile data
+            for value in plugged_in_profile:
+                if type(value) != int:
+                    raise TypeError('The values should be integers.')
+                if value not in [0, 1]:
+                    raise ValueError(
+                        'The EV\'s plugged-in status has to be 0 or 1.'
+                        )
+            # check the data for logic
             if type(static_discharge_profile) in [int, float]:
+                # discharge values have to be non-negative
+                if static_discharge_profile < 0:
+                    raise ValueError(
+                        'Discharge profile values cannot be negative.'
+                        )
                 # if the EV is plugged in, the fixed discharge has to be zero
                 for _pip in plugged_in_profile:
                     if _pip == 1 and static_discharge_profile > 0:
@@ -221,6 +262,10 @@ class GenericElectricVehicle(BatteryStorage):
                             'The static discharge cannot exceed the maximum '+
                             'discharge rate.'
                             )
+                    if _sdp < 0:
+                        raise ValueError(
+                            'Discharge profile values cannot be negative.'
+                            )
             elif type(static_discharge_profile) == Series:
                 # size
                 if (len(plugged_in_profile) != 
@@ -241,12 +286,31 @@ class GenericElectricVehicle(BatteryStorage):
                             'The static discharge cannot exceed the maximum '+
                             'discharge rate.'
                             )
+                    if static_discharge_profile.iloc[i] < 0:
+                        raise ValueError(
+                            'Discharge profile values cannot be negative.'
+                            )
             else:
-                raise NotImplementedError
+                raise TypeError(
+                    'Unsupported type for the static discharge profile.'
+                    )
     
         elif type(plugged_in_profile) == Series:
+            # check the profile data
+            for value in plugged_in_profile:
+                if type(value) != int:
+                    raise TypeError('The values should be integers.')
+                if value not in [0, 1]:
+                    raise ValueError(
+                        'The EV\'s plugged-in status has to be 0 or 1.'
+                        )
             
             if type(static_discharge_profile) in [int, float]:
+                # discharge values have to be non-negative
+                if static_discharge_profile < 0:
+                    raise ValueError(
+                        'Discharge profile values cannot be negative.'
+                        )
                 # if the EV is plugged in, the fixed discharge has to be zero
                 for idx in plugged_in_profile.index:
                     if (plugged_in_profile.loc[idx] == 1 and
@@ -280,6 +344,10 @@ class GenericElectricVehicle(BatteryStorage):
                             'The static discharge cannot exceed the maximum '+
                             'discharge rate.'
                             )
+                    if _sdp < 0:
+                        raise ValueError(
+                            'Discharge profile values cannot be negative.'
+                            )
                 
             elif type(static_discharge_profile) == Series:
                 # sizes
@@ -301,6 +369,18 @@ class GenericElectricVehicle(BatteryStorage):
                             'The static discharge cannot exceed the maximum '+
                             'discharge rate.'
                             )
+                    if static_discharge_profile.loc[idx] < 0:
+                        raise ValueError(
+                            'Discharge profile values cannot be negative.'
+                            )
+            
+            else:
+                raise TypeError(
+                    'Unsupported type for the static discharge profile.'
+                    )
+        else:
+            raise TypeError('Unsupported type for the plugged-in profile.')
+        # return the profiles
         return plugged_in_profile, static_discharge_profile
 
     def build_core(self):
@@ -310,7 +390,7 @@ class GenericElectricVehicle(BatteryStorage):
         # TODO: mutually-exclusive charging and discharging
         
         electricity = self.location.get_carrier(ElectricityCarrier)
-
+        
         self.create_solph_node(
             label="EV",
             node_type=GenericStorage,
