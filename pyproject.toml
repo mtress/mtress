@@ -47,6 +47,7 @@ dependencies = [
     "numpy>=2.2.0",
     "setuptools>=59.1.1",
     "pvlib",
+    "tox",
 ]
 license = {text = "MIT"}
 
