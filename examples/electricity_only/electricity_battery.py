@@ -71,7 +71,4 @@ plt.xticks(
 plt.ylabel("Power (W)")
 plt.show()
 
-plot = solph_representation.graph(
-    detail=True, flow_results=flows, flow_color=None
-)
-plot.render(outfile="electricity_battery_results.png")
+solph_representation.graph(flow_results=flows)
