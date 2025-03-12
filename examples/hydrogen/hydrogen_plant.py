@@ -133,23 +133,12 @@ solph_representation = SolphModel(
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="hydrogen_plant_detail.png")
-
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="hydrogen_plant_simple.png")
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-
-logging.info("Optimise the energy system")
 myresults = results(solved_model)
 flows = get_flows(myresults)
-
-plot = solph_representation.graph(
-    detail=True, flow_results=flows, flow_color=None
-)
-# plot.render(outfile="hydrogen_plant_results.png")
 
 solved_model.write(
     "hydrogen_plant.lp", io_options={"symbolic_solver_labels": True}
 )
+
+solph_representation.graph(flow_results=flows)
