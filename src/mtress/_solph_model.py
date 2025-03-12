@@ -12,9 +12,9 @@ import logging
 from typing import TYPE_CHECKING, Dict, Tuple
 
 import pandas as pd
-from graphviz import Digraph
 from dash import Dash, html, dcc, Input, Output, callback
 import dash_cytoscape as cyto
+import logging
 from oemof.solph import EnergySystem, Model
 
 from ._data_handler import DataHandler
@@ -294,7 +294,8 @@ class SolphModel:
                 ]
             )
 
-        app.run(debug=True)  # TODO: debug false?
+        logging.getLogger("werkzeug").setLevel(logging.ERROR)
+        app.run(debug=False)  # TODO: debug true?
 
     def solve(
         self,
