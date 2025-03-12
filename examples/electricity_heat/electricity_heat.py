@@ -8,8 +8,8 @@ a demand (consumer) with a demand time series.
 And heat wise: a heat carrier, a heat pump, an heat exchanger as well as
 a heat demand time series.
 
-At first an energy system (here meta_model) is defined with a time series 
-(index). Afterwards a location is defined and added to the energysystem. Then 
+At first an energy system (here meta_model) is defined with a time series
+(index). Afterwards a location is defined and added to the energysystem. Then
 the electricity carrier and electricity demand (time series) are added to the
 energysystem. Furthermore a heat carrier is defined with specific temp-
 erature level(s) and a reference temperature. Then  a heat demand (time series)
@@ -100,19 +100,12 @@ solph_representation = SolphModel(
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="electricity_heat_detail.png")
-
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="electricity_heat_simple.png")
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="electricity_heat_results.png")
-
 solved_model.write(
     "electricity_heat.lp", io_options={"symbolic_solver_labels": True}
 )
+
+solph_representation.graph(flow_results=flows)
