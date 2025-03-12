@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, Dict, Tuple
 
 import pandas as pd
 from graphviz import Digraph
+from dash import Dash, html, dcc, Input, Output, callback
+import dash_cytoscape as cyto
 from oemof.solph import EnergySystem, Model
 
 from ._data_handler import DataHandler
@@ -92,15 +94,14 @@ class SolphModel:
 
     def graph(
         self,
-        detail: bool = False,
         flow_results: dict = None,
         flow_color: dict = None,
         colorscheme: dict = None,
-    ) -> Digraph:
-        """Generate a graph representation of the energy system."""
-        graph = Digraph(name="MTRESS model")
-        external_edges = set()
-
+    ) -> None:  # return Dash?
+        """
+        Generate an interactive graph representation of the energy system.
+        """
+        # manage coloring
         if flow_color is None:
             flow_color = {}
 
@@ -112,61 +113,188 @@ class SolphModel:
                 "HeatCarrier": "maroon",
             }
 
+        nodes_simple, nodes_detail, nodes_result = [], [], []
+        # iterate locations
         for location in self._meta_model.locations:
-            subgraph, external_edges = location.graph(
-                detail, flow_results, flow_color, colorscheme
+            n_simple, n_detail, n_result = location.graph(
+                flow_results,
+                flow_color,
+                colorscheme,
+            )
+            nodes_simple += n_simple
+            nodes_detail += n_detail
+            nodes_result += n_result
+
+        # init dash cytoscape
+        cyto.load_extra_layouts()
+        app = Dash()
+
+        tabs = [
+            dcc.Tab(label="simple", value="simple"),
+            dcc.Tab(label="detail", value="detail"),
+        ]
+        if flow_results != None:
+            tabs.append(dcc.Tab(label="results", value="results"))
+        app.layout = html.Div(
+            [
+                dcc.Tabs(
+                    id="detail_selector",
+                    value="simple",
+                    children=tabs,
+                ),
+                html.Div(id="graph"),
+            ]
+        )
+
+        @callback(
+            Output("graph", "children"), Input("detail_selector", "value")
+        )
+        def render_graph(tab):
+            if tab == "simple":
+                n = nodes_simple
+            elif tab == "detail":
+                n = nodes_detail
+            elif tab == "results":
+                n = nodes_result
+
+            return html.Div(
+                [
+                    cyto.Cytoscape(
+                        id="mtress_model",
+                        layout={"name": "cose-bilkent"},  # cola | klay
+                        style={
+                            "width": "100%",
+                            "height": "calc(100vh - 120px)",
+                        },
+                        stylesheet=[
+                            # Group selectors
+                            {
+                                "selector": "node",
+                                "style": {
+                                    "content": "data(label)",
+                                    "shape": "cut-rectangle",
+                                },
+                            },
+                            {
+                                "selector": "edge",
+                                "style": {
+                                    "curve-style": "bezier",
+                                    "source-arrow-shape": "triangle",
+                                    "line-color": "black",
+                                    "source-arrow-color": "black",
+                                },
+                            },
+                            # Class selectors
+                            # coloring
+                            {
+                                "selector": "." + colorscheme["HeatCarrier"],
+                                "style": {
+                                    "line-color": colorscheme["HeatCarrier"],
+                                    "source-arrow-color": colorscheme[
+                                        "HeatCarrier"
+                                    ],
+                                },
+                            },
+                            {
+                                "selector": "."
+                                + colorscheme["ElectricityCarrier"],
+                                "style": {
+                                    "line-color": colorscheme[
+                                        "ElectricityCarrier"
+                                    ],
+                                    "source-arrow-color": colorscheme[
+                                        "ElectricityCarrier"
+                                    ],
+                                },
+                            },
+                            {
+                                "selector": "." + colorscheme["GasCarrier"],
+                                "style": {
+                                    "line-color": colorscheme["GasCarrier"],
+                                    "source-arrow-color": colorscheme[
+                                        "GasCarrier"
+                                    ],
+                                },
+                            },
+                            {
+                                "selector": ".inactive",
+                                "style": {
+                                    "line-color": "lightgrey",
+                                    "source-arrow-color": "lightgrey",
+                                },
+                            },
+                            {
+                                "selector": ".rainbow",
+                                "style": {
+                                    "line-fill": "linear-gradient",
+                                    "line-gradient-stop-colors": "firebrick darkorange gold chartreuse deepskyblue cornflowerblue darkslateblue",
+                                    "source-arrow-color": "firebrick",
+                                },
+                            },
+                            # node shapes
+                            {
+                                "selector": ".source",
+                                "style": {
+                                    "shape": "polygon",
+                                    "shape-polygon-points": "1, 1, 0.5, -1, -0.5, -1, -1, 1",
+                                    "text-valign": "center",
+                                    "text-halign": "center",
+                                    "width": "label",
+                                },
+                            },
+                            {
+                                "selector": ".sink",
+                                "style": {
+                                    "shape": "polygon",
+                                    "shape-polygon-points": "0.5, 1, 1, -1, -1, -1, -0.5, 1",
+                                    "text-valign": "center",
+                                    "text-halign": "center",
+                                    "width": "label",
+                                },
+                            },
+                            {
+                                "selector": ".bus",
+                                "style": {
+                                    "shape": "ellipse",
+                                    "text-valign": "center",
+                                    "text-halign": "center",
+                                    "width": "label",
+                                },
+                            },
+                            {
+                                "selector": ".converter",
+                                "style": {
+                                    "shape": "octagon",
+                                    "text-valign": "center",
+                                    "text-halign": "center",
+                                    "width": "label",
+                                },
+                            },
+                            {
+                                "selector": ".storage",
+                                "style": {
+                                    "shape": "barrel",
+                                    "text-valign": "center",
+                                    "text-halign": "center",
+                                    "width": "label",
+                                },
+                            },
+                            {
+                                "selector": ".parent",
+                                "style": {
+                                    "shape": "round-rectangle",
+                                    "text-valign": "top",
+                                    # "text-halign": "center",
+                                    # "width": "label",
+                                },
+                            },
+                        ],
+                        elements=n,
+                    )
+                ]
             )
 
-            external_edges.update(external_edges)
-            graph.subgraph(subgraph)
-
-            for edge in external_edges:
-                graph.edge(edge[0], edge[1], label=edge[2], color=edge[3])
-        return graph
-
-    def graph_series(
-        self,
-        flow_results: dict,
-        step: pd.Timedelta,
-        start: pd.Timestamp = None,
-        stop: pd.Timestamp = None,
-        flow_color: dict = None,
-        colorscheme: dict = None,
-    ) -> list[Digraph]:
-        """
-        Wrapper for graph function to generate multiple graphs as a series.
-        """
-        if start is None:
-            # use first entry of time series
-            temp_flow = list(flow_results.items())[0][1]
-            start = temp_flow.index[0]
-        if stop is None:
-            # use last entry of time series
-            temp_flow = list(flow_results.items())[0][1]
-            stop = temp_flow.index[-1]
-        current = start
-        graphs = []
-        while current + step <= stop:
-            current_flow = {
-                k: v[current : current + step] for k, v in flow_results.items()
-            }
-            g = self.graph(
-                detail=True,
-                flow_results=current_flow,
-                flow_color=flow_color,
-                colorscheme=colorscheme,
-            )
-            g.attr(
-                label=(
-                    current.strftime("%Y-%m-%d %X")
-                    + " - "
-                    + (current + step).strftime("%Y-%m-%d %X")
-                )
-            )
-            graphs.append(g)
-            current += step
-
-        return graphs
+        app.run(debug=True)  # TODO: debug false?
 
     def solve(
         self,

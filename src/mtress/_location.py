@@ -101,27 +101,32 @@ class Location(NamedElement):
 
     def graph(
         self,
-        detail: bool = True,
-        flow_results=None,
+        flow_results: dict = None,
         flow_color: dict = None,
         colorscheme: dict = None,
-    ) -> Tuple[Digraph, set]:
-        """
-        Generate graphviz visualization of the MTRESS location.
+    ) -> Dict:
+        id = "-".join(self.identifier)
+        nodes_simple = [
+            {
+                "data": {
+                    "id": id,
+                    "label": self.name,
+                },
+                "classes": "parent",
+            },
+        ]
+        nodes_detail = list(nodes_simple)
+        nodes_result = list(nodes_simple)
 
-        :param detail: Include solph nodes.
-        """
-        graph = Digraph(name=f"cluster_{self.identifier}")
-        graph.attr("graph", label=self.name)
-
-        external_edges = set()
-
+        # iterate components
         for component in self.components:
-            subgraph, edges = component.graph(
-                detail, flow_results, flow_color, colorscheme
+            n_simple, n_detail, n_result = component.graph(
+                flow_results,
+                flow_color,
+                colorscheme,
             )
+            nodes_simple += n_simple
+            nodes_detail += n_detail
+            nodes_result += n_result
 
-            external_edges.update(edges)
-            graph.subgraph(subgraph)
-
-        return graph, external_edges
+        return nodes_simple, nodes_detail, nodes_result
