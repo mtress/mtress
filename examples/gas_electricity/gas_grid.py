@@ -123,18 +123,10 @@ house_1.connect(connection=technologies.GasGridConnection, destination=house_2)
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="gas_grid_detail.png")
-
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="gas_grid_simple.png")
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="gas_grid_flow.png")
+solved_model.write("gas_grid.lp", io_options={"symbolic_solver_labels": True})
 
-solved_model.write("gas_plant.lp", io_options={"symbolic_solver_labels": True})
+solph_representation.graph(flow_results=flows)
