@@ -161,7 +161,7 @@ class SolphModel:
                 [
                     cyto.Cytoscape(
                         id="mtress_model",
-                        layout={"name": "cose-bilkent"},  # cola | klay
+                        layout={"name": "cola"},  # cose-bilkent | cola | klay
                         style={
                             "width": "100%",
                             "height": "calc(100vh - 120px)",
