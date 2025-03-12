@@ -1,7 +1,7 @@
 """
 Basic example to show that it's possible to define the values you want to apply
 when there is excess or missing heat
- 
+
 """
 
 import os
@@ -55,15 +55,13 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-
 myresults = results(solved_model)
 flows = get_flows(myresults)
-
-plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="specify_penalties.png")
 
 mr = meta_results(solved_model)
 
 # Print the objective value.
 # Here it contains the cost of the operation including penalties.
 print(mr["objective"])
+
+solph_representation.graph(flow_results=flows)

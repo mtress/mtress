@@ -111,21 +111,12 @@ house_1.connect(
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="conn_pv_detail.png")
-
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="conn_pv_simple.png")
-
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
-results = pd.DataFrame(flows)
 
-plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="conn_pv_results.png")
+solph_representation.graph(flow_results=flows)
 
 solved_model.write(
-    "electricity_pv.lp", io_options={"symbolic_solver_labels": True}
+    "connecting_location.lp", io_options={"symbolic_solver_labels": True}
 )

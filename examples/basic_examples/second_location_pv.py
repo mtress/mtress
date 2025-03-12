@@ -71,21 +71,12 @@ house_1.connect(
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="second_location_pv_detail.png")
-
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="second_location_pv_simple.png")
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-plot = solph_representation.graph(
-    detail=True, flow_results=flows, flow_color=None
-)
-plot.render(outfile="second_location_pv_results.png")
+solph_representation.graph(flow_results=flows)
 
 solved_model.write(
-    "electricity_pv.lp", io_options={"symbolic_solver_labels": True}
+    "second_location_pv.lp", io_options={"symbolic_solver_labels": True}
 )
