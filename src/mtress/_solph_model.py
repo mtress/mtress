@@ -284,8 +284,6 @@ class SolphModel:
                                 "style": {
                                     "shape": "round-rectangle",
                                     "text-valign": "top",
-                                    # "text-halign": "center",
-                                    # "width": "label",
                                 },
                             },
                         ],
