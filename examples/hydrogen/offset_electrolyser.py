@@ -88,20 +88,10 @@ solph_representation = SolphModel(
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="offset_ely_detail.png")
-
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="offset_ely_simple.png")
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-
-logging.info("Optimise the energy system")
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-results_df = pd.DataFrame(flows)
-plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="offset_ely_detail_flows.png")
-
 solved_model.write("offset.lp", io_options={"symbolic_solver_labels": True})
+
+solph_representation.graph(flow_results=flows)
