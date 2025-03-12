@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Callable, NamedTuple, Tuple
+from typing import TYPE_CHECKING, Callable, NamedTuple, Tuple, List
 
 from graphviz import Digraph
 from oemof.solph import Bus
@@ -22,12 +22,12 @@ if TYPE_CHECKING:
     from ._location import Location
 
 SOLPH_SHAPES = {
-    Source: "trapezium",
-    Sink: "invtrapezium",
-    Bus: "ellipse",
-    Converter: "octagon",
-    OffsetConverter: "octagon",
-    GenericStorage: "cylinder",
+    Source: "source",
+    Sink: "sink",
+    Bus: "bus",
+    Converter: "converter",
+    OffsetConverter: "converter",
+    GenericStorage: "storage",
 }
 
 test_dict = {}
@@ -171,122 +171,113 @@ class AbstractSolphRepresentation(AbstractComponent):
 
     def graph(
         self,
-        detail: bool = False,
-        flow_results=None,
+        flow_results: dict = None,
         flow_color: dict = None,
         colorscheme: dict = None,
-    ) -> Tuple[Digraph, set]:
+    ) -> List:
         self.get_flow_color(flow_color, colorscheme)
-        """
-        Generate graphviz visualization of the MTRESS component.
 
-        :param detail: Include solph nodes.
-        """
+        id = "-".join(self.identifier)
+        parent = "-".join(self.location.identifier)
+
+        # add component
+        nodes_simple = [
+            {
+                "data": {
+                    "id": id,
+                    "label": self.name,
+                    "parent": parent,
+                },
+                "classes": "bus",
+            }
+        ]
+        nodes_detail = [
+            {
+                "data": {
+                    "id": id,
+                    "label": self.name,
+                    "parent": parent,
+                },
+                "classes": "parent",
+            }
+        ]
+        nodes_result = list(nodes_detail)
+
+        # external edges for simple graph
         external_edges = set()
 
-        graph = Digraph(name=f"cluster_{self.identifier}")
-        graph.attr(
-            "graph",
-            label=self.name,
-            # Draw border of cluster only for detail representation
-            style="dashed" if detail else "invis",
-            color="black",
-        )
-
-        if not detail:
-            # TODO: Node shape?
-            graph.node(str(self.identifier), label=self.name)
-
+        # iterate nodes
         for solph_node in self.solph_nodes:
-            node_flow = 0
-            if detail:
-                graph.node(
-                    name=str(solph_node.label),
-                    label=str(solph_node.short_label),
-                    shape=SOLPH_SHAPES.get(type(solph_node), "rectangle"),
-                )
+            # add node
+            n = {
+                "data": {
+                    "id": "-".join(solph_node.label),
+                    "label": solph_node.short_label,
+                    "parent": id,
+                },
+                "classes": SOLPH_SHAPES.get(type(solph_node), "rectangle"),
+            }
+            nodes_detail.append(n)
+            nodes_result.append(n)
 
+            # iterate edges
             for origin in solph_node.inputs:
+                # internal edges
                 edge_color = flow_color.get(tuple(origin.label), {}).get(
                     tuple(solph_node.label), "black"
                 )
-                if origin in self._solph_nodes:
-                    # This is an internal edge and thus only added
-                    # if detail is True
-                    if detail:
-                        flow = 0
-                        if flow_results is not None:
-                            flow = (
-                                flow_results[(origin.label, solph_node.label)]
-                            ).sum()
-                            node_flow += flow
-                            if flow > 0:
-                                graph.edge(
-                                    str(origin.label),
-                                    str(solph_node.label),
-                                    label=f"{round(flow, 3)}",
-                                    color=edge_color,
-                                )
-                            else:
-                                graph.edge(
-                                    str(origin.label),
-                                    str(solph_node.label),
-                                    color="grey",
-                                )
-                        else:
-                            graph.edge(
-                                str(origin.label), str(solph_node.label)
-                            )
-                else:
-                    # This is an external edge
-                    if detail:
-                        flow = 0
-                        if flow_results is not None:
-                            flow = (
-                                flow_results[(origin.label, solph_node.label)]
-                            ).sum()
+                e_detail = {
+                    "data": {
+                        "source": "-".join(solph_node.label),
+                        "target": "-".join(origin.label),
+                    },
+                }
+                nodes_detail.append(e_detail)
 
-                            if flow > 0:
-                                external_edges.add(
-                                    (
-                                        str(origin.label),
-                                        str(solph_node.label),
-                                        f"{round(flow, 3)}",
-                                        edge_color,
-                                    )
-                                )
-                            else:
-                                external_edges.add(
-                                    (
-                                        str(origin.label),
-                                        str(solph_node.label),
-                                        "",
-                                        "grey",
-                                    )
-                                )
-                        else:
-                            external_edges.add(
-                                (
-                                    str(origin.label),
-                                    str(solph_node.label),
-                                    "",
-                                    "black",
-                                )
-                            )
+                if flow_results is not None:
+                    flow = (
+                        flow_results[(origin.label, solph_node.label)]
+                    ).sum()
+                    e_result = {
+                        "data": {
+                            "source": "-".join(solph_node.label),
+                            "target": "-".join(origin.label),
+                        },
+                    }
+                    if flow > 0:
+                        e_result["classes"] = edge_color
+                        e_result["style"] = {
+                            "label": str(round(flow, 3)),
+                            "text-rotation": "autorotate",
+                            "text-background-shape": "round-rectangle",
+                            "text-background-opacity": "1",
+                            "color": "white",
+                        }
+                        # TODO: show edge only if active?
+                        nodes_result.append(e_result)
                     else:
-                        # Add edge from MTRESS component to MTRESS component
-                        external_edges.add(
-                            (
-                                str(origin.mtress_component.identifier),
-                                str(self.identifier),
-                                "",
-                                "black",
-                            )
-                        )
+                        e_result["classes"] = "inactive"
+                # nodes_result.append(e_result)
 
-        return graph, external_edges
+                # external edges
+                if origin not in self._solph_nodes:
+                    e_simple = (
+                        id,
+                        "-".join(origin.mtress_component.identifier),
+                    )
+                    external_edges.add(e_simple)
 
-    # TODO: Methods for result analysis
+        # add external edges to simple graph
+        for s, t in external_edges:
+            e_s = {
+                "data": {
+                    "source": s,
+                    "target": t,
+                }
+            }
+            nodes_simple.append(e_s)
+
+        return nodes_simple, nodes_detail, nodes_result
 
 
 class ModelicaInterface(
