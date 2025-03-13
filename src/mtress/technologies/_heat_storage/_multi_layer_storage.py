@@ -25,9 +25,15 @@ class LayeredHeatStorage(AbstractHeatStorage):
     """
     Layered heat storage.
 
-    Matrjoschka storage, i.e. one storage per temperature level
-    with shared resources.
-    See https://arxiv.org/abs/2012.12664
+    Layered storage, i.e. one subvolume per temperature level
+    following https://doi.org/10.1016/j.apenergy.2022.118890.
+
+    For simplification, an infitesimal subvolume for each temperature is
+    and will be assumed to be always present, meaning that losses do not skip
+    depleted layers and top-level losses will always consider the highest
+    temeprature.
+    Note that currently, only heat losses through the side are implemented,
+    the storage only works for min_temperature == ambient_temperature.
     """
 
     def __init__(
