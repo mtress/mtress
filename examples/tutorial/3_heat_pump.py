@@ -12,7 +12,6 @@ from mtress import (
     technologies,
 )
 from mtress._helpers import get_flows
-from mtress._helpers._visualization import render_series
 
 os.chdir(os.path.dirname(__file__))
 
