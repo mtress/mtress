@@ -69,8 +69,8 @@ def test_layered_heat_storage():
             name="HS",
             diameter=1,
             volume=10,
-            ambient_temperature=n_days * 24 * [0],
-            u_value=None,
+            ambient_temperature=10,
+            u_value=0.2,
             power_limit=None,
             max_temperature=30,
             min_temperature=10,
@@ -129,8 +129,7 @@ if __name__ == "__main__":
     plt.grid()
 
     plt.legend()
+    plt.show()
 
     plot = solph_representation.graph(detail=True, flow_results=flows)
     plot.render(outfile="layered_heat_demand.png")
-
-    plt.show()

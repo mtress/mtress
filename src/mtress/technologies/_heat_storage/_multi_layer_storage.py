@@ -16,7 +16,7 @@ from pyomo import environ as po
 
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import HeatCarrier
-from mtress.physics import H2O_DENSITY
+from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR
 
 from ._abstract_heat_storage import AbstractHeatStorage
 
@@ -36,8 +36,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
         diameter: float,
         volume: float,
         power_limit: float,
-        ambient_temperature: TimeseriesSpecifier,
-        reference_temperature: float = 0,
+        ambient_temperature: float,
         u_value: float | None = None,
         max_temperature: float | None = None,
         min_temperature: float | None = None,
@@ -75,7 +74,6 @@ class LayeredHeatStorage(AbstractHeatStorage):
             initial_storage_levels = {}
 
         self.initial_storage_levels = initial_storage_levels
-        self.reference_temperature = reference_temperature
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -86,7 +84,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
 
         temperature_levels = heat_carrier.levels
 
-        loss_flow = {}
+        gain_flow = {}
 
         for temperature in temperature_levels:
             if self.min_temperature <= temperature <= self.max_temperature:
@@ -99,40 +97,12 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 else:
                     initial_storage_level = None
 
-                if self.u_value is None:
-                    loss_rate = 0
-                    fixed_losses_relative = 0
-                    fixed_losses_absolute = 0
-                else:
-                    (
-                        loss_rate,
-                        fixed_losses_relative,
-                        fixed_losses_absolute,  # MW
-                    ) = stratified_thermal_storage.calculate_losses(
-                        u_value=self.u_value,
-                        diameter=self.diameter,
-                        temp_h=temperature,
-                        temp_c=self.reference_temperature,
-                        temp_env=self._solph_model.data.get_timeseries(
-                            self.ambient_temperature,
-                            kind=TimeseriesType.INTERVAL,
-                        ),
-                    )
-                    fixed_losses_relative = fixed_losses_relative
-                    fixed_losses_absolute = fixed_losses_absolute
-
-                # losses to the upper side of the storage will just leave the
-                # storage for the uppermost level.
-                # So, we neglect them for the others.
-                if temperature != max(temperature_levels):
-                    fixed_losses_relative = fixed_losses_absolute = 0
-
                 bus = self.create_solph_node(
                     label=f"b_{temperature:.0f}",
                     node_type=Bus,
                     inputs={level_node: Flow(nominal_value=self.power_limit)},
                     outputs={level_node: Flow(nominal_value=self.power_limit)}
-                    | loss_flow,
+                    | gain_flow,
                 )
 
                 self.buses[temperature] = bus
@@ -143,16 +113,13 @@ class LayeredHeatStorage(AbstractHeatStorage):
                     inputs={bus: Flow()},
                     outputs={bus: Flow()},
                     nominal_storage_capacity=self.volume * H2O_DENSITY,
-                    loss_rate=loss_rate,
                     balanced=self.balanced,
                     initial_storage_level=initial_storage_level,
-                    fixed_losses_absolute=fixed_losses_absolute,
-                    fixed_losses_relative=fixed_losses_relative,
                 )
 
                 self.storage_components[temperature] = storage
 
-                loss_flow = {}
+                gain_flow = {bus: Flow()}
 
     def add_constraints(self):
         """Add constraints to the model."""
@@ -180,17 +147,24 @@ class LayeredHeatStorage(AbstractHeatStorage):
             ):
 
                 def equate_variables_rule(_, t):
-                    ratio = (
-                        lower_temperature - self.ambient_temperature[t]
-                    ) / (upper_temperature - self.ambient_temperature[t])
+                    loss_factor = (
+                        4
+                        * SECONDS_PER_HOUR
+                        * self.u_value
+                        * (upper_temperature - self.ambient_temperature)
+                    ) / (
+                        self.diameter
+                        * H2O_DENSITY
+                        * H2O_HEAT_CAPACITY
+                        * (upper_temperature - lower_temperature)
+                    )
                     return (
-                        (ratio / (1 - ratio))
-                        * (
-                            model.GenericStorageBlock.storage_losses[
+                        loss_factor * (
+                            model.GenericStorageBlock.storage_content[
                                 self.storage_components[upper_temperature], t
                             ]
                         )
-                    ) <= model.flow[
+                    ) == model.flow[
                         self.buses[upper_temperature],
                         self.buses[lower_temperature],
                         t,
