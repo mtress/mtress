@@ -23,7 +23,7 @@ class AbstractHeatStorage(AbstractTechnology, AbstractSolphRepresentation):
         diameter: float,
         volume: float,
         power_limit: float,
-        ambient_temperature: TimeseriesSpecifier,
+        ambient_temperature: float,
         u_value: float | None = None,
         max_temperature: float | None = None,
         min_temperature: float | None = None,
