@@ -62,12 +62,7 @@ house_1.add(
     )
 )
 
-house_1.add(
-    carriers.HeatCarrier(
-        temperature_levels=[20, 80],
-        reference_temperature=0,
-    )
-)
+house_1.add(carriers.HeatCarrier(temperature_levels=[20, 80]))
 
 house_1.add(
     demands.FixedTemperatureHeating(

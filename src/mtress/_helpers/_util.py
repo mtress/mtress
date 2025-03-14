@@ -119,9 +119,10 @@ def enable_templating(template_class):
         func_params = func_signature.parameters
         # check if kw arguments have been provided
         kwargs_present = any(
-            param.kind==inspect.Parameter.VAR_KEYWORD
+            param.kind == inspect.Parameter.VAR_KEYWORD
             for param_str, param in func_params.items()
-            )
+        )
+
         def _wrapper(*args, template=None, **kwargs):
             if template is not None:
                 if not isinstance(template, template_class):
@@ -130,9 +131,9 @@ def enable_templating(template_class):
                     )
 
                 for param in param_names:
-                    if (param not in kwargs and (
-                            param in func_params or kwargs_present)
-                            ):
+                    if param not in kwargs and (
+                        param in func_params or kwargs_present
+                    ):
                         # Take the value from the template if it is not
                         # provided as keyword argument
                         kwargs[param] = getattr(template, param)

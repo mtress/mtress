@@ -70,12 +70,7 @@ house_1.add(
     )
 )
 
-house_1.add(
-    carriers.HeatCarrier(
-        temperature_levels=[20, 80],
-        reference_temperature=10,
-    )
-)
+house_1.add(carriers.HeatCarrier(temperature_levels=[20, 80]))
 
 
 # Choose default CHP template (HYDROGEN_MIXED_CHP) and change gas

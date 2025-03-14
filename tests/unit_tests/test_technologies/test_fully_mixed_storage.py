@@ -8,6 +8,8 @@ def test_storage_initialisation():
     storage_volume = 0.8
     storage_power_limit = 2
     ambient_temperature = 10
+    max_temperature = 60
+    min_temperature = 20
 
     storage = FullyMixedHeatStorage(
         name=storage_name,
@@ -15,6 +17,8 @@ def test_storage_initialisation():
         volume=storage_volume,
         power_limit=storage_power_limit,
         ambient_temperature=ambient_temperature,
+        max_temperature = 60,
+        min_temperature = 20,
     )
 
     assert storage.name == storage_name
@@ -22,12 +26,9 @@ def test_storage_initialisation():
     assert storage.volume == storage_volume
     assert storage.power_limit == storage_power_limit
     assert storage.ambient_temperature == ambient_temperature
-    assert (
-        storage.capacity_per_unit
-        == storage_volume
-        * (H2O_DENSITY * H2O_HEAT_CAPACITY)
-        / SECONDS_PER_HOUR
-    )
+    assert storage.max_temperature == max_temperature
+    assert storage.min_temperature == min_temperature
+    assert storage.capacity_per_unit == storage_volume * H2O_DENSITY
 
     ambient_temperature = [10, 13]
     storage = FullyMixedHeatStorage(
@@ -36,5 +37,7 @@ def test_storage_initialisation():
         volume=storage_volume,
         power_limit=storage_power_limit,
         ambient_temperature=ambient_temperature,
+        max_temperature=60,
+        min_temperature=20,
     )
     assert storage.ambient_temperature == ambient_temperature

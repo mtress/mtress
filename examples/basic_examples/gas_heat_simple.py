@@ -37,12 +37,7 @@ house_1.add(
 # Add carriers
 house_1.add(carriers.GasCarrier(gases={NATURAL_GAS: [10]}))
 
-house_1.add(
-    carriers.HeatCarrier(
-        temperature_levels=[20, 30, 50],
-        reference_temperature=0,
-    )
-)
+house_1.add(carriers.HeatCarrier(temperature_levels=[20, 30, 50]))
 
 # Add demands
 house_1.add(
@@ -61,7 +56,7 @@ house_1.add(
         gas_type=NATURAL_GAS,
         maximum_temperature=55,
         minimum_temperature=20,
-        heating_power=50000,  #  W
+        thermal_power_limit=50000,  #  W
         efficiency=0.85,
         input_pressure=10,
     )
@@ -71,7 +66,7 @@ solph_representation = SolphModel(
     timeindex={
         "start": "2021-07-10 00:00:00",
         "end": "2021-07-10 02:00:00",
-        "freq": "60T",
+        "freq": "60min",
     },
 )
 

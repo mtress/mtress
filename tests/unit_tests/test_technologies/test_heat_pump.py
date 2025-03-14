@@ -45,7 +45,7 @@ def test_heat_pump_init_custom_design_conditions():
     assert hp.ref_cop == hp_ref_cop
 
 
-def test_heat_pump_example():
+def test_heat_pump_heating_example():
 
     energy_system = MetaModel()
 
@@ -58,18 +58,17 @@ def test_heat_pump_example():
 
     house_1.add(
         carriers.HeatCarrier(
-            temperature_levels=[5, 10, 20, 30, 40],
-            reference_temperature=0,
+            temperature_levels=[10, 15, 20, 30, 40, 55],
         )
     )
 
     # Add technologies
     house_1.add(
-        technologies.HeatExchanger(
+        technologies.HeatSource(
             name="Air_HE",
             reservoir_temperature=20,
             maximum_working_temperature=40,
-            minimum_working_temperature=5,
+            minimum_working_temperature=10,
             nominal_power=1e4,
         )
     )
@@ -78,20 +77,10 @@ def test_heat_pump_example():
         technologies.HeatPump(
             name="HeatPump",
             thermal_power_limit=None,
-            max_temp_primary=10,
-            min_temp_primary=5,
+            max_temp_primary=20,
+            min_temp_primary=10,
             max_temp_secondary=40,
             min_temp_secondary=30,
-        )
-    )
-
-    # Add demands
-    house_1.add(
-        demands.FixedTemperatureCooling(
-            name="Cooling_demand",
-            max_flow_temperature=5,
-            return_temperature=10,
-            time_series=[50, 50, 40, 25],
         )
     )
 
@@ -118,6 +107,6 @@ def test_heat_pump_example():
     solved_model = solph_representation.solve(solve_kwargs={"tee": True})
     mr = meta_results(solved_model)
 
-    pyomo_objective = 1235.7246755
+    pyomo_objective = 640.7893695
 
     assert math.isclose(pyomo_objective, mr["objective"], abs_tol=3e-3)

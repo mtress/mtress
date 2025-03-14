@@ -1,7 +1,7 @@
 """
 This example shows how to use the SlackNode technology.
 First a basic energy system is created.
-Next, the SlackNode technology is created with different 
+Next, the SlackNode technology is created with different
     penalties per energy carrier.
 Lastly, after the model is build and solved,
     flows from and to the SlackNode are strongly highlighted
@@ -31,12 +31,7 @@ energy_system.add_location(house_1)
 
 # Add carriers
 house_1.add(carriers.ElectricityCarrier())
-house_1.add(
-    carriers.HeatCarrier(
-        temperature_levels=[5, 10, 20, 30, 40],
-        reference_temperature=0,
-    )
-)
+house_1.add(carriers.HeatCarrier(temperature_levels=[5, 10, 20, 30, 40]))
 
 # Add technologies
 house_1.add(

@@ -36,9 +36,10 @@ test_dict = {}
 class AbstractComponent(NamedElement):
     """Abstract MTRESS component."""
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, name: str, autoconnect: bool = True) -> None:
         """Initialize a generic MTRESS component."""
-        super().__init__(**kwargs)
+        super().__init__(name)
+        self.autoconnect = autoconnect
         self._location = None
 
     @property

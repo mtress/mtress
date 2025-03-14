@@ -54,8 +54,7 @@ class TestFuelCell:
 
         house_1.add(
             carriers.HeatCarrier(
-                temperature_levels=[20, template.maximum_temperature],
-                reference_temperature=10,
+                temperature_levels=[20, template.maximum_temperature]
             )
         )
 
@@ -134,9 +133,9 @@ class TestOffsetFuelCell:
             (AFC, 0, 0.342255559),
             (PEMFC, 0, 0.314030005),
             (AEMFC, 0, 0.3678928605),
-            (AFC, AFC.minimum_load, 1444444420000.05),
-            (PEMFC, PEMFC.minimum_load, 1400000000000.05),
-            (AEMFC, AEMFC.minimum_load, 1571428590000.05),
+            (AFC, AFC.minimum_load, 38281176000.05),
+            (PEMFC, PEMFC.minimum_load, 34453058000.05),
+            (AEMFC, AEMFC.minimum_load, 49218654000.05),
         ],
     )
     def test_ofc(self, template, norm_min_power, expected_result):
@@ -163,7 +162,6 @@ class TestOffsetFuelCell:
                     template.minimum_temperature,
                     template.maximum_temperature,
                 ],
-                reference_temperature=10,
             )
         )
 

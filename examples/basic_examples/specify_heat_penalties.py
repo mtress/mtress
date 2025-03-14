@@ -1,7 +1,7 @@
 """
 Basic example to show that it's possible to define the values you want to apply
 when there is excess or missing heat
- 
+
 """
 
 import os
@@ -25,12 +25,7 @@ energy_system = MetaModel()
 house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
-house_1.add(
-    carriers.HeatCarrier(
-        temperature_levels=[10, 20, 30, 40, 55],
-        reference_temperature=0,
-    )
-)
+house_1.add(carriers.HeatCarrier(temperature_levels=[10, 20, 30, 40, 55]))
 house_1.add(
     demands.FixedTemperatureHeating(
         name="space_heating",

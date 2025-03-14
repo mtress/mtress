@@ -247,7 +247,7 @@ class CHP(AbstractHeater):
             node_type=Converter,
             inputs={
                 gas_bus[gas]: Flow(nominal_value=nominal_gas_consumption)
-                for gas, share in self.gas_type.items()
+                for gas in self.gas_type.keys()
             },
             outputs={
                 electrical_bus: Flow(),

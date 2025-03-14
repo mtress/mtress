@@ -1,6 +1,6 @@
 """
-This example shows how to introduce fixed losses per hour independent of 
-storage content and of nominal storage capacity. 
+This example shows how to introduce fixed losses per hour independent of
+storage content and of nominal storage capacity.
 """
 
 import os
