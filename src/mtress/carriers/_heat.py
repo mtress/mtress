@@ -32,11 +32,11 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
         renewable energy supply systems. This is done by defining several
         discrete temperature levels.
 
-        Notice that the assumption of a hydraulic system typically does not
-        impact the result. It is just to have a temperate-independent measure
-        for the energy, meaning that the sum of flows into and out of the
-        HeatCarrier and all attached Technologies should be zero although
-        the latter increase or dectrease the energy.
+        Note that the assumption of a hydraulic system does not normally
+        affect the result. It is simply a matter of having a temperature-
+        independent measure of energy, meaning that the sum of the flows into
+        and out of the HeatCarrier and all attached Technologies should be
+        zero, even if the latter increase or decrease the energy.
 
         Other components and demands might be added to the energy_system by
         their respective classes / functions and are automatically connected

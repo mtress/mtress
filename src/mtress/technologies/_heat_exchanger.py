@@ -13,7 +13,7 @@ from ._abstract_technology import AbstractTechnology
 
 class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
     """
-    Heat exchanger
+    Heat exchanger (HE)
 
     Functionality: Holds a time series of both the temperature and the
         power limit that can be drawn from the source and/or expelled
@@ -47,9 +47,13 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         Initialize heat exchanger to draw or expel energy from a source
 
         :param name: Name of the component.
-        :param nominal_power: Nominal power of the heat exchanger (in W),
-            default to None.
         :param reservoir_temperature: Reference to air temperature time series
+        :param minimum_working_temperature: Minimum temperature limit (in °C)
+        :param maximum_working_temperature: maximum temperature limit (in °C)
+        :param nominal_power: Nominal power of the heat exchanger (in W),
+            default to None
+        :param minimum_delta: Specifies the delta between the primary and
+            secondary sides of the HE (in °C)
         """
         super().__init__(name=name)
 

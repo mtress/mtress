@@ -194,14 +194,15 @@ class Electrolyser(AbstractElectrolyser):
 
         :param name: Name of the component
         :param nominal_power: Nominal electrical power (in W) of the component
-        :param max_load_hydrogen_efficiency: Hydrogen production efficiency at
+        :param full_load_hydrogen_efficiency: Hydrogen production efficiency at
             nominal load, i.e., the ratio of hydrogen output and
             electrical input
-        :param max_load_thermal_efficiency: Thermal efficiency at the nominal
+        :param full_load_thermal_efficiency: Thermal efficiency at the nominal
             load i.e., ratio of thermal output and electrical input
         :param maximum_temperature: Maximum waste heat temperature level
             (in °C).
         :param minimum_temperature: Minimum return temperature level (in °C)
+        :param hydrogen_output_pressure: output pressure (in bar)
         """
         super().__init__(
             name=name,
@@ -288,10 +289,10 @@ class OffsetElectrolyser(AbstractElectrolyser):
 
         :param name: Name of the component
         :param nominal_power: Nominal electrical power (in W) of the component
-        :param max_load_hydrogen_efficiency: Hydrogen production efficiency at
+        :param full_load_hydrogen_efficiency: Hydrogen production efficiency at
             nominal load, i.e., the ratio of hydrogen output and
             electrical input
-        :param max_load_thermal_efficiency: Thermal efficiency at the nominal
+        :param full_load_thermal_efficiency: Thermal efficiency at the nominal
             load i.e., ratio of thermal output and electrical input
         :param maximum_temperature: Maximum waste heat temperature level
             (in °C).
