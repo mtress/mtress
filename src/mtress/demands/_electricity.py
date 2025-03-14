@@ -61,6 +61,3 @@ class Electricity(AbstractDemand, AbstractSolphRepresentation):
         )
 
         # TODO: categorize out flow
-
-    def establish_interconnections(self) -> None:
-        pass

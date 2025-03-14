@@ -68,6 +68,3 @@ class AbstractLayeredCarrier(AbstractCarrier):
             max_index = np.searchsorted(self.levels, maximum)
 
         return self.levels[min_index:max_index]
-
-    def establish_interconnections(self) -> None:
-        pass

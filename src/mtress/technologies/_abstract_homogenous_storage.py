@@ -157,6 +157,3 @@ class AbstractHomogenousStorage(AbstractSolphRepresentation):
             f"""Storage constraint implementation {self.implementation} 
             not implement"""
         )
-
-    def establish_interconnections(self) -> None:
-        pass

@@ -54,6 +54,3 @@ class AbstractHeatStorage(AbstractTechnology, AbstractSolphRepresentation):
             self.u_value = u_value
         else:
             raise ValueError("u_value needs to be positive.")
-
-    def establish_interconnections(self):
-        pass

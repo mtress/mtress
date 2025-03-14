@@ -91,6 +91,3 @@ class RenewableElectricitySource(
             node_type=Source,
             outputs={local_bus: flow},
         )
-
-    def establish_interconnections(self) -> None:
-        pass

@@ -201,6 +201,3 @@ class Photovoltaics(RenewableElectricitySource):
         self.specific_generation = model_chain.results.ac
 
         return super().build_core()
-
-    def establish_interconnections(self) -> None:
-        pass
