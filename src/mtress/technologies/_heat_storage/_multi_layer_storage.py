@@ -152,20 +152,22 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 temperatures, temperatures[1:]
             ):
 
-                def equate_variables_rule(_, t):
-                    loss_factor = (
-                        4
-                        * SECONDS_PER_HOUR
-                        * self.u_value
-                        * (upper_temperature - self.ambient_temperature)
-                    ) / (
-                        self.diameter
-                        * H2O_DENSITY
-                        * H2O_HEAT_CAPACITY
-                        * (upper_temperature - lower_temperature)
+                loss_rate, _, fixed_losses = (
+                    stratified_thermal_storage.calculate_losses(
+                        self.u_value,
+                        self.diameter,
+                        upper_temperature,
+                        lower_temperature,
+                        self.ambient_temperature,
                     )
+                )
+                # fixed losses are only present for the top level
+                if upper_temperature < temperatures[-1]:
+                    fixed_losses = 0
+
+                def equate_variables_rule(_, t):
                     return (
-                        loss_factor * (
+                        fixed_losses + loss_rate * (
                             model.GenericStorageBlock.storage_content[
                                 self.storage_components[upper_temperature], t
                             ]
