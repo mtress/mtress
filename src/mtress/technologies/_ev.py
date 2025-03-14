@@ -45,7 +45,7 @@ GenericSegmentC_EV = ElectricVehicleTemplate(
     nominal_capacity=62e3,  # 62 kWh
     charging_C_Rate=100 / 62,  # 100 kW
     discharging_C_Rate=100 / 62,  # 100 kW
-    charging_efficiency=0.95,  # 90% round trip?
+    charging_efficiency=0.96,  # 90% round trip? used 96% for tests
     discharging_efficiency=0.95,  # 90% round trip?
     loss_rate=0,  # ?
     consumption_per_distance=0.178,  # 17.8 kWh/100km = 0.178 kWh/km
@@ -88,55 +88,38 @@ class GenericElectricVehicle(BatteryStorage):
              plugged_in_profile, 
              static_discharge_profile
              )
-        processing_required = (
-            self.plugged_in_profile != 1 or 
-            self.static_discharge_profile != 0.0
+        mobile_ev = not (
+            (isinstance(self.plugged_in_profile, Real) and
+             self.plugged_in_profile == 1) or 
+            (isinstance(self.static_discharge_profile, Real) and
+             self.static_discharge_profile == 0.0)
             )
+        
         # inputs are okay, process them if necessary
-        if processing_required:
-            # create a new fixed absolute losses profile
+        if mobile_ev:
+            # not stationary: losses need to be combined with the dchg. profile
             
-            # 
+            # losses: can be int, list/tuple or Series
+            # profile: can be list/tuple or Series
             
-            pass
-            # if type(self.fixed_losses_absolute) in [list, tuple]:
-            #     # list or tuple
-                
-            #     # further differentiate handling based on the profiles
-            #     if type(self.plugged_in_profile) in [int, Series]:
-            #         # numbers or Series
-            #         pass
-                    
-            #     elif type(self.plugged_in_profile) in [list, tuple]:
-            #         # list/tuple: iterate
-            #         pass
-            
-            # else: # int or Series
-            #     pass
-            
-            # differentiate handling based on type
-            if type(self.plugged_in_profile) in [int, Series]:
-                # numbers or Series
-                # differentiate based on fixed_losses_absolute
-                if type(self.fixed_losses_absolute) in [list, tuple]:
-                    
-                    # convert to Series
-                    self.fixed_losses_absolute = (
-                        self.static_discharge_profile/self.discharging_efficiency
-                        +
-                        Series(data=self.fixed_losses_absolute)
-                        )
+            if isinstance(self.fixed_losses_absolute, Real):
+                # has to be redefined
+                if type(self.static_discharge_profile) in [list, tuple]:
+                    self.fixed_losses_absolute = [
+                        sdp/self.discharging_efficiency+
+                        self.fixed_losses_absolute
+                        for sdp in self.static_discharge_profile
+                        ]
                 else:
-                    # int or Series: just add
                     self.fixed_losses_absolute = (
-                        self.static_discharge_profile/self.discharging_efficiency
-                        +
+                        self.static_discharge_profile/
+                        self.discharging_efficiency+
                         self.fixed_losses_absolute
                         )
-            elif type(self.plugged_in_profile) in [list, tuple]:
-                # list/tuple: iterate
-                if type(self.fixed_losses_absolute) in [list, tuple]:
-                
+            
+            elif type(self.fixed_losses_absolute) in [list, tuple]:
+                # has to be redefined
+                if type(self.static_discharge_profile) in [list, tuple]:
                     self.fixed_losses_absolute = [
                         sdp/self.discharging_efficiency+fla
                         for sdp, fla in zip(
@@ -145,14 +128,27 @@ class GenericElectricVehicle(BatteryStorage):
                                 )
                         ]
                 else:
-                    raise NotImplementedError
-                    # int or Series: just add
+                    # static discharge profile is a Series
                     self.fixed_losses_absolute = (
-                        self.static_discharge_profile/self.discharging_efficiency
-                        +
+                        self.static_discharge_profile/
+                        self.discharging_efficiency+
+                        Series(data=self.fixed_losses_absolute)
+                        )
+            else: # series
+                # has to be redefined
+                if type(self.static_discharge_profile) in [list, tuple]:
+                    self.fixed_losses_absolute = [
+                        self.fixed_losses_absolute+
+                        Series(data=self.static_discharge_profile)/
+                        self.discharging_efficiency
+                        ]
+                else:
+                    # static discharge profile is a Series
+                    self.fixed_losses_absolute = (
+                        self.static_discharge_profile/
+                        self.discharging_efficiency+
                         self.fixed_losses_absolute
                         )
-            # no other possibility should be allowed
         
     def _check_inputs(self, plugged_in_profile, static_discharge_profile):
         
@@ -172,6 +168,16 @@ class GenericElectricVehicle(BatteryStorage):
         if (type(plugged_in_profile) == int and
             type(static_discharge_profile) in [int, float]):
             # all are numeric
+            
+            # if not plugged in and the discharge is not zero, then error:
+            # why? because otherwise the SOC will only decrease, as charging is
+            # ruled out by the presence of a constant discharging profile
+            
+            if not plugged_in_profile and static_discharge_profile != 0:
+                raise ValueError(
+                    'This combination is not accepted, as it leads to '+
+                    'infeasibility.'
+                    )
             
             # status values have to be binary
             if plugged_in_profile not in [0, 1]:
@@ -206,7 +212,7 @@ class GenericElectricVehicle(BatteryStorage):
                 raise ValueError('The profiles need to have the same size.')
             # status values have to be binary
             for value in plugged_in_profile:
-                if type(value) not in [int, float]:
+                if not isinstance(value, Real):
                     raise TypeError(
                         'The EV\'s plugged-in status has to be 0 or 1.'
                         )
@@ -216,7 +222,7 @@ class GenericElectricVehicle(BatteryStorage):
             # discharge values have to be non-negative
             # the static discharge profile cannot exceed the max dchg power
             for value in static_discharge_profile:
-                if type(value) not in [int, float]:
+                if not isinstance(value, Real):
                     raise TypeError(
                         'Discharge profiles have to contain numeric data.'
                         )
@@ -248,7 +254,7 @@ class GenericElectricVehicle(BatteryStorage):
                 raise ValueError('The profiles need to have the same size.')
             # status values have to be binary
             for idx in plugged_in_profile.index:
-                if type(plugged_in_profile.loc[idx]) not in [int, float]:
+                if not isinstance(plugged_in_profile.loc[idx], Real):
                     raise TypeError(
                         'The EV\'s plugged-in status has to be 0 or 1.'
                         )
@@ -258,7 +264,7 @@ class GenericElectricVehicle(BatteryStorage):
             # discharge values have to be non-negative
             # the static discharge profile cannot exceed the max dchg power
             for idx in static_discharge_profile.index:
-                if type(static_discharge_profile.loc[idx]) not in [int, float]:
+                if not isinstance(static_discharge_profile.loc[idx], Real):
                     raise TypeError(
                         'Discharge profiles have to contain numeric data.'
                         )
@@ -321,7 +327,10 @@ class GenericElectricVehicle(BatteryStorage):
             initial_storage_level=self.initial_soc,
             inflow_conversion_factor=self.charging_efficiency,
             outflow_conversion_factor=self.discharging_efficiency,
-            fixed_losses_absolute=self.fixed_losses_absolute
+            fixed_losses_absolute=self._solph_model.data.get_timeseries(
+                self.fixed_losses_absolute, 
+                kind=TimeseriesType.INTERVAL
+            )
         )
 
 
