@@ -43,7 +43,7 @@ python -m ruff check .
 Alternatively, checks can also be done using black: 
 
 ```bash 
-python -m black -l 79 --preview --enable-unstable-feature=string_processing .
+python -m black -l 79 --check --preview --enable-unstable-feature=string_processing .
 ``` 
 
 The code itself can be tested locally with:
