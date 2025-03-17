@@ -95,8 +95,6 @@ class GenericElectricVehicle(BatteryStorage):
         if mutually_exclusive_charging_discharging:
             raise NotImplementedError
 
-        # TODO: predetermine the plugged-in profile based on the dchg profile
-
         # call super class constructor
         BatteryStorage.__init__(self, **kwargs)
 
@@ -189,41 +187,21 @@ class GenericElectricVehicle(BatteryStorage):
             static_discharge_profile
         ) in [int, float]:
             # all are numeric
-
-            # if not plugged in and the discharge is not zero, then error:
-            # why? because otherwise the SOC will only decrease, as charging is
-            # ruled out by the presence of a constant discharging profile
-
-            if not plugged_in_profile and static_discharge_profile != 0:
-                raise ValueError(
-                    "This combination is not accepted, as it leads to "
-                    + "infeasibility."
-                )
-
+            
             # status values have to be binary
             if plugged_in_profile not in [0, 1]:
                 raise ValueError(
                     "The EV's plugged-in status has to be 0 or 1."
                 )
-            # discharge values have to be non-negative
-            if static_discharge_profile < 0:
+
+            # if not plugged in and the discharge is not zero, then error:
+            # why? because otherwise the SOC will only decrease, as charging is
+            # ruled out by the presence of a constant discharging profile
+
+            if plugged_in_profile != 1 or static_discharge_profile != 0:
                 raise ValueError(
-                    "Discharge profile values cannot be negative."
-                )
-            # if the EV is plugged in, the fixed discharge has to be zero
-            if plugged_in_profile and static_discharge_profile > 0:
-                raise ValueError(
-                    "If the EV is plugged in, there can be no static "
-                    + "discharge."
-                )
-            # the static discharge profile cannot exceed the max dchg power
-            if (
-                static_discharge_profile
-                > self.nominal_capacity * self.discharging_C_Rate
-            ):
-                raise ValueError(
-                    "The static discharge cannot exceed the maximum "
-                    + "discharge rate."
+                    "This combination is not accepted, as it leads to "
+                    + "infeasibility."
                 )
 
         elif type(plugged_in_profile) in [list, tuple] and type(
@@ -261,7 +239,7 @@ class GenericElectricVehicle(BatteryStorage):
                     )
             # if the EV is plugged in, the fixed discharge has to be zero
             for _sdp, _pip in zip(
-                static_discharge_profile, static_discharge_profile
+                static_discharge_profile, plugged_in_profile
             ):
                 if _pip == 1 and _sdp > 0:
                     raise ValueError(
@@ -366,7 +344,7 @@ class ElectricVehicle(GenericElectricVehicle):
         self,
         consumption_per_distance: float,
         distance_travelled: TimeseriesSpecifier = 0.0,
-        **kwargs,
+        **kwargs
     ):
         """
         Initialize Electric Vehicle instance.
@@ -405,8 +383,9 @@ class ElectricVehicle(GenericElectricVehicle):
 
         # performance data
         self.consumption_per_distance = consumption_per_distance
-
+        # create a static discharge profile based on the inputs
         if isinstance(distance_travelled, Real):
+            # just a number
             static_discharge_profile = (
                 consumption_per_distance * distance_travelled
             )
@@ -420,10 +399,30 @@ class ElectricVehicle(GenericElectricVehicle):
             )
         else:
             raise TypeError("The inputs were not correctly specified.")
-
+        
         if "static_discharge_profile" in kwargs:
             raise ValueError("The static discharge profile is redundant.")
-
+        # replace the static discharging profile
         kwargs["static_discharge_profile"] = static_discharge_profile
+        # create a connection status profile if it is not defined
+        if ("plugged_in_profile" not in kwargs and
+            type(kwargs["static_discharge_profile"]) in [list, tuple, Series]):
+            
+            # the default connection status profile was selected but a varying
+            # static discharge profile was selected: create a new plugged-in
+            # connection status profile to solve the conflict
+            if type(kwargs["static_discharge_profile"]) in [list, tuple]:
+                # list, tuple
+                kwargs["plugged_in_profile"] = [
+                    0 if sdp > 0 else 1
+                    for sdp in kwargs["static_discharge_profile"]
+                    ]
+            else:
+                # Series
+                kwargs["plugged_in_profile"] = Series(data=[
+                    0 if sdp > 0 else 1
+                    for sdp in kwargs["static_discharge_profile"]
+                    ])
+        
         # call super class constructor
         GenericElectricVehicle.__init__(self, **kwargs)
