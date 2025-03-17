@@ -1,4 +1,5 @@
 from mtress.technologies import AFC, AEMFC, PEMFC, FuelCell, OffsetFuelCell
+from mtress.technologies import SlackNode
 from mtress.physics import HYDROGEN
 import math
 import pytest
@@ -58,6 +59,8 @@ class TestFuelCell:
             )
         )
 
+        # house_1.add(SlackNode({carriers.HeatCarrier: 1e9}))
+
         fc = FuelCell("fc", nominal_power=10e3, template=template)
         self._check_fc_obj(fc, template, nominal_power=fc.nominal_power)
         house_1.add(fc)
@@ -101,6 +104,9 @@ class TestFuelCell:
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        
+        
+        
 
 
 class TestOffsetFuelCell:
@@ -164,6 +170,8 @@ class TestOffsetFuelCell:
                 ],
             )
         )
+
+        # house_1.add(SlackNode({carriers.HeatCarrier: 1e9}))
 
         fc = OffsetFuelCell(
             "fc",
@@ -262,12 +270,22 @@ class TestOffsetFuelCell:
                     template.minimum_temperature,
                     template.maximum_temperature,
                 ],
-                reference_temperature=10,
+                # reference_temperature=10,
                 # heat does not matter
-                missing_heat_penalty=0,
-                excess_heat_penalty=0
+                # missing_heat_penalty=0,
+                # excess_heat_penalty=0
             )
         )
+
+        house_1.add(
+            SlackNode(
+                {
+                    carriers.HeatCarrier: 0.0, 
+                    # carriers.GasCarrier: 1e9, 
+                    # carriers.ElectricityCarrier: 1e9
+                    }
+                )
+            )
 
         fc = OffsetFuelCell(
             name="fc",

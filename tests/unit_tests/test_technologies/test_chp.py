@@ -10,6 +10,7 @@ from mtress import (
     demands,
     technologies,
 )
+from mtress.technologies import SlackNode
     
 from mtress.technologies._chp import CHPTemplate
 from mtress.technologies import (
@@ -56,7 +57,7 @@ class TestCHP:
             (AET100NG_CHP, 0.7897307499999999, True),
             # exports off: electricity production determines the rest
             (NATURALGAS_CHP, 0.8508048112500001, False),
-            (BIOGAS_CHP, 58187714401.612885, False), # mismatched production!
+            (BIOGAS_CHP, 1179261561.6128826, False), # mismatched production!
             (BIOMETHANE_CHP, 0.7855700564999999, False),
             (HYDROGEN_CHP, 0.32534810449999996, False),
             (HYDROGEN_MIXED_CHP, 0.6963973715, False),
@@ -103,9 +104,10 @@ class TestCHP:
         house_1.add(
             carriers.HeatCarrier(
                 temperature_levels=[20, template.maximum_temperature],
-                reference_temperature=10,
+                # reference_temperature=10,
             )
         )
+        house_1.add(SlackNode())
 
         chp = CHP(
             "chp", 
@@ -199,12 +201,12 @@ class TestOffsetCHP:
             (HYDROGEN_MIXED_CHP, 1.04185495, 0.0, False),
             (AET100NG_CHP, 1.30378095, 0.0, False),
             # use min load from template (!= 0): penalties cannot be avoided
-            (NATURALGAS_CHP, 1410195551.004933, None, False),
-            (BIOGAS_CHP, 1249504641.7741709, None, False),
-            (BIOMETHANE_CHP, 1408755200.926659, None, False),
-            (HYDROGEN_CHP, 1562637370.4231193, None, False),
-            (HYDROGEN_MIXED_CHP, 2006569161.1460404, None, False),
-            (AET100NG_CHP, 9135593171.890484, None, False),
+            (NATURALGAS_CHP, 28579735.004933327, None, False),
+            (BIOGAS_CHP, 25323091.774170972, None, False),
+            (BIOMETHANE_CHP, 28550544.92665914, None, False),
+            (HYDROGEN_CHP, 29909798.423119232, None, False),
+            (HYDROGEN_MIXED_CHP, 40666145.14604045, None, False),
+            (AET100NG_CHP, 143067783.8904824, None, False),
             # exports on @ net metering: marginal impact due to huge penalties
             # min load = 0: no (major) penalties
             (NATURALGAS_CHP, 0.9135757499999999, 0.0, True),
@@ -214,12 +216,12 @@ class TestOffsetCHP:
             (HYDROGEN_MIXED_CHP, 1.04185495, 0.0, True),
             (AET100NG_CHP, 1.30378095, 0.0, True),
             # use min load from template (!= 0): penalties cannot be avoided
-            (NATURALGAS_CHP, 1410195551.004933, None, True),
-            (BIOGAS_CHP, 1249504641.7741709, None, True),
-            (BIOMETHANE_CHP, 1408755200.926659, None, True),
-            (HYDROGEN_CHP, 1562637370.4231193, None, True),
-            (HYDROGEN_MIXED_CHP, 2006569161.1460404, None, True),
-            (AET100NG_CHP, 9135593171.890484, None, True),
+            (NATURALGAS_CHP, 28579735.004933327, None, True),
+            (BIOGAS_CHP, 25323091.774170972, None, True),
+            (BIOMETHANE_CHP, 28550544.92665914, None, True),
+            (HYDROGEN_CHP, 29909798.423119232, None, True),
+            (HYDROGEN_MIXED_CHP, 40666145.14604045, None, True),
+            (AET100NG_CHP, 143067783.8904824, None, True),
         ],
     )
     def test_min_power(
@@ -276,10 +278,11 @@ class TestOffsetCHP:
         house_1.add(
             carriers.HeatCarrier(
                 temperature_levels=[20, template.maximum_temperature],
-                reference_temperature=10,
+                # reference_temperature=10,
             )
         )
         # 
+        house_1.add(SlackNode())
         
         chp = OffsetCHP(
             "chp", 
@@ -375,12 +378,22 @@ class TestOffsetCHP:
                     template.minimum_temperature,
                     template.maximum_temperature,
                 ],
-                reference_temperature=10,
+                # reference_temperature=10,
                 # heat does not matter
-                missing_heat_penalty=0,
-                excess_heat_penalty=0
+                # missing_heat_penalty=0,
+                # excess_heat_penalty=0
             )
         )
+
+        house_1.add(
+            SlackNode(
+                {
+                    carriers.HeatCarrier: 0.0, 
+                    # carriers.GasCarrier: 1e9, 
+                    # carriers.ElectricityCarrier: 1e9
+                    }
+                )
+            )
         
         chp = OffsetCHP(
             name="chp", 
@@ -445,44 +458,44 @@ class TestOffsetCHP:
             # - same performance on both time steps
             (0.0, 0.0, 1, -1098.73620879), 
             # - penalties on second time step because load is too low
-            (0.0, 0.0, 0.99,  1681317601.2637913), 
+            (0.0, 0.0, 0.99,  34073353.26379121), 
             
             # constant thermal efficiency, increasing electrical efficiency
             # - higher (worse) result because efficiency is reduced at low load
             (0.0, -0.05, 1, -1084.4512090757), 
             # - higher (worse) result because efficiency is reduced at low load
-            (0.0, -0.05, 0.99, 1681317615.548791), 
+            (0.0, -0.05, 0.99, 34073367.54879093), 
             
             # constant thermal efficiency, decreasing electrical efficiency
             # - better results due to higher elec. efficiency at low load
             (0.0, 0.05, 1, -1113.0212045045002),
             # - better results due to higher electric. efficiency at low load
-            (0.0, 0.05, 0.99, 1681317586.9787953),
+            (0.0, 0.05, 0.99, 34073338.9787955),
             
             # increasing thermal efficiency, constant electrical efficiency
             # - same results since production matches demand
             (-0.05, 0.0, 1, -1098.73620879),
             # - penalties are lower since load is lower
-            (-0.05, 0.0, 0.99, 1494504381.2637913),
+            (-0.05, 0.0, 0.99, 30287303.26379121),
             # decreasing thermal efficiency, constant electrical efficiency
             # - same results since production matches demand
             (0.05, 0.0, 1, -1098.73620879),
             # - penalties are higher since load is higher
-            (0.05, 0.0, 0.99, 1868130721.2637913),
+            (0.05, 0.0, 0.99, 37859403.26379121),
             
             # varying thermal and electrical efficiencies
             # thermal efficiency increases, electrical efficiency increases
             (-0.05, -0.05, 1, -1084.4512090757),
-            (-0.05, -0.05, 0.99, 1494504395.548791),
+            (-0.05, -0.05, 0.99, 30287317.548790924),
             # thermal efficiency decreases, electrical efficiency increases
             (0.05, -0.05, 1, -1084.4512090757),
-            (0.05, -0.05, 0.99, 1868130735.548791),
+            (0.05, -0.05, 0.99, 37859417.54879093),
             # thermal efficiency increases, electrical efficiency decreases
             (-0.05, 0.05, 1, -1113.0212045045002),
-            (-0.05, 0.05, 0.99, 1494504366.9787953),
+            (-0.05, 0.05, 0.99, 30287288.9787955),
             # thermal efficiency decreases, electrical efficiency decreases
             (0.05, 0.05, 1, -1113.0212045045002),
-            (0.05, 0.05, 0.99, 1868130706.9787953),
+            (0.05, 0.05, 0.99, 37859388.9787955),
         ],
     )
     def test_variable_efficiency(
@@ -569,10 +582,11 @@ class TestOffsetCHP:
                     template.minimum_temperature, 
                     template.maximum_temperature
                     ],
-                reference_temperature=10,
+                # reference_temperature=10,
             )
         )
         # 
+        house_1.add(SlackNode())
         
         chp = OffsetCHP(
             name="chp", 
