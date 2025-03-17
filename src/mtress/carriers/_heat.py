@@ -10,7 +10,6 @@ SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
-import numpy as np
 from oemof.solph import Bus, Flow, components
 
 from .._abstract_component import AbstractSolphRepresentation
@@ -26,17 +25,18 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
     levels can represent flow and return of a room heating system or various
     tapping temperatures.
 
-    (T3) -> (T2) -> (T1) -> (T0)
-
     Functionality: Heat connections at a location. This class represents a
-        local heat distribution system (typically hydraulic).
+        local heat distribution system (assumed to be hydraulic).
         The energy carrier heat allows to optimise both, temperature and heat,
         as the temperature has a significant impact on the performance of
         renewable energy supply systems. This is done by defining several
         discrete temperature levels.
-        Besides the temperature levels, a reference temperature is defined,
-        that is used to calculate the values of heat flows from, to an inside
-        the carrier.
+
+        Note that the assumption of a hydraulic system does not normally
+        affect the result. It is simply a matter of having a temperature-
+        independent measure of energy, meaning that the sum of the flows into
+        and out of the HeatCarrier and all attached Technologies should be
+        zero, even if the latter increase or decrease the energy.
 
         Other components and demands might be added to the energy_system by
         their respective classes / functions and are automatically connected
@@ -46,60 +46,21 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
     def __init__(
         self,
         temperature_levels: list[float],
-        reference_temperature: float = 0,
-        missing_heat_penalty: float = 1e9,
-        excess_heat_penalty: float = 1e9,
+        specific_heat_capacity=1.161,
     ):
         """
         Initialize heat energy carrier and add components.
 
         :param temperature_levels: list of temperatures (in °C)
-        :param reference_temperature: Reference temperature (in °C)
-        :param missing_heat_penalty: assigns a cost for each unit of missing
-            heat produced (in any currency)
-        :param excess_heat_penalty: assigns a cost for each unit of excess
-            heat produced (in any currency)
+        :param specific_heat_capacity: heat capacity (in Wh/kg/K)
         """
-        if reference_temperature in temperature_levels:
-            raise ValueError(
-                "Reference temperature is not a valid temperature level."
-            )
         super().__init__(
             levels=sorted(temperature_levels),
-            reference=reference_temperature,
         )
-        self.missing_heat_penalty = missing_heat_penalty
-        self.excess_heat_penalty = excess_heat_penalty
-
-        self._reference_index = np.searchsorted(
-            self.levels, reference_temperature
-        )
+        self.specific_heat_capacity = specific_heat_capacity
 
         # Properties for solph interfaces
         self.level_nodes = {}
-
-    @property
-    def reference_level(self):
-        """Return index or key of reference level"""
-        return self._reference_index
-
-    @property
-    def levels_above_reference(self):
-        return self.levels[self._reference_index :]
-
-    @property
-    def levels_below_reference(self):
-        return self.levels[: self._reference_index]
-
-    @property
-    def input_levels(self):
-        """Return the list of input temperature levels."""
-        return self.levels[1:]
-
-    @property
-    def output_levels(self):
-        """Return the list of output temperature levels."""
-        return self.levels
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -109,45 +70,3 @@ class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
                 label=f"T_{temperature:.0f}",
                 node_type=Bus,
             )
-
-        self.create_solph_node(
-            label="excess_heat",
-            node_type=components.Sink,
-            inputs={
-                bus: Flow(variable_costs=self.excess_heat_penalty)
-                for bus in self.level_nodes.values()
-            },
-        )
-
-        self.create_solph_node(
-            label="missing_heat",
-            node_type=components.Source,
-            outputs={
-                bus: Flow(variable_costs=self.missing_heat_penalty)
-                for bus in self.level_nodes.values()
-            },
-        )
-
-    def get_connection_heat_transfer(self, max_temp, min_temp):
-        warm_level_heating, _ = self.get_surrounding_levels(max_temp)
-        _, cold_level_heating = self.get_surrounding_levels(min_temp)
-
-        if cold_level_heating not in self.levels:
-            raise ValueError(
-                f"""No suitable temperature level available 
-                for {cold_level_heating}."""
-            )
-        if warm_level_heating not in self.levels:
-            raise ValueError(
-                f"""No suitable temperature level available 
-                for {warm_level_heating}."""
-            )
-
-        ratio = (cold_level_heating - self.reference) / (
-            warm_level_heating - self.reference
-        )
-
-        heat_bus_warm = self.level_nodes[warm_level_heating]
-        heat_bus_cold = self.level_nodes[cold_level_heating]
-
-        return heat_bus_warm, heat_bus_cold, ratio

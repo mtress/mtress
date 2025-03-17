@@ -7,7 +7,9 @@ from dataclasses import dataclass
 from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import ElectricityCarrier
 from ._abstract_technology import AbstractTechnology
+from .._data_handler import TimeseriesSpecifier
 from .._helpers._util import enable_templating
+
 
 @dataclass(frozen=True)
 class BatteryStorageTemplate:
@@ -18,37 +20,39 @@ class BatteryStorageTemplate:
     :param nominal_capacity: Nominal capacity of the battery (in Wh)
     :param charging_C_Rate: Charging C-rate
     :param discharging_C_Rate: Discharging C-rate
-    :param charging_efficiency: Efficiency during battery charging 
+    :param charging_efficiency: Efficiency during battery charging
     :param discharging_efficiency: Efficiency during battery discharging
     :param loss_rate: Loss rate of a battery storage
     """
-    
+
     nominal_capacity: float
     charging_C_Rate: float
     discharging_C_Rate: float
     charging_efficiency: float
     discharging_efficiency: float
     loss_rate: float
-    
+
+
 # PowerWallGenI (source: https://doi.org/10.1109/SEST.2019.8849064)
 PowerWallGenI = BatteryStorageTemplate(
-    nominal_capacity=6.4e3,         # 6.4 kWh
-    charging_C_Rate=3.3/6.4,        # 3.3 kW
-    discharging_C_Rate=3.3/6.4,     # 3.3 kW
-    charging_efficiency=0.95,       # 95%
-    discharging_efficiency=1/1.03,  # 100*(100/103) = ~97%
-    loss_rate=0                     # ?
-    )
+    nominal_capacity=6.4e3,  # 6.4 kWh
+    charging_C_Rate=3.3 / 6.4,  # 3.3 kW
+    discharging_C_Rate=3.3 / 6.4,  # 3.3 kW
+    charging_efficiency=0.95,  # 95%
+    discharging_efficiency=1 / 1.03,  # 100*(100/103) = ~97%
+    loss_rate=0,  # ?
+)
 
 # PowerWallGenII (source: PowerWall 2 datasheet)
 PowerWallGenII = BatteryStorageTemplate(
-    nominal_capacity=13.5e3,        # 1.5 kWh
-    charging_C_Rate=5/13.5,         # 5 kW
-    discharging_C_Rate=5/13.5,      # 5 kW
-    charging_efficiency=0.95,       # 90% round trip = sqrt(0.9)*sqrt(0.9)
-    discharging_efficiency=0.95,    # 90% round trip = sqrt(0.9)*sqrt(0.9)
-    loss_rate=0                     # ?
-    )
+    nominal_capacity=13.5e3,  # 1.5 kWh
+    charging_C_Rate=5 / 13.5,  # 5 kW
+    discharging_C_Rate=5 / 13.5,  # 5 kW
+    charging_efficiency=0.95,  # 90% round trip = sqrt(0.9)*sqrt(0.9)
+    discharging_efficiency=0.95,  # 90% round trip = sqrt(0.9)*sqrt(0.9)
+    loss_rate=0,  # ?
+)
+
 
 class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
     """Battery Storage Component"""
@@ -65,6 +69,7 @@ class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
         loss_rate: float = 0.0,
         initial_soc: float = 0.5,
         min_soc: float = 0.1,
+        fixed_losses_absolute: TimeseriesSpecifier = 0.0,
     ):
         """
         Initialize Battery Storage.
@@ -81,6 +86,9 @@ class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
         :param initial_soc: Initial state of charge of a battery,
             default to 0.5.
         :param min_soc: Minimum state of charge of a battery, default to 0.1.
+        :param fixed_losses_absolute: numeric (iterable or scalar), losses per
+            hour that are independent of storage content and independent of
+            nominal storage capacity.
         """
 
         super().__init__(name=name)
@@ -93,6 +101,7 @@ class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
         self.loss_rate = loss_rate
         self.initial_soc = initial_soc
         self.min_soc = min_soc
+        self.fixed_losses_absolute = fixed_losses_absolute
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -118,4 +127,5 @@ class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
             initial_storage_level=self.initial_soc,
             inflow_conversion_factor=self.charging_efficiency,
             outflow_conversion_factor=self.discharging_efficiency,
+            fixed_losses_absolute=self.fixed_losses_absolute,
         )

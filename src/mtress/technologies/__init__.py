@@ -34,6 +34,7 @@ from ._heater import GasBoiler, ResistiveHeater
 from ._photovoltaics import Photovoltaics
 from ._pressure_storage import H2Storage
 from ._renewable_electricity_source import RenewableElectricitySource
+from ._slack import SlackNode
 from .grid_connection import ElectricityGridConnection, GasGridConnection
 
 __all__ = [
@@ -75,4 +76,5 @@ __all__ = [
     "Photovoltaics",
     "RenewableElectricitySource",
     "GasBoiler",
+    "SlackNode",
 ]

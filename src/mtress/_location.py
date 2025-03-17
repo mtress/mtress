@@ -50,14 +50,6 @@ class Location(NamedElement):
         self._components: Set[AbstractComponent] = set()
         self._grid_connections: Dict[type, AbstractGridConnection] = {}
 
-    @property
-    def identifier(self) -> list[str]:
-        """
-        As Location is at the highest level, it's name directly identifies it.
-        The list is created for consistency.
-        """
-        return [self.name]
-
     def add(self, component: AbstractComponent):
         """Add a component to the location."""
         component.register_location(self)

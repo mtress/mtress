@@ -50,12 +50,7 @@ house_1.add(
     )
 )
 
-house_1.add(
-    carriers.HeatCarrier(
-        temperature_levels=[20, 40],
-        reference_temperature=0,
-    )
-)
+house_1.add(carriers.HeatCarrier(temperature_levels=[20, 40]))
 
 house_1.add(
     technologies.OffsetElectrolyser(
@@ -73,6 +68,14 @@ house_1.add(
         time_series=[3000, 3000, 3000],
     )
 )
+
+# add infinite source and sink for heat carrier
+house_1.add(
+    technologies.SlackNode(
+        {carriers.HeatCarrier: 1e9},
+    )
+)
+
 solph_representation = SolphModel(
     energy_system,
     timeindex={

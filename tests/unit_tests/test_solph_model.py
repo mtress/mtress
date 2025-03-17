@@ -123,10 +123,7 @@ def test_graph_simple():
     carrier0 = carriers.ElectricityCarrier()
     nodes.append(("house_1", "ElectricityCarrier"))
 
-    carrier1 = carriers.HeatCarrier(
-        temperature_levels=[10, 20, 30],
-        reference_temperature=0,
-    )
+    carrier1 = carriers.HeatCarrier(temperature_levels=[10, 20, 30])
     nodes.append(
         (
             "house_1",
@@ -184,12 +181,7 @@ def test_graph_detail():
     nodes.append(("house_1", "ElectricityCarrier", "distribution"))
     nodes.append(("house_1", "ElectricityCarrier", "feed_in"))
 
-    carrier1 = carriers.HeatCarrier(
-        temperature_levels=[10, 20, 30],
-        reference_temperature=0,
-    )
-    nodes.append(("house_1", "HeatCarrier", "missing_heat"))
-    nodes.append(("house_1", "HeatCarrier", "excess_heat"))
+    carrier1 = carriers.HeatCarrier(temperature_levels=[10, 20, 30])
     nodes.append(("house_1", "HeatCarrier", "T_10"))
     nodes.append(("house_1", "HeatCarrier", "T_20"))
     nodes.append(("house_1", "HeatCarrier", "T_30"))
@@ -235,12 +227,7 @@ def test_graph_detail():
 
     obj_names = [obj["name"] for obj in plot_json_dict["objects"]]
     for n in nodes:
-        assert (
-            f"SolphLabel(location='{n[0]}',"
-            + f" mtress_component='{n[1]}', "
-            + f"solph_node='{n[2]}')"
-            in obj_names
-        )
+        assert str(n) in obj_names
 
 
 def test_graph_flow():
@@ -316,12 +303,7 @@ def test_graph_flow():
 
     obj_names = [obj["name"] for obj in plot_json_dict["objects"]]
     for n in nodes:
-        assert (
-            f"SolphLabel(location='{n[0]}', "
-            + f"mtress_component='{n[1]}', "
-            + f"solph_node='{n[2]}')"
-            in obj_names
-        )
+        assert str(n) in obj_names
 
     edge_colors = set([edge["color"] for edge in plot_json_dict["edges"]])
     assert colors == edge_colors
@@ -377,9 +359,4 @@ def test_graph_series():
 
         obj_names = [obj["name"] for obj in plot_json_dict["objects"]]
         for n in nodes:
-            assert (
-                f"SolphLabel(location='{n[0]}',"
-                + f" mtress_component='{n[1]}',"
-                + f" solph_node='{n[2]}')"
-                in obj_names
-            )
+            assert str(n) in obj_names

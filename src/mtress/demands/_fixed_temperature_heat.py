@@ -90,7 +90,6 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         if self.return_temperature not in carrier.levels:
             raise ValueError("Return temperature must be a temperature level")
 
-        temperature_ratio = 0
         inputs = {}
         outputs = {}
         conversion_factors = {}
@@ -104,13 +103,11 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         inputs[carrier.level_nodes[self.flow_temperature]] = Flow()
         outputs[carrier.level_nodes[self.return_temperature]] = Flow()
 
-        temperature_ratio = (self.return_temperature - carrier.reference) / (
-            self.flow_temperature - carrier.reference
-        )
         conversion_factors = {
             carrier.level_nodes[self.flow_temperature]: 1,
-            output: 1 - temperature_ratio,
-            carrier.level_nodes[self.return_temperature]: temperature_ratio,
+            output: (self.flow_temperature - self.return_temperature)
+            * carrier.specific_heat_capacity,
+            carrier.level_nodes[self.return_temperature]: 1,
         }
 
         self.create_solph_node(
@@ -165,7 +162,6 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         """Build core structure of oemof.solph representation."""
         carrier = self.location.get_carrier(HeatCarrier)
 
-        temperature_ratio = 0
         inputs = {}
         outputs = {}
         conversion_factors = {}
@@ -184,14 +180,11 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         outputs[carrier.level_nodes[self.return_temperature]] = Flow()
         inputs[carrier.level_nodes[minimum_t]] = Flow()
 
-        temperature_ratio = (minimum_t - carrier.reference) / (
-            self.return_temperature - carrier.reference
-        )
-
         conversion_factors = {
             carrier.level_nodes[self.return_temperature]: 1,
-            input: 1 - temperature_ratio,
-            carrier.level_nodes[minimum_t]: temperature_ratio,
+            input: carrier.specific_heat_capacity
+            * (self.return_temperature - minimum_t),
+            carrier.level_nodes[minimum_t]: 1,
         }
 
         self.create_solph_node(

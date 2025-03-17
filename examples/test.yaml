@@ -37,7 +37,6 @@ locations:
     
     carriers:
       Heat: # class name
-        reference_temperature: 10 # °C
         temperature_levels:
           - 35. # °C
           - 60. # °C

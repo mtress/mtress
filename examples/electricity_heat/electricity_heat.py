@@ -8,8 +8,8 @@ a demand (consumer) with a demand time series.
 And heat wise: a heat carrier, a heat pump, an heat exchanger as well as
 a heat demand time series.
 
-At first an energy system (here meta_model) is defined with a time series 
-(index). Afterwards a location is defined and added to the energysystem. Then 
+At first an energy system (here meta_model) is defined with a time series
+(index). Afterwards a location is defined and added to the energysystem. Then
 the electricity carrier and electricity demand (time series) are added to the
 energysystem. Furthermore a heat carrier is defined with specific temp-
 erature level(s) and a reference temperature. Then  a heat demand (time series)
@@ -54,8 +54,7 @@ house_1.add(
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[10, 20, 30, 40, 55],
-        reference_temperature=0,
+        temperature_levels=[10, 15, 20, 30, 40, 55],
     )
 )
 house_1.add(
@@ -66,6 +65,13 @@ house_1.add(
         time_series=[50, 60],
     )
 )
+
+electric_heater = technologies.ResistiveHeater(
+    name="ResistiveHeater",
+    thermal_power_limit=None,
+    maximum_temperature=100,
+)
+house_1.add(electric_heater)
 
 house_1.add(
     technologies.HeatPump(
@@ -88,13 +94,12 @@ house_1.add(
     )
 )
 
-
 solph_representation = SolphModel(
     energy_system,
     timeindex={
         "start": "2021-07-10 00:00:00",
         "end": "2021-07-10 02:00:00",
-        "freq": "60T",
+        "freq": "60min",
     },
 )
 
@@ -106,13 +111,9 @@ plot.render(outfile="electricity_heat_detail.png")
 plot = solph_representation.graph(detail=False)
 plot.render(outfile="electricity_heat_simple.png")
 
-solved_model = solph_representation.solve(solve_kwargs={"tee": True})
+solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
 plot = solph_representation.graph(detail=True, flow_results=flows)
 plot.render(outfile="electricity_heat_results.png")
-
-solved_model.write(
-    "electricity_heat.lp", io_options={"symbolic_solver_labels": True}
-)
