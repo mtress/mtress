@@ -60,6 +60,7 @@ class GenericElectricVehicle(BatteryStorage):
         self,
         plugged_in_profile: TimeseriesSpecifier = 1,
         static_discharge_profile: TimeseriesSpecifier = 0.0,
+        mutually_exclusive_charging_discharging: bool = False,
         **kwargs,
     ):
         """
@@ -77,7 +78,22 @@ class GenericElectricVehicle(BatteryStorage):
         :param initial_soc: Initial state of charge of a battery,
             default to 0.5.
         :param min_soc: Minimum state of charge of a battery, default to 0.1.
+        :param plugged_in_profile: A sequence of binary values indicating if
+            the EV is plugged-in (=1) or not (=0). By default, the EV is
+            permanently defined as being stationary, which means it can charge
+            or discharge as long as power and SOC limits are observed.
+        :param static_discharge_profile: A sequence of non-negative real values
+            indicating the power delivered by the battery to the EV (and not to
+            to the grid). Value errors will be raised if these values are in
+            contradiction with the respective plugged-in status.
+        :param mutually_exclusive_charging_discharging: If True, the EV cannot
+            charge or discharge simultaneously. The default value is False.
         """
+        # TODO: implement mutually-exclusive charging and discharging mode
+        if mutually_exclusive_charging_discharging:
+            raise NotImplementedError
+            
+        # TODO: predetermine the plugged-in profile based on the dchg profile
         
         # call super class constructor
         BatteryStorage.__init__(self, **kwargs)
@@ -137,11 +153,11 @@ class GenericElectricVehicle(BatteryStorage):
             else: # series
                 # has to be redefined
                 if type(self.static_discharge_profile) in [list, tuple]:
-                    self.fixed_losses_absolute = [
+                    self.fixed_losses_absolute = (
                         self.fixed_losses_absolute+
                         Series(data=self.static_discharge_profile)/
                         self.discharging_efficiency
-                        ]
+                        )
                 else:
                     # static discharge profile is a Series
                     self.fixed_losses_absolute = (
@@ -293,9 +309,6 @@ class GenericElectricVehicle(BatteryStorage):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-
-        # super().build_core()
-        # TODO: mutually-exclusive charging and discharging
         
         electricity = self.location.get_carrier(ElectricityCarrier)
         
@@ -359,6 +372,24 @@ class ElectricVehicle(GenericElectricVehicle):
         :param initial_soc: Initial state of charge of a battery,
             default to 0.5.
         :param min_soc: Minimum state of charge of a battery, default to 0.1.
+        :param consumption_per_distance: The energy consumption per distance
+            travelled specific to this EV. The energy consumption represents
+            that delivered to the EV, not the one seen from the point of view 
+            of the battery (before the discharge efficiency is considered).
+        :param distance_travelled: A sequence of distances travelled with the
+            EV. The parameter acts as an override for the static discharge
+            profile. The units selected have to be consistent with those used 
+            with the consumption_per_distance parameter.
+        :param plugged_in_profile: A sequence of binary values indicating if
+            the EV is plugged-in (=1) or not (=0). By default, the EV is
+            permanently defined as being stationary, which means it can charge
+            or discharge as long as power and SOC limits are observed.
+        :param static_discharge_profile: A sequence of non-negative real values
+            indicating the power delivered by the battery to the EV (and not to
+            to the grid). Value errors will be raised if these values are in
+            contradiction with the respective plugged-in status.
+        :param mutually_exclusive_charging_discharging: If True, the EV cannot
+            charge or discharge simultaneously. The default value is False.
         """
         
         # performance data
