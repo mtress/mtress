@@ -14,6 +14,12 @@ from mtress._helpers import get_flows
 
 
 class TestGridConnection:
+    """
+    1. Test the initialisation
+    2. Test a constraint on the import of the grid:
+        a) A limit of 10 W is specified
+        b) No limit is specified
+    """
 
     def test_grid_initialisation(self):
         grid_working_rate = None
@@ -77,5 +83,5 @@ class TestGridConnection:
         ]
 
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
-        if grid_limit == 10:
-            assert math.isclose(grid_flow.mean(), grid_limit, abs_tol=3e-3)
+        if grid_limit is not None:
+            assert math.isclose(grid_flow.iloc[0], grid_limit, abs_tol=3e-3)
