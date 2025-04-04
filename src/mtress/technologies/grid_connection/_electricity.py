@@ -23,6 +23,7 @@ class ElectricityGridConnection(
         revenue: Optional[TimeseriesSpecifier] = None,
         demand_rate: Optional[float] = 0,
         grid_import_limit: Optional[float] = None,
+        grid_export_limit: Optional[float] = None,
     ) -> None:
         """
         :working_rate: in currency/Wh
@@ -36,6 +37,7 @@ class ElectricityGridConnection(
         self.demand_rate = demand_rate
         self.revenue = revenue
         self.grid_import_limit = grid_import_limit
+        self.grid_export_limit = grid_export_limit
 
         self.grid_export = None
         self.grid_import = None
@@ -60,9 +62,10 @@ class ElectricityGridConnection(
                 node_type=Sink,
                 inputs={
                     b_grid_export: Flow(
+                        nominal_value=self.grid_export_limit,
                         variable_costs=-self._solph_model.data.get_timeseries(
                             self.revenue, kind=TimeseriesType.INTERVAL
-                        )
+                        ),
                     )
                 },
             )
