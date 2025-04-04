@@ -101,9 +101,9 @@ class TestGridExport:
 
     @pytest.mark.parametrize(
         "export_limit, expected_result",
-        [(5, 900.0)],
+        [(5, 900.0), (None, 200)],
     )
-    def test_grid_imports_example(self, export_limit, expected_result):
+    def test_grid_exports_example(self, export_limit, expected_result):
 
         energy_system = MetaModel()
 
