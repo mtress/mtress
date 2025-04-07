@@ -23,8 +23,10 @@ class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
     ) -> None:
         """
         Initialize HeatGridConnection
-        :param maximum_working_temperature: Maximum flow temperature (°C) of the grid
-        :param minimum_working_temperature: Minimum return temperature (°C) of the grid
+        :param maximum_working_temperature: Maximum flow temperature (°C)
+            of the grid
+        :param minimum_working_temperature: Minimum return temperature (°C)
+            of the grid
         :param working_rate: Working price of heat in currency/Wh
         :param revenue: Revenue of the heat export to grid in currency/Wh
         """
