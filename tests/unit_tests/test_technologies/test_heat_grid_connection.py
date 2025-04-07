@@ -230,7 +230,5 @@ if __name__ == "__main__":
     flows = get_flows(myresults)
     mr = meta_results(solved_model)
 
-    plot = solph_representation.graph(detail=True, flow_results=flows)
-    plot.render(outfile="heat_grid_detail_flow.png")
-
-    print(mr)
+    # plot = solph_representation.graph(detail=True, flow_results=flows)
+    # plot.render(outfile="heat_grid_detail_flow.png")

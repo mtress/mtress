@@ -1,5 +1,6 @@
 """
-Basic example to represent the import of heat assuming the existance of a heat network
+Basic example to represent the import of heat assuming the existance of a heat
+network
 """
 
 import os
