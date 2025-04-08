@@ -37,12 +37,14 @@ from .grid_connection import (
     ElectricityGridConnection,
     GasGridConnection,
     HeatGridConnection,
+    HeatGridInterconnection,
 )
 
 __all__ = [
     "ElectricityGridConnection",
     "GasGridConnection",
     "HeatGridConnection",
+    "HeatGridInterconnection",
     "FullyMixedHeatStorage",
     "Electrolyser",
     "OffsetElectrolyser",
