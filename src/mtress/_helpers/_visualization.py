@@ -59,6 +59,7 @@ def cytoscape_graph(elements: list[dict], colorscheme: dict):
             "width": "100%",
             "height": "calc(100vh - 120px)",
         },
+        wheelSensitivity=0.1,
         stylesheet=[
             # Group selectors
             {
@@ -66,6 +67,7 @@ def cytoscape_graph(elements: list[dict], colorscheme: dict):
                 "style": {
                     "content": "data(label)",
                     "shape": "cut-rectangle",
+                    "font-size": "36",
                 },
             },
             {
@@ -125,6 +127,7 @@ def cytoscape_graph(elements: list[dict], colorscheme: dict):
                     "text-valign": "center",
                     "text-halign": "center",
                     "width": "label",
+                    "height": "label",
                 },
             },
             {
@@ -135,6 +138,7 @@ def cytoscape_graph(elements: list[dict], colorscheme: dict):
                     "text-valign": "center",
                     "text-halign": "center",
                     "width": "label",
+                    "height": "label",
                 },
             },
             {
@@ -144,6 +148,7 @@ def cytoscape_graph(elements: list[dict], colorscheme: dict):
                     "text-valign": "center",
                     "text-halign": "center",
                     "width": "label",
+                    "height": "label",
                 },
             },
             {
@@ -153,6 +158,7 @@ def cytoscape_graph(elements: list[dict], colorscheme: dict):
                     "text-valign": "center",
                     "text-halign": "center",
                     "width": "label",
+                    "height": "label",
                 },
             },
             {
@@ -162,6 +168,7 @@ def cytoscape_graph(elements: list[dict], colorscheme: dict):
                     "text-valign": "center",
                     "text-halign": "center",
                     "width": "label",
+                    "height": "label",
                 },
             },
             {
@@ -251,7 +258,6 @@ def generate_graph(
     """
     Function to generate nodes and edeges usable for dash cytoscape.
     """
-    # TODO: handle flows (NOT) given
     if colorscheme is None:
         # set to default
         colorscheme = COLORS
@@ -331,6 +337,8 @@ def generate_graph(
                     }
                 else:  # TODO: show inactive edges -> toggle on off?
                     edge["classes"] = "inactive"
+            else:
+                edge["classes"] = edge_color
             graph_edges.append(edge)
 
     if show:
