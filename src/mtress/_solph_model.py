@@ -18,6 +18,7 @@ import logging
 from oemof.solph import EnergySystem, Model
 
 from ._data_handler import DataHandler
+from ._helpers._visualization import generate_graph
 
 if TYPE_CHECKING:
     from ._abstract_component import AbstractSolphRepresentation
@@ -85,6 +86,10 @@ class SolphModel:
                 connection.carrier, connection.destination
             )
 
+    def nodes(self):
+        # access oemof.network.nodes
+        return self.energy_system.nodes
+
     def build_solph_model(self):
         """Build the `oemof.solph` representation of the model."""
         self.model = Model(self.energy_system)
@@ -92,7 +97,7 @@ class SolphModel:
         for component in self._meta_model.components:
             component.add_constraints()
 
-    def graph(
+    def graph_old(
         self,
         flow_results: dict = None,
         flow_color: dict = None,
@@ -294,6 +299,20 @@ class SolphModel:
 
         logging.getLogger("werkzeug").setLevel(logging.ERROR)
         app.run(debug=False)  # TODO: debug true?
+
+    def graph(
+        self,
+        flow_results: dict = None,
+        flow_color: dict = None,
+        colorscheme: dict = None,
+    ):
+        generate_graph(
+            nodes=self.nodes(),
+            flows=flow_results,
+            flow_color=flow_color,
+            colorscheme=colorscheme,
+            show=True,
+        )
 
     def solve(
         self,

@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, Set, Tuple
-
-from graphviz import Digraph
+from typing import Dict, Iterable, Set
 
 from ._abstract_component import AbstractComponent
 from ._interfaces import NamedElement
@@ -98,35 +96,3 @@ class Location(NamedElement):
 
         for component in self._components:
             yield component
-
-    def graph(
-        self,
-        flow_results: dict = None,
-        flow_color: dict = None,
-        colorscheme: dict = None,
-    ) -> Dict:
-        id = "-".join(self.identifier)
-        nodes_simple = [
-            {
-                "data": {
-                    "id": id,
-                    "label": self.name,
-                },
-                "classes": "parent",
-            },
-        ]
-        nodes_detail = list(nodes_simple)
-        nodes_result = list(nodes_simple)
-
-        # iterate components
-        for component in self.components:
-            n_simple, n_detail, n_result = component.graph(
-                flow_results,
-                flow_color,
-                colorscheme,
-            )
-            nodes_simple += n_simple
-            nodes_detail += n_detail
-            nodes_result += n_result
-
-        return nodes_simple, nodes_detail, nodes_result

@@ -32,6 +32,10 @@ from mtress import (
     technologies,
 )
 from mtress._helpers import get_flows
+<<<<<<< HEAD
+=======
+from mtress._helpers._visualization import generate_graph
+>>>>>>> e332344 (rework of plotting algorithm. added oemof nodes are now considered as well. moved plotting code to _helpers)
 
 os.chdir(os.path.dirname(__file__))
 meta_model = MetaModel()
@@ -58,9 +62,15 @@ solph_representation = SolphModel(
     },
 )
 
+<<<<<<< HEAD
 carrier_node =  solph_representation.energy_system.node[
         ("house_1", "ElectricityCarrier", "distribution")
     ]
+=======
+carrier_node = solph_representation.energy_system.node[
+    ("house_1", "ElectricityCarrier", "distribution")
+]
+>>>>>>> e332344 (rework of plotting algorithm. added oemof nodes are now considered as well. moved plotting code to _helpers)
 
 solph_representation.energy_system.add(
     solph.components.GenericStorage(
@@ -100,3 +110,8 @@ print(
         ("house_1", "electricity demand", "sink"),
     ]
 )
+<<<<<<< HEAD
+=======
+
+solph_representation.graph(flow_results=flows)
+>>>>>>> e332344 (rework of plotting algorithm. added oemof nodes are now considered as well. moved plotting code to _helpers)
