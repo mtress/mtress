@@ -16,8 +16,8 @@ class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
 
     def __init__(
         self,
-        flow_temperature: float,
-        return_temperature: float,
+        maximum_working_temperature: float,
+        minimum_working_temperature: float,
         working_rate: Optional[TimeseriesSpecifier] = 0,
         revenue: Optional[TimeseriesSpecifier] = None,
         grid_import_limit: Optional[float] = None,
@@ -25,8 +25,8 @@ class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
     ) -> None:
         """
         Initialize HeatGridConnection
-        :param flow_temperature: Flow temperature (°C) of the grid
-        :param return_temperature: Return temperature (°C) of the grid
+        :param maximum_working_temperature: Flow temperature (°C) of the grid
+        :param minimum_working_temperature: Return temperature (°C) of the grid
         :param working_rate: Working price of heat in currency/Wh
         :param revenue: Revenue of the heat export to grid in currency/Wh
         :param grid_import_limit: limits the grid's imports (in W)
@@ -36,8 +36,8 @@ class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
 
         self.working_rate = working_rate
         self.revenue = revenue
-        self.flow_temperature = flow_temperature
-        self.return_temperature = return_temperature
+        self.maximum_working_temperature = maximum_working_temperature
+        self.minimum_working_temperature = minimum_working_temperature
         self.grid_import_limit = grid_import_limit
         self.grid_export_limit = grid_export_limit
 
@@ -45,38 +45,44 @@ class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
 
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
-        inputs_source = {}
-        outputs_source = {}
-        convert_source = {}
-
         input = self.create_solph_node(
             label="input",
             node_type=Bus,
         )
 
-        inputs_source[input] = Flow(nominal_value=self.grid_import_limit)
-
-        outputs_source[heat_carrier.level_nodes[self.flow_temperature]] = (
-            Flow()
+        in_levels = sorted(
+            heat_carrier.get_levels_between(
+                self.minimum_working_temperature,
+                self.maximum_working_temperature,
+            ),
+            reverse=True,
         )
-        inputs_source[heat_carrier.level_nodes[self.return_temperature]] = (
-            Flow()
-        )
 
-        convert_source = {
-            heat_carrier.level_nodes[self.flow_temperature]: 1,
-            input: (self.flow_temperature - self.return_temperature)
-            * heat_carrier.specific_heat_capacity,
-            heat_carrier.level_nodes[self.return_temperature]: 1,
-        }
+        for temperature in in_levels[:-1]:
+            return_t = in_levels[in_levels.index(temperature) + 1]
 
-        self.create_solph_node(
-            label="source_exchanger",
-            node_type=Converter,
-            inputs=inputs_source,
-            outputs=outputs_source,
-            conversion_factors=convert_source,
-        )
+            inputs_source = {}
+            outputs_source = {}
+            convert_source = {}
+
+            inputs_source[input] = Flow(nominal_value=self.grid_import_limit)
+            outputs_source[heat_carrier.level_nodes[temperature]] = Flow()
+            inputs_source[heat_carrier.level_nodes[return_t]] = Flow()
+
+            convert_source = {
+                heat_carrier.level_nodes[temperature]: 1,
+                input: (temperature - return_t)
+                * heat_carrier.specific_heat_capacity,
+                heat_carrier.level_nodes[return_t]: 1,
+            }
+
+            self.create_solph_node(
+                label=f"T_{temperature}_source",
+                node_type=Converter,
+                inputs=inputs_source,
+                outputs=outputs_source,
+                conversion_factors=convert_source,
+            )
 
         self.create_solph_node(
             label="Source",
@@ -93,38 +99,38 @@ class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
 
         if self.revenue is not None:
 
-            inputs_sink = {}
-            outputs_sink = {}
-            convert_sink = {}
-
             output = self.create_solph_node(
                 label="output",
                 node_type=Bus,
             )
 
-            outputs_sink[output] = Flow(nominal_value=self.grid_export_limit)
+            for temperature in in_levels[:-1]:
+                return_t = in_levels[in_levels.index(temperature) + 1]
 
-            inputs_sink[heat_carrier.level_nodes[self.flow_temperature]] = (
-                Flow()
-            )
-            outputs_sink[heat_carrier.level_nodes[self.return_temperature]] = (
-                Flow()
-            )
+                inputs_sink = {}
+                outputs_sink = {}
+                convert_sink = {}
 
-            convert_source = {
-                heat_carrier.level_nodes[self.flow_temperature]: 1,
-                output: (self.flow_temperature - self.return_temperature)
-                * heat_carrier.specific_heat_capacity,
-                heat_carrier.level_nodes[self.return_temperature]: 1,
-            }
+                outputs_sink[output] = Flow(
+                    nominal_value=self.grid_import_limit
+                )
+                inputs_sink[heat_carrier.level_nodes[temperature]] = Flow()
+                outputs_sink[heat_carrier.level_nodes[return_t]] = Flow()
 
-            self.create_solph_node(
-                label="return_exchanger",
-                node_type=Converter,
-                inputs=inputs_sink,
-                outputs=outputs_sink,
-                conversion_factors=convert_sink,
-            )
+                convert_source = {
+                    heat_carrier.level_nodes[temperature]: 1,
+                    output: (temperature - return_t)
+                    * heat_carrier.specific_heat_capacity,
+                    heat_carrier.level_nodes[return_t]: 1,
+                }
+
+                self.create_solph_node(
+                    label=f"T_{temperature}_sink",
+                    node_type=Converter,
+                    inputs=inputs_sink,
+                    outputs=outputs_sink,
+                    conversion_factors=convert_sink,
+                )
 
             self.create_solph_node(
                 label="Sink",
