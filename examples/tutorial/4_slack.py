@@ -131,4 +131,4 @@ flow_color = {
     },
 }
 
-plot = solph_representation.graph(flow_results=flows, flow_color=flow_color)
+solph_representation.graph(flow_results=flows, flow_color=flow_color)

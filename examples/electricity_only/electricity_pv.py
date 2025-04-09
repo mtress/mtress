@@ -70,4 +70,4 @@ solved_model.write(
     "electricity_pv.lp", io_options={"symbolic_solver_labels": True}
 )
 
-plot = solph_representation.graph(flow_results=flows)
+solph_representation.graph(flow_results=flows)
