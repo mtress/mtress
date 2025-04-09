@@ -2,34 +2,13 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
-from typing import TYPE_CHECKING, Callable, NamedTuple, Tuple, List
-
-from oemof.solph import Bus
-from oemof.solph.components import (
-    Converter,
-    GenericStorage,
-    Sink,
-    Source,
-    OffsetConverter,
-)
+from typing import TYPE_CHECKING, Callable
 
 from ._interfaces import NamedElement
 from ._solph_model import SolphModel
 
 if TYPE_CHECKING:
     from ._location import Location
-
-SOLPH_SHAPES = {
-    Source: "source",
-    Sink: "sink",
-    Bus: "bus",
-    Converter: "converter",
-    OffsetConverter: "converter",
-    GenericStorage: "storage",
-}
-
-test_dict = {}
 
 
 class AbstractComponent(NamedElement):
