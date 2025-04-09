@@ -17,14 +17,6 @@ import networkx as nx
 
 # Define shapes for the component types
 SHAPES = {
-    Source: "trapezium",
-    Sink: "invtrapezium",
-    Bus: "ellipse",
-    Converter: "octagon",
-    GenericStorage: "cylinder",
-}
-
-SOLPH_SHAPES = {
     Source: "source",
     Sink: "sink",
     Bus: "bus",
@@ -300,7 +292,7 @@ def generate_graph(
                             "classes": (
                                 "parent"
                                 if is_parent
-                                else SOLPH_SHAPES.get(type(n), "rectangle")
+                                else SHAPES.get(type(n), "rectangle")
                             ),
                         }
                     )
@@ -314,7 +306,7 @@ def generate_graph(
                         "id": identifier,
                         "label": n.label,
                     },
-                    "classes": SOLPH_SHAPES.get(type(n), "rectangle"),
+                    "classes": SHAPES.get(type(n), "rectangle"),
                 }
             )
         for o in n.inputs:
