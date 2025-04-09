@@ -114,7 +114,10 @@ def cytoscape_graph(elements: list[dict], colorscheme: dict):
                 "selector": ".rainbow",
                 "style": {
                     "line-fill": "linear-gradient",
-                    "line-gradient-stop-colors": "firebrick darkorange gold chartreuse deepskyblue cornflowerblue darkslateblue",
+                    "line-gradient-stop-colors": """firebrick darkorange gold
+                                                    chartreuse deepskyblue
+                                                    cornflowerblue darkslateblue
+                                                """,
                     "source-arrow-color": "firebrick",
                 },
             },
