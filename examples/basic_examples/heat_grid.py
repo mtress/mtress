@@ -28,16 +28,11 @@ house_1.add(
         temperature_levels=[10, 20, 30, 55],
     )
 )
-
 house_1.add(
-    technologies.HeatGridConnection(
-        working_rate=1e9,
-        maximum_working_temperature=55,
-        minimum_working_temperature=20,
-        revenue=0,
+    technologies.HeatGridInterconnection(
+        maximum_working_temperature=30, minimum_working_temperature=20
     )
 )
-
 house_2 = Location(name="house_2")
 energy_system.add_location(house_2)
 
@@ -48,14 +43,10 @@ house_2.add(
 )
 
 house_2.add(
-    technologies.HeatGridConnection(
-        working_rate=1e10,
-        maximum_working_temperature=55,
-        minimum_working_temperature=20,
-        revenue=0,
+    technologies.HeatGridInterconnection(
+        maximum_working_temperature=30, minimum_working_temperature=20
     )
 )
-
 house_2.add(
     demands.FixedTemperatureHeating(
         name="space heating",
@@ -77,13 +68,16 @@ house_3.add(
 house_3.add(
     technologies.HeatGridConnection(
         working_rate=0,
-        maximum_working_temperature=55,
+        maximum_working_temperature=30,
         minimum_working_temperature=20,
-        revenue=0,
+        revenue=None,
     )
 )
-
-
+house_3.add(
+    technologies.HeatGridInterconnection(
+        maximum_working_temperature=30, minimum_working_temperature=20
+    )
+)
 solph_representation = SolphModel(
     energy_system,
     timeindex={
@@ -94,10 +88,10 @@ solph_representation = SolphModel(
 )
 
 house_3.connect(
-    connection=technologies.HeatGridConnection, destination=house_1
+    connection=technologies.HeatGridInterconnection, destination=house_1
 )
 house_1.connect(
-    connection=technologies.HeatGridConnection, destination=house_2
+    connection=technologies.HeatGridInterconnection, destination=house_2
 )
 
 solph_representation.build_solph_model()
