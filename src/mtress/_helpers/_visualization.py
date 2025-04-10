@@ -31,6 +31,13 @@ COLORS = {
     "HeatCarrier": "maroon",
 }
 
+RAINBOW = """firebrick darkorange gold 
+            chartreuse deepskyblue
+            cornflowerblue darkslateblue"""
+
+SOURCE_SHAPE = "1, 1, 0.75, -1, -0.75, -1, -1, 1"
+SINK_SHAPE = "0.75, 1, 1, -1, -1, -1, -0.75, 1"
+
 
 def networkx_graph():
     # TODO: extract networkx representation from cytoscape for static plotting
@@ -135,11 +142,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                             "selector": ".rainbow",
                             "style": {
                                 "line-fill": "linear-gradient",
-                                "line-gradient-stop-colors": """
-                                                    firebrick darkorange gold
-                                                    chartreuse deepskyblue
-                                                    cornflowerblue darkslateblue
-                                                    """,
+                                "line-gradient-stop-colors": RAINBOW,
                                 "source-arrow-color": "firebrick",
                             },
                         },
@@ -148,7 +151,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                             "selector": ".source",
                             "style": {
                                 "shape": "polygon",
-                                "shape-polygon-points": "1, 1, 0.5, -1, -0.5, -1, -1, 1",
+                                "shape-polygon-points": SOURCE_SHAPE,
                                 "text-valign": "center",
                                 "text-halign": "center",
                                 "width": "label",
@@ -159,7 +162,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                             "selector": ".sink",
                             "style": {
                                 "shape": "polygon",
-                                "shape-polygon-points": "0.5, 1, 1, -1, -1, -1, -0.5, 1",
+                                "shape-polygon-points": SINK_SHAPE,
                                 "text-valign": "center",
                                 "text-halign": "center",
                                 "width": "label",
