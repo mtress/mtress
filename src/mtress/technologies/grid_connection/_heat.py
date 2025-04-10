@@ -5,13 +5,12 @@ from typing import Optional
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Source
 
-from mtress._abstract_component import AbstractSolphRepresentation
 from mtress.carriers import HeatCarrier
 
 from ._abstract_grid_connection import AbstractGridConnection
 
 
-class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
+class HeatGridConnection(AbstractGridConnection):
     def __init__(
         self,
         working_rate: Optional[float] = None,

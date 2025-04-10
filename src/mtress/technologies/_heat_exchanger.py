@@ -5,13 +5,12 @@ import numpy as np
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Converter, Sink, Source
 
-from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import HeatCarrier
 from ._abstract_technology import AbstractTechnology
 
 
-class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
+class AbstactHeatExchanger(AbstractTechnology):
     """
     Heat exchanger (HE)
 

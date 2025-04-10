@@ -2,11 +2,10 @@
 
 from oemof.solph import Bus
 
-from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractCarrier
 
 
-class ElectricityCarrier(AbstractCarrier, AbstractSolphRepresentation):
+class ElectricityCarrier(AbstractCarrier):
     """
     Electricity energy carrier.
 

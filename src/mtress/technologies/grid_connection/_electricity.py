@@ -7,16 +7,13 @@ from typing import Optional
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Sink, Source
 
-from mtress._abstract_component import AbstractSolphRepresentation
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import ElectricityCarrier
 
 from ._abstract_grid_connection import AbstractGridConnection
 
 
-class ElectricityGridConnection(
-    AbstractGridConnection, AbstractSolphRepresentation
-):
+class ElectricityGridConnection(AbstractGridConnection):
     def __init__(
         self,
         working_rate: Optional[TimeseriesSpecifier] = None,

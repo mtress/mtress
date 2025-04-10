@@ -4,7 +4,6 @@ from oemof.solph import Flow
 from oemof.solph.components import GenericStorage
 from dataclasses import dataclass
 
-from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import ElectricityCarrier
 from ._abstract_technology import AbstractTechnology
 from .._data_handler import TimeseriesSpecifier
@@ -54,7 +53,7 @@ PowerWallGenII = BatteryStorageTemplate(
 )
 
 
-class BatteryStorage(AbstractTechnology, AbstractSolphRepresentation):
+class BatteryStorage(AbstractTechnology):
     """Battery Storage Component"""
 
     @enable_templating(BatteryStorageTemplate)

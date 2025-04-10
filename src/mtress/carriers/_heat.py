@@ -10,13 +10,12 @@ SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
-from oemof.solph import Bus, Flow, components
+from oemof.solph import Bus
 
-from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractLayeredCarrier
 
 
-class HeatCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
+class HeatCarrier(AbstractLayeredCarrier):
     """
     Connector class for modelling power flows with variable temperature levels.
 
