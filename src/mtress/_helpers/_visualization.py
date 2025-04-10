@@ -39,149 +39,175 @@ def networkx_graph():
     pass
 
 
-def cytoscape_graph(elements: list[dict], colorscheme: dict):
+def cytoscape_graph(elements: dict, colorscheme: dict):
     # init dash cytoscape
     cyto.load_extra_layouts()
     app = Dash()
 
-    graph = cyto.Cytoscape(
-        id="mtress_model",
-        layout={"name": "cose-bilkent"},  # cose-bilkent | cola | klay
-        style={
-            "width": "100%",
-            "height": "calc(100vh - 120px)",
-        },
-        wheelSensitivity=0.1,
-        stylesheet=[
-            # Group selectors
-            {
-                "selector": "node",
-                "style": {
-                    "content": "data(label)",
-                    "shape": "cut-rectangle",
-                    "font-size": "36",
-                },
-            },
-            {
-                "selector": "edge",
-                "style": {
-                    "curve-style": "bezier",
-                    "source-arrow-shape": "triangle",
-                    "line-color": "black",
-                    "source-arrow-color": "black",
-                },
-            },
-            # Class selectors
-            # coloring
-            {
-                "selector": "." + colorscheme["HeatCarrier"],
-                "style": {
-                    "line-color": colorscheme["HeatCarrier"],
-                    "source-arrow-color": colorscheme["HeatCarrier"],
-                },
-            },
-            {
-                "selector": "." + colorscheme["ElectricityCarrier"],
-                "style": {
-                    "line-color": colorscheme["ElectricityCarrier"],
-                    "source-arrow-color": colorscheme["ElectricityCarrier"],
-                },
-            },
-            {
-                "selector": "." + colorscheme["GasCarrier"],
-                "style": {
-                    "line-color": colorscheme["GasCarrier"],
-                    "source-arrow-color": colorscheme["GasCarrier"],
-                },
-            },
-            {
-                "selector": ".inactive",
-                "style": {
-                    "line-color": "lightgrey",
-                    "source-arrow-color": "lightgrey",
-                    "line-style": "dashed",
-                },
-            },
-            {
-                "selector": ".rainbow",
-                "style": {
-                    "line-fill": "linear-gradient",
-                    "line-gradient-stop-colors": """firebrick darkorange gold
-                                                    chartreuse deepskyblue
-                                                    cornflowerblue darkslateblue
-                                                """,
-                    "source-arrow-color": "firebrick",
-                },
-            },
-            # node shapes
-            {
-                "selector": ".source",
-                "style": {
-                    "shape": "polygon",
-                    "shape-polygon-points": "1, 1, 0.5, -1, -0.5, -1, -1, 1",
-                    "text-valign": "center",
-                    "text-halign": "center",
-                    "width": "label",
-                    "height": "label",
-                },
-            },
-            {
-                "selector": ".sink",
-                "style": {
-                    "shape": "polygon",
-                    "shape-polygon-points": "0.5, 1, 1, -1, -1, -1, -0.5, 1",
-                    "text-valign": "center",
-                    "text-halign": "center",
-                    "width": "label",
-                    "height": "label",
-                },
-            },
-            {
-                "selector": ".bus",
-                "style": {
-                    "shape": "ellipse",
-                    "text-valign": "center",
-                    "text-halign": "center",
-                    "width": "label",
-                    "height": "label",
-                },
-            },
-            {
-                "selector": ".converter",
-                "style": {
-                    "shape": "octagon",
-                    "text-valign": "center",
-                    "text-halign": "center",
-                    "width": "label",
-                    "height": "label",
-                },
-            },
-            {
-                "selector": ".storage",
-                "style": {
-                    "shape": "barrel",
-                    "text-valign": "center",
-                    "text-halign": "center",
-                    "width": "label",
-                    "height": "label",
-                },
-            },
-            {
-                "selector": ".parent",
-                "style": {
-                    "shape": "round-rectangle",
-                    "text-valign": "top",
-                },
-            },
-        ],
-        elements=elements,
-    )
+    tabs = [dcc.Tab(label=x, value=x) for x in elements.keys()]
 
     app.layout = html.Div(
         [
-            graph,
+            dcc.Tabs(
+                id="view_selector",
+                value="graph",
+                children=tabs,
+            ),
+            html.Div(id="graph"),
         ]
     )
+
+    @callback(Output("graph", "children"), Input("view_selector", "value"))
+    def render_graph(tab):
+        e = elements[tab]
+        return html.Div(
+            [
+                cyto.Cytoscape(
+                    id="mtress_model",
+                    layout={
+                        "name": "cose-bilkent"
+                    },  # cose-bilkent | cola | klay
+                    style={
+                        "width": "100%",
+                        "height": "calc(100vh - 120px)",
+                    },
+                    wheelSensitivity=0.1,
+                    stylesheet=[
+                        # Group selectors
+                        {
+                            "selector": "node",
+                            "style": {
+                                "content": "data(label)",
+                                "shape": "cut-rectangle",
+                                "font-size": "36",
+                            },
+                        },
+                        {
+                            "selector": "edge",
+                            "style": {
+                                "curve-style": "bezier",
+                                "source-arrow-shape": "triangle",
+                                "line-color": "black",
+                                "source-arrow-color": "black",
+                            },
+                        },
+                        # Class selectors
+                        # coloring
+                        {
+                            "selector": "." + colorscheme["HeatCarrier"],
+                            "style": {
+                                "line-color": colorscheme["HeatCarrier"],
+                                "source-arrow-color": colorscheme[
+                                    "HeatCarrier"
+                                ],
+                            },
+                        },
+                        {
+                            "selector": "."
+                            + colorscheme["ElectricityCarrier"],
+                            "style": {
+                                "line-color": colorscheme[
+                                    "ElectricityCarrier"
+                                ],
+                                "source-arrow-color": colorscheme[
+                                    "ElectricityCarrier"
+                                ],
+                            },
+                        },
+                        {
+                            "selector": "." + colorscheme["GasCarrier"],
+                            "style": {
+                                "line-color": colorscheme["GasCarrier"],
+                                "source-arrow-color": colorscheme[
+                                    "GasCarrier"
+                                ],
+                            },
+                        },
+                        {
+                            "selector": ".inactive",
+                            "style": {
+                                "line-color": "lightgrey",
+                                "source-arrow-color": "lightgrey",
+                                "line-style": "dashed",
+                            },
+                        },
+                        {
+                            "selector": ".rainbow",
+                            "style": {
+                                "line-fill": "linear-gradient",
+                                "line-gradient-stop-colors": """
+                                                    firebrick darkorange gold
+                                                    chartreuse deepskyblue
+                                                    cornflowerblue darkslateblue
+                                                    """,
+                                "source-arrow-color": "firebrick",
+                            },
+                        },
+                        # node shapes
+                        {
+                            "selector": ".source",
+                            "style": {
+                                "shape": "polygon",
+                                "shape-polygon-points": "1, 1, 0.5, -1, -0.5, -1, -1, 1",
+                                "text-valign": "center",
+                                "text-halign": "center",
+                                "width": "label",
+                                "height": "label",
+                            },
+                        },
+                        {
+                            "selector": ".sink",
+                            "style": {
+                                "shape": "polygon",
+                                "shape-polygon-points": "0.5, 1, 1, -1, -1, -1, -0.5, 1",
+                                "text-valign": "center",
+                                "text-halign": "center",
+                                "width": "label",
+                                "height": "label",
+                            },
+                        },
+                        {
+                            "selector": ".bus",
+                            "style": {
+                                "shape": "ellipse",
+                                "text-valign": "center",
+                                "text-halign": "center",
+                                "width": "label",
+                                "height": "label",
+                            },
+                        },
+                        {
+                            "selector": ".converter",
+                            "style": {
+                                "shape": "octagon",
+                                "text-valign": "center",
+                                "text-halign": "center",
+                                "width": "label",
+                                "height": "label",
+                            },
+                        },
+                        {
+                            "selector": ".storage",
+                            "style": {
+                                "shape": "barrel",
+                                "text-valign": "center",
+                                "text-halign": "center",
+                                "width": "label",
+                                "height": "label",
+                            },
+                        },
+                        {
+                            "selector": ".parent",
+                            "style": {
+                                "shape": "round-rectangle",
+                                "text-valign": "top",
+                            },
+                        },
+                    ],
+                    elements=e,
+                )
+            ]
+        )
 
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
     app.run(debug=False)
@@ -266,6 +292,7 @@ def generate_graph(
     graph_nodes = []
     graph_nodes_tracker = set()
     graph_edges = []
+    graph_edges_flows = []
     for n in nodes:
         if type(n.label) == tuple:
             # mtress node
@@ -317,12 +344,15 @@ def generate_graph(
                 "data": {
                     "source": "-".join(n.label),
                     "target": "-".join(o.label),
-                }
+                },
+                "classes": edge_color,
             }
+            # edge["classes"] = edge_color
+            graph_edges.append(edge.copy())
             if flows is not None:
                 flow = flows[o.label, n.label].sum()
                 if flow > 0:
-                    edge["classes"] = edge_color
+                    # edge["classes"] = edge_color
                     edge["style"] = {
                         "label": str(round(flow, 3)),
                         "text-rotation": "autorotate",
@@ -332,11 +362,17 @@ def generate_graph(
                     }
                 else:  # TODO: show inactive edges -> toggle on off?
                     edge["classes"] = "inactive"
-            else:
+                graph_edges_flows.append(edge)
+            """ else:
                 edge["classes"] = edge_color
-            graph_edges.append(edge)
+                graph_edges.append(edge) """
+
+    elements = {}
+    elements["graph"] = graph_nodes + graph_edges
+    if flows is not None:
+        elements["flows"] = graph_nodes + graph_edges_flows
 
     if show:
-        cytoscape_graph(graph_nodes + graph_edges, colorscheme)
+        cytoscape_graph(elements, colorscheme)
     else:
-        return graph_nodes + graph_edges
+        return elements
