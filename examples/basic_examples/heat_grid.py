@@ -67,10 +67,10 @@ house_3.add(
 
 house_3.add(
     technologies.HeatGridConnection(
-        working_rate=0,
+        heat_network_temperature=30,
         maximum_working_temperature=30,
         minimum_working_temperature=20,
-        revenue=None,
+        grid_limit=1e4,
     )
 )
 house_3.add(
