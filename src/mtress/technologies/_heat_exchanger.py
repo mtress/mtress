@@ -190,7 +190,7 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
                     },
                     outputs={heat_bus_warm_source: Flow()},
                     conversion_factors={
-                        _bus_source: self.minimum_delta
+                        _bus_source: (warm_temperature - cold_temperature)
                         * self.heat_carrier.specific_heat_capacity
                     },
                 )
