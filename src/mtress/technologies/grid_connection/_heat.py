@@ -1,42 +1,106 @@
 """Heat grid connection."""
 
+from __future__ import annotations
 from typing import Optional
 
 from oemof.solph import Bus, Flow
-from oemof.solph.components import Source
+from ...technologies._heat_exchanger import AbstactHeatExchanger
 
 from mtress._abstract_component import AbstractSolphRepresentation
+from mtress._data_handler import TimeseriesSpecifier
 from mtress.carriers import HeatCarrier
-
 from ._abstract_grid_connection import AbstractGridConnection
 
 
-class HeatGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
+class HeatGridConnection(AbstractGridConnection, AbstactHeatExchanger):
+
     def __init__(
         self,
-        working_rate: Optional[float] = None,
+        heat_network_temperature: TimeseriesSpecifier,
+        maximum_working_temperature: float,
+        minimum_working_temperature: float,
+        working_rate: Optional[TimeseriesSpecifier] = 0,
+        revenue: Optional[TimeseriesSpecifier] = None,
+        grid_limit: Optional[float] = None,
     ) -> None:
-        super().__init__()
-
-        self.working_rate = working_rate
+        """
+        Initialize HeatGridConnection
+        :param maximum_temperature: Flow temperature (°C) of the grid
+        :param minimum_temperature: Return temperature (°C) of the grid
+        :param working_rate: Working price of heat in currency/Wh
+        :param revenue: Revenue of the heat export to grid in currency/Wh
+        :param grid_limit: limits the grid's nominal power (in W)
+        """
+        super().__init__(
+            reservoir_temperature=heat_network_temperature,
+            maximum_working_temperature=maximum_working_temperature,
+            minimum_working_temperature=minimum_working_temperature,
+            nominal_power=grid_limit,
+            working_rate=working_rate,
+            revenue=revenue,
+        )
 
     def build_core(self):
+        """Build core structure of oemof.solph representation."""
+        super()._build_core()
+
+    def establish_interconnections(self) -> None:
+
+        super()._define_source()
+        if self.revenue is not None:
+            super()._define_sink()
+
+
+class HeatGridInterconnection(
+    AbstractGridConnection, AbstractSolphRepresentation
+):
+
+    def __init__(
+        self,
+        maximum_working_temperature: float,
+        minimum_working_temperature: float,
+    ) -> None:
+        """
+        Initialize HeatGridConnection
+        :param maximum_working_temperature: Maximum flow temperature (°C)
+            of the internal grid
+        :param minimum_working_temperature: Minimum return temperature (°C)
+            of the internal grid
+        """
+        super().__init__()
+
+        self.flow_temperature = maximum_working_temperature
+        self.return_temperature = minimum_working_temperature
+
+        # Properties for solph interfaces
+        self.level_nodes = {}
+
+    def build_core(self):
+
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
-        for target_temperature in heat_carrier.temperature_levels:
-            level_bus = self.create_solph_node(
-                label=f"heat_grid_in_{target_temperature:.0f}",
+        in_levels = heat_carrier.get_levels_between(
+            self.return_temperature, self.flow_temperature
+        )
+
+        for temperature in in_levels:
+            self.level_nodes[temperature] = self.create_solph_node(
+                label=f"T_{temperature}",
                 node_type=Bus,
-                outputs={heat_carrier.level_nodes[target_temperature]: Flow()},
+                inputs={
+                    heat_carrier.level_nodes[temperature]: Flow(),
+                },
+                outputs={
+                    heat_carrier.level_nodes[temperature]: Flow(),
+                },
             )
 
-            if self.working_rate is not None:
-                self.create_solph_node(
-                    label="source_import",
-                    node_type=Source,
-                    outputs={
-                        level_bus: Flow(
-                            variable_costs=self.working_rate,
-                        )
-                    },
-                )
+    def connect(
+        self,
+        other: HeatGridInterconnection,
+    ):
+        for node1_t, node2_t in zip(
+            self.level_nodes.values(), other.level_nodes.values()
+        ):
+            node1_t.inputs[node2_t] = Flow()
+            node1_t.outputs[node2_t] = Flow()
