@@ -60,13 +60,53 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                 value="graph",
                 children=tabs,
             ),
+            html.Button(
+                html.H3("hide inactive"),
+                id="toggle_inactive",
+                style={
+                    "position": "absolute",
+                    "right": 50,
+                    "top": 15,
+                    "z-index": 10,
+                },
+                hidden=True,
+                n_clicks=0,
+            ),
             html.Div(id="graph"),
         ]
     )
 
-    @callback(Output("graph", "children"), Input("view_selector", "value"))
-    def render_graph(tab):
+    @callback(
+        Output("toggle_inactive", "children"),
+        Input("toggle_inactive", "n_clicks"),
+    )
+    def change_button(btn_clicks):
+        if btn_clicks % 2:
+            return html.H3("show inactive")
+        else:
+            return html.H3("hide inactive")
+
+    @callback(
+        Output("toggle_inactive", "hidden"), Input("view_selector", "value")
+    )
+    def toggle_inactive(tab):
+        if tab == "graph":
+            return True
+        elif tab == "flows":
+            return False
+
+    @callback(
+        Output("graph", "children"),
+        Input("view_selector", "value"),
+        Input("toggle_inactive", "n_clicks"),
+    )
+    def render_graph(tab, show_inactive):
         e = elements[tab]
+
+        # remove inactive edges
+        if show_inactive % 2:
+            e = [item for item in e if item["classes"] != "inactive"]
+
         return html.Div(
             [
                 cyto.Cytoscape(
@@ -96,6 +136,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                                 "source-arrow-shape": "triangle",
                                 "line-color": "black",
                                 "source-arrow-color": "black",
+                                "font-size": "28",
                             },
                         },
                         # Class selectors
@@ -156,6 +197,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                                 "text-halign": "center",
                                 "width": "label",
                                 "height": "label",
+                                "padding": "25px",
                             },
                         },
                         {
@@ -167,6 +209,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                                 "text-halign": "center",
                                 "width": "label",
                                 "height": "label",
+                                "padding": "25px",
                             },
                         },
                         {
@@ -177,6 +220,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                                 "text-halign": "center",
                                 "width": "label",
                                 "height": "label",
+                                "padding": "25px",
                             },
                         },
                         {
@@ -187,6 +231,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                                 "text-halign": "center",
                                 "width": "label",
                                 "height": "label",
+                                "padding": "25px",
                             },
                         },
                         {
@@ -197,6 +242,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                                 "text-halign": "center",
                                 "width": "label",
                                 "height": "label",
+                                "padding": "25px",
                             },
                         },
                         {
@@ -350,12 +396,10 @@ def generate_graph(
                 },
                 "classes": edge_color,
             }
-            # edge["classes"] = edge_color
             graph_edges.append(edge.copy())
             if flows is not None:
                 flow = flows[o.label, n.label].sum()
                 if flow > 0:
-                    # edge["classes"] = edge_color
                     edge["style"] = {
                         "label": str(round(flow, 3)),
                         "text-rotation": "autorotate",
@@ -366,9 +410,6 @@ def generate_graph(
                 else:  # TODO: show inactive edges -> toggle on off?
                     edge["classes"] = "inactive"
                 graph_edges_flows.append(edge)
-            """ else:
-                edge["classes"] = edge_color
-                graph_edges.append(edge) """
 
     elements = {}
     elements["graph"] = graph_nodes + graph_edges
