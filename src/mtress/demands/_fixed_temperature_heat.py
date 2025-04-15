@@ -203,7 +203,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         )
 
         self.create_solph_node(
-            label="Source",
+            label="source",
             node_type=Source,
             outputs={
                 input: Flow(
