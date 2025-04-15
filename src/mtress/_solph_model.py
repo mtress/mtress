@@ -99,13 +99,14 @@ class SolphModel:
         flow_results: dict = None,
         flow_color: dict = None,
         colorscheme: dict = None,
+        show: bool = True,
     ):
-        generate_graph(
+        return generate_graph(
             nodes=self.nodes(),
             flows=flow_results,
             flow_color=flow_color,
             colorscheme=colorscheme,
-            show=True,
+            show=show,
         )
 
     def solve(
