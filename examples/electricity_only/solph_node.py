@@ -33,9 +33,12 @@ from mtress import (
 )
 from mtress._helpers import get_flows
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 from mtress._helpers._visualization import generate_graph
 >>>>>>> e332344 (rework of plotting algorithm. added oemof nodes are now considered as well. moved plotting code to _helpers)
+=======
+>>>>>>> 99d4e00 (remove unused import)
 
 os.chdir(os.path.dirname(__file__))
 meta_model = MetaModel()
