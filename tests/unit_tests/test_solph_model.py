@@ -306,19 +306,18 @@ def test_graph():
     )
 
     # check both graph representations
-    assert graph_elements["graph"] and graph_elements["flows"]
-    assert len(graph_elements["graph"]) == len(graph_elements["flows"])
+    assert graph_elements["nodes"] and graph_elements["edges"]
+    assert len(graph_elements["nodes"]) == len(nodes)
 
     # check all nodes present
-    # check graph colors okay
-    graph_elements = graph_elements["graph"]
-    graph_nodes = []
-    graph_colors = set()
-    for ge in graph_elements:
-        if "id" in ge["data"]:
-            graph_nodes.append(ge["data"]["id"])
-        else:
-            graph_colors.add(ge["classes"])
-
+    graph_nodes = list(graph_elements["nodes"].keys())
     assert set(nodes) == set(graph_nodes)
+
+    # check graph colors okay
+    graph_edges = graph_elements["edges"]
+    graph_colors = set()
+    for source, targets in graph_edges.items():
+        for edge_attr in targets.values():
+            graph_colors.add(edge_attr["color"])
+
     assert colors == graph_colors
