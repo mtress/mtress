@@ -13,8 +13,6 @@ import logging
 from dash import Dash, html, dcc, Input, Output, callback
 import dash_cytoscape as cyto
 
-import networkx as nx
-
 # Define shapes for the component types
 SHAPES = {
     Source: "source",
@@ -34,19 +32,31 @@ COLORS = {
 RAINBOW = """firebrick darkorange gold 
             chartreuse deepskyblue
             cornflowerblue darkslateblue"""
+RAINBOW = """darkslateblue cornflowerblue
+            deepskyblue chartreuse
+            gold darkorange firebrick"""
 
 SOURCE_SHAPE = "1, 1, 0.75, -1, -0.75, -1, -1, 1"
 SINK_SHAPE = "0.75, 1, 1, -1, -1, -1, -0.75, 1"
 
 
-def networkx_graph():
-    # TODO: extract networkx representation from cytoscape for static plotting
-    # https://networkx.org/documentation/stable/reference/readwrite/generated/networkx.readwrite.json_graph.cytoscape_graph.html
-    # cyto.Cytoscape().to_plotly_json()
-    pass
+def graph_cytoscape(
+    nodes,
+    flows,
+    flow_color: dict,
+    colorscheme: dict,
+):
+    if colorscheme is None:
+        # set to default
+        colorscheme = COLORS
 
+    # get cytoscape elements
+    f = flows is not None
+    elements = generate_graph_cytoscape(
+        generate_graph(nodes, flows, flow_color, colorscheme),
+        f,
+    )
 
-def cytoscape_graph(elements: dict, colorscheme: dict):
     # init dash cytoscape
     cyto.load_extra_layouts()
     app = Dash()
@@ -133,10 +143,11 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                             "selector": "edge",
                             "style": {
                                 "curve-style": "bezier",
-                                "source-arrow-shape": "triangle",
+                                "target-arrow-shape": "triangle",
                                 "line-color": "black",
-                                "source-arrow-color": "black",
+                                "target-arrow-color": "black",
                                 "font-size": "28",
+                                "width": "6",
                             },
                         },
                         # Class selectors
@@ -145,7 +156,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                             "selector": "." + colorscheme["HeatCarrier"],
                             "style": {
                                 "line-color": colorscheme["HeatCarrier"],
-                                "source-arrow-color": colorscheme[
+                                "target-arrow-color": colorscheme[
                                     "HeatCarrier"
                                 ],
                             },
@@ -157,7 +168,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                                 "line-color": colorscheme[
                                     "ElectricityCarrier"
                                 ],
-                                "source-arrow-color": colorscheme[
+                                "target-arrow-color": colorscheme[
                                     "ElectricityCarrier"
                                 ],
                             },
@@ -166,7 +177,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                             "selector": "." + colorscheme["GasCarrier"],
                             "style": {
                                 "line-color": colorscheme["GasCarrier"],
-                                "source-arrow-color": colorscheme[
+                                "target-arrow-color": colorscheme[
                                     "GasCarrier"
                                 ],
                             },
@@ -175,7 +186,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                             "selector": ".inactive",
                             "style": {
                                 "line-color": "lightgrey",
-                                "source-arrow-color": "lightgrey",
+                                "target-arrow-color": "lightgrey",
                                 "line-style": "dashed",
                             },
                         },
@@ -184,7 +195,7 @@ def cytoscape_graph(elements: dict, colorscheme: dict):
                             "style": {
                                 "line-fill": "linear-gradient",
                                 "line-gradient-stop-colors": RAINBOW,
-                                "source-arrow-color": "firebrick",
+                                "target-arrow-color": "firebrick",
                             },
                         },
                         # node shapes
@@ -323,11 +334,7 @@ def generate_graph(
     flows,
     flow_color: dict = None,
     colorscheme: dict = None,
-    show: bool = True,
-):
-    """
-    Function to generate nodes and edeges usable for dash cytoscape.
-    """
+) -> dict:
     if colorscheme is None:
         # set to default
         colorscheme = COLORS
@@ -338,85 +345,126 @@ def generate_graph(
     for n in nodes:
         get_flow_color(n, flow_color, colorscheme)
 
-    graph_nodes = []
+    graph_nodes = {}
     graph_nodes_tracker = set()
-    graph_edges = []
-    graph_edges_flows = []
+    graph_edges = {}
+
     for n in nodes:
+        # get nodes
         if type(n.label) == tuple:
             # mtress node
             identifier = list(n.label)
 
-            child, child_id = None, None
+            current_label, current_id = None, None
             is_parent = False
             # go up the hierarchy and build parent - child relationship
             while identifier:
-                if child_id in graph_nodes_tracker:
+                child_id = current_id
+                if current_id in graph_nodes_tracker:
                     is_parent = True
-                child_id = "-".join(identifier)
-                child = identifier.pop()
+                current_id = "-".join(identifier)
+                current_label = identifier.pop()
                 parent_id = "-".join(identifier)
-                if child_id not in graph_nodes_tracker:
-                    # only add nodes once
-                    graph_nodes.append(
-                        {
-                            "data": {
-                                "id": child_id,
-                                "label": child,
-                                "parent": parent_id,
-                            },
-                            "classes": (
-                                "parent"
-                                if is_parent
-                                else SHAPES.get(type(n), "rectangle")
-                            ),
-                        }
-                    )
-                    graph_nodes_tracker.add(child_id)
+                graph_nodes.setdefault(
+                    current_id,
+                    {
+                        "label": current_label,
+                        "children": set() if is_parent else None,
+                        "parent": parent_id if parent_id != "" else None,
+                        "shape": SHAPES.get(type(n), "rectangle"),
+                    },
+                )
+                if is_parent:
+                    graph_nodes[current_id]["children"].add(child_id)
+                graph_nodes_tracker.add(current_id)
         elif type(n.label) == str:
             # manually added oemof node (floaty boy)
-            identifier = "-".join(n.label)
-            graph_nodes.append(
+            identifier = n.label
+            graph_nodes.setdefault(
+                identifier,
                 {
-                    "data": {
-                        "id": identifier,
-                        "label": n.label,
-                    },
-                    "classes": SHAPES.get(type(n), "rectangle"),
-                }
-            )
-        for o in n.inputs:
-            edge_color = flow_color.get(tuple(o.label), {}).get(
-                tuple(n.label), "black"
-            )
-            edge = {
-                "data": {
-                    "source": "-".join(n.label),
-                    "target": "-".join(o.label),
+                    "label": identifier,
+                    "children": None,
+                    "parent": None,
+                    "shape": SHAPES.get(type(n), "rectangle"),
                 },
-                "classes": edge_color,
-            }
-            graph_edges.append(edge.copy())
+            )
+
+        # get edges
+        for t in n.outputs:
+            edge_color = flow_color.get(tuple(n.label), {}).get(
+                tuple(t.label), "black"
+            )
+            source_id = (
+                "-".join(n.label) if type(n.label) == tuple else n.label
+            )
+            target_id = (
+                "-".join(t.label) if type(t.label) == tuple else t.label
+            )
+            graph_edges.setdefault(source_id, {})
+            graph_edges[source_id].setdefault(target_id, {})
+            graph_edges[source_id][target_id]["color"] = edge_color
             if flows is not None:
-                flow = flows[o.label, n.label].sum()
+                flow = flows[n.label, t.label].sum()
+                graph_edges[source_id][target_id]["flow"] = flow
+
+    graph_elements = {
+        "nodes": graph_nodes,
+        "edges": graph_edges,
+    }
+    return graph_elements
+
+
+def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
+    graph_nodes = graph_elements["nodes"]
+    graph_edges = graph_elements["edges"]
+
+    cytoscape_nodes = []
+    for node, node_attr in graph_nodes.items():
+        n = {
+            "data": {
+                "id": node,
+                "label": node_attr["label"],
+                "parent": node_attr["parent"],
+            },
+            "classes": (
+                "parent"
+                if node_attr["children"] is not None
+                else node_attr["shape"]
+            ),
+        }
+        cytoscape_nodes.append(n)
+
+    cytoscape_edges = []
+    cytoscape_edges_flows = []
+    for source, targets in graph_edges.items():
+        for t, edge_attr in targets.items():
+            e = {
+                "data": {
+                    "source": source,
+                    "target": t,
+                },
+                "classes": edge_attr["color"],
+            }
+            cytoscape_edges.append(e.copy())
+
+            if flows:
+                flow = edge_attr["flow"]
                 if flow > 0:
-                    edge["style"] = {
+                    e["style"] = {
                         "label": str(round(flow, 3)),
                         "text-rotation": "autorotate",
                         "text-background-shape": "round-rectangle",
                         "text-background-opacity": "1",
                         "color": "white",
                     }
-                else:  # TODO: show inactive edges -> toggle on off?
-                    edge["classes"] = "inactive"
-                graph_edges_flows.append(edge)
+                else:
+                    e["classes"] = "inactive"
+                cytoscape_edges_flows.append(e)
 
-    elements = {}
-    elements["graph"] = graph_nodes + graph_edges
-    if flows is not None:
-        elements["flows"] = graph_nodes + graph_edges_flows
+    cytoscape_elements = {}
+    cytoscape_elements["graph"] = cytoscape_nodes + cytoscape_edges
+    if flows:
+        cytoscape_elements["flows"] = cytoscape_nodes + cytoscape_edges_flows
 
-    if show:
-        cytoscape_graph(elements, colorscheme)
-    else:
-        return elements
+    return cytoscape_elements
