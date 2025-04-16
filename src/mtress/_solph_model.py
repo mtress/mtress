@@ -15,7 +15,7 @@ import pandas as pd
 from oemof.solph import EnergySystem, Model
 
 from ._data_handler import DataHandler
-from ._helpers._visualization import generate_graph
+from ._helpers._visualization import generate_graph, graph_cytoscape
 
 if TYPE_CHECKING:
     from ._abstract_component import AbstractSolphRepresentation
@@ -101,13 +101,20 @@ class SolphModel:
         colorscheme: dict = None,
         show: bool = True,
     ):
-        return generate_graph(
-            nodes=self.nodes(),
-            flows=flow_results,
-            flow_color=flow_color,
-            colorscheme=colorscheme,
-            show=show,
-        )
+        if show:
+            graph_cytoscape(
+                nodes=self.nodes(),
+                flows=flow_results,
+                flow_color=flow_color,
+                colorscheme=colorscheme,
+            )
+        else:
+            return generate_graph(
+                nodes=self.nodes(),
+                flows=flow_results,
+                flow_color=flow_color,
+                colorscheme=colorscheme,
+            )
 
     def solve(
         self,
