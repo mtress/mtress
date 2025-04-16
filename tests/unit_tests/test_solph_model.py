@@ -114,6 +114,7 @@ def test_build_model_with_connected_electricity_missing_connection():
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 def test_graph_simple():
     nodes = []
     meta_model = MetaModel()
@@ -235,6 +236,9 @@ def test_graph_flow():
 =======
 def test_graph():
 >>>>>>> 8af8584 (adapt tests to new plotting)
+=======
+def test_graph():
+>>>>>>> 47bb909c43107a3bef75fe06f103486a0448b15c
     nodes = []
     colors = set()
     meta_model = MetaModel()
