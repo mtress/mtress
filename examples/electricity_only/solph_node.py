@@ -32,7 +32,6 @@ from mtress import (
     technologies,
 )
 from mtress._helpers import get_flows
-from mtress._helpers._visualization import generate_graph
 
 os.chdir(os.path.dirname(__file__))
 meta_model = MetaModel()
