@@ -113,132 +113,7 @@ def test_build_model_with_connected_electricity_missing_connection():
         )
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-def test_graph_simple():
-    nodes = []
-    meta_model = MetaModel()
-
-    house_1 = Location(name="house_1")
-    meta_model.add_location(house_1)
-
-    carrier0 = carriers.ElectricityCarrier()
-    nodes.append(("house_1", "ElectricityCarrier"))
-
-    carrier1 = carriers.HeatCarrier(temperature_levels=[10, 20, 30])
-    nodes.append(
-        (
-            "house_1",
-            "HeatCarrier",
-        )
-    )
-
-    demand1 = demands.Electricity(name="demand1", time_series=[0, 1, 2])
-    nodes.append(("house_1", "demand1"))
-
-    demand2 = demands.FixedTemperatureHeating(
-        name="demand2",
-        min_flow_temperature=20,
-        return_temperature=10,
-        time_series=[1, 2, 3],
-    )
-    nodes.append(("house_1", "demand2"))
-
-    house_1.add(carrier0)
-    house_1.add(carrier1)
-    house_1.add(demand1)
-    house_1.add(demand2)
-
-    solph_representation = SolphModel(
-        meta_model,
-        timeindex={
-            "start": "2021-07-10 00:00:00",
-            "end": "2021-07-10 03:00:00",
-            "freq": "60T",
-        },
-    )
-
-    solph_representation.build_solph_model()
-
-    plot = solph_representation.graph(detail=False)
-
-    plot_json_string = plot.pipe("json").decode()
-    plot_json_dict = json.loads(plot_json_string)
-
-    assert plot_json_dict["name"] == "MTRESS model"
-
-    obj_names = [obj["name"] for obj in plot_json_dict["objects"]]
-    for n in nodes:
-        assert f"['{n[0]}', '{n[1]}']" in obj_names
-
-
-def test_graph_detail():
-    nodes = []
-    meta_model = MetaModel()
-
-    house_1 = Location(name="house_1")
-    meta_model.add_location(house_1)
-
-    carrier0 = carriers.ElectricityCarrier()
-    nodes.append(("house_1", "ElectricityCarrier", "distribution"))
-    nodes.append(("house_1", "ElectricityCarrier", "feed_in"))
-
-    carrier1 = carriers.HeatCarrier(temperature_levels=[10, 20, 30])
-    nodes.append(("house_1", "HeatCarrier", "T_10"))
-    nodes.append(("house_1", "HeatCarrier", "T_20"))
-    nodes.append(("house_1", "HeatCarrier", "T_30"))
-
-    demand1 = demands.Electricity(name="demand1", time_series=[0, 1, 2])
-    nodes.append(("house_1", "demand1", "input"))
-    nodes.append(("house_1", "demand1", "sink"))
-
-    demand2 = demands.FixedTemperatureHeating(
-        name="demand2",
-        min_flow_temperature=20,
-        return_temperature=10,
-        time_series=[1, 2, 3],
-    )
-    nodes.append(("house_1", "demand2", "output"))
-    nodes.append(("house_1", "demand2", "sink"))
-    nodes.append(("house_1", "demand2", "heat_exchanger"))
-
-    house_1.add(carrier0)
-    house_1.add(carrier1)
-    house_1.add(demand1)
-    house_1.add(demand2)
-
-    solph_representation = SolphModel(
-        meta_model,
-        timeindex={
-            "start": "2021-07-10 00:00:00",
-            "end": "2021-07-10 03:00:00",
-            "freq": "60T",
-        },
-    )
-
-    solph_representation.build_solph_model()
-
-    plot = solph_representation.graph(detail=True)
-
-    plot_json_string = plot.pipe("json").decode()
-    plot_json_dict = json.loads(plot_json_string)
-
-    print(plot_json_dict)
-
-    assert plot_json_dict["name"] == "MTRESS model"
-
-    obj_names = [obj["name"] for obj in plot_json_dict["objects"]]
-    for n in nodes:
-        assert str(n) in obj_names
-
-
-def test_graph_flow():
-=======
 def test_graph():
->>>>>>> 8af8584 (adapt tests to new plotting)
-=======
-def test_graph():
->>>>>>> 47bb909c43107a3bef75fe06f103486a0448b15c
     nodes = []
     colors = set()
     meta_model = MetaModel()
@@ -310,18 +185,19 @@ def test_graph():
     )
 
     # check both graph representations
-    assert graph_elements["nodes"] and graph_elements["edges"]
-    assert len(graph_elements["nodes"]) == len(nodes)
+    assert graph_elements["graph"] and graph_elements["flows"]
+    assert len(graph_elements["graph"]) == len(graph_elements["flows"])
 
     # check all nodes present
-    graph_nodes = list(graph_elements["nodes"].keys())
-    assert set(nodes) == set(graph_nodes)
-
     # check graph colors okay
-    graph_edges = graph_elements["edges"]
+    graph_elements = graph_elements["graph"]
+    graph_nodes = []
     graph_colors = set()
-    for source, targets in graph_edges.items():
-        for edge_attr in targets.values():
-            graph_colors.add(edge_attr["color"])
+    for ge in graph_elements:
+        if "id" in ge["data"]:
+            graph_nodes.append(ge["data"]["id"])
+        else:
+            graph_colors.add(ge["classes"])
 
+    assert set(nodes) == set(graph_nodes)
     assert colors == graph_colors
