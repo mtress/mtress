@@ -6,7 +6,6 @@ from typing import Optional
 from oemof.solph import Bus, Flow
 from ...technologies._heat_exchanger import AbstactHeatExchanger
 
-from mtress._abstract_component import AbstractSolphRepresentation
 from mtress._data_handler import TimeseriesSpecifier
 from mtress.carriers import HeatCarrier
 from ._abstract_grid_connection import AbstractGridConnection
@@ -51,9 +50,7 @@ class HeatGridConnection(AbstractGridConnection, AbstactHeatExchanger):
             super()._define_sink()
 
 
-class HeatGridInterconnection(
-    AbstractGridConnection, AbstractSolphRepresentation
-):
+class HeatGridInterconnection(AbstractGridConnection):
 
     def __init__(
         self,
