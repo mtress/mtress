@@ -1,5 +1,6 @@
 """This module provides a class representing an air heat exchanger."""
 
+from typing import Optional
 import numpy as np
 
 from oemof.solph import Bus, Flow
@@ -41,6 +42,8 @@ class AbstactHeatExchanger(AbstractTechnology):
         maximum_working_temperature: float = 0,
         nominal_power: float = None,
         minimum_delta: float = 1.0,
+        working_rate: Optional[TimeseriesSpecifier] = 0,
+        revenue: Optional[TimeseriesSpecifier] = 0,
     ):
         """
         Initialize heat exchanger to draw or expel energy from a source
@@ -48,11 +51,13 @@ class AbstactHeatExchanger(AbstractTechnology):
         :param name: Name of the component.
         :param reservoir_temperature: Reference to air temperature time series
         :param minimum_working_temperature: Minimum temperature limit (in °C)
-        :param maximum_working_temperature: maximum temperature limit (in °C)
+        :param maximum_working_temperature: Maximum temperature limit (in °C)
         :param nominal_power: Nominal power of the heat exchanger (in W),
             default to None
         :param minimum_delta: Specifies the delta between the primary and
             secondary sides of the HE (in °C)
+        :param working_rate: Working price of imported heat in currency/Wh
+        :param revenue: Revenue from heat exported to a sink in currency/Wh
         """
         super().__init__(name=name)
 
@@ -61,6 +66,8 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.maximum_working_temperature = maximum_working_temperature
         self.nominal_power = nominal_power
         self.minimum_delta = minimum_delta
+        self.working_rate = working_rate
+        self.revenue = revenue
 
     def _build_core(self):
         self.reservoir_temperature = self._solph_model.data.get_timeseries(
@@ -91,7 +98,14 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.create_solph_node(
             label="source_reservoir",
             node_type=Source,
-            outputs={_bus_source: Flow()},
+            outputs={
+                _bus_source: Flow(
+                    variable_costs=self._solph_model.data.get_timeseries(
+                        self.working_rate,
+                        kind=TimeseriesType.INTERVAL,
+                    ),
+                )
+            },
             custom_attributes={"temperature": self.reservoir_temperature},
         )
 
@@ -189,7 +203,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                     },
                     outputs={heat_bus_warm_source: Flow()},
                     conversion_factors={
-                        _bus_source: self.minimum_delta
+                        _bus_source: (warm_temperature - cold_temperature)
                         * self.heat_carrier.specific_heat_capacity
                     },
                 )
@@ -203,7 +217,16 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.create_solph_node(
             label="sink",
             node_type=Sink,
-            inputs={_bus_sink: Flow()},
+            inputs={
+                _bus_sink: Flow(
+                    variable_costs=-(
+                        self._solph_model.data.get_timeseries(
+                            self.revenue,
+                            kind=TimeseriesType.INTERVAL,
+                        )
+                    )
+                )
+            },
         )
 
         highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
