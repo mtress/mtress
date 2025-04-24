@@ -14,15 +14,12 @@ SPDX-License-Identifier: MIT
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Source
 
-from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier
 from ._abstract_technology import AbstractTechnology
 
 
-class RenewableElectricitySource(
-    AbstractTechnology, AbstractSolphRepresentation
-):
+class RenewableElectricitySource(AbstractTechnology):
     """A generic renewable electricity source."""
 
     def __init__(

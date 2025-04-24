@@ -18,7 +18,7 @@ from oemof.solph import EnergySystem, Model
 from ._data_handler import DataHandler
 
 if TYPE_CHECKING:
-    from ._abstract_component import AbstractSolphRepresentation
+    from ._abstract_component import AbstractComponent
     from ._meta_model import MetaModel
 
 LOGGER = logging.getLogger(__file__)
@@ -40,7 +40,7 @@ class SolphModel:
         """
         self._meta_model = meta_model
         self._solph_representations: Dict[
-            Tuple[AbstractSolphRepresentation, str], object
+            Tuple[AbstractComponent, str], object
         ] = {}
 
         match timeindex:

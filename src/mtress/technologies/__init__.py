@@ -27,7 +27,7 @@ from ._electrolyser import (
 from ._fuel_cell import AEMFC, AFC, PEMFC, FuelCell, OffsetFuelCell
 from ._heat_exchanger import HeatExchanger, HeatSink, HeatSource
 from ._heat_pump import HeatPump, COPReference
-from ._heat_storage import FullyMixedHeatStorage, LayeredHeatStorage
+from ._heat_storage import LayeredHeatStorage
 from ._heater import GasBoiler, ResistiveHeater
 from ._photovoltaics import Photovoltaics
 from ._pressure_storage import H2Storage

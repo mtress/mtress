@@ -58,9 +58,9 @@ solph_representation = SolphModel(
     },
 )
 
-carrier_node =  solph_representation.energy_system.node[
-        ("house_1", "ElectricityCarrier", "distribution")
-    ]
+carrier_node = solph_representation.energy_system.node[
+    ("house_1", "ElectricityCarrier", "distribution")
+]
 
 solph_representation.energy_system.add(
     solph.components.GenericStorage(
