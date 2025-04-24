@@ -109,41 +109,6 @@ class AbstactHeatExchanger(AbstractTechnology):
             custom_attributes={"temperature": self.reservoir_temperature},
         )
 
-        b_out = self.create_solph_node(
-            label="out",
-            node_type=Bus,
-            custom_properties={"temperature": usable_temperature},
-        )
-
-        b_in = self.create_solph_node(
-            label="in",
-            node_type=Bus,
-            custom_properties={
-                "temperature": usable_temperature - self.minimum_delta
-            },
-        )
-
-        usability_series = [
-            1 if temp >= self.maximum_working_temperature else 0
-            for temp in self.reservoir_temperature
-        ]
-
-        self.create_solph_node(
-            label=f"source_limit",
-            node_type=Converter,
-            inputs={
-                _bus_source: Flow(
-                    max=usability_series, nominal_value=self.nominal_power
-                ),
-                b_in: Flow(),
-            },
-            outputs={b_out: Flow()},
-            conversion_factors={
-                _bus_source: self.minimum_delta
-                * self.heat_carrier.specific_heat_capacity
-            },
-        )
-
         if self.autoconnect:
             highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
                 min(
