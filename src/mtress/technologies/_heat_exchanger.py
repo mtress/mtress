@@ -42,6 +42,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         maximum_working_temperature: float = 0,
         nominal_power: float = None,
         minimum_delta: float = 1.0,
+        conductivity: float | None = None,
         working_rate: Optional[TimeseriesSpecifier] = 0,
         revenue: Optional[TimeseriesSpecifier] = 0,
     ):
@@ -66,6 +67,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.maximum_working_temperature = maximum_working_temperature
         self.nominal_power = nominal_power
         self.minimum_delta = minimum_delta
+        self.conductivity = conductivity
         self.working_rate = working_rate
         self.revenue = revenue
 
