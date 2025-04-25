@@ -40,9 +40,9 @@ class AbstactHeatExchanger(AbstractTechnology):
         reservoir_temperature: TimeseriesSpecifier,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        nominal_power: float = None,
+        nominal_power: float = None, # defining this as the timeseries for the radiation would simplify the structure
         minimum_delta: float = 1.0,
-        conductivity: float | None = None,
+        conductivity: float | None = None, #this would need to be the value of [a1(+a3)]*area  in W
         working_rate: Optional[TimeseriesSpecifier] = 0,
         revenue: Optional[TimeseriesSpecifier] = 0,
     ):
@@ -347,3 +347,38 @@ class HeatExchanger(AbstactHeatExchanger):
     def establish_interconnections(self) -> None:
         self._define_source()
         self._define_sink()
+
+
+class HeatColl(AbstactHeatExchanger):
+    def __init__(
+        self,
+        name: str,
+        reservoir_temperature: TimeseriesSpecifier,
+        minimum_working_temperature: float = 0,
+        maximum_working_temperature: float = 0,
+        conductivity: float | None = None,
+        nominal_power: float = None,
+        minimum_delta: float = 1.0,
+    ):
+
+        super().__init__(
+            name=name,
+            reservoir_temperature=reservoir_temperature,
+            minimum_working_temperature=minimum_working_temperature,
+            maximum_working_temperature=maximum_working_temperature,
+            nominal_power=nominal_power,
+            minimum_delta=minimum_delta,
+        )
+
+        # Solph model interfaces
+        self._bus_source = None
+        self._bus_sink = None
+
+    def build_core(self):
+        """Build core structure of oemof.solph representation."""
+        self._build_core()
+
+    def establish_interconnections(self) -> None:
+        self._define_source()
+        self._define_sink()
+
