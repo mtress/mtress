@@ -43,6 +43,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         nominal_power: float = None, # defining this as the timeseries for the radiation would simplify the structure
         minimum_delta: float = 1.0,
         conductivity: float | None = None, #this would need to be the value of [a1(+a3)]*area  in W
+        normalized_gains: float| None = None, 
         working_rate: Optional[TimeseriesSpecifier] = 0,
         revenue: Optional[TimeseriesSpecifier] = 0,
     ):
@@ -68,6 +69,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.nominal_power = nominal_power
         self.minimum_delta = minimum_delta
         self.conductivity = conductivity
+        self.normalized_gains = normalized_gains
         self.working_rate = working_rate
         self.revenue = revenue
 
@@ -153,10 +155,18 @@ class AbstactHeatExchanger(AbstractTechnology):
                     cold_temperature
                 ]
 
+                utilisation_factor = self.conductivity/self.nominal_power
+                additional_gains = self.normalized_gains * self.nominal_power # this factor would be the additional gains in W, assuming that the nominal power is the time series of the radiation
+
                 usability_series = [
-                    1 if temp >= warm_temperature else 0
+                    min(1, max(0, (temp - warm_temperature) * utilisation_factor) + additional_gains)
                     for temp in self.reservoir_temperature
                 ]
+#
+ #               usability_series = [
+  #                  1 if temp >= warm_temperature else 0
+   #                 for temp in self.reservoir_temperature
+    #            ]
 
                 self.create_solph_node(
                     label=f"source_{warm_temperature}",
@@ -323,6 +333,8 @@ class HeatExchanger(AbstactHeatExchanger):
         reservoir_temperature: TimeseriesSpecifier,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
+        conductivity: float | None = None,
+        normalized_gains:  float | None = None,
         nominal_power: float = None,
         minimum_delta: float = 1.0,
     ):
@@ -333,6 +345,8 @@ class HeatExchanger(AbstactHeatExchanger):
             minimum_working_temperature=minimum_working_temperature,
             maximum_working_temperature=maximum_working_temperature,
             nominal_power=nominal_power,
+            conductivity=conductivity,
+            normalized_gains=normalized_gains,
             minimum_delta=minimum_delta,
         )
 
@@ -356,7 +370,6 @@ class HeatColl(AbstactHeatExchanger):
         reservoir_temperature: TimeseriesSpecifier,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        conductivity: float | None = None,
         nominal_power: float = None,
         minimum_delta: float = 1.0,
     ):
@@ -372,7 +385,6 @@ class HeatColl(AbstactHeatExchanger):
 
         # Solph model interfaces
         self._bus_source = None
-        self._bus_sink = None
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -380,5 +392,5 @@ class HeatColl(AbstactHeatExchanger):
 
     def establish_interconnections(self) -> None:
         self._define_source()
-        self._define_sink()
+
 
