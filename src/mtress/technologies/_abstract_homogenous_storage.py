@@ -16,7 +16,7 @@ from oemof.solph import Bus, Flow
 from oemof.solph.components import GenericStorage
 from oemof.solph.constraints import storage_level_constraint
 
-from .._abstract_component import AbstractSolphRepresentation
+from .._abstract_component import AbstractComponent
 from .._oemof_storage_multiplexer import storage_multiplexer_constraint
 
 
@@ -33,7 +33,7 @@ class Implementation(Enum):
     FLEXIBLE = "flexible"
 
 
-class AbstractHomogenousStorage(AbstractSolphRepresentation):
+class AbstractHomogenousStorage(AbstractComponent):
     """Abstract mixed storage."""
 
     def __init__(self, *, implementation: Implementation, **kwargs) -> None:

@@ -25,12 +25,7 @@ energy_system.add_location(house_1)
 house_1.add(carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
-house_1.add(
-    carriers.HeatCarrier(
-        temperature_levels=[5, 10, 20, 30, 40],
-        reference_temperature=0,
-    )
-)
+house_1.add(carriers.HeatCarrier(temperature_levels=[5, 10, 20, 30, 40]))
 
 # Add technologies
 house_1.add(
@@ -86,34 +81,22 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 plot = solph_representation.graph(detail=False)
-plot.render(outfile="heat_pump_cooling_simple.png")
+plot.render(outfile="3_heat_pump_simple.png", cleanup=True)
 
 plot = solph_representation.graph(detail=True)
-plot.render(outfile="heat_pump_cooling_detail.png")
+plot.render(outfile="3_heat_pump_detail.png", cleanup=True)
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-flow_color = {
-    ("house_1", "HeatCarrier", "missing_heat"): {
-        ("house_1", "HeatCarrier", "T_40"): "red"
-    },
-    ("house_1", "HeatCarrier", "T_5"): {
-        ("house_1", "HeatCarrier", "excess_heat"): "red"
-    },
-}
-
-plot = solph_representation.graph(
-    detail=True, flow_results=flows, flow_color=flow_color
-)
-plot.render(outfile="heat_pump_cooling_results.png")
+plot = solph_representation.graph(detail=True, flow_results=flows)
+plot.render(outfile="3_heat_pump_results.png", cleanup=True)
 
 plot_series = solph_representation.graph_series(
     flow_results=flows,
     # start=pd.Timestamp("2021-07-10 00:00:00"),
     # stop=pd.Timestamp("2021-07-10 03:00:00"),
     step=pd.Timedelta("60min"),
-    flow_color=flow_color,
 )
-render_series(plot_series, "heat_pump_cooling_series", 2500)
+render_series(plot_series, "3_heat_pump_series", 2500)

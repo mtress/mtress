@@ -9,17 +9,25 @@ class NamedElement(ABC):
     def __init__(self, name: str) -> None:
         """Initialize named element."""
         self._name = name
+        self._nesting_element = None
 
     @property
     def name(self) -> str:
         """Return name."""
         return self._name
 
-    def create_label(self, label: str) -> str:
+    def create_label(self, label: str) -> list[str]:
         """Return a unique label based on the identifier."""
         return self.identifier + [label]
 
     @property
-    @abstractmethod
     def identifier(self) -> list[str]:
         """Return identifier."""
+        identifier = []
+        highest_level = self
+        while highest_level is not None:
+            identifier.append(highest_level.name)
+            highest_level = highest_level._nesting_element
+
+        identifier.reverse()
+        return identifier

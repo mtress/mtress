@@ -2,11 +2,10 @@
 
 from oemof.solph import Bus, Flow
 
-from .._abstract_component import AbstractSolphRepresentation
 from ._abstract_carrier import AbstractLayeredCarrier
 
 
-class GasCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
+class GasCarrier(AbstractLayeredCarrier):
     """
     GasCarrier is the container for different types of gases, which
     considers the gas properties from dataclass Gas. All gas flows,
@@ -21,8 +20,7 @@ class GasCarrier(AbstractLayeredCarrier, AbstractSolphRepresentation):
 
     def __init__(self, *, gases, **kwargs):
         """Initialize carrier."""
-        referennce = {gas: 0 for gas in gases}
-        super().__init__(levels=gases, reference=referennce, **kwargs)
+        super().__init__(levels=gases, **kwargs)
 
         self.distribution = {}
 

@@ -1,7 +1,7 @@
 """
 Basic example to show that it's possible to define the values you want to apply
 when there is excess or missing heat
- 
+
 """
 
 import os
@@ -14,6 +14,7 @@ from mtress import (
     SolphModel,
     carriers,
     demands,
+    technologies,
 )
 from mtress._helpers import get_flows
 
@@ -24,14 +25,7 @@ energy_system = MetaModel()
 house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
-house_1.add(
-    carriers.HeatCarrier(
-        temperature_levels=[10, 20, 30, 40, 55],
-        reference_temperature=0,
-        missing_heat_penalty=10,
-        excess_heat_penalty=10,
-    )
-)
+house_1.add(carriers.HeatCarrier(temperature_levels=[10, 20, 30, 40, 55]))
 house_1.add(
     demands.FixedTemperatureHeating(
         name="space_heating",
@@ -40,6 +34,9 @@ house_1.add(
         time_series=[50],
     )
 )
+
+# set penalty here
+house_1.add(technologies.SlackNode(penalty=10))
 
 solph_representation = SolphModel(
     energy_system,

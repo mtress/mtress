@@ -7,32 +7,34 @@ from typing import Optional
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Sink, Source
 
-from mtress._abstract_component import AbstractSolphRepresentation
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import ElectricityCarrier
 
 from ._abstract_grid_connection import AbstractGridConnection
 
 
-class ElectricityGridConnection(
-    AbstractGridConnection, AbstractSolphRepresentation
-):
+class ElectricityGridConnection(AbstractGridConnection):
     def __init__(
         self,
         working_rate: Optional[TimeseriesSpecifier] = None,
         revenue: Optional[TimeseriesSpecifier] = None,
         demand_rate: Optional[float] = 0,
+        grid_import_limit: Optional[float] = None,
+        grid_export_limit: Optional[float] = None,
     ) -> None:
         """
         :working_rate: in currency/Wh
         :revenue: in currency/Wh
         :demand_rate: in currency/Wh
+        :grid_import_limit: limits the grid's imports (in W)
         """
         super().__init__()
 
         self.working_rate = working_rate
         self.demand_rate = demand_rate
         self.revenue = revenue
+        self.grid_import_limit = grid_import_limit
+        self.grid_export_limit = grid_export_limit
 
         self.grid_export = None
         self.grid_import = None
@@ -57,9 +59,10 @@ class ElectricityGridConnection(
                 node_type=Sink,
                 inputs={
                     b_grid_export: Flow(
+                        nominal_value=self.grid_export_limit,
                         variable_costs=-self._solph_model.data.get_timeseries(
                             self.revenue, kind=TimeseriesType.INTERVAL
-                        )
+                        ),
                     )
                 },
             )
@@ -75,6 +78,7 @@ class ElectricityGridConnection(
                 node_type=Source,
                 outputs={
                     b_grid_import: Flow(
+                        nominal_value=self.grid_import_limit,
                         variable_costs=self._solph_model.data.get_timeseries(
                             self.working_rate, kind=TimeseriesType.INTERVAL
                         ),

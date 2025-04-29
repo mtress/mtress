@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tests for MTRESS FixedTemperatureHeat Demand.
+Tests for MTRESS LayeredHeatStorage
 """
 import os
 
@@ -13,7 +13,7 @@ from mtress import (
     SolphModel,
     carriers,
     demands,
-    technologies
+    technologies,
 )
 from mtress._helpers import get_flows
 
@@ -27,7 +27,6 @@ def test_layered_heat_storage():
     house_1.add(
         carriers.HeatCarrier(
             temperature_levels=[10, 20, 30],
-            reference_temperature=0,
         )
     )
 
@@ -55,7 +54,7 @@ def test_layered_heat_storage():
     )
 
     heat_demand = np.zeros(n_days * 24)
-    heat_demand[7 * 24] = 5e3
+    heat_demand[7 * 24 : 7 * 24 + 12] = 5e3
     house_1.add(
         demands.FixedTemperatureHeating(
             name="HD",
@@ -70,12 +69,15 @@ def test_layered_heat_storage():
             name="HS",
             diameter=1,
             volume=10,
-            ambient_temperature=0,
-            u_value=0.1,
+            ambient_temperature=10,
+            u_value=0.2,
             power_limit=None,
             max_temperature=30,
             min_temperature=10,
-            initial_storage_levels={30: 0.9},
+            initial_storage_levels={
+                10: 0.1,
+                30: 0.8,
+            },
             balanced=False,
         )
     )
@@ -92,7 +94,7 @@ def test_layered_heat_storage():
 
     solph_representation.build_solph_model()
 
-    solved_model = solph_representation.solve(solve_kwargs={"tee": True})
+    solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 
     return solph_representation, solved_model
 
@@ -116,17 +118,18 @@ if __name__ == "__main__":
     for key, result in myresults.items():
         if "storage_content" in result["sequences"]:
             plt.plot(
-                result["sequences"]["storage_content"] * 1e-3,
-                label=str(key[0].label.solph_node),
+                result["sequences"]["storage_content"],
+                label=str(key[0].label[-1]),
             )
             total_content += result["sequences"]["storage_content"]
             index = result["sequences"].index
-    plt.plot(index, total_content * 1e-3, label="total")
-    plt.ylabel("Energy (kWh)")
+    plt.plot(index, total_content, label="total")
+    plt.ylim(0, 12e3)
+    plt.ylabel("Content (kg)")
+    plt.grid()
 
     plt.legend()
+    plt.show()
 
     plot = solph_representation.graph(detail=True, flow_results=flows)
     plot.render(outfile="layered_heat_demand.png")
-
-    plt.show()

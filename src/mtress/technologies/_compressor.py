@@ -3,7 +3,6 @@
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Converter
 
-from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import ElectricityCarrier, GasCarrier
 from ..physics import (
     IDEAL_GAS_CONSTANT,
@@ -13,7 +12,7 @@ from ..physics import (
 from ._abstract_technology import AbstractTechnology
 
 
-class GasCompressor(AbstractTechnology, AbstractSolphRepresentation):
+class GasCompressor(AbstractTechnology):
     """Ideal gas compressor."""
 
     def __init__(

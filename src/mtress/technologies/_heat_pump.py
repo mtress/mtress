@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Converter, Source
 
-from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import ElectricityCarrier, HeatCarrier
 from ..physics import calc_cop
 from ._abstract_technology import AbstractTechnology
@@ -23,7 +22,7 @@ from ._abstract_technology import AbstractTechnology
 @dataclass
 class COPReference:
     """
-    :param cold_side_in: Reference inlet temperature (°C) at cold side 
+    :param cold_side_in: Reference inlet temperature (°C) at cold side
         of the HP, e.g., evaporator.
     :param cold_side_out: Reference outlet temperature (°C) at cold side
         of the HP, e.g., evaporator.
@@ -40,7 +39,7 @@ class COPReference:
     warm_side_in: float = 30.0
 
 
-class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
+class HeatPump(AbstractTechnology):
     """
     Clustered heat pump for modeling power flows with variable
     temperature levels.
@@ -80,7 +79,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         :param cop_0_35: COP for the temperature rise 0°C to 35°C
         :param max_temp_primary: Maximum inlet temperature (°C)
             at the cold side.
-        :param min_temp_primary: Minimum outlet temperature (°C) 
+        :param min_temp_primary: Minimum outlet temperature (°C)
             at the cold side.
         :param min_delta_temp_primary: Minumum delta (°C) at the cold side.
         :param max_temp_secondary: Maximum outlet temperature (°C)
@@ -108,6 +107,9 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         # Solph specific parameters
         self.electricity_bus = None
         self.heat_budget_bus = None
+
+        self.q_in = {}
+        self.q_out = {}
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -137,7 +139,7 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
             },
         )
 
-    def establish_interconnections(self):
+    def establish_interconnections(self) -> None:
         """Add connections to anergy sources."""
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
@@ -159,10 +161,18 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
             self.max_temp_secondary,
         )
 
-        temp_primary_out = primary_out_levels[0]
-        temp_primary_in = primary_in_levels[0]
-        temp_secondary_in = secondary_in_levels[0]
-        temp_secondary_out = secondary_out_levels[0]
+        for (
+            temp_secondary_in,
+            temp_secondary_out,
+        ) in zip(
+            secondary_in_levels,
+            secondary_out_levels,
+        ):
+            self._create_he_node(
+                temp_heigh=temp_secondary_out,
+                temp_low=temp_secondary_in,
+                side="out",
+            )
 
         for (
             temp_primary_out,
@@ -171,6 +181,11 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
             primary_out_levels,
             primary_in_levels,
         ):
+            self._create_he_node(
+                temp_heigh=temp_primary_in,
+                temp_low=temp_primary_out,
+                side="in",
+            )
             for (
                 temp_secondary_in,
                 temp_secondary_out,
@@ -185,6 +200,46 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
                     temp_secondary_out,
                 )
 
+    def _create_he_node(self, temp_heigh, temp_low, side):
+        heat_carrier = self.location.get_carrier(HeatCarrier)
+
+        heat_content = heat_carrier.specific_heat_capacity * (
+            temp_heigh - temp_low
+        )
+
+        heat_bus_warm = heat_carrier.level_nodes[temp_heigh]
+        heat_bus_cold = heat_carrier.level_nodes[temp_low]
+
+        if side == "in":
+            q_side = self.create_solph_node(
+                label=f"Qin_{temp_heigh:.0f}",
+                node_type=Bus,
+            )
+            self.q_in[int(temp_heigh)] = q_side
+            inputs = {
+                heat_bus_warm: Flow(),
+            }
+            outputs = {
+                q_side: Flow(),
+                heat_bus_cold: Flow(),
+            }
+        else:
+            q_side = self.create_solph_node(
+                label=f"Qout_{temp_heigh:.0f}",
+                node_type=Bus,
+            )
+            self.q_out[int(temp_heigh)] = q_side
+            inputs = {q_side: Flow(), heat_bus_cold: Flow()}
+            outputs = {heat_bus_warm: Flow()}
+
+        self.create_solph_node(
+            label=f"HE_{side}_{temp_heigh:.0f}",
+            node_type=Converter,
+            inputs=inputs,
+            outputs=outputs,
+            conversion_factors={q_side: heat_content},
+        )
+
     def _create_converter_node(
         self,
         temp_primary_out,
@@ -192,22 +247,9 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
         temp_secondary_in,
         temp_secondary_out,
     ):
-        heat_carrier = self.location.get_carrier(HeatCarrier)
-        (
-            heat_bus_warm_primary,
-            heat_bus_cold_primary,
-            ratio_primary,
-        ) = heat_carrier.get_connection_heat_transfer(
-            temp_primary_in, temp_primary_out
-        )
+        q_in = self.q_in[temp_primary_in]
+        q_out = self.q_out[temp_secondary_out]
 
-        (
-            heat_bus_warm_secondary,
-            heat_bus_cold_secondary,
-            ratio_secondary,
-        ) = heat_carrier.get_connection_heat_transfer(
-            temp_secondary_out, temp_secondary_in
-        )
         cop = calc_cop(
             ref_cop=self.ref_cop,
             temp_primary_in=temp_primary_in,
@@ -220,25 +262,17 @@ class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
             label=f"cop_{temp_primary_in:.0f}_{temp_secondary_out:.0f}",
             node_type=Converter,
             inputs={
-                heat_bus_warm_primary: Flow(),
-                heat_bus_cold_secondary: Flow(),
+                q_in: Flow(),
                 self.electricity_bus: Flow(),
                 self.heat_budget_bus: Flow(),
             },
             outputs={
-                heat_bus_cold_primary: Flow(),
-                heat_bus_warm_secondary: Flow(),
+                q_out: Flow(),
             },
             conversion_factors={
-                heat_bus_warm_primary: (cop - 1) / cop / (1 - ratio_primary),
-                heat_bus_cold_secondary: ratio_secondary
-                / (1 - ratio_secondary),
                 self.electricity_bus: 1 / cop,
                 self.heat_budget_bus: 1,
-                heat_bus_cold_primary: (cop - 1)
-                / cop
-                * ratio_primary
-                / (1 - ratio_primary),
-                heat_bus_warm_secondary: 1 / (1 - ratio_secondary),
+                q_in: 1 - 1 / cop,
+                q_out: 1,
             },
         )
