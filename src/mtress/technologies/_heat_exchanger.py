@@ -38,12 +38,11 @@ class AbstactHeatExchanger(AbstractTechnology):
         self,
         name: str,
         reservoir_temperature: TimeseriesSpecifier,
+        nominal_power: float,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        nominal_power: float = None,
         minimum_delta: float = 1.0,
         conductivity: float | None = None,
-        normalized_gains: float | None = None,
         working_rate: Optional[TimeseriesSpecifier] = 0,
         revenue: Optional[TimeseriesSpecifier] = 0,
     ):
@@ -56,9 +55,8 @@ class AbstactHeatExchanger(AbstractTechnology):
         :param maximum_working_temperature: Maximum temperature limit (in °C)
         :param nominal_power: Nominal power of the heat exchanger (in W),
             is treated as a power limit.
-            defaults to None
         :param minimum_delta: Specifies the delta between the primary and
-            secondary sides of the HE (in °C)
+            secondary sides of the HE (in °C), needs to be > 1 °C
         :param conductivity: Conductivity of the collector (in W/K)
         :param working_rate: Working price of imported heat in currency/Wh
         :param revenue: Revenue from heat exported to a sink in currency/Wh
@@ -74,6 +72,14 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.working_rate = working_rate
         self.revenue = revenue
 
+        if minimum_delta < 1:
+            raise ValueError("minimum_delta has to be > 1 °C")
+
+        if conductivity:
+            self.conductivity_gain_factor = conductivity / nominal_power
+        else:
+            self.conductivity_gain_factor = nominal_power
+
     def _build_core(self):
         self.reservoir_temperature = self._solph_model.data.get_timeseries(
             self.reservoir_temperature,
@@ -81,6 +87,13 @@ class AbstactHeatExchanger(AbstractTechnology):
         )
 
         self.heat_carrier = self.location.get_carrier(HeatCarrier)
+
+    def _normalised_gains(self, temperature):
+        unbound_gains = (
+            self.reservoir_temperature - temperature
+        ) * self.conductivity_gain_factor
+
+        return np.clip(unbound_gains, 0, 1)
 
     def _define_source(self):
         usable_temperature = np.array(
@@ -156,22 +169,12 @@ class AbstactHeatExchanger(AbstractTechnology):
                     cold_temperature
                 ]
 
-                utilisation_factor = self.conductivity / self.nominal_power
-
-                usability_series = [
-                    min(
-                        1,
-                        max(0, (temp - warm_temperature) * utilisation_factor),
-                    )
-                    for temp in self.reservoir_temperature
-                ]
-
                 self.create_solph_node(
                     label=f"source_{warm_temperature}",
                     node_type=Converter,
                     inputs={
                         _bus_source: Flow(
-                            max=usability_series,
+                            max=self._normalised_gains(warm_temperature),
                             nominal_value=self.nominal_power,
                         ),
                         heat_bus_cold_source: Flow(),
@@ -262,14 +265,16 @@ class AbstactHeatExchanger(AbstractTechnology):
 
 
 class HeatSource(AbstactHeatExchanger):
+
     def __init__(
         self,
         name: str,
         reservoir_temperature: TimeseriesSpecifier,
+        nominal_power: float,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        nominal_power: float = None,
         minimum_delta: float = 1.0,
+        conductivity: float | None = None,
     ):
 
         super().__init__(
@@ -279,6 +284,7 @@ class HeatSource(AbstactHeatExchanger):
             maximum_working_temperature=maximum_working_temperature,
             nominal_power=nominal_power,
             minimum_delta=minimum_delta,
+            conductivity=conductivity,
         )
 
         # Solph model interfaces
@@ -293,14 +299,16 @@ class HeatSource(AbstactHeatExchanger):
 
 
 class HeatSink(AbstactHeatExchanger):
+
     def __init__(
         self,
         name: str,
         reservoir_temperature: TimeseriesSpecifier,
+        nominal_power: float,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        nominal_power: float = None,
         minimum_delta: float = 1.0,
+        conductivity: float | None = None,
     ):
 
         super().__init__(
@@ -310,6 +318,7 @@ class HeatSink(AbstactHeatExchanger):
             maximum_working_temperature=maximum_working_temperature,
             nominal_power=nominal_power,
             minimum_delta=minimum_delta,
+            conductivity=conductivity,
         )
 
         # Solph model interfaces
@@ -344,7 +353,6 @@ class HeatExchanger(AbstactHeatExchanger):
             maximum_working_temperature=maximum_working_temperature,
             nominal_power=nominal_power,
             conductivity=conductivity,
-            normalized_gains=normalized_gains,
             minimum_delta=minimum_delta,
         )
 

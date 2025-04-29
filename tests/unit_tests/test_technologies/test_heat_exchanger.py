@@ -1,0 +1,58 @@
+# -*- coding: utf-8 -*-
+
+import numpy as np
+import pytest
+
+from mtress.technologies import HeatExchanger
+from mtress.technologies import HeatSink
+from mtress.technologies import HeatSource
+
+
+def test_heat_source_initialisation():
+    name = "source"
+    reservoir_temperature = np.array([0, 15, 55, -8.6])
+    nominal_power = 10000
+    conductivity = 200
+
+    with pytest.raises(TypeError, match="nominal_power"):
+        _ = HeatSource(
+            name=name,
+            reservoir_temperature=reservoir_temperature,
+        )
+
+    with pytest.raises(ValueError, match="minimum_delta has to be > 1 °C"):
+        _ = HeatSource(
+            name=name,
+            reservoir_temperature=reservoir_temperature,
+            nominal_power=1,
+            minimum_delta=0.5,
+        )
+
+    with pytest.raises(ValueError, match="minimum_delta has to be > 1 °C"):
+        _ = HeatSource(
+            name=name,
+            reservoir_temperature=reservoir_temperature,
+            nominal_power=1,
+            minimum_delta=-4,
+        )
+
+    # basic initialisation
+    src = HeatSource(
+        name=name,
+        reservoir_temperature=reservoir_temperature,
+        nominal_power=nominal_power,
+    )
+    assert src.name is "source"
+    assert (src.reservoir_temperature == reservoir_temperature).all()
+    assert (src._normalised_gains(40) == [0, 0, 1, 0]).all()
+    assert (src._normalised_gains(-5) == [1, 1, 1, 0]).all()
+
+    # basic initialisation
+    src = HeatSource(
+        name=name,
+        reservoir_temperature=reservoir_temperature,
+        nominal_power=nominal_power,
+        conductivity=conductivity,
+    )
+    assert (src._normalised_gains(40) == [0, 0, 0.3, 0]).all()
+    assert (src._normalised_gains(-5) == [0.1, 0.4, 1, 0]).all()
