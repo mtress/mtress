@@ -9,10 +9,10 @@ from mtress.technologies import HeatSource
 
 
 def test_heat_source_initialisation():
+    """Tests for initilisation (including gains helper)"""
     name = "source"
-    reservoir_temperature = np.array([0, 15, 55, -8.6])
+    reservoir_temperature = np.array([0, 15, 55, -8.5])
     nominal_power = 10000
-    conductivity = 200
 
     with pytest.raises(TypeError, match="nominal_power"):
         _ = HeatSource(
@@ -44,15 +44,30 @@ def test_heat_source_initialisation():
     )
     assert src.name is "source"
     assert (src.reservoir_temperature == reservoir_temperature).all()
-    assert (src._normalised_gains(40) == [0, 0, 1, 0]).all()
-    assert (src._normalised_gains(-5) == [1, 1, 1, 0]).all()
+    assert (src._normalised_gains(40) == [0, 0, 1, 0])
+    assert (src._normalised_gains(-5) == [1, 1, 1, 0])
 
-    # basic initialisation
+    # initialisation with conductive gains
+    conductivity = 200
+
     src = HeatSource(
         name=name,
         reservoir_temperature=reservoir_temperature,
         nominal_power=nominal_power,
         conductivity=conductivity,
     )
-    assert (src._normalised_gains(40) == [0, 0, 0.3, 0]).all()
-    assert (src._normalised_gains(-5) == [0.1, 0.4, 1, 0]).all()
+    assert np.allclose(src._normalised_gains(40), [0, 0, 0.3, 0])
+    assert np.allclose(src._normalised_gains(-5), [0.1, 0.4, 1, 0])
+
+    # initialisation with conductive and non-thermal gains
+    non_thermal_gains = np.array([0, 1, 0.8, 0.4])
+
+    src = HeatSource(
+        name=name,
+        reservoir_temperature=reservoir_temperature,
+        nominal_power=nominal_power,
+        conductivity=conductivity,
+        non_thermal_gains=non_thermal_gains,
+    )
+    assert np.allclose(src._normalised_gains(40), [0, 0.5, 1, 0])
+    assert np.allclose(src._normalised_gains(-5), [0.1, 1, 1, 0.33])
