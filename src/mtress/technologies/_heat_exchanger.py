@@ -40,10 +40,10 @@ class AbstactHeatExchanger(AbstractTechnology):
         reservoir_temperature: TimeseriesSpecifier,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        nominal_power: float = None, # defining this as the timeseries for the radiation would simplify the structure
+        nominal_power: float = None,
         minimum_delta: float = 1.0,
-        conductivity: float | None = None, #this would need to be the value of [a1(+a3)]*area  in W
-        normalized_gains: float| None = None, 
+        conductivity: float | None = None,
+        normalized_gains: float | None = None,
         working_rate: Optional[TimeseriesSpecifier] = 0,
         revenue: Optional[TimeseriesSpecifier] = 0,
     ):
@@ -55,9 +55,11 @@ class AbstactHeatExchanger(AbstractTechnology):
         :param minimum_working_temperature: Minimum temperature limit (in °C)
         :param maximum_working_temperature: Maximum temperature limit (in °C)
         :param nominal_power: Nominal power of the heat exchanger (in W),
-            default to None
+            is treated as a power limit.
+            defaults to None
         :param minimum_delta: Specifies the delta between the primary and
             secondary sides of the HE (in °C)
+        :param conductivity: Conductivity of the collector (in W/K)
         :param working_rate: Working price of imported heat in currency/Wh
         :param revenue: Revenue from heat exported to a sink in currency/Wh
         """
@@ -69,7 +71,6 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.nominal_power = nominal_power
         self.minimum_delta = minimum_delta
         self.conductivity = conductivity
-        self.normalized_gains = normalized_gains
         self.working_rate = working_rate
         self.revenue = revenue
 
@@ -155,18 +156,15 @@ class AbstactHeatExchanger(AbstractTechnology):
                     cold_temperature
                 ]
 
-                utilisation_factor = self.conductivity/self.nominal_power
-                additional_gains = self.normalized_gains * self.nominal_power # this factor would be the additional gains in W, assuming that the nominal power is the time series of the radiation
+                utilisation_factor = self.conductivity / self.nominal_power
 
                 usability_series = [
-                    min(1, max(0, (temp - warm_temperature) * utilisation_factor) + additional_gains)
+                    min(
+                        1,
+                        max(0, (temp - warm_temperature) * utilisation_factor),
+                    )
                     for temp in self.reservoir_temperature
                 ]
-#
- #               usability_series = [
-  #                  1 if temp >= warm_temperature else 0
-   #                 for temp in self.reservoir_temperature
-    #            ]
 
                 self.create_solph_node(
                     label=f"source_{warm_temperature}",
@@ -334,7 +332,7 @@ class HeatExchanger(AbstactHeatExchanger):
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
         conductivity: float | None = None,
-        normalized_gains:  float | None = None,
+        normalized_gains: float | None = None,
         nominal_power: float = None,
         minimum_delta: float = 1.0,
     ):
@@ -392,5 +390,3 @@ class HeatColl(AbstactHeatExchanger):
 
     def establish_interconnections(self) -> None:
         self._define_source()
-
-

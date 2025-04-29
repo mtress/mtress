@@ -54,7 +54,7 @@ house_1.add(
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[-10,-5,0, 10, 15, 20, 30, 40, 55],
+        temperature_levels=[-10, -5, 0, 10, 15, 20, 30, 40, 55],
     )
 )
 house_1.add(
@@ -90,8 +90,8 @@ house_1.add(
         reservoir_temperature=[10, 15],
         maximum_working_temperature=40,
         minimum_working_temperature=-10,
-        conductivity=30, 
-        normalized_gains=0.6, 
+        conductivity=30,
+        normalized_gains=0.6,
         nominal_power=1e3,
     )
 )
