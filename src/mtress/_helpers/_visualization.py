@@ -29,9 +29,6 @@ COLORS = {
     "HeatCarrier": "maroon",
 }
 
-RAINBOW = """firebrick darkorange gold 
-            chartreuse deepskyblue
-            cornflowerblue darkslateblue"""
 RAINBOW = """darkslateblue cornflowerblue
             deepskyblue chartreuse
             gold darkorange firebrick"""
@@ -274,6 +271,20 @@ def graph_cytoscape(
 
 
 def get_flow_color(node, flow_color: dict, colorscheme: dict) -> None:
+    """
+    Function to determine the color of a graphs edges.
+    The graph is supposed to be a MTRESS energy system.
+    The determined color is dependent on the Energy Carrier
+    a node is connected to.
+    The algorithm recursivley determines edge colors for neighbouring
+    nodes until dead ends are reached.
+
+    :param node: the node of whichs colors should be determined
+    :param flow_color: a dictionary of already determined colors for edges
+    :param colorscheme: a dictionary which assigns a color
+        per MTRESS energy carrier
+    """
+
     def rec(n, c):  # node, color
         # recursively iterate nodes until all edges covered
         # or node type in [Source, Sink, Converter]
@@ -294,6 +305,7 @@ def get_flow_color(node, flow_color: dict, colorscheme: dict) -> None:
                 rec(t, c)
         return
 
+    # tuple with >= 2 entries or str expected
     color = colorscheme.get(node.label[-2], None)
     if color is None:  # component not a carrier
         node_id = tuple(node.label)
@@ -335,16 +347,27 @@ def generate_graph(
     flow_color: dict = None,
     colorscheme: dict = None,
 ) -> dict:
+    """
+    Function to generate a simple dict representation of a MTRESS energy system.
+
+    :param nodes: the oemof.solph.EnergySystem.nodes
+    :param flows: [OPTIONAL] the resulting flows of the solved energy system
+    :param flow_color: a dictionary of already determined colors for edges
+    :param colorscheme: a dictionary which assigns a color
+        per MTRESS energy carrier
+    """
     if colorscheme is None:
         # set to default
         colorscheme = COLORS
 
+    # determine color of edges
     if flow_color is None:
         flow_color = {}
 
     for n in nodes:
         get_flow_color(n, flow_color, colorscheme)
 
+    # data structures for storing nodes and edges
     graph_nodes = {}
     graph_nodes_tracker = set()
     graph_edges = {}
@@ -358,12 +381,12 @@ def generate_graph(
             current_label, current_id = None, None
             is_parent = False
             # go up the hierarchy and build parent - child relationship
-            while identifier:
+            while identifier:  # do until list is empty
                 child_id = current_id
                 if current_id in graph_nodes_tracker:
                     is_parent = True
                 current_id = "-".join(identifier)
-                current_label = identifier.pop()
+                current_label = identifier.pop()  # take element out of list
                 parent_id = "-".join(identifier)
                 graph_nodes.setdefault(
                     current_id,
@@ -405,7 +428,7 @@ def generate_graph(
             graph_edges[source_id].setdefault(target_id, {})
             graph_edges[source_id][target_id]["color"] = edge_color
             if flows is not None:
-                flow = flows[n.label, t.label].sum()
+                flow = flows[n.label, t.label].mean()  # .sum()
                 graph_edges[source_id][target_id]["flow"] = flow
 
     graph_elements = {
@@ -413,6 +436,14 @@ def generate_graph(
         "edges": graph_edges,
     }
     return graph_elements
+
+
+def generate_graph_graphviz(graph_elements: dict, flows: bool):
+    # TODO: generate a graphviz representation
+    # what is returned?
+    # or directly plot and save and not return anything?
+    # or plot in a separate function?
+    pass
 
 
 def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
