@@ -113,7 +113,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                     if temp >= self.maximum_working_temperature
                     else temp
                 )
-                for temp in self.reservoir_temperature
+                for temp in self.reservoir_temperature # for a collector we would like to have usable tempertures ABOVE the reservoir temp
             ]
         )
 

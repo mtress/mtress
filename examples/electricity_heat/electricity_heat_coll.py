@@ -87,14 +87,14 @@ house_1.add(
 house_1.add(
     technologies.HeatSource(
         name="thColl",
-        reservoir_temperature=[30, 30],
+        reservoir_temperature=[10, 10],
         maximum_working_temperature=40,
         minimum_working_temperature=0,
         coll_area=10, 
-        conductivity=10,
-        non_thermal_gains=1000,
-        zero_losses_eff=1,
-        nominal_power=1000,
+        conductivity=20,
+        non_thermal_gains=800,
+        zero_losses_eff=0.6,
+        nominal_power=13000,
     )
 )
 
