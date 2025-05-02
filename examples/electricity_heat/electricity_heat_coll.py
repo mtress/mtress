@@ -85,14 +85,16 @@ house_1.add(
 )
 
 house_1.add(
-    technologies.HeatExchanger(
+    technologies.HeatSource(
         name="thColl",
-        reservoir_temperature=[10, 15],
+        reservoir_temperature=[30, 30],
         maximum_working_temperature=40,
-        minimum_working_temperature=-10,
-        conductivity=30,
-        normalized_gains=0.6,
-        nominal_power=1e3,
+        minimum_working_temperature=0,
+        coll_area=10, 
+        conductivity=10,
+        non_thermal_gains=1000,
+        zero_losses_eff=1,
+        nominal_power=1000,
     )
 )
 

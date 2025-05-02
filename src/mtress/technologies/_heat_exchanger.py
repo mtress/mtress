@@ -38,12 +38,14 @@ class AbstactHeatExchanger(AbstractTechnology):
         self,
         name: str,
         reservoir_temperature: TimeseriesSpecifier,
-        nominal_power: float,
+        nominal_power: float, # for a collector this should be the nominal power for the total coll area, i.e. the max solar radiation available, 1300W/m2 * coll area
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
         minimum_delta: float = 1.0,
-        conductivity: float | None = None,
-        non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
+        coll_area: float = 1.0, # in m2, collector area to multiply by the incident non_thermal gains per m2
+        conductivity: float | None = None, # in W/m2K, this would be the value of the conductivity (heat loss factor) 
+        non_thermal_gains: Optional[TimeseriesSpecifier] = 0, #in W/m2, they need to be relative to nominal power to work in the formula below (line 101). As I could not see them being relative and assuming that this is the time series for the available radiation per m2 I normalized them directlz in the formula below
+        zero_losses_eff: float | None = None, # dimensionless, factor to reduce the available incoming radiation (zero loss coll efficiency)
         working_rate: Optional[TimeseriesSpecifier] = 0,
         revenue: Optional[TimeseriesSpecifier] = 0,
     ):
@@ -58,8 +60,9 @@ class AbstactHeatExchanger(AbstractTechnology):
             is treated as a power limit.
         :param minimum_delta: Specifies the delta between the primary and
             secondary sides of the HE (in °C), needs to be > 1 °C
-        :param conductivity: Conductivity of the collector (in W/K)
-        :param non_thermal_gains: Additional gains (relative to nominal_power)
+        :param conductivity: Conductivity of the collector (in W/m2K)
+        :param non_thermal_gains: Additional gains (relative to nominal_power) 
+        :zero_losses_eff: zero loss efficienca factor for limiting the non thermal gains
         :param working_rate: Working price of imported heat in currency/Wh
         :param revenue: Revenue from heat exported to a sink in currency/Wh
         """
@@ -68,10 +71,12 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.reservoir_temperature = reservoir_temperature
         self.minimum_working_temperature = minimum_working_temperature
         self.maximum_working_temperature = maximum_working_temperature
-        self.nominal_power = nominal_power
+        self.nominal_power = nominal_power  
         self.minimum_delta = minimum_delta
+        self.coll_area = coll_area
         self.conductivity = conductivity
         self.non_thermal_gains = non_thermal_gains
+        self.zero_losses_eff = zero_losses_eff
         self.working_rate = working_rate
         self.revenue = revenue
 
@@ -79,7 +84,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             raise ValueError("minimum_delta has to be > 1 °C")
 
         if conductivity:
-            self.conductivity_gain_factor = conductivity / nominal_power
+            self.conductivity_gain_factor = conductivity * coll_area / nominal_power
         else:
             self.conductivity_gain_factor = nominal_power
 
@@ -93,7 +98,7 @@ class AbstactHeatExchanger(AbstractTechnology):
 
     def _normalised_gains(self, temperature):
         unbound_gains = (
-            self.non_thermal_gains
+            self.zero_losses_eff * self.coll_area * self.non_thermal_gains / self.nominal_power
             + (self.reservoir_temperature - temperature)
             * self.conductivity_gain_factor
         )
@@ -134,7 +139,7 @@ class AbstactHeatExchanger(AbstractTechnology):
 
         if self.autoconnect:
             highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
-                min(
+                min(# this should not be the case!!: with this limitation the collector as a source never supplies at temperatures above the ambient air temps given
                     max(self.reservoir_temperature),
                     self.maximum_working_temperature,
                 )
@@ -279,8 +284,10 @@ class HeatSource(AbstactHeatExchanger):
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
         minimum_delta: float = 1.0,
+        coll_area: float = 1.0,
         conductivity: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
+        zero_losses_eff : float | None = None,
     ):
 
         super().__init__(
@@ -292,6 +299,7 @@ class HeatSource(AbstactHeatExchanger):
             minimum_delta=minimum_delta,
             conductivity=conductivity,
             non_thermal_gains=non_thermal_gains,
+            zero_losses_eff= zero_losses_eff, 
         )
 
         # Solph model interfaces
@@ -378,34 +386,3 @@ class HeatExchanger(AbstactHeatExchanger):
     def establish_interconnections(self) -> None:
         self._define_source()
         self._define_sink()
-
-
-class HeatColl(AbstactHeatExchanger):
-    def __init__(
-        self,
-        name: str,
-        reservoir_temperature: TimeseriesSpecifier,
-        minimum_working_temperature: float = 0,
-        maximum_working_temperature: float = 0,
-        nominal_power: float = None,
-        minimum_delta: float = 1.0,
-    ):
-
-        super().__init__(
-            name=name,
-            reservoir_temperature=reservoir_temperature,
-            minimum_working_temperature=minimum_working_temperature,
-            maximum_working_temperature=maximum_working_temperature,
-            nominal_power=nominal_power,
-            minimum_delta=minimum_delta,
-        )
-
-        # Solph model interfaces
-        self._bus_source = None
-
-    def build_core(self):
-        """Build core structure of oemof.solph representation."""
-        self._build_core()
-
-    def establish_interconnections(self) -> None:
-        self._define_source()
