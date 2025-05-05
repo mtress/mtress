@@ -44,6 +44,13 @@ RAINBOW = """darkslateblue cornflowerblue
             deepskyblue chartreuse
             gold darkorange firebrick"""
 
+RAINBOW_GRAPHVIZ = (
+    "firebrick1:darkorange:gold2:"
+    + "chartreuse3:deepskyblue:cornflowerblue:"
+    + "darkslateblue"
+)
+
+
 SOURCE_SHAPE = "1, 1, 0.75, -1, -0.75, -1, -1, 1"
 SINK_SHAPE = "0.75, 1, 1, -1, -1, -1, -0.75, 1"
 
@@ -451,13 +458,7 @@ def generate_graph(
 
 
 def generate_graph_graphviz(graph_elements: dict, flows: bool):
-    # TODO: generate a graphviz representation
-    # what is returned?
-    # or directly plot and save and not return anything?
-    # or plot in a separate function?
-    # print(graph_elements)
     nodes = graph_elements["nodes"]
-    # print(nodes)
     edges = graph_elements["edges"]
     graph = Digraph(name="MTRESS model")
 
@@ -473,6 +474,12 @@ def generate_graph_graphviz(graph_elements: dict, flows: bool):
         components = [k for k, v in nodes.items() if v["parent"] == l]
         for comp in components:
             comp_graph = Digraph(name=f"cluster_{comp}")
+            comp_graph.attr(
+                "graph",
+                label=comp,
+                style="dashed",  # border of component
+                color="black",
+            )
             # 3. determine NODES of COMPONENTS
             # (children of COMPONENTS)
             c_n = [k for k, v in nodes.items() if v["parent"] == comp]
@@ -495,6 +502,18 @@ def generate_graph_graphviz(graph_elements: dict, flows: bool):
     # print(locations)
     # --- EDGES
     print(edges)
+    for source, targets in edges.items():
+        for target, edge_attributes in targets.items():
+            flow = edge_attributes["flow"] if flows else None
+            color = edge_attributes["color"]
+            if color == "rainbow":
+                color = RAINBOW_GRAPHVIZ
+            graph.edge(
+                source,
+                target,
+                label=f"{round(flow, 3)}" if flows else None,
+                color=color,
+            )
     graph.render(outfile="model.png", cleanup=True)
 
 
