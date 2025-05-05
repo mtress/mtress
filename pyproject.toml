@@ -38,6 +38,7 @@ classifiers = [
 
 requires-python = ">=3.10"
 dependencies = [
+    "graphviz",
     "oemof.solph>=0.5.4",
     "oemof.thermal>=0.0.6.dev1",
     "pandas>=1.3.4",
