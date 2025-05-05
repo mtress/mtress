@@ -13,6 +13,8 @@ import logging
 from dash import Dash, html, dcc, Input, Output, callback
 import dash_cytoscape as cyto
 
+from graphviz import Digraph
+
 # Define shapes for the component types
 SHAPES = {
     Source: "source",
@@ -22,6 +24,15 @@ SHAPES = {
     OffsetConverter: "converter",
     GenericStorage: "storage",
 }
+
+SHAPES_GRAPHVIZ = {
+    "source": "trapezium",
+    "sink": "invtrapezium",
+    "bus": "ellipse",
+    "converter": "octagon",
+    "storage": "cylinder",
+}
+
 
 COLORS = {
     "ElectricityCarrier": "orange",
@@ -348,7 +359,8 @@ def generate_graph(
     colorscheme: dict = None,
 ) -> dict:
     """
-    Function to generate a simple dict representation of a MTRESS energy system.
+    Function to generate a simple dict representation
+    of a MTRESS energy system.
 
     :param nodes: the oemof.solph.EnergySystem.nodes
     :param flows: [OPTIONAL] the resulting flows of the solved energy system
@@ -443,7 +455,47 @@ def generate_graph_graphviz(graph_elements: dict, flows: bool):
     # what is returned?
     # or directly plot and save and not return anything?
     # or plot in a separate function?
-    pass
+    # print(graph_elements)
+    nodes = graph_elements["nodes"]
+    # print(nodes)
+    edges = graph_elements["edges"]
+    graph = Digraph(name="MTRESS model")
+
+    # --- NODES
+    # 1. determine LOCATIONS
+    # (nodes without parents)
+    locations = {k: dict() for k, v in nodes.items() if v["parent"] == None}
+
+    # 2. determine COMPONENTS of LOCATIONS
+    # (children of LOCATIONS)
+    for l, c in locations.items():
+        loc_graph = Digraph(name=f"cluster_{l}")
+        components = [k for k, v in nodes.items() if v["parent"] == l]
+        for comp in components:
+            comp_graph = Digraph(name=f"cluster_{comp}")
+            # 3. determine NODES of COMPONENTS
+            # (children of COMPONENTS)
+            c_n = [k for k, v in nodes.items() if v["parent"] == comp]
+            c[comp] = c_n
+
+            # draw nodes
+            for n in c_n:
+                label = nodes[n]["label"]
+                shape = SHAPES_GRAPHVIZ.get(nodes[n]["shape"], "rectangle")
+                comp_graph.node(
+                    name=n,
+                    label=label,
+                    shape=shape,
+                )
+            # draw component
+            loc_graph.subgraph(comp_graph)
+        # draw location
+        graph.subgraph(loc_graph)
+
+    # print(locations)
+    # --- EDGES
+    print(edges)
+    graph.render(outfile="model.png", cleanup=True)
 
 
 def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
