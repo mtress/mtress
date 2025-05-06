@@ -66,13 +66,6 @@ house_1.add(
     )
 )
 
-""" electric_heater = technologies.ResistiveHeater(
-    name="ResistiveHeater",
-    thermal_power_limit=None,
-    maximum_temperature=100,
-)
-house_1.add(electric_heater)
- """
 house_1.add(
     technologies.HeatPump(
         name="HeatPump",
