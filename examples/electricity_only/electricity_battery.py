@@ -17,7 +17,7 @@ from mtress import (
     demands
 )
 from mtress._helpers import get_flows
-from mtress._helpers._visualization import render_series
+# from mtress._helpers._visualization import render_series
 
 os.chdir(os.path.dirname(__file__))
 
@@ -90,5 +90,5 @@ plt.show()
 plot = solph_representation.graph(
     detail=True, flow_results=flows, flow_color=None
 )
-plot.render(view=True)
-plot.render(outfile="electricity_battery_results.png")
+# plot.render(view=True) # works 
+# plot.render(outfile="electricity_battery_results.png")
