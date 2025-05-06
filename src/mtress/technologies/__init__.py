@@ -75,7 +75,6 @@ __all__ = [
     "H2Storage",
     "FuelCell",
     "LayeredHeatStorage",
-    "Photovoltaics",
     "RenewableElectricitySource",
     "GasBoiler",
     "SlackNode",

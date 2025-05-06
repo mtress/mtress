@@ -37,13 +37,10 @@ weather = {
 
 
 house_1.add(
-    technologies.Photovoltaics(
+    technologies.RenewableElectricitySource(
         "pv0",
-        (52.729, 8.181),
-        nominal_power=10,
-        weather=weather,
-        surface_azimuth=180,
-        surface_tilt=35,
+        nominal_power=10000,
+        specific_generation="FILE:../input_file.csv:pv",
         fixed=False,
     )
 )
@@ -57,7 +54,7 @@ house_2.add(demands.Electricity(name="demand0", time_series=10))
 solph_representation = SolphModel(
     energy_system,
     timeindex={
-        "start": "2021-07-10 00:00:00",
+        "start": "2022-07-10 00:00:00",
         "freq": "60T",
         "periods": 10,
         "tz": "Europe/Berlin",
