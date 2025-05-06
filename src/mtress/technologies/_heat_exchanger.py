@@ -139,10 +139,10 @@ class AbstactHeatExchanger(AbstractTechnology):
 
         if self.autoconnect:
             highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
-                min(# this should not be the case!!: with this limitation the collector as a source never supplies at temperatures above the ambient air temps given
-                    max(self.reservoir_temperature),
+               # min(# this should not be the case!!: with this limitation the collector as a source never supplies at temperatures above the ambient air temps given
+                   # max(self.reservoir_temperature),
                     self.maximum_working_temperature,
-                )
+                #)
             )
 
             _, cold_level = self.heat_carrier.get_surrounding_levels(
@@ -251,7 +251,7 @@ class AbstactHeatExchanger(AbstractTechnology):
 
             internal_sequence = [
                 1 if temp <= cold_level else 0
-                for temp in self.reservoir_temperature
+                for temp in max(self.reservoir_temperature, active_levels)#self.reservoir_temperature #
             ]
 
             self.create_solph_node(
