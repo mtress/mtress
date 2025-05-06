@@ -622,36 +622,22 @@ class TestGenericElectricVehicle:
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
-        # TODO: revise other_result method to uncomment the following tests
-        # assert math.isclose(
-        #     mr["objective"],
-        #     self.other_result(
-        #         template,
-        #         discharge=discharge[1],
-        #         losses=loss if type(loss) == list else (
-        #             loss.to_list()
-        #             if type(loss) == Series else
-        #             [loss, loss, loss]
-        #             )
-        #         ),
-        #     abs_tol=1e-3
-        #     )
 
     # *************************************************************************
     # *************************************************************************
     
     def test_trigger_errors(self):
         
-        # pending implementation error: mutex charging and discharging
-        with pytest.raises(NotImplementedError):
-            GenericElectricVehicle(
-                name="ev",
-                static_discharge_profile=[1, 0, 1],
-                plugged_in_profile=[0, 1, 0],
-                fixed_losses_absolute=1e3,
-                template=GenericSegmentB_EV,
-                mutually_exclusive_charging_discharging=True
-            )
+        # # pending implementation error: mutex charging and discharging
+        # with pytest.raises(NotImplementedError):
+        #     GenericElectricVehicle(
+        #         name="ev",
+        #         static_discharge_profile=[1, 0, 1],
+        #         plugged_in_profile=[0, 1, 0],
+        #         fixed_losses_absolute=1e3,
+        #         template=GenericSegmentB_EV,
+        #         mutually_exclusive_charging_discharging=True
+        #     )
             
         # unrecognised types: non-matching types
         with pytest.raises(TypeError):
@@ -1119,20 +1105,6 @@ class TestElectricVehicle:
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
-        # TODO: revise other_result method to uncomment the following tests
-        # assert math.isclose(
-        #     mr["objective"],
-        #     self.other_result(
-        #         template,
-        #         discharge=discharge[1],
-        #         losses=loss if type(loss) == list else (
-        #             loss.to_list()
-        #             if type(loss) == Series else
-        #             [loss, loss, loss]
-        #             )
-        #         ),
-        #     abs_tol=1e-3
-        #     )
 
     # *************************************************************************
     # *************************************************************************
@@ -1226,7 +1198,7 @@ class TestElectricVehicle:
         house_1.add(
             technologies.ElectricityGridConnection(working_rate=prices)
         )
-
+        
         ev = ElectricVehicle(
             name="ev",
             distance_travelled=distance,
@@ -1245,27 +1217,11 @@ class TestElectricVehicle:
             energy_system,
             timeindex=time_index,
         )
-
+        
         solph_representation.build_solph_model()
-        # print(solph_representation.model.pprint())
-        # solph_representation.model.write('thatproblem.lp')
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
-        # TODO: revise other_result method to uncomment the following tests
-        # assert math.isclose(
-        #     mr["objective"],
-        #     self.other_result(
-        #         template,
-        #         discharge=discharge[1],
-        #         losses=loss if type(loss) == list else (
-        #             loss.to_list()
-        #             if type(loss) == Series else
-        #             [loss, loss, loss]
-        #             )
-        #         ),
-        #     abs_tol=1e-3
-        #     )
 
     # *************************************************************************
     # *************************************************************************

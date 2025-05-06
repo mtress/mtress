@@ -62,7 +62,6 @@ class GenericElectricVehicle(BatteryStorage):
         self,
         plugged_in_profile: TimeseriesSpecifier = 1,
         static_discharge_profile: TimeseriesSpecifier = 0.0,
-        mutually_exclusive_charging_discharging: bool = False,
         **kwargs,
     ):
         """
@@ -88,12 +87,7 @@ class GenericElectricVehicle(BatteryStorage):
             indicating the power delivered by the battery to the EV (and not to
             to the grid). Value errors will be raised if these values are in
             contradiction with the respective plugged-in status.
-        :param mutually_exclusive_charging_discharging: If True, the EV cannot
-            charge or discharge simultaneously. The default value is False.
         """
-        # TODO: implement mutually-exclusive charging and discharging mode
-        if mutually_exclusive_charging_discharging:
-            raise NotImplementedError
 
         # call super class constructor
         BatteryStorage.__init__(self, **kwargs)
@@ -304,7 +298,7 @@ class GenericElectricVehicle(BatteryStorage):
 
         electricity = self.location.get_carrier(ElectricityCarrier)
 
-        self.create_solph_node(
+        self.thatbus = self.create_solph_node(
             label="EV",
             node_type=GenericStorage,
             inputs={
@@ -334,7 +328,6 @@ class GenericElectricVehicle(BatteryStorage):
                 self.fixed_losses_absolute, kind=TimeseriesType.INTERVAL
             ),
         )
-
 
 class ElectricVehicle(GenericElectricVehicle):
     """Electric Vehicle Component"""
