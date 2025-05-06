@@ -55,6 +55,27 @@ SOURCE_SHAPE = "1, 1, 0.75, -1, -0.75, -1, -1, 1"
 SINK_SHAPE = "0.75, 1, 1, -1, -1, -1, -0.75, 1"
 
 
+def graph_graphviz(
+    nodes,
+    flows,
+    flow_color: dict,
+    colorscheme: dict,
+) -> None:
+    if colorscheme is None:
+        # set to default
+        colorscheme = COLORS
+
+    # get graphviz digraph
+    f = flows is not None
+    graph = generate_graph_graphviz(
+        generate_graph(nodes, flows, flow_color, colorscheme),
+        f,
+    )
+
+    # render graph and write to file
+    graph.render(outfile="model.png", cleanup=True)
+
+
 def graph_cytoscape(
     nodes,
     flows,
@@ -481,12 +502,13 @@ def generate_graph_graphviz(
     # (children of LOCATIONS)
     for l, c in locations.items():
         loc_graph = Digraph(name=f"cluster_{l}")
+        loc_graph.attr("graph", label=l)
         components = [k for k, v in nodes.items() if v["parent"] == l]
         for comp in components:
             comp_graph = Digraph(name=f"cluster_{comp}")
             comp_graph.attr(
                 "graph",
-                label=comp,
+                label=nodes[comp]["label"],
                 style="dashed",  # border of component
                 color="black",
             )
@@ -514,19 +536,34 @@ def generate_graph_graphviz(
         # one source can have multiple targets
         for target, edge_attributes in targets.items():
             # draw edge for every target
-            flow = edge_attributes["flow"] if flows else None
             color = edge_attributes["color"]
             if color == "rainbow":
                 color = RAINBOW_GRAPHVIZ
-            graph.edge(
-                source,
-                target,
-                label=f"{round(flow, 3)}" if flows else None,
-                color=color,
-            )
+            if flows:
+                flow = edge_attributes["flow"]
+                if flow > 0:
+                    graph.edge(
+                        source,
+                        target,
+                        label=f"{round(flow, 3)}",
+                        color=color,
+                    )
+                else:
+                    graph.edge(
+                        source,
+                        target,
+                        label="",
+                        color="grey",
+                    )
+            else:
+                graph.edge(
+                    source,
+                    target,
+                    label="",
+                    color=color,
+                )
 
     return graph
-    graph.render(outfile="model.png", cleanup=True)
 
 
 def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
