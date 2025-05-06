@@ -54,7 +54,7 @@ house_1.add(
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[-10, -5, 0, 10, 15, 20, 30, 40, 55],
+        temperature_levels=[0, 10, 15, 20, 30, 40],
     )
 )
 house_1.add(
@@ -87,13 +87,11 @@ house_1.add(
 house_1.add(
     technologies.HeatSource(
         name="thColl",
-        reservoir_temperature=[10, 10],
+        reservoir_temperature=[15, 15],
         maximum_working_temperature=40,
         minimum_working_temperature=0,
-        coll_area=10, 
-        conductivity=20,
-        non_thermal_gains=800,
-        zero_losses_eff=0.6,
+        conductivity=200,
+        non_thermal_gains=8000,
         nominal_power=13000,
     )
 )

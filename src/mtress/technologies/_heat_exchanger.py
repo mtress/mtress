@@ -1,5 +1,6 @@
 """This module provides a class representing an air heat exchanger."""
 
+import logging
 from typing import Optional
 import numpy as np
 
@@ -10,6 +11,8 @@ from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import HeatCarrier
 from ._abstract_technology import AbstractTechnology
 
+
+_LOGGER = logging.getLogger(__name__)
 
 class AbstactHeatExchanger(AbstractTechnology):
     """
@@ -38,14 +41,12 @@ class AbstactHeatExchanger(AbstractTechnology):
         self,
         name: str,
         reservoir_temperature: TimeseriesSpecifier,
-        nominal_power: float, # for a collector this should be the nominal power for the total coll area, i.e. the max solar radiation available, 1300W/m2 * coll area
+        nominal_power: float,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
         minimum_delta: float = 1.0,
-        coll_area: float = 1.0, # in m2, collector area to multiply by the incident non_thermal gains per m2
-        conductivity: float | None = None, # in W/m2K, this would be the value of the conductivity (heat loss factor) 
-        non_thermal_gains: Optional[TimeseriesSpecifier] = 0, #in W/m2, they need to be relative to nominal power to work in the formula below (line 101). As I could not see them being relative and assuming that this is the time series for the available radiation per m2 I normalized them directlz in the formula below
-        zero_losses_eff: float | None = None, # dimensionless, factor to reduce the available incoming radiation (zero loss coll efficiency)
+        conductivity: float | None = None,
+        non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
         working_rate: Optional[TimeseriesSpecifier] = 0,
         revenue: Optional[TimeseriesSpecifier] = 0,
     ):
@@ -60,9 +61,8 @@ class AbstactHeatExchanger(AbstractTechnology):
             is treated as a power limit.
         :param minimum_delta: Specifies the delta between the primary and
             secondary sides of the HE (in °C), needs to be > 1 °C
-        :param conductivity: Conductivity of the collector (in W/m2K)
-        :param non_thermal_gains: Additional gains (relative to nominal_power) 
-        :zero_losses_eff: zero loss efficienca factor for limiting the non thermal gains
+        :param conductivity: Conductivity of the collector (in W/K)
+        :param non_thermal_gains: Additional gains (in W)
         :param working_rate: Working price of imported heat in currency/Wh
         :param revenue: Revenue from heat exported to a sink in currency/Wh
         """
@@ -73,10 +73,8 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.maximum_working_temperature = maximum_working_temperature
         self.nominal_power = nominal_power  
         self.minimum_delta = minimum_delta
-        self.coll_area = coll_area
         self.conductivity = conductivity
         self.non_thermal_gains = non_thermal_gains
-        self.zero_losses_eff = zero_losses_eff
         self.working_rate = working_rate
         self.revenue = revenue
 
@@ -84,9 +82,14 @@ class AbstactHeatExchanger(AbstractTechnology):
             raise ValueError("minimum_delta has to be > 1 °C")
 
         if conductivity:
-            self.conductivity_gain_factor = conductivity * coll_area / nominal_power
+            self.conductivity_gain_factor = conductivity / nominal_power
         else:
-            self.conductivity_gain_factor = nominal_power
+            self.conductivity_gain_factor = None
+            if np.array(self.non_thermal_gains).max() != 0:
+                _LOGGER.warning(
+                    "Warning: AbstactHeatExchanger.non_thermal_gains only"
+                    " makes sense when conductivity is also set."
+                )
 
     def _build_core(self):
         self.reservoir_temperature = self._solph_model.data.get_timeseries(
@@ -97,11 +100,17 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.heat_carrier = self.location.get_carrier(HeatCarrier)
 
     def _normalised_gains(self, temperature):
-        unbound_gains = (
-            self.zero_losses_eff * self.coll_area * self.non_thermal_gains / self.nominal_power
-            + (self.reservoir_temperature - temperature)
-            * self.conductivity_gain_factor
-        )
+        unbound_gains = self.non_thermal_gains / self.nominal_power
+
+        if self.conductivity_gain_factor:
+            unbound_gains += ((self.reservoir_temperature - temperature)
+                * self.conductivity_gain_factor
+            )
+        else:
+            # This means full power step at reservoir_temperature.
+            # Only makes sense when non_thermal_gains are zero,
+            # but we always only warn (see above).
+            unbound_gains += self.reservoir_temperature - temperature
 
         return np.clip(unbound_gains, 0, 1)
 
@@ -284,10 +293,8 @@ class HeatSource(AbstactHeatExchanger):
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
         minimum_delta: float = 1.0,
-        coll_area: float = 1.0,
         conductivity: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
-        zero_losses_eff : float | None = None,
     ):
 
         super().__init__(
@@ -299,7 +306,6 @@ class HeatSource(AbstactHeatExchanger):
             minimum_delta=minimum_delta,
             conductivity=conductivity,
             non_thermal_gains=non_thermal_gains,
-            zero_losses_eff= zero_losses_eff, 
         )
 
         # Solph model interfaces
