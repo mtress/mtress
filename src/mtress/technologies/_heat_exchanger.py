@@ -115,21 +115,21 @@ class AbstactHeatExchanger(AbstractTechnology):
         return np.clip(unbound_gains, 0, 1)
 
     def _define_source(self):
-        usable_temperature = np.array(
+        usable_ambient_temperature = np.array(
             [
                 (
                     self.maximum_working_temperature
                     if temp >= self.maximum_working_temperature
                     else temp
                 )
-                for temp in self.reservoir_temperature # for a collector we would like to have usable tempertures ABOVE the reservoir temp
+                for temp in self.reservoir_temperature
             ]
         )
 
         self._bus_source = _bus_source = self.create_solph_node(
             label="heat_source",
             node_type=Bus,
-            custom_properties={"temperature": usable_temperature},
+            custom_properties={"temperature": usable_ambient_temperature},
         )
 
         self.create_solph_node(
@@ -148,10 +148,7 @@ class AbstactHeatExchanger(AbstractTechnology):
 
         if self.autoconnect:
             highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
-               # min(# this should not be the case!!: with this limitation the collector as a source never supplies at temperatures above the ambient air temps given
-                   # max(self.reservoir_temperature),
                     self.maximum_working_temperature,
-                #)
             )
 
             _, cold_level = self.heat_carrier.get_surrounding_levels(
@@ -260,7 +257,7 @@ class AbstactHeatExchanger(AbstractTechnology):
 
             internal_sequence = [
                 1 if temp <= cold_level else 0
-                for temp in max(self.reservoir_temperature, active_levels)#self.reservoir_temperature #
+                for temp in max(self.reservoir_temperature, active_levels)
             ]
 
             self.create_solph_node(
