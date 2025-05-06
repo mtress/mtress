@@ -23,6 +23,7 @@ from mtress import (
 )
 from mtress.technologies.grid_connection import ElectricityGridConnection
 from mtress._helpers import get_flows
+from mtress._helpers._visualization import generate_graph
 
 
 def test_minimal_initialisation_with_date_range():
@@ -177,27 +178,22 @@ def test_graph():
     colors.add("red")
     colors.add("blue")
 
-    graph_elements = solph_representation.graph(
-        flow_results=flows,
+    graph_elements = generate_graph(
+        nodes=solph_representation.nodes(),
+        flows=flows,
         flow_color=flow_color,
         colorscheme=colorscheme,
-        show=False,
     )
 
-    # check both graph representations
-    assert graph_elements["graph"] and graph_elements["flows"]
-    assert len(graph_elements["graph"]) == len(graph_elements["flows"])
-
     # check all nodes present
-    # check graph colors okay
-    graph_elements = graph_elements["graph"]
-    graph_nodes = []
-    graph_colors = set()
-    for ge in graph_elements:
-        if "id" in ge["data"]:
-            graph_nodes.append(ge["data"]["id"])
-        else:
-            graph_colors.add(ge["classes"])
+    nodes = graph_elements["nodes"]
+    assert set(nodes) == set(nodes.keys())
 
-    assert set(nodes) == set(graph_nodes)
+    # check graph colors okay
+    edges = graph_elements["edges"]
+    graph_colors = set()
+
+    for source, targets in edges.items():
+        for target, edge_attributes in targets.items():
+            graph_colors.add(edge_attributes["color"])
     assert colors == graph_colors
