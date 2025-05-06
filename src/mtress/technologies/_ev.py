@@ -55,7 +55,41 @@ GenericSegmentC_EV = ElectricVehicleTemplate(
 
 
 class GenericElectricVehicle(BatteryStorage):
-    """Electric Vehicle Component"""
+    """
+    Generic Electric Vehicle Component
+    
+    :param name: Name of the component
+    :param nominal_capacity: Nominal capacity of the battery (in Wh)
+    :param charging_C_Rate: Charging C-rate, default to 1
+    :param discharging_C_Rate: Discharging C-rate, default to 1
+    :param charging_efficiency: Efficiency during battery charging,
+                                default to 0.98.
+    :param discharging_efficiency: Efficiency during battery discharging,
+                                   default to 0.95.
+    :param loss_rate: Loss rate of a battery storage, default to 0.
+    :param initial_soc: Initial state of charge of a battery,
+        default to 0.5.
+    :param min_soc: Minimum state of charge of a battery, default to 0.1.
+    :param fixed_losses_absolute: numeric (iterable or scalar), losses per
+        hour that are independent of storage content and independent of
+        nominal storage capacity.
+    :param one_sense_per_time_step: boolean, default to False, determines
+        whether the model allows for charging and discharging within the 
+        same time interval (=False) or not (=True). 
+    :param shared_limit: boolean, default to True, limits the (average) 
+        charging and discharging power during a time interval to a given limit,
+        defined as the average between the respective power limits. Please note
+        this constraint is only introduced if charging and discharging can take
+        place during the same time interval (one_sense_per_time_step=False).
+    :param plugged_in_profile: A sequence of binary values indicating if
+        the EV is plugged-in (=1) or not (=0). By default, the EV is
+        permanently defined as being stationary, which means it can charge
+        or discharge as long as power and SOC limits are observed.
+    :param static_discharge_profile: A sequence of non-negative real values
+        indicating the power delivered by the battery to the EV (and not to
+        to the grid). Value errors will be raised if these values are in
+        contradiction with the respective plugged-in status.
+    """
 
     @enable_templating(BatteryStorageTemplate)
     def __init__(
@@ -64,30 +98,7 @@ class GenericElectricVehicle(BatteryStorage):
         static_discharge_profile: TimeseriesSpecifier = 0.0,
         **kwargs,
     ):
-        """
-        Initialize Electric Vehicle instance.
-
-        :param name: Name of the component
-        :param nominal_capacity: Nominal capacity of the battery (in Wh)
-        :param charging_C_Rate: Charging C-rate, default to 1
-        :param discharging_C_Rate: Discharging C-rate, default to 1
-        :param charging_efficiency: Efficiency during battery charging,
-                                    default to 0.98.
-        :param discharging_efficiency: Efficiency during battery discharging,
-                                       default to 0.95.
-        :param loss_rate: Loss rate of a battery storage, default to 0.
-        :param initial_soc: Initial state of charge of a battery,
-            default to 0.5.
-        :param min_soc: Minimum state of charge of a battery, default to 0.1.
-        :param plugged_in_profile: A sequence of binary values indicating if
-            the EV is plugged-in (=1) or not (=0). By default, the EV is
-            permanently defined as being stationary, which means it can charge
-            or discharge as long as power and SOC limits are observed.
-        :param static_discharge_profile: A sequence of non-negative real values
-            indicating the power delivered by the battery to the EV (and not to
-            to the grid). Value errors will be raised if these values are in
-            contradiction with the respective plugged-in status.
-        """
+        """Initialize Electric Vehicle instance."""
 
         # call super class constructor
         BatteryStorage.__init__(self, **kwargs)
@@ -330,8 +341,50 @@ class GenericElectricVehicle(BatteryStorage):
         )
 
 class ElectricVehicle(GenericElectricVehicle):
-    """Electric Vehicle Component"""
-
+    """
+    Electric Vehicle Component
+    
+    :param name: Name of the component
+    :param nominal_capacity: Nominal capacity of the battery (in Wh)
+    :param charging_C_Rate: Charging C-rate, default to 1
+    :param discharging_C_Rate: Discharging C-rate, default to 1
+    :param charging_efficiency: Efficiency during battery charging,
+                                default to 0.98.
+    :param discharging_efficiency: Efficiency during battery discharging,
+                                   default to 0.95.
+    :param loss_rate: Loss rate of a battery storage, default to 0.
+    :param initial_soc: Initial state of charge of a battery,
+        default to 0.5.
+    :param min_soc: Minimum state of charge of a battery, default to 0.1.
+    :param fixed_losses_absolute: numeric (iterable or scalar), losses per
+        hour that are independent of storage content and independent of
+        nominal storage capacity.
+    :param consumption_per_distance: The energy consumption per distance
+        travelled specific to this EV. The energy consumption represents
+        that delivered to the EV, not the one seen from the point of view
+        of the battery (before the discharge efficiency is considered).
+    :param distance_travelled: A sequence of distances travelled with the
+        EV. The parameter acts as an override for the static discharge
+        profile. The units selected have to be consistent with those used
+        with the consumption_per_distance parameter.
+    :param one_sense_per_time_step: boolean, default to False, determines
+        whether the model allows for charging and discharging within the 
+        same time interval (=False) or not (=True). 
+    :param shared_limit: boolean, default to True, limits the (average) 
+        charging and discharging power during a time interval to a given limit,
+        defined as the average between the respective power limits. Please note
+        this constraint is only introduced if charging and discharging can take
+        place during the same time interval (one_sense_per_time_step=False).
+    :param plugged_in_profile: A sequence of binary values indicating if
+        the EV is plugged-in (=1) or not (=0). By default, the EV is
+        permanently defined as being stationary, which means it can charge
+        or discharge as long as power and SOC limits are observed.
+    :param static_discharge_profile: A sequence of non-negative real values
+        indicating the power delivered by the battery to the EV (and not to
+        to the grid). Value errors will be raised if these values are in
+        contradiction with the respective plugged-in status.
+    """
+    
     @enable_templating(ElectricVehicleTemplate)
     def __init__(
         self,
@@ -339,40 +392,7 @@ class ElectricVehicle(GenericElectricVehicle):
         distance_travelled: TimeseriesSpecifier = 0.0,
         **kwargs
     ):
-        """
-        Initialize Electric Vehicle instance.
-
-        :param name: Name of the component
-        :param nominal_capacity: Nominal capacity of the battery (in Wh)
-        :param charging_C_Rate: Charging C-rate, default to 1
-        :param discharging_C_Rate: Discharging C-rate, default to 1
-        :param charging_efficiency: Efficiency during battery charging,
-                                    default to 0.98.
-        :param discharging_efficiency: Efficiency during battery discharging,
-                                       default to 0.95.
-        :param loss_rate: Loss rate of a battery storage, default to 0.
-        :param initial_soc: Initial state of charge of a battery,
-            default to 0.5.
-        :param min_soc: Minimum state of charge of a battery, default to 0.1.
-        :param consumption_per_distance: The energy consumption per distance
-            travelled specific to this EV. The energy consumption represents
-            that delivered to the EV, not the one seen from the point of view
-            of the battery (before the discharge efficiency is considered).
-        :param distance_travelled: A sequence of distances travelled with the
-            EV. The parameter acts as an override for the static discharge
-            profile. The units selected have to be consistent with those used
-            with the consumption_per_distance parameter.
-        :param plugged_in_profile: A sequence of binary values indicating if
-            the EV is plugged-in (=1) or not (=0). By default, the EV is
-            permanently defined as being stationary, which means it can charge
-            or discharge as long as power and SOC limits are observed.
-        :param static_discharge_profile: A sequence of non-negative real values
-            indicating the power delivered by the battery to the EV (and not to
-            to the grid). Value errors will be raised if these values are in
-            contradiction with the respective plugged-in status.
-        :param mutually_exclusive_charging_discharging: If True, the EV cannot
-            charge or discharge simultaneously. The default value is False.
-        """
+        """Initialize Electric Vehicle instance."""
 
         # performance data
         self.consumption_per_distance = consumption_per_distance

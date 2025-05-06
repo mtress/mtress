@@ -55,7 +55,33 @@ GenericBatteryModelII = BatteryStorageTemplate(
 
 
 class BatteryStorage(AbstractTechnology):
-    """Battery Storage Component"""
+    """
+    Battery Storage Component
+    
+    :param name: Name of the component
+    :param nominal_capacity: Nominal capacity of the battery (in Wh)
+    :param charging_C_Rate: Charging C-rate, default to 1
+    :param discharging_C_Rate: Discharging C-rate, default to 1
+    :param charging_efficiency: Efficiency during battery charging,
+                                default to 0.98.
+    :param discharging_efficiency: Efficiency during battery discharging,
+                                   default to 0.95.
+    :param loss_rate: Loss rate of a battery storage, default to 0.
+    :param initial_soc: Initial state of charge of a battery,
+        default to 0.5.
+    :param min_soc: Minimum state of charge of a battery, default to 0.1.
+    :param fixed_losses_absolute: numeric (iterable or scalar), losses per
+        hour that are independent of storage content and independent of
+        nominal storage capacity.
+    :param one_sense_per_time_step: boolean, default to False, determines
+        whether the model allows for charging and discharging within the 
+        same time interval (=False) or not (=True). 
+    :param shared_limit: boolean, default to True, limits the (average) 
+        charging and discharging power during a time interval to a given limit,
+        defined as the average between the respective power limits. Please note
+        this constraint is only introduced if charging and discharging can take
+        place during the same time interval (one_sense_per_time_step=False).
+    """
 
     @enable_templating(BatteryStorageTemplate)
     def __init__(
@@ -75,22 +101,6 @@ class BatteryStorage(AbstractTechnology):
     ):
         """
         Initialize Battery Storage.
-
-        :param name: Name of the component
-        :param nominal_capacity: Nominal capacity of the battery (in Wh)
-        :param charging_C_Rate: Charging C-rate, default to 1
-        :param discharging_C_Rate: Discharging C-rate, default to 1
-        :param charging_efficiency: Efficiency during battery charging,
-                                    default to 0.98.
-        :param discharging_efficiency: Efficiency during battery discharging,
-                                       default to 0.95.
-        :param loss_rate: Loss rate of a battery storage, default to 0.
-        :param initial_soc: Initial state of charge of a battery,
-            default to 0.5.
-        :param min_soc: Minimum state of charge of a battery, default to 0.1.
-        :param fixed_losses_absolute: numeric (iterable or scalar), losses per
-            hour that are independent of storage content and independent of
-            nominal storage capacity.
         """
 
         super().__init__(name=name)
@@ -179,4 +189,3 @@ class BatteryStorage(AbstractTechnology):
                     str(self.create_label(f"{self.name}_shared_limit")),
                     pyo.Constraint(model.TIMESTEPS, rule=rule_shared_limit),
                 )
-            # TODO: add more advanced constraints to ensure consistency
