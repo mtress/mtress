@@ -457,13 +457,23 @@ def generate_graph(
     return graph_elements
 
 
-def generate_graph_graphviz(graph_elements: dict, flows: bool):
+def generate_graph_graphviz(
+    graph_elements: dict,
+    flows: bool,
+) -> Digraph:
+    """
+    Function to generate a graphviz Digraph representation
+    from the dict representation of the MTRESS graph.
+
+    :param graph_elements: simple dict representation of a MTRESS energy system
+    :param flows: flag to toggle flows
+    """
     nodes = graph_elements["nodes"]
     edges = graph_elements["edges"]
     graph = Digraph(name="MTRESS model")
 
     # --- NODES
-    # 1. determine LOCATIONS
+    # 1. determine LOCATIONS or floaty boys
     # (nodes without parents)
     locations = {k: dict() for k, v in nodes.items() if v["parent"] == None}
 
@@ -499,11 +509,11 @@ def generate_graph_graphviz(graph_elements: dict, flows: bool):
         # draw location
         graph.subgraph(loc_graph)
 
-    # print(locations)
     # --- EDGES
-    print(edges)
     for source, targets in edges.items():
+        # one source can have multiple targets
         for target, edge_attributes in targets.items():
+            # draw edge for every target
             flow = edge_attributes["flow"] if flows else None
             color = edge_attributes["color"]
             if color == "rainbow":
@@ -514,10 +524,19 @@ def generate_graph_graphviz(graph_elements: dict, flows: bool):
                 label=f"{round(flow, 3)}" if flows else None,
                 color=color,
             )
+
+    return graph
     graph.render(outfile="model.png", cleanup=True)
 
 
 def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
+    """
+    Function to generate a dash cytoscape ready dict representation
+    from the dict representation of the MTRESS graph.
+
+    :param graph_elements: simple dict representation of a MTRESS energy system
+    :param flows: flag to toggle flows
+    """
     graph_nodes = graph_elements["nodes"]
     graph_edges = graph_elements["edges"]
 
