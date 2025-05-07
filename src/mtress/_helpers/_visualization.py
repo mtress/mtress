@@ -569,7 +569,7 @@ def generate_graph_graphviz(
 def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
     """
     Function to generate a dash cytoscape ready dict representation
-    from the dict representation of the MTRESS graph.
+    from the dict representation of the MTRESS energy system.
 
     :param graph_elements: simple dict representation of a MTRESS energy system
     :param flows: flag to toggle flows
