@@ -99,12 +99,14 @@ class SolphModel:
         flow_results: dict = None,
         flow_color: dict = None,
         colorscheme: dict = None,
+        path: str = "model.png",
     ):
         graph_graphviz(
             nodes=self.nodes(),
             flows=flow_results,
             flow_color=flow_color,
             colorscheme=colorscheme,
+            path=path,
         )
 
     def graph_interactive(

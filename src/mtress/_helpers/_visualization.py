@@ -60,6 +60,7 @@ def graph_graphviz(
     flows,
     flow_color: dict,
     colorscheme: dict,
+    path: str = "model.png",
 ) -> None:
     if colorscheme is None:
         # set to default
@@ -73,7 +74,7 @@ def graph_graphviz(
     )
 
     # render graph and write to file
-    graph.render(outfile="model.png", cleanup=True)
+    graph.render(outfile=path, cleanup=True)
 
 
 def graph_cytoscape(

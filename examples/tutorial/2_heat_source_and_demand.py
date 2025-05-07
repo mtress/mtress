@@ -104,4 +104,7 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-solph_representation.graph(flow_results=flows)
+solph_representation.graph(
+    flow_results=flows,
+    path="2_heat_source_and_demand_model.png",
+)
