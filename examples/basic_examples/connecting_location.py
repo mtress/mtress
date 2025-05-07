@@ -31,24 +31,11 @@ house_1.add(
     technologies.ElectricityGridConnection(working_rate=None, revenue=0.0001)
 )
 
-weather = {
-    "ghi": "FILE:../weather.csv:ghi",
-    "dhi": "FILE:../weather.csv:dhi",
-    "wind_speed": "FILE:../weather.csv:wind_speed",
-    "temp_air": "FILE:../weather.csv:temp_air",
-    "temp_dew": "FILE:../weather.csv:temp_dew",
-    "pressure": "FILE:../weather.csv:pressure",
-}
-
-
 house_1.add(
-    technologies.Photovoltaics(
+    technologies.RenewableElectricitySource(
         "pv0",
-        (52.729, 8.181),
         nominal_power=8000,
-        weather=weather,
-        surface_azimuth=180,
-        surface_tilt=35,
+        specific_generation="FILE:../input_file.csv:pv",
         fixed=False,
     )
 )
@@ -92,8 +79,8 @@ house_2.add(demands.Electricity(name="demand0", time_series=500))
 solph_representation = SolphModel(
     energy_system,
     timeindex={
-        "start": "2021-07-10 10:00:00",
-        "freq": "60T",
+        "start": "2022-07-10 10:00:00",
+        "freq": "60min",
         "periods": 10,
         "tz": "Europe/Berlin",
     },
