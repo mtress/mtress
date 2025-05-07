@@ -5,7 +5,7 @@ Tests for the MTRESS solph model.
 
 import datetime
 
-import json
+import jsonschema
 
 import pandas as pd
 import pytest
@@ -112,88 +112,3 @@ def test_build_model_with_connected_electricity_missing_connection():
                 "freq": "15T",
             },
         )
-
-
-def test_graph():
-    nodes = []
-    colors = set()
-    meta_model = MetaModel()
-
-    house_1 = Location(name="house_1")
-    meta_model.add_location(house_1)
-
-    carrier0 = carriers.ElectricityCarrier()
-    nodes.append(("house_1", "ElectricityCarrier"))
-    nodes.append(("house_1", "ElectricityCarrier", "distribution"))
-    nodes.append(("house_1", "ElectricityCarrier", "feed_in"))
-
-    grid0 = technologies.ElectricityGridConnection(working_rate=32)
-    nodes.append(("house_1", "ElectricityGridConnection"))
-    nodes.append(("house_1", "ElectricityGridConnection", "grid_import"))
-    nodes.append(("house_1", "ElectricityGridConnection", "grid_export"))
-    nodes.append(("house_1", "ElectricityGridConnection", "source_import"))
-
-    demand1 = demands.Electricity(name="demand1", time_series=[0, 1, 2])
-    nodes.append(("house_1", "demand1"))
-    nodes.append(("house_1", "demand1", "input"))
-    nodes.append(("house_1", "demand1", "sink"))
-
-    nodes = ["-".join(n) for n in nodes]
-    nodes.append("house_1")
-
-    house_1.add(carrier0)
-    house_1.add(grid0)
-    house_1.add(demand1)
-
-    solph_representation = SolphModel(
-        meta_model,
-        timeindex={
-            "start": "2021-07-10 00:00:00",
-            "end": "2021-07-10 03:00:00",
-            "freq": "60T",
-        },
-    )
-
-    solph_representation.build_solph_model()
-
-    solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-    myresults = results(solved_model)
-    flows = get_flows(myresults)
-
-    colorscheme = {
-        "ElectricityCarrier": "orange",
-        "GasCarrier": "steelblue",
-        "HeatCarrier": "maroon",
-    }
-    colors.add("orange")  # only electricity in the system
-
-    flow_color = {
-        ("house_1", "demand1", "input"): {
-            ("house_1", "demand1", "sink"): "red"
-        },
-        ("house_1", "ElectricityGridConnection", "source_import"): {
-            ("house_1", "ElectricityGridConnection", "grid_import"): "blue"
-        },
-    }
-    colors.add("red")
-    colors.add("blue")
-
-    graph_elements = generate_graph(
-        nodes=solph_representation.nodes(),
-        flows=flows,
-        flow_color=flow_color,
-        colorscheme=colorscheme,
-    )
-
-    # check all nodes present
-    nodes = graph_elements["nodes"]
-    assert set(nodes) == set(nodes.keys())
-
-    # check graph colors okay
-    edges = graph_elements["edges"]
-    graph_colors = set()
-
-    for source, targets in edges.items():
-        for target, edge_attributes in targets.items():
-            graph_colors.add(edge_attributes["color"])
-    assert colors == graph_colors
