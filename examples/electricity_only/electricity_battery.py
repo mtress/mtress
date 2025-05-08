@@ -45,7 +45,7 @@ solph_representation = SolphModel(
     timeindex={
         "start": "2021-07-10 10:00:00",
         "end": "2021-07-10 13:00:00",
-        "freq": "60T",
+        "freq": "60min",
         "tz": "Europe/Berlin",
     },
 )

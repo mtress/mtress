@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Converter, Source
 
-from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import ElectricityCarrier, HeatCarrier
 from ..physics import calc_cop
 from ._abstract_technology import AbstractTechnology
@@ -40,7 +39,7 @@ class COPReference:
     warm_side_in: float = 30.0
 
 
-class HeatPump(AbstractTechnology, AbstractSolphRepresentation):
+class HeatPump(AbstractTechnology):
     """
     Clustered heat pump for modeling power flows with variable
     temperature levels.

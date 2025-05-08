@@ -46,7 +46,6 @@ dependencies = [
     "numpy>=2.2.0",
     "jsonschema",
     "setuptools>=59.1.1",
-    "pvlib",
     "tox",
     "dash",
     "dash-cytoscape",

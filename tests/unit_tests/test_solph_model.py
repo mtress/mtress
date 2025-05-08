@@ -88,7 +88,7 @@ def test_build_model_with_connected_electricity():
         timeindex={
             "start": "2021-07-10 00:00:00",
             "end": "2021-07-10 15:15:00",
-            "freq": "15T",
+            "freq": "15min",
         },
     )
     solph_model.build_solph_model()
@@ -109,6 +109,6 @@ def test_build_model_with_connected_electricity_missing_connection():
             timeindex={
                 "start": "2021-07-10 00:00:00",
                 "end": "2021-07-10 15:15:00",
-                "freq": "15T",
+                "freq": "15min",
             },
         )

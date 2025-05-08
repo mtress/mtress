@@ -6,7 +6,6 @@ from typing import Optional
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Sink, Source
 
-from mtress._abstract_component import AbstractSolphRepresentation
 from mtress.carriers import GasCarrier
 from mtress.physics import Gas
 
@@ -15,7 +14,7 @@ from ._abstract_grid_connection import AbstractGridConnection
 LOGGER = logging.getLogger(__file__)
 
 
-class GasGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
+class GasGridConnection(AbstractGridConnection):
     """
     The gas grid connection represents the distribution pipelines for
     a specific gas type, identified by the `gas_type` parameter. It

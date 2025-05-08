@@ -167,7 +167,9 @@ class LayeredHeatStorage(AbstractHeatStorage):
 
                 def equate_variables_rule(_, t):
                     return (
-                        fixed_losses + loss_rate * (
+                        fixed_losses
+                        + loss_rate
+                        * (
                             model.GenericStorageBlock.storage_content[
                                 self.storage_components[upper_temperature], t
                             ]

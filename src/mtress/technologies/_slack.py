@@ -14,13 +14,12 @@ import numbers
 from oemof.solph import Flow
 from oemof.solph.components import Source, Sink
 
-from .._abstract_component import AbstractSolphRepresentation
 from ..carriers._abstract_carrier import AbstractCarrier
 from ..carriers import ElectricityCarrier, HeatCarrier, GasCarrier
 from ._abstract_technology import AbstractTechnology
 
 
-class SlackNode(AbstractTechnology, AbstractSolphRepresentation):
+class SlackNode(AbstractTechnology):
     """
     A component that provides sink and source slack nodes.
     Slack nodes are infinte sources of energy.

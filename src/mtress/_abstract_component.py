@@ -20,6 +20,9 @@ class AbstractComponent(NamedElement):
         self.autoconnect = autoconnect
         self._location = None
 
+        self._solph_nodes: list = []
+        self._solph_model: SolphModel = None
+
     @property
     def location(self):
         """Return location this component belongs to."""
@@ -32,17 +35,6 @@ class AbstractComponent(NamedElement):
 
         self._nesting_element = location
         self._location = location
-
-
-class AbstractSolphRepresentation(AbstractComponent):
-    """Interface for components which can be represented in `oemof.solph`."""
-
-    def __init__(self, **kwargs) -> None:
-        """Initialize component."""
-        super().__init__(**kwargs)
-
-        self._solph_nodes: list = []
-        self._solph_model: SolphModel = None
 
     def register_solph_model(self, solph_model: SolphModel) -> None:
         """Store a reference to the solph model."""
@@ -84,11 +76,3 @@ class AbstractSolphRepresentation(AbstractComponent):
 
     def add_constraints(self) -> None:
         """Add constraints to the model."""
-
-
-class ModelicaInterface(
-    AbstractComponent
-):  # pylint: disable=too-few-public-methods
-    """Interface for components which can be represented in open modelica."""
-
-    # At the moment, this is just a memory aid
