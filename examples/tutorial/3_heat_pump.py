@@ -12,7 +12,6 @@ from mtress import (
     technologies,
 )
 from mtress._helpers import get_flows
-from mtress._helpers._visualization import render_series
 
 os.chdir(os.path.dirname(__file__))
 
@@ -80,23 +79,11 @@ solph_representation = SolphModel(
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="3_heat_pump_simple.png", cleanup=True)
-
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="3_heat_pump_detail.png", cleanup=True)
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="3_heat_pump_results.png", cleanup=True)
-
-plot_series = solph_representation.graph_series(
+solph_representation.graph(
     flow_results=flows,
-    # start=pd.Timestamp("2021-07-10 00:00:00"),
-    # stop=pd.Timestamp("2021-07-10 03:00:00"),
-    step=pd.Timedelta("60min"),
+    path="3_heat_pump_model.png",
 )
-render_series(plot_series, "3_heat_pump_series", 2500)

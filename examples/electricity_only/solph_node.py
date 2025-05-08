@@ -100,3 +100,5 @@ print(
         ("house_1", "electricity demand", "sink"),
     ]
 )
+
+solph_representation.graph(flow_results=flows)

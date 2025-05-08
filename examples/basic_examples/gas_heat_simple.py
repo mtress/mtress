@@ -72,13 +72,8 @@ solph_representation = SolphModel(
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="gas_heat_detail.png")
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": False})
-
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="gas_heat_result.png")
+solph_representation.graph(flow_results=flows)

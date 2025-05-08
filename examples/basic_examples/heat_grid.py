@@ -96,15 +96,8 @@ house_1.connect(
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="heat_grid_detail.png")
-
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="heat_grid_simple.png")
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
 myresults = results(solved_model)
 flows = get_flows(myresults)
-plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="heat_grid_detail_flow.png")
+solph_representation.graph(flow_results=flows)

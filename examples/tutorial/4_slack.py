@@ -88,56 +88,46 @@ solph_representation = SolphModel(
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="4_slack_detail.png", cleanup=True)
-
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="4_slack_simple.png", cleanup=True)
-
-solved_model = solph_representation.solve(solve_kwargs={"tee": True})
+solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
 # indicate usage of SlackNode with a rainbow-colored scheme
-rainbow = (
-    "firebrick1:darkorange:gold2:"
-    + "chartreuse3:deepskyblue:cornflowerblue:"
-    + "darkslateblue"
-)
 flow_color = {
     ("house_1", "SlackNode", "missing_energy"): {
         (
             "house_1",
             "ElectricityCarrier",
             "distribution",
-        ): rainbow,
-        ("house_1", "HeatCarrier", "T_5"): rainbow,
-        ("house_1", "HeatCarrier", "T_10"): rainbow,
-        ("house_1", "HeatCarrier", "T_20"): rainbow,
-        ("house_1", "HeatCarrier", "T_30"): rainbow,
-        ("house_1", "HeatCarrier", "T_40"): rainbow,
+        ): "rainbow",
+        ("house_1", "HeatCarrier", "T_5"): "rainbow",
+        ("house_1", "HeatCarrier", "T_10"): "rainbow",
+        ("house_1", "HeatCarrier", "T_20"): "rainbow",
+        ("house_1", "HeatCarrier", "T_30"): "rainbow",
+        ("house_1", "HeatCarrier", "T_40"): "rainbow",
     },
     ("house_1", "ElectricityCarrier", "distribution"): {
-        ("house_1", "SlackNode", "excess_energy"): rainbow
+        ("house_1", "SlackNode", "excess_energy"): "rainbow"
     },
     ("house_1", "HeatCarrier", "T_5"): {
-        ("house_1", "SlackNode", "excess_energy"): rainbow
+        ("house_1", "SlackNode", "excess_energy"): "rainbow"
     },
     ("house_1", "HeatCarrier", "T_10"): {
-        ("house_1", "SlackNode", "excess_energy"): rainbow
+        ("house_1", "SlackNode", "excess_energy"): "rainbow"
     },
     ("house_1", "HeatCarrier", "T_20"): {
-        ("house_1", "SlackNode", "excess_energy"): rainbow
+        ("house_1", "SlackNode", "excess_energy"): "rainbow"
     },
     ("house_1", "HeatCarrier", "T_30"): {
-        ("house_1", "SlackNode", "excess_energy"): rainbow
+        ("house_1", "SlackNode", "excess_energy"): "rainbow"
     },
     ("house_1", "HeatCarrier", "T_40"): {
-        ("house_1", "SlackNode", "excess_energy"): rainbow
+        ("house_1", "SlackNode", "excess_energy"): "rainbow"
     },
 }
 
-plot = solph_representation.graph(
-    detail=True, flow_results=flows, flow_color=flow_color
+solph_representation.graph(
+    flow_results=flows,
+    flow_color=flow_color,
+    path="4_slack_model.png",
 )
-plot.render(outfile="4_slack_results.png", cleanup=True)
