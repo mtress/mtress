@@ -86,7 +86,9 @@ Rad_beam = 850 # in W/m2 total radiation, beam and diffuse
 Rad_diff = 150 # in W/m2 total radiation, beam and diffuse
 K_d = 0.827
 Rad_nom = 1350 # in W/m2 total radiation, beam and diffuse
-
+#######################
+# right now we underestimate slightly the non thermal gains and overestimate greatly the thermal losses - RECHECK the last ones!
+#######################
 house_1.add(# parameters for the WISC coll (for npro validation) - nu0=0,329; a1=40,94, global radiation at 25° in Athens = 1985,48 kWh/m2a; Result (npro) =557,93 kWh/m2
     technologies.HeatSource(
         name="thColl",
