@@ -62,7 +62,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         :param minimum_delta: Specifies the delta between the primary and
             secondary sides of the HE (in °C), needs to be > 1 °C
         :param conductivity: Conductivity of the collector (in W/K)
-        :param non_thermal_gains: Additional gains (in W)
+        :param non_thermal_gains: Additional gains (in W) - for a solar collector this represents the nu_0 multiplied by the collector area and the radiation (as time series)
         :param working_rate: Working price of imported heat in currency/Wh
         :param revenue: Revenue from heat exported to a sink in currency/Wh
         """
