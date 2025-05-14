@@ -26,25 +26,12 @@ energy_system.add_location(house_1)
 house_1.add(carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=0.35))
 
-weather = {
-    "ghi": "FILE:../weather.csv:ghi",
-    "dhi": "FILE:../weather.csv:dhi",
-    "wind_speed": "FILE:../weather.csv:wind_speed",
-    "temp_air": "FILE:../weather.csv:temp_air",
-    "temp_dew": "FILE:../weather.csv:temp_dew",
-    "pressure": "FILE:../weather.csv:pressure",
-}
-
-
 house_1.add(
-    technologies.Photovoltaics(
+    technologies.RenewableElectricitySource(
         "pv0",
-        (52.729, 8.181),
         nominal_power=15e5,
-        weather=weather,
-        surface_azimuth=180,
-        surface_tilt=35,
-        fixed=True,
+        specific_generation="FILE:../input_file.csv:pv",
+        fixed=False,
     )
 )
 
@@ -135,31 +122,21 @@ house_1.add(technologies.SlackNode())
 solph_representation = SolphModel(
     energy_system,
     timeindex={
-        "start": "2021-07-10 12:00:00",
-        "end": "2021-07-10 16:00:00",
-        "freq": "60T",
+        "start": "2022-07-10 12:00:00",
+        "end": "2022-07-10 16:00:00",
+        "freq": "60min",
         "tz": "Europe/Berlin",
     },
 )
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="hydrogen_production_detail.png")
-
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="hydrogen_production_simple.png")
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-
 myresults = results(solved_model)
 flows = get_flows(myresults)
-
-plot = solph_representation.graph(
-    detail=True, flow_results=flows, flow_color=None
-)
-# plot.render(outfile="hydrogen_production_results.png")
 
 solved_model.write(
     "hydrogen_production.lp", io_options={"symbolic_solver_labels": True}
 )
+
+solph_representation.graph(flow_results=flows)

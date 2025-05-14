@@ -42,7 +42,7 @@ def test_slack_build():
         timeindex={
             "start": "2021-07-10 00:00:00",
             "end": "2021-07-10 03:00:00",
-            "freq": "60T",
+            "freq": "60min",
         },
     )
 
@@ -97,7 +97,7 @@ def test_slack_build():
         timeindex={
             "start": "2021-07-10 00:00:00",
             "end": "2021-07-10 03:00:00",
-            "freq": "60T",
+            "freq": "60min",
         },
     )
 

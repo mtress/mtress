@@ -94,21 +94,17 @@ solph_representation = SolphModel(
     timeindex={
         "start": "2022-01-10 00:00:00",
         "end": "2022-01-10 02:00:00",
-        "freq": "60T",
+        "freq": "60min",
     },
 )
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="2_heat_source_and_demand_detail.png", cleanup=True)
-
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="2_heat_source_and_demand_simple.png", cleanup=True)
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="2_heat_source_and_demand_results.png", cleanup=True)
+solph_representation.graph(
+    flow_results=flows,
+    path="2_heat_source_and_demand_model.png",
+)

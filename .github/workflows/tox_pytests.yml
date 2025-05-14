@@ -21,9 +21,9 @@ jobs:
         python-version: ["3.10"]
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Install coinor-cbc
-      run: sudo apt install coinor-cbc
+    - uses: actions/checkout@v4
+    - name: Install non-Python dependencies
+      run: sudo apt install coinor-cbc graphviz
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
