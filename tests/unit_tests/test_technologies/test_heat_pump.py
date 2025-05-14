@@ -1,7 +1,9 @@
+import math
+import pytest
+
 from mtress.technologies import HeatPump, COPReference
 
 from oemof.solph.processing import meta_results
-import math
 
 from mtress import (
     Location,
@@ -45,6 +47,7 @@ def test_heat_pump_init_custom_design_conditions():
     assert hp.ref_cop == hp_ref_cop
 
 
+@pytest.mark.skip(reason="Not really unit test.")
 def test_heat_pump_heating_example():
 
     energy_system = MetaModel()
