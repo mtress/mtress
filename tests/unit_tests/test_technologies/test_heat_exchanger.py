@@ -44,8 +44,8 @@ def test_heat_source_initialisation():
     )
     assert src.name is "source"
     assert (src.reservoir_temperature == reservoir_temperature).all()
-    assert (src._normalised_gains(40) == [0, 0, 1, 0])
-    assert (src._normalised_gains(-5) == [1, 1, 1, 0])
+    assert (src._normalised_gains(40) == [0, 0, 1, 0]).all()
+    assert (src._normalised_gains(-5) == [1, 1, 1, 0]).all()
 
     # initialisation with conductive gains
     conductivity = 200
