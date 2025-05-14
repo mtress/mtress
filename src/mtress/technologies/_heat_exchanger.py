@@ -14,6 +14,7 @@ from ._abstract_technology import AbstractTechnology
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class AbstactHeatExchanger(AbstractTechnology):
     """
     Heat exchanger (HE)
@@ -71,7 +72,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.reservoir_temperature = reservoir_temperature
         self.minimum_working_temperature = minimum_working_temperature
         self.maximum_working_temperature = maximum_working_temperature
-        self.nominal_power = nominal_power  
+        self.nominal_power = nominal_power
         self.minimum_delta = minimum_delta
         self.conductivity = conductivity
         self.non_thermal_gains = non_thermal_gains
@@ -103,9 +104,9 @@ class AbstactHeatExchanger(AbstractTechnology):
         unbound_gains = self.non_thermal_gains / self.nominal_power
 
         if self.conductivity_gain_factor:
-            unbound_gains += ((self.reservoir_temperature - temperature)
-                * self.conductivity_gain_factor
-            )
+            unbound_gains += (
+                self.reservoir_temperature - temperature
+            ) * self.conductivity_gain_factor
         else:
             # This means full power step at reservoir_temperature.
             # Only makes sense when non_thermal_gains are zero,
@@ -148,7 +149,7 @@ class AbstactHeatExchanger(AbstractTechnology):
 
         if self.autoconnect:
             highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
-                    self.maximum_working_temperature,
+                self.maximum_working_temperature,
             )
 
             _, cold_level = self.heat_carrier.get_surrounding_levels(
