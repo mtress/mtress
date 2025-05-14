@@ -1,12 +1,12 @@
 """
-Basic working 'electricity and heat' example.
+Basic working 'electricity_heat_coll' example.
 
-Basic working 'electricity and heat' example which includes a location (house),
+Basic working example which includes a location (house),
 electricity wise: an electricity carrier which acts as a electricity
-source/supply from the official grid (working price of 0.035 ct/Wh) as well as
-a demand (consumer) with a demand time series.
-And heat wise: a heat carrier, a heat pump, an heat exchanger as well as
-a heat demand time series.
+source/supply from the official grid (working price of 0.035 ct/Wh) which is solely
+used to supply the required electricity for an electric heater used as back up to the collector. 
+And heat wise: a heat carrier, a solar collector as well as
+a heat demand time series. 
 
 At first an energy system (here meta_model) is defined with a time series
 (index). Afterwards a location is defined and added to the energysystem. Then
@@ -54,9 +54,9 @@ house_1.add(
 house_1.add(
     demands.FixedTemperatureHeating(
         name="space_heating",
-        min_flow_temperature=20,
+        min_flow_temperature=25,
         return_temperature=15,
-        time_series=[2000e3, 2000e3],
+        time_series=[2e3, 2e3],
     )
 )
 
@@ -66,17 +66,6 @@ electric_heater = technologies.ResistiveHeater(
     maximum_temperature=100,
 )
 house_1.add(electric_heater)
-"""
-house_1.add(
-    technologies.HeatPump(
-        name="HeatPump",
-        thermal_power_limit=None,
-        max_temp_primary=25,
-        min_temp_primary=-10,
-        max_temp_secondary=55,
-        min_temp_secondary=30,
-    )
-) """
 
 #Yearly_rad = 1765e3 # data from Solarkeymark in Wh/m2a
 # Npro_output = 557e3 # data from npro in Wh/m2a
@@ -94,10 +83,10 @@ house_1.add(# parameters for the WISC coll (for npro validation) - nu0=0,329; a1
         name="thColl",
         reservoir_temperature=[15, 15],
         maximum_working_temperature=20,
-        minimum_working_temperature=10,
+        minimum_working_temperature=15,
         conductivity=40.94*Acoll,
-        non_thermal_gains=0.329*Rad_beam*Acoll+Acoll*K_d*Rad_diff*0.329, # this factor is the nu_0 times the radiation (as time series in Wh/h) for the total collector area
-        nominal_power=Rad_nom*Acoll, # this factor needs to be the maximum radiation on the collector plane for a given timestep (e.g. for hours in Wh/h) for the total collector area
+        non_thermal_gains=0.329*Acoll*(Rad_beam+K_d*Rad_diff), # this factor is the nu_0 times the radiation (as time series in Wh/h) for the total collector area
+        nominal_power=Rad_nom*Acoll, # this factor has no influence - should be the maximum radiation on the collector plane for a given timestep (e.g. for hours in Wh/h) for the total collector area
     )
 )
 
@@ -132,5 +121,6 @@ Qcoll = flows[('house_1', 'thColl', 'source_reservoir'), ('house_1', 'thColl', '
 Overestimation = Qcoll - Power_O_keymark #Npro_output
 
 
-print(Qcoll)
+print("Qcoll =", Qcoll)
+print("Qcoll_25 =")#, Qcoll_25)
 print( Overestimation)
