@@ -106,7 +106,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                     ),
                 )
             },
-            custom_attributes={"temperature": self.reservoir_temperature},
+            custom_properties={"temperature": self.reservoir_temperature},
         )
 
         b_out = self.create_solph_node(
