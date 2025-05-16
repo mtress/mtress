@@ -84,17 +84,17 @@ class GasGridConnection(AbstractGridConnection):
 
         if self.working_rate is not None:
             if self.demand_rate:
-                demand_rate = Investment(ep_costs=self.demand_rate)
+                maximum_load = Investment(ep_costs=self.demand_rate)
             else:
-                demand_rate = None
+                maximum_load = None
 
             self.create_solph_node(
                 label="source_import",
                 node_type=Source,
                 outputs={
                     self.b_grid_import: Flow(
+                        nominal_value=maximum_load,
                         variable_costs=self.working_rate,
-                        investment=demand_rate,
                     )
                 },
             )
