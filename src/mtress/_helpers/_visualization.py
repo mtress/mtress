@@ -9,6 +9,7 @@ from oemof.solph.components import (
     OffsetConverter,
 )
 
+from copy import deepcopy
 import logging
 from dash import Dash, html, dcc, Input, Output, callback
 import dash_cytoscape as cyto
@@ -120,6 +121,8 @@ def graph_cytoscape(
                 n_clicks=0,
             ),
             html.Div(id="graph"),
+            html.Div(id="slider_place"),
+            html.P(id="cyto_click_detail"),
         ]
     )
 
@@ -134,7 +137,8 @@ def graph_cytoscape(
             return html.H3("hide inactive")
 
     @callback(
-        Output("toggle_inactive", "hidden"), Input("view_selector", "value")
+        Output("toggle_inactive", "hidden"),
+        Input("view_selector", "value"),
     )
     def toggle_inactive(tab):
         if tab == "graph":
@@ -306,6 +310,41 @@ def graph_cytoscape(
             ]
         )
 
+    @callback(
+        Output("slider_place", "children"),
+        Input("view_selector", "value"),
+    )
+    def show_range_slider(tab):
+        if tab == "flows":
+            return dcc.RangeSlider(0, 10, 1, id="date_slider")
+        else:
+            return None
+
+    @callback(
+        Output("cyto_click_detail", "children"),
+        Input("mtress_model", "tapNodeData"),
+        Input("view_selector", "value"),
+    )
+    def displayTapNodeData(data, tab):
+        if tab == "flows" and data:
+            # print(elements)
+            e_out = {}
+            e_in = {}
+            for d in elements["flows"]:
+                if "source" in d["data"] and "flow" in d["data"]:
+                    if d["data"]["source"] == data["id"]:
+                        e_out[d["data"]["target"]] = d["data"]["flow"]
+                    if d["data"]["target"] == data["id"]:
+                        e_in[d["data"]["source"]] = d["data"]["flow"]
+
+            print("node: ", data)
+            print("---")
+            print("out: ", e_out)
+            print("---")
+            print("in: ", e_in)
+            print("--------------------------------------------------------")
+            return "You recently clicked: " + data["label"]
+
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
     app.run(debug=False)
 
@@ -469,7 +508,7 @@ def generate_graph(
             graph_edges[source_id].setdefault(target_id, {})
             graph_edges[source_id][target_id]["color"] = edge_color
             if flows is not None:
-                flow = flows[n.label, t.label].mean()  # .sum()
+                flow = flows[n.label, t.label]  # .mean()  # .sum()
                 graph_edges[source_id][target_id]["flow"] = flow
 
     graph_elements = {
@@ -541,7 +580,7 @@ def generate_graph_graphviz(
             if color == "rainbow":
                 color = RAINBOW_GRAPHVIZ
             if flows:
-                flow = edge_attributes["flow"]
+                flow = edge_attributes["flow"].mean()
                 if flow > 0:
                     graph.edge(
                         source,
@@ -605,13 +644,15 @@ def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
                 },
                 "classes": edge_attr["color"],
             }
-            cytoscape_edges.append(e.copy())
+            cytoscape_edges.append(deepcopy(e))
 
             if flows:
                 flow = edge_attr["flow"]
-                if flow > 0:
+                flow_mean = flow.mean()
+                if flow_mean > 0:
+                    e["data"]["flow"] = flow
                     e["style"] = {
-                        "label": str(round(flow, 3)),
+                        "label": str(round(flow_mean, 3)),
                         "text-rotation": "autorotate",
                         "text-background-shape": "round-rectangle",
                         "text-background-opacity": "1",
