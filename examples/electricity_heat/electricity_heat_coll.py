@@ -121,18 +121,16 @@ solph_representation = SolphModel(
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="electricity_heat_coll_detail.png")
+plot = solph_representation.graph(path="electricity_heat_coll_detail.png")
 
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="electricity_heat_coll_simple.png")
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-plot = solph_representation.graph(detail=True, flow_results=flows)
-plot.render(outfile="electricity_heat_coll_results.png")
+plot = solph_representation.graph(
+    flow_results=flows, path="electricity_heat_coll_results.png"
+)
 
 Qcoll = flows[
     ("house_1", "thColl", "source_reservoir"),
