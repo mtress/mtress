@@ -193,16 +193,14 @@ class AbstactHeatExchanger(AbstractTechnology):
                     label=f"source_{warm_temperature}",
                     node_type=Converter,
                     inputs={
-                        _bus_source: Flow(
-                            max=self._normalised_gains(warm_temperature),
-                            nominal_value=self.nominal_power,
-                        ),
+                        _bus_source: Flow(nominal_value=self.nominal_power),
                         heat_bus_cold_source: Flow(),
                     },
                     outputs={heat_bus_warm_source: Flow()},
                     conversion_factors={
                         _bus_source: (warm_temperature - cold_temperature)
                         * self.heat_carrier.specific_heat_capacity
+                        * self._normalised_gains(warm_temperature)
                     },
                 )
 
