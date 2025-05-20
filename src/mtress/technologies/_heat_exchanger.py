@@ -189,18 +189,23 @@ class AbstactHeatExchanger(AbstractTechnology):
                     cold_temperature
                 ]
 
+                gains = self._normalised_gains(warm_temperature)
+
                 self.create_solph_node(
                     label=f"source_{warm_temperature}",
                     node_type=Converter,
                     inputs={
-                        _bus_source: Flow(nominal_value=self.nominal_power),
+                        _bus_source: Flow(
+                            nominal_value=self.nominal_power,
+                            max=[0 if gain == 0 else 1 for gain in gains],
+                        ),
                         heat_bus_cold_source: Flow(),
                     },
                     outputs={heat_bus_warm_source: Flow()},
                     conversion_factors={
                         _bus_source: (warm_temperature - cold_temperature)
                         * self.heat_carrier.specific_heat_capacity
-                        * self._normalised_gains(warm_temperature)
+                        * gains
                     },
                 )
 
