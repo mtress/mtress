@@ -14,6 +14,7 @@ from ._abstract_technology import AbstractTechnology
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class AbstactHeatExchanger(AbstractTechnology):
     """
     Heat exchanger (HE)
@@ -62,7 +63,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         :param minimum_delta: Specifies the delta between the primary and
             secondary sides of the HE (in °C), needs to be > 1 °C
         :param conductivity: Conductivity of the collector (in W/K)
-        :param non_thermal_gains: Additional gains (in W) - for a solar collector this represents the nu_0 multiplied by the collector area and the radiation (as time series)
+        :param non_thermal_gains: Additional gains (relative to nominal power)
         :param working_rate: Working price of imported heat in currency/Wh
         :param revenue: Revenue from heat exported to a sink in currency/Wh
         """
@@ -71,7 +72,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.reservoir_temperature = reservoir_temperature
         self.minimum_working_temperature = minimum_working_temperature
         self.maximum_working_temperature = maximum_working_temperature
-        self.nominal_power = nominal_power  
+        self.nominal_power = nominal_power
         self.minimum_delta = minimum_delta
         self.conductivity = conductivity
         self.non_thermal_gains = non_thermal_gains
@@ -100,12 +101,15 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.heat_carrier = self.location.get_carrier(HeatCarrier)
 
     def _normalised_gains(self, temperature):
-        unbound_gains = self.non_thermal_gains / self.nominal_power
+        unbound_gains = np.zeros(len(self.reservoir_temperature))
+        # We want a copy but do not know if self.non_thermal_gains
+        # is a scalar or an array.
+        unbound_gains += self.non_thermal_gains
 
         if self.conductivity_gain_factor:
-            unbound_gains += ((self.reservoir_temperature - temperature)
-                * self.conductivity_gain_factor
-            )
+            unbound_gains += (
+                self.reservoir_temperature - temperature
+            ) * self.conductivity_gain_factor
         else:
             # This means full power step at reservoir_temperature.
             # Only makes sense when non_thermal_gains are zero,
@@ -143,12 +147,12 @@ class AbstactHeatExchanger(AbstractTechnology):
                     ),
                 )
             },
-            custom_attributes={"temperature": self.reservoir_temperature},
+            custom_properties={"temperature": self.reservoir_temperature},
         )
 
         if self.autoconnect:
             highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
-                    self.maximum_working_temperature,
+                self.maximum_working_temperature,
             )
 
             _, cold_level = self.heat_carrier.get_surrounding_levels(
@@ -185,13 +189,15 @@ class AbstactHeatExchanger(AbstractTechnology):
                     cold_temperature
                 ]
 
+                gains = self._normalised_gains(warm_temperature)
+
                 self.create_solph_node(
                     label=f"source_{warm_temperature}",
                     node_type=Converter,
                     inputs={
                         _bus_source: Flow(
-                            max=self._normalised_gains(warm_temperature),
                             nominal_value=self.nominal_power,
+                            max=[0 if gain == 0 else 1 for gain in gains],
                         ),
                         heat_bus_cold_source: Flow(),
                     },
@@ -199,6 +205,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                     conversion_factors={
                         _bus_source: (warm_temperature - cold_temperature)
                         * self.heat_carrier.specific_heat_capacity
+                        * gains
                     },
                 )
 

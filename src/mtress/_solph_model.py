@@ -12,10 +12,10 @@ import logging
 from typing import TYPE_CHECKING, Dict, Tuple
 
 import pandas as pd
-from graphviz import Digraph
 from oemof.solph import EnergySystem, Model
 
 from ._data_handler import DataHandler
+from ._helpers._visualization import graph_cytoscape, graph_graphviz
 
 if TYPE_CHECKING:
     from ._abstract_component import AbstractComponent
@@ -83,6 +83,10 @@ class SolphModel:
                 connection.carrier, connection.destination
             )
 
+    def nodes(self):
+        # access oemof.network.nodes
+        return self.energy_system.nodes
+
     def build_solph_model(self):
         """Build the `oemof.solph` representation of the model."""
         self.model = Model(self.energy_system)
@@ -92,81 +96,31 @@ class SolphModel:
 
     def graph(
         self,
-        detail: bool = False,
         flow_results: dict = None,
         flow_color: dict = None,
         colorscheme: dict = None,
-    ) -> Digraph:
-        """Generate a graph representation of the energy system."""
-        graph = Digraph(name="MTRESS model")
-        external_edges = set()
+        path: str = "model.png",
+    ):
+        graph_graphviz(
+            nodes=self.nodes(),
+            flows=flow_results,
+            flow_color=flow_color,
+            colorscheme=colorscheme,
+            path=path,
+        )
 
-        if flow_color is None:
-            flow_color = {}
-
-        if colorscheme is None:
-            # set to default
-            colorscheme = {
-                "ElectricityCarrier": "orange",
-                "GasCarrier": "steelblue",
-                "HeatCarrier": "maroon",
-            }
-
-        for location in self._meta_model.locations:
-            subgraph, external_edges = location.graph(
-                detail, flow_results, flow_color, colorscheme
-            )
-
-            external_edges.update(external_edges)
-            graph.subgraph(subgraph)
-
-            for edge in external_edges:
-                graph.edge(edge[0], edge[1], label=edge[2], color=edge[3])
-        return graph
-
-    def graph_series(
+    def graph_interactive(
         self,
-        flow_results: dict,
-        step: pd.Timedelta,
-        start: pd.Timestamp = None,
-        stop: pd.Timestamp = None,
+        flow_results: dict = None,
         flow_color: dict = None,
         colorscheme: dict = None,
-    ) -> list[Digraph]:
-        """
-        Wrapper for graph function to generate multiple graphs as a series.
-        """
-        if start is None:
-            # use first entry of time series
-            temp_flow = list(flow_results.items())[0][1]
-            start = temp_flow.index[0]
-        if stop is None:
-            # use last entry of time series
-            temp_flow = list(flow_results.items())[0][1]
-            stop = temp_flow.index[-1]
-        current = start
-        graphs = []
-        while current + step <= stop:
-            current_flow = {
-                k: v[current : current + step] for k, v in flow_results.items()
-            }
-            g = self.graph(
-                detail=True,
-                flow_results=current_flow,
-                flow_color=flow_color,
-                colorscheme=colorscheme,
-            )
-            g.attr(
-                label=(
-                    current.strftime("%Y-%m-%d %X")
-                    + " - "
-                    + (current + step).strftime("%Y-%m-%d %X")
-                )
-            )
-            graphs.append(g)
-            current += step
-
-        return graphs
+    ):
+        graph_cytoscape(
+            nodes=self.nodes(),
+            flows=flow_results,
+            flow_color=flow_color,
+            colorscheme=colorscheme,
+        )
 
     def solve(
         self,
