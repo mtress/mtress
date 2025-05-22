@@ -129,6 +129,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Source,
             outputs={
                 _bus_source: Flow(
+                    nominal_value=self.nominal_power,
                     variable_costs=self._solph_model.data.get_timeseries(
                         self.working_rate,
                         kind=TimeseriesType.INTERVAL,
