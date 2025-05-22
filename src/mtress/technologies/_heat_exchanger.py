@@ -321,6 +321,7 @@ class HeatSink(AbstactHeatExchanger):
         minimum_delta: float = 1.0,
         conductivity: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
+        revenue: float = 0,
     ):
 
         super().__init__(
@@ -332,6 +333,7 @@ class HeatSink(AbstactHeatExchanger):
             minimum_delta=minimum_delta,
             conductivity=conductivity,
             non_thermal_gains=non_thermal_gains,
+            revenue=revenue,
         )
 
         # Solph model interfaces
