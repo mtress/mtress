@@ -184,7 +184,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                     inputs={
                         _bus_source: Flow(
                             nominal_value=self.nominal_power,
-                            max=[0 if gain == 0 else 1 for gain in gains],
+                            max=gains,
                         ),
                         heat_bus_cold_source: Flow(),
                     },
@@ -192,7 +192,6 @@ class AbstactHeatExchanger(AbstractTechnology):
                     conversion_factors={
                         _bus_source: (warm_temperature - cold_temperature)
                         * self.heat_carrier.specific_heat_capacity
-                        * gains
                     },
                 )
 
@@ -251,7 +250,7 @@ class AbstactHeatExchanger(AbstractTechnology):
 
             internal_sequence = [
                 1 if temp <= cold_level else 0
-                for temp in max(self.reservoir_temperature, active_levels)
+                for temp in self.reservoir_temperature
             ]
 
             self.create_solph_node(
