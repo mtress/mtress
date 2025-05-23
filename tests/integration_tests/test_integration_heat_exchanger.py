@@ -2,9 +2,6 @@
 """
 Tests for MTRESS HeatExchanger
 """
-import os
-
-import numpy as np
 import pytest
 from oemof.solph.processing import results
 
@@ -13,7 +10,6 @@ from mtress import (
     MetaModel,
     SolphModel,
     carriers,
-    demands,
     technologies,
 )
 from mtress._helpers import get_flows
