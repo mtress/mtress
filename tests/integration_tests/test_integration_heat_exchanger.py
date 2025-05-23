@@ -22,9 +22,9 @@ from mtress._helpers import get_flows
 def _heat_source_test_template(
     reservoir_temperature,
     temperature_levels,
-    results1=None,
-    results2=None,
-    results3=None,
+    results_20_10=None,
+    results_25_20=None,
+    results_30_25=None,
     nominal_power=10,
     conductivity_gain_factor=None,
     non_thermal_gains=0,
@@ -54,7 +54,7 @@ def _heat_source_test_template(
 
     house_1.add(
         technologies.HeatSink(
-            name="HeatSink1",
+            name="HeatSink_20_10",
             reservoir_temperature=[0, 0],
             maximum_working_temperature=20,
             minimum_working_temperature=10,
@@ -65,7 +65,7 @@ def _heat_source_test_template(
 
     house_1.add(
         technologies.HeatSink(
-            name="HeatSink2",
+            name="HeatSink_25_20",
             reservoir_temperature=[0, 0],
             maximum_working_temperature=25,
             minimum_working_temperature=20,
@@ -76,7 +76,7 @@ def _heat_source_test_template(
 
     house_1.add(
         technologies.HeatSink(
-            name="HeatSink3",
+            name="HeatSink_30_25",
             reservoir_temperature=[0, 0],
             maximum_working_temperature=30,
             minimum_working_temperature=25,
@@ -102,39 +102,39 @@ def _heat_source_test_template(
 
     flows = get_flows(myresults)
 
-    flow1 = flows[
-        ("house_1", "HeatSink1", "output"),
-        ("house_1", "HeatSink1", "sink"),
+    flow_20_10 = flows[
+        ("house_1", "HeatSink_20_10", "output"),
+        ("house_1", "HeatSink_20_10", "sink"),
     ]
-    flow2 = flows[
-        ("house_1", "HeatSink2", "output"),
-        ("house_1", "HeatSink2", "sink"),
+    flow_25_20 = flows[
+        ("house_1", "HeatSink_25_20", "output"),
+        ("house_1", "HeatSink_25_20", "sink"),
     ]
-    flow3 = flows[
-        ("house_1", "HeatSink3", "output"),
-        ("house_1", "HeatSink3", "sink"),
+    flow_30_25 = flows[
+        ("house_1", "HeatSink_30_25", "output"),
+        ("house_1", "HeatSink_30_25", "sink"),
     ]
 
-    if results1 is not None:
+    if results_20_10 is not None:
         # lower temperature and revenue, allowed in both step
-        assert flow1.iloc[0] == pytest.approx(results1[0])
-        assert flow1.iloc[1] == pytest.approx(results1[1])
+        assert flow_20_10.iloc[0] == pytest.approx(results_20_10[0])
+        assert flow_20_10.iloc[1] == pytest.approx(results_20_10[1])
     else:
-        print(flow1)
+        print(flow_20_10)
 
-    if results2 is not None:
+    if results_25_20 is not None:
         # higher temperature and revenue, only allowed in second step
-        assert flow2.iloc[0] == pytest.approx(results2[0])
-        assert flow2.iloc[1] == pytest.approx(results2[1])
+        assert flow_25_20.iloc[0] == pytest.approx(results_25_20[0])
+        assert flow_25_20.iloc[1] == pytest.approx(results_25_20[1])
     else:
-        print(flow2)
+        print(flow_25_20)
 
-    if results3 is not None:
+    if results_30_25 is not None:
         # higherst temperature and revenue, not allowed at all
-        assert flow3.iloc[0] == pytest.approx(results3[0])
-        assert flow3.iloc[1] == pytest.approx(results3[1])
+        assert flow_30_25.iloc[0] == pytest.approx(results_30_25[0])
+        assert flow_30_25.iloc[1] == pytest.approx(results_30_25[1])
     else:
-        print(flow3)
+        print(flow_30_25)
 
     return solph_representation, myresults
 
@@ -143,37 +143,64 @@ def test_heat_source():
     _heat_source_test_template(
         reservoir_temperature=[21, 30],
         temperature_levels=[10, 20, 25, 30],
-        results1=[10, 0],
-        results2=[0, 10],
-        results3=[0, 0],
+        results_20_10=[10, 0],
+        results_25_20=[0, 10],
+        results_30_25=[0, 0],
     )
     _heat_source_test_template(
         reservoir_temperature=[21, 31],
         temperature_levels=[10, 20, 25, 30],
-        results1=[10, 0],
-        results2=[0, 0],
-        results3=[0, 10],
+        results_20_10=[10, 0],
+        results_25_20=[0, 0],
+        results_30_25=[0, 10],
     )
     _heat_source_test_template(
         reservoir_temperature=[21, 30],
         conductivity_gain_factor=0.8,
         temperature_levels=[10, 20, 25, 30],
-        results1=[0.8, 6],
-        results2=[0, 4],
-        results3=[0, 0],
+        results_20_10=[8, 0],  # 8 = 0.8 * (21 - 20) * 10
+        results_25_20=[0, 10],
+        results_30_25=[0, 0],
+    )
+    _heat_source_test_template(
+        reservoir_temperature=[21, 30],
+        conductivity_gain_factor=0.8,
+        temperature_levels=[10, 15, 20, 25, 30],
+        results_20_10=[10, 0],  # new level allows gains at 15 °C
+        results_25_20=[0, 10],
+        results_30_25=[0, 0],
+    )
+    _heat_source_test_template(
+        nominal_power=10,
+        reservoir_temperature=[21, 30],
+        conductivity_gain_factor=0.8,
+        temperature_levels=[10, 20, 25, 30],
+        non_thermal_gains=0.1,
+        results_20_10=[9, 0],  # 9 = (0.8 * (21 - 20) + 0.1) * 10
+        results_25_20=[0, 4],  # 9 = 10 (see last example) - 1 (results3[1])
+        results_30_25=[0, 1],  # 1 = (0.8 * (30 - 30) + 0.1) * 10
+    )
+
+    _heat_source_test_template(
+        nominal_power=10,
+        reservoir_temperature=[21, 30],
+        conductivity_gain_factor=0.1,
+        temperature_levels=[10, 20, 25, 30],
+        non_thermal_gains=0.9,
+        results_20_10=[5, 0],  # 5 = 10 - 5 (see next example)
+        results_25_20=[5, 1],  # 5 = (0.1 * (21 - 25) + 0.9) * 10
+        results_30_25=[0, 9],  # 9 = (0.1 * (30 - 30) + 0.9) * 10
     )
 
 
 if __name__ == "__main__":
     model, myresults = _heat_source_test_template(
-        nominal_power=10,
         reservoir_temperature=[21, 30],
-        conductivity_gain_factor=0.5,
-        temperature_levels=[10, 20, 25, 30],
-        non_thermal_gains=0.1,
-        #results1=[0.8, 6],
-        #results2=[0, 4],
-        #results3=[0, 0],
+        conductivity_gain_factor=0.8,
+        temperature_levels=[10, 15, 20, 25, 30],
+        results_20_10=[10, 0],  # 8 = 0.8 * (21 - 20) * 10
+        results_25_20=[0, 10],
+        results_30_25=[0, 0],
     )
 
     flows = get_flows(myresults)
