@@ -3,8 +3,9 @@ Basic working 'electricity_heat_coll' example.
 
 Basic working example which includes a location (house),
 electricity wise: an electricity carrier which acts as a electricity
-source/supply from the official grid (working price of 0.035 ct/Wh) which is solely
-used to supply the required electricity for an electric heater used as back up to the collector.
+source/supply from the official grid (working price of 0.035 ct/Wh) which
+is solely used to supply the required electricity for an electric
+heater used as back up to the collector.
 And heat wise: a heat carrier, a solar collector as well as
 a heat demand time series.
 
@@ -78,7 +79,7 @@ Rad_nom = 1350  # in W/m2 total radiation, beam and diffuse
 
 
 #######################
-house_1.add(  # parameters for the WISC coll (for npro validation) - nu0=0,329; a1=40,94, global radiation at 25° in Athens = 1985,48 kWh/m2a; Result (npro) =557,93 kWh/m2
+house_1.add(
     technologies.HeatSource(
         name="thColl",
         reservoir_temperature=[15, 15],
@@ -87,9 +88,9 @@ house_1.add(  # parameters for the WISC coll (for npro validation) - nu0=0,329; 
         conductivity_gain_factor=32.56 * Acoll,
         non_thermal_gains=0.381
         * Acoll
-        * Rad_tot,  # this factor is the nu_0 times the radiation (as time series in Wh/h) for the total collector area
+        * Rad_tot,
         nominal_power=Rad_nom
-        * Acoll,  # this factor has no influence - should be the maximum radiation on the collector plane for a given timestep (e.g. for hours in Wh/h) for the total collector area
+        * Acoll,
     )
 )
 
