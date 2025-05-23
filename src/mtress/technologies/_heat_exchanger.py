@@ -46,7 +46,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
         minimum_delta: float = 1.0,
-        conductivity: float | None = None,
+        conductivity_gain_factor: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
         working_rate: Optional[TimeseriesSpecifier] = 0,
         revenue: Optional[TimeseriesSpecifier] = 0,
@@ -55,17 +55,22 @@ class AbstactHeatExchanger(AbstractTechnology):
         Initialize heat exchanger to draw or expel energy from a source
 
         :param name: Name of the component.
-        :param reservoir_temperature: Reference to air temperature time series
+        :param reservoir_temperature: Temperature of the reservoir (in °C)
         :param minimum_working_temperature: Minimum temperature limit (in °C)
         :param maximum_working_temperature: Maximum temperature limit (in °C)
         :param nominal_power: Nominal power of the heat exchanger (in W),
             is treated as a power limit.
         :param minimum_delta: Specifies the delta between the primary and
             secondary sides of the HE (in °C), needs to be > 1 °C
-        :param conductivity: Conductivity of the collector (in W/K)
+        :param conductivity_gain_factor: Gains (in nominal_power/K)
         :param non_thermal_gains: Additional gains (relative to nominal power)
         :param working_rate: Working price of imported heat in currency/Wh
         :param revenue: Revenue from heat exported to a sink in currency/Wh
+
+
+        The heat is (partly) taken from the reservoir. If there are no
+        non_thermal_gains, its temperatre needs to be above (strictly greater)
+        the target temperature.
         """
         super().__init__(name=name)
 
@@ -74,7 +79,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.maximum_working_temperature = maximum_working_temperature
         self.nominal_power = nominal_power
         self.minimum_delta = minimum_delta
-        self.conductivity = conductivity
+        self.conductivity_gain_factor = conductivity_gain_factor
         self.non_thermal_gains = non_thermal_gains
         self.working_rate = working_rate
         self.revenue = revenue
@@ -82,10 +87,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         if minimum_delta < 1:
             raise ValueError("minimum_delta has to be > 1 °C")
 
-        if conductivity:
-            self.conductivity_gain_factor = conductivity / nominal_power
-        else:
-            self.conductivity_gain_factor = None
+        if not self.conductivity_gain_factor:
             if np.array(self.non_thermal_gains).max() != 0:
                 _LOGGER.warning(
                     "Warning: AbstactHeatExchanger.non_thermal_gains only"
@@ -106,7 +108,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         # is a scalar or an array.
         unbound_gains += self.non_thermal_gains
 
-        if self.conductivity_gain_factor:
+        if self.conductivity_gain_factor is not None:
             unbound_gains += (
                 self.reservoir_temperature - temperature
             ) * self.conductivity_gain_factor
@@ -284,7 +286,7 @@ class HeatSource(AbstactHeatExchanger):
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
         minimum_delta: float = 1.0,
-        conductivity: float | None = None,
+        conductivity_gain_factor: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
     ):
 
@@ -295,7 +297,7 @@ class HeatSource(AbstactHeatExchanger):
             maximum_working_temperature=maximum_working_temperature,
             nominal_power=nominal_power,
             minimum_delta=minimum_delta,
-            conductivity=conductivity,
+            conductivity_gain_factor=conductivity_gain_factor,
             non_thermal_gains=non_thermal_gains,
         )
 
@@ -320,7 +322,7 @@ class HeatSink(AbstactHeatExchanger):
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
         minimum_delta: float = 1.0,
-        conductivity: float | None = None,
+        conductivity_gain_factor: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
         revenue: float = 0,
     ):
@@ -332,7 +334,7 @@ class HeatSink(AbstactHeatExchanger):
             maximum_working_temperature=maximum_working_temperature,
             nominal_power=nominal_power,
             minimum_delta=minimum_delta,
-            conductivity=conductivity,
+            conductivity_gain_factor=conductivity_gain_factor,
             non_thermal_gains=non_thermal_gains,
             revenue=revenue,
         )
@@ -359,7 +361,7 @@ class HeatExchanger(AbstactHeatExchanger):
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
         minimum_delta: float = 1.0,
-        conductivity: float | None = None,
+        conductivity_gain_factor: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
     ):
 
@@ -369,7 +371,7 @@ class HeatExchanger(AbstactHeatExchanger):
             minimum_working_temperature=minimum_working_temperature,
             maximum_working_temperature=maximum_working_temperature,
             nominal_power=nominal_power,
-            conductivity=conductivity,
+            conductivity_gain_factor=conductivity_gain_factor,
             non_thermal_gains=non_thermal_gains,
             minimum_delta=minimum_delta,
         )

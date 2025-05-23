@@ -48,13 +48,13 @@ def test_heat_source_initialisation():
     assert np.array_equal(src._normalised_gains(-5), [1, 1, 1, 0])
 
     # initialisation with conductive gains
-    conductivity = 200
+    conductivity_gain_factor = 200 / nominal_power
 
     src = HeatSource(
         name=name,
         reservoir_temperature=reservoir_temperature,
         nominal_power=nominal_power,
-        conductivity=conductivity,
+        conductivity_gain_factor=conductivity_gain_factor,
     )
     assert np.allclose(src._normalised_gains(40), [0, 0, 0.3, 0])
     assert np.allclose(src._normalised_gains(-5), [0.1, 0.4, 1, 0])
@@ -66,7 +66,7 @@ def test_heat_source_initialisation():
         name=name,
         reservoir_temperature=reservoir_temperature,
         nominal_power=nominal_power,
-        conductivity=conductivity,
+        conductivity_gain_factor=conductivity_gain_factor,
         non_thermal_gains=non_thermal_gains,
     )
     assert np.allclose(src._normalised_gains(40), [0, 0.5, 1, 0])
