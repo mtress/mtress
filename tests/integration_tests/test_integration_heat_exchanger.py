@@ -139,29 +139,38 @@ def _heat_source_test_template(
     return solph_representation, myresults
 
 
-def test_heat_source():
+def test_heat_source_1():
     _heat_source_test_template(
-        reservoir_temperature=[21, 30],
+        reservoir_temperature=[21, 29.99],
         temperature_levels=[10, 20, 25, 30],
         results_20_10=[10, 0],
         results_25_20=[0, 10],
         results_30_25=[0, 0],
     )
-    _heat_source_test_template(
-        reservoir_temperature=[21, 30.1],
-        temperature_levels=[10, 20, 25, 30],
-        results_20_10=[10, 0],
-        results_25_20=[0, 9],  # 10 - 1 (results3[1])
-        results_30_25=[0, 1],  # (30.1 - 30) * 10
-    )
+
+
+def test_heat_source_2():
     _heat_source_test_template(
         reservoir_temperature=[21, 30],
+        temperature_levels=[10, 20, 25, 30],
+        results_20_10=[10, 0],
+        results_25_20=[0, 0],
+        results_30_25=[0, 10],
+    )
+
+
+def test_heat_source_3():
+    _heat_source_test_template(
+        reservoir_temperature=[21, 29],
         conductivity_gain_factor=0.8,
         temperature_levels=[10, 20, 25, 30],
         results_20_10=[8, 0],  # 8 = 0.8 * (21 - 20) * 10
         results_25_20=[0, 10],
         results_30_25=[0, 0],
     )
+
+
+def test_heat_source_4():
     _heat_source_test_template(
         reservoir_temperature=[21, 30],
         conductivity_gain_factor=0.8,
@@ -170,6 +179,9 @@ def test_heat_source():
         results_25_20=[0, 10],
         results_30_25=[0, 0],
     )
+
+
+def test_heat_source_5():
     _heat_source_test_template(
         nominal_power=10,
         reservoir_temperature=[21, 30],
@@ -181,6 +193,8 @@ def test_heat_source():
         results_30_25=[0, 1],  # 1 = (0.8 * (30 - 30) + 0.1) * 10
     )
 
+
+def test_heat_source_6():
     _heat_source_test_template(
         nominal_power=10,
         reservoir_temperature=[21, 30],

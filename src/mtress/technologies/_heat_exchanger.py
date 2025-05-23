@@ -87,12 +87,14 @@ class AbstactHeatExchanger(AbstractTechnology):
         if minimum_delta < 1:
             raise ValueError("minimum_delta has to be > 1 °C")
 
-        if not self.conductivity_gain_factor:
-            if np.array(self.non_thermal_gains).max() != 0:
-                _LOGGER.warning(
-                    "Warning: AbstactHeatExchanger.non_thermal_gains only"
-                    " makes sense when conductivity is also set."
-                )
+        if (
+            np.array(self.non_thermal_gains).max() != 0
+            and not self.conductivity_gain_factor
+        ):
+            raise ValueError(
+                "AbstactHeatExchanger.non_thermal_gains only"
+                " makes sense when conductivity is also set."
+            )
 
     def _build_core(self):
         self.reservoir_temperature = self._solph_model.data.get_timeseries(
@@ -103,22 +105,22 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.heat_carrier = self.location.get_carrier(HeatCarrier)
 
     def _normalised_gains(self, temperature):
-        unbound_gains = np.zeros(len(self.reservoir_temperature))
-        # We want a copy but do not know if self.non_thermal_gains
-        # is a scalar or an array.
-        unbound_gains += self.non_thermal_gains
-
         if self.conductivity_gain_factor is not None:
+            unbound_gains = np.zeros(len(self.reservoir_temperature))
+            # We want a copy but do not know if self.non_thermal_gains
+            # is a scalar or an array.
+            unbound_gains += self.non_thermal_gains
+
             unbound_gains += (
                 self.reservoir_temperature - temperature
             ) * self.conductivity_gain_factor
+            return np.clip(unbound_gains, 0, 1)
         else:
             # This means full power step at reservoir_temperature.
-            # Only makes sense when non_thermal_gains are zero,
-            # but we always only warn (see above).
-            unbound_gains += self.reservoir_temperature - temperature
-
-        return np.clip(unbound_gains, 0, 1)
+            # Only makes sense when non_thermal_gains are zero (see above).
+            return [
+                0 if temperature > t else 1 for t in self.reservoir_temperature
+            ]
 
     def _define_source(self):
         self._bus_source = _bus_source = self.create_solph_node(
