@@ -148,11 +148,11 @@ def test_heat_source():
         results_30_25=[0, 0],
     )
     _heat_source_test_template(
-        reservoir_temperature=[21, 31],
+        reservoir_temperature=[21, 30.1],
         temperature_levels=[10, 20, 25, 30],
         results_20_10=[10, 0],
-        results_25_20=[0, 0],
-        results_30_25=[0, 10],
+        results_25_20=[0, 9],  # 10 - 1 (results3[1])
+        results_30_25=[0, 1],  # (30.1 - 30) * 10
     )
     _heat_source_test_template(
         reservoir_temperature=[21, 30],
@@ -177,7 +177,7 @@ def test_heat_source():
         temperature_levels=[10, 20, 25, 30],
         non_thermal_gains=0.1,
         results_20_10=[9, 0],  # 9 = (0.8 * (21 - 20) + 0.1) * 10
-        results_25_20=[0, 4],  # 9 = 10 (see last example) - 1 (results3[1])
+        results_25_20=[0, 9],  # 9 = 10 (see last example) - 1 (results3[1])
         results_30_25=[0, 1],  # 1 = (0.8 * (30 - 30) + 0.1) * 10
     )
 
