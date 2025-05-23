@@ -4,9 +4,9 @@ Basic working 'electricity_heat_coll' example.
 Basic working example which includes a location (house),
 electricity wise: an electricity carrier which acts as a electricity
 source/supply from the official grid (working price of 0.035 ct/Wh) which is solely
-used to supply the required electricity for an electric heater used as back up to the collector. 
+used to supply the required electricity for an electric heater used as back up to the collector.
 And heat wise: a heat carrier, a solar collector as well as
-a heat demand time series. 
+a heat demand time series.
 
 At first an energy system (here meta_model) is defined with a time series
 (index). Afterwards a location is defined and added to the energysystem. Then
@@ -22,7 +22,7 @@ created and the solver output is written to an .lp file.
 """
 
 import os
-import pandas as pd 
+import pandas as pd
 
 from oemof.solph.processing import results
 
@@ -48,7 +48,7 @@ house_1.add(technologies.ElectricityGridConnection(working_rate=0.035))
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[ 10, 15,25, 30, 45],
+        temperature_levels=[10, 15, 25, 30, 45],
     )
 )
 
@@ -69,24 +69,27 @@ electric_heater = technologies.ResistiveHeater(
 house_1.add(electric_heater)
 
 
-Acoll= 2 #in m2
-#Rad_beam = 850 # in W/m2 beam 
-#Rad_diff = 150 # in W/m2  diffuse
-#K_d = 0.97
-Rad_tot = 1000 #in W/m2 total radiation, beam and diffuse
-Rad_nom = 1350 # in W/m2 total radiation, beam and diffuse
+Acoll = 2  # in m2
+# Rad_beam = 850 # in W/m2 beam
+# Rad_diff = 150 # in W/m2  diffuse
+# K_d = 0.97
+Rad_tot = 1000  # in W/m2 total radiation, beam and diffuse
+Rad_nom = 1350  # in W/m2 total radiation, beam and diffuse
 
 
 #######################
-house_1.add(# parameters for the WISC coll (for npro validation) - nu0=0,329; a1=40,94, global radiation at 25° in Athens = 1985,48 kWh/m2a; Result (npro) =557,93 kWh/m2
+house_1.add(  # parameters for the WISC coll (for npro validation) - nu0=0,329; a1=40,94, global radiation at 25° in Athens = 1985,48 kWh/m2a; Result (npro) =557,93 kWh/m2
     technologies.HeatSource(
         name="thColl",
         reservoir_temperature=[15, 15],
         maximum_working_temperature=45,
         minimum_working_temperature=15,
-        conductivity=32.56*Acoll,
-        non_thermal_gains=0.381*Acoll*Rad_tot, # this factor is the nu_0 times the radiation (as time series in Wh/h) for the total collector area
-        nominal_power=Rad_nom*Acoll, # this factor has no influence - should be the maximum radiation on the collector plane for a given timestep (e.g. for hours in Wh/h) for the total collector area
+        conductivity_gain_factor=32.56 * Acoll,
+        non_thermal_gains=0.381
+        * Acoll
+        * Rad_tot,  # this factor is the nu_0 times the radiation (as time series in Wh/h) for the total collector area
+        nominal_power=Rad_nom
+        * Acoll,  # this factor has no influence - should be the maximum radiation on the collector plane for a given timestep (e.g. for hours in Wh/h) for the total collector area
     )
 )
 
@@ -114,9 +117,18 @@ flows = get_flows(myresults)
 plot = solph_representation.graph(detail=True, flow_results=flows)
 plot.render(outfile="electricity_heat_coll_results.png")
 
-Qcoll = flows[('house_1', 'thColl', 'source_reservoir'), ('house_1', 'thColl', 'heat_source')]
-Qcoll_30 = flows [('house_1', 'thColl', 'heat_source'), ('house_1', 'thColl', 'source_30')]
-Qcoll_45 = flows [('house_1', 'thColl', 'heat_source'), ('house_1', 'thColl', 'source_45')]
-Qcoll_25 = flows [('house_1', 'thColl', 'heat_source'), ('house_1', 'thColl', 'source_25')]
+Qcoll = flows[
+    ("house_1", "thColl", "source_reservoir"),
+    ("house_1", "thColl", "heat_source"),
+]
+Qcoll_30 = flows[
+    ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_30")
+]
+Qcoll_45 = flows[
+    ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_45")
+]
+Qcoll_25 = flows[
+    ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_25")
+]
 
-print (Qcoll)
+print(Qcoll)

@@ -191,20 +191,3 @@ def test_heat_source():
         results_25_20=[5, 1],  # 5 = (0.1 * (21 - 25) + 0.9) * 10
         results_30_25=[0, 9],  # 9 = (0.1 * (30 - 30) + 0.9) * 10
     )
-
-
-if __name__ == "__main__":
-    model, myresults = _heat_source_test_template(
-        reservoir_temperature=[21, 30],
-        conductivity_gain_factor=0.8,
-        temperature_levels=[10, 15, 20, 25, 30],
-        results_20_10=[10, 0],  # 8 = 0.8 * (21 - 20) * 10
-        results_25_20=[0, 10],
-        results_30_25=[0, 0],
-    )
-
-    flows = get_flows(myresults)
-    model.graph(
-        flow_results=flows,
-        path="results.png",
-    )
