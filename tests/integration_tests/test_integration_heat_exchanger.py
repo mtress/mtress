@@ -201,3 +201,16 @@ def test_heat_source_6():
         results_25_20=[5, 1],  # 5 = (0.1 * (21 - 25) + 0.9) * 10
         results_30_25=[0, 9],  # 9 = (0.1 * (30 - 30) + 0.9) * 10
     )
+
+def test_heat_source_7():
+    _heat_source_test_template(
+        nominal_power=20,
+        reservoir_temperature=[21, 30],
+        conductivity_gain_factor=0.1,
+        temperature_levels=[10, 20, 25, 30],
+        non_thermal_gains=0.9,
+        results_20_10=[10, 0],
+        results_25_20=[10, 2],
+        results_30_25=[0, 18],
+)
+
