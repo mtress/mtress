@@ -12,7 +12,9 @@ from oemof.solph.components import (
 from copy import deepcopy
 import logging
 from dash import Dash, html, dcc, Input, Output, callback
+import plotly.express as px
 import dash_cytoscape as cyto
+import pandas as pd
 
 from graphviz import Digraph
 
@@ -108,22 +110,73 @@ def graph_cytoscape(
                 value="graph",
                 children=tabs,
             ),
-            html.Button(
-                html.H3("hide inactive"),
-                id="toggle_inactive",
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Button("hello", style={"margin-top": "15px"}),
+                            dcc.RadioItems(["mean", "total"]),
+                            html.Button(
+                                "hide inactive",
+                                id="toggle_inactive",
+                                style={
+                                    # "position": "absolute",
+                                    # "right": 50,
+                                    # "top": 100,
+                                    # "z-index": 10,
+                                },
+                                hidden=True,
+                                n_clicks=0,
+                            ),
+                        ],
+                        style={
+                            "width": "5%",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            html.Div(id="graph"),
+                            html.Div(
+                                id="slider_place",
+                                style={"border-top": "dashed"},
+                            ),
+                        ],
+                        style={
+                            "width": "70%",
+                            "border-left": "solid",
+                            "border-right": "solid",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            html.H1("Node details"),
+                            html.Div(
+                                id="cyto_click_detail",
+                                style={},
+                            ),
+                        ],
+                        style={
+                            "width": "25%",
+                            "height": "100%",
+                            "overflowY": "auto",
+                        },
+                    ),
+                ],
                 style={
-                    "position": "absolute",
-                    "right": 50,
-                    "top": 15,
-                    "z-index": 10,
+                    "display": "flex",
+                    "align-items": "top",
+                    "overflow": "hidden",
+                    "width": "100%",
+                    "height": "100%",
+                    "border-top": "solid",
                 },
-                hidden=True,
-                n_clicks=0,
             ),
-            html.Div(id="graph"),
-            html.Div(id="slider_place"),
-            html.P(id="cyto_click_detail"),
-        ]
+        ],
+        style={
+            "height": "100vh",
+            "width": "100%",
+            "overflow": "hidden",
+        },
     )
 
     @callback(
@@ -132,9 +185,9 @@ def graph_cytoscape(
     )
     def change_button(btn_clicks):
         if btn_clicks % 2:
-            return html.H3("show inactive")
+            return "show inactive"
         else:
-            return html.H3("hide inactive")
+            return "hide inactive"
 
     @callback(
         Output("toggle_inactive", "hidden"),
@@ -330,20 +383,56 @@ def graph_cytoscape(
             # print(elements)
             e_out = {}
             e_in = {}
+            plots = []
             for d in elements["flows"]:
                 if "source" in d["data"] and "flow" in d["data"]:
                     if d["data"]["source"] == data["id"]:
-                        e_out[d["data"]["target"]] = d["data"]["flow"]
+                        target = d["data"]["target"]
+                        flow = d["data"]["flow"]
+                        e_out[target] = flow
+                        f = pd.DataFrame()
+                        f["flow"] = flow
+                        fig = px.line(
+                            f,
+                            x=f.index,
+                            y="flow",
+                            title=f"OUT: {target}",
+                        )
+                        fig.update_xaxes(rangeslider_visible=True)
+                        plots.append(dcc.Graph(figure=fig))
                     if d["data"]["target"] == data["id"]:
-                        e_in[d["data"]["source"]] = d["data"]["flow"]
+                        source = d["data"]["source"]
+                        flow = d["data"]["flow"]
+                        e_in[source] = flow
+                        f = pd.DataFrame()
+                        f["flow"] = flow
+                        fig = px.line(
+                            f,
+                            x=f.index,
+                            y="flow",
+                            title=f"IN: {source}",
+                        )
+                        fig.update_xaxes(rangeslider_visible=True)
+                        plots.append(dcc.Graph(figure=fig))
 
             print("node: ", data)
+            # check if active flows
+            msg = " | "
+            if not e_out and not e_in:
+                msg += "no flows available for this node"
+            else:
+                msg += f"this node has {len(e_out)} out- and {len(e_in)} ingoing flows"
+
             print("---")
             print("out: ", e_out)
             print("---")
             print("in: ", e_in)
             print("--------------------------------------------------------")
-            return "You recently clicked: " + data["label"]
+            return (
+                [html.P("You recently clicked: " + data["label"] + msg)]
+                + plots
+                + [html.P("end of flexbox")]
+            )
 
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
     app.run(debug=False)
