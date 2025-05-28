@@ -114,24 +114,22 @@ def graph_cytoscape(
                 [
                     html.Div(
                         [
-                            html.Button("hello", style={"margin-top": "15px"}),
-                            dcc.RadioItems(["mean", "total"]),
+                            html.H1("Menu"),
+                            html.Hr(style={"margin-right": "-5px"}),
+                            html.Button("hello"),
+                            dcc.RadioItems(
+                                ["mean", "total"],
+                                "mean",
+                                id="ts_aggregation",
+                            ),
                             html.Button(
                                 "hide inactive",
                                 id="toggle_inactive",
-                                style={
-                                    # "position": "absolute",
-                                    # "right": 50,
-                                    # "top": 100,
-                                    # "z-index": 10,
-                                },
                                 hidden=True,
                                 n_clicks=0,
                             ),
                         ],
-                        style={
-                            "width": "5%",
-                        },
+                        style={"width": "5%", "padding-right": "5px"},
                     ),
                     html.Div(
                         [
@@ -150,6 +148,7 @@ def graph_cytoscape(
                     html.Div(
                         [
                             html.H1("Node details"),
+                            html.Hr(style={"margin-left": "-5px"}),
                             html.Div(
                                 id="cyto_click_detail",
                                 style={},
@@ -159,6 +158,7 @@ def graph_cytoscape(
                             "width": "25%",
                             "height": "100%",
                             "overflowY": "auto",
+                            "padding-left": "5px",
                         },
                     ),
                 ],
@@ -176,6 +176,7 @@ def graph_cytoscape(
             "height": "100vh",
             "width": "100%",
             "overflow": "hidden",
+            "font-family": "Tahoma",
         },
     )
 
@@ -203,13 +204,24 @@ def graph_cytoscape(
         Output("graph", "children"),
         Input("view_selector", "value"),
         Input("toggle_inactive", "n_clicks"),
+        Input("ts_aggregation", "value"),
     )
-    def render_graph(tab, show_inactive):
+    def render_graph(tab, show_inactive, ts_agg):
         e = elements[tab]
 
         # remove inactive edges
         if show_inactive % 2:
             e = [item for item in e if item["classes"] != "inactive"]
+
+        # set labels on edges according to selection
+        for d in e:
+            if "source" in d["data"] and "flow" in d["data"]:
+                flow = d["data"]["flow"]
+                match ts_agg:
+                    case "mean":
+                        d["style"]["label"] = f"{round(flow.mean(), 3)}"
+                    case "total":
+                        d["style"]["label"] = f"{round(flow.sum(), 3)}"
 
         return html.Div(
             [
@@ -396,7 +408,7 @@ def graph_cytoscape(
                             f,
                             x=f.index,
                             y="flow",
-                            title=f"OUT: {target}",
+                            title=f"OUTflow to {target}",
                         )
                         fig.update_xaxes(rangeslider_visible=True)
                         plots.append(dcc.Graph(figure=fig))
@@ -410,14 +422,14 @@ def graph_cytoscape(
                             f,
                             x=f.index,
                             y="flow",
-                            title=f"IN: {source}",
+                            title=f"INflow from {source}",
                         )
                         fig.update_xaxes(rangeslider_visible=True)
                         plots.append(dcc.Graph(figure=fig))
 
             print("node: ", data)
             # check if active flows
-            msg = " | "
+            msg = "--> "
             if not e_out and not e_in:
                 msg += "no flows available for this node"
             else:
@@ -428,11 +440,12 @@ def graph_cytoscape(
             print("---")
             print("in: ", e_in)
             print("--------------------------------------------------------")
-            return (
-                [html.P("You recently clicked: " + data["label"] + msg)]
-                + plots
-                + [html.P("end of flexbox")]
-            )
+            return [
+                html.P(
+                    f"You recently clicked: {data['label']} ({data['id']})"
+                ),
+                html.P(msg),
+            ] + plots
 
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
     app.run(debug=False)
