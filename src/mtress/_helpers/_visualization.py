@@ -97,6 +97,19 @@ def graph_cytoscape(
         f,
     )
 
+    # get optimization start- and end-point
+    if flows is not None:
+        e = elements["flows"]
+        for d in e:
+            if "source" in d["data"] and "flow" in d["data"]:
+                flow = d["data"]["flow"]
+                break
+        t_start, t_end, t_steps = (
+            flow.index[0],
+            flow.index[-1],
+            flow.index,
+        )
+
     # init dash cytoscape
     cyto.load_extra_layouts()
     app = Dash()
@@ -116,17 +129,22 @@ def graph_cytoscape(
                         [
                             html.H1("Menu"),
                             html.Hr(style={"margin-right": "-5px"}),
-                            html.Button("hello"),
-                            dcc.RadioItems(
-                                ["mean", "total"],
-                                "mean",
-                                id="ts_aggregation",
-                            ),
-                            html.Button(
-                                "hide inactive",
-                                id="toggle_inactive",
+                            html.Div(
+                                [
+                                    html.Button("hello"),
+                                    dcc.RadioItems(
+                                        ["mean", "total"],
+                                        "mean",
+                                        id="ts_aggregation",
+                                    ),
+                                    html.Button(
+                                        "hide inactive",
+                                        id="toggle_inactive",
+                                        n_clicks=0,
+                                    ),
+                                ],
+                                id="menu",
                                 hidden=True,
-                                n_clicks=0,
                             ),
                         ],
                         style={"width": "5%", "padding-right": "5px"},
@@ -135,8 +153,30 @@ def graph_cytoscape(
                         [
                             html.Div(id="graph"),
                             html.Div(
-                                id="slider_place",
-                                style={"border-top": "dashed"},
+                                [
+                                    (
+                                        dcc.RangeSlider(
+                                            0,
+                                            len(t_steps) - 1,
+                                            value=[0, len(t_steps) - 1],
+                                            marks={
+                                                0: str(t_start),
+                                                len(t_steps) - 1: str(t_end),
+                                            },
+                                            allowCross=False,
+                                            id="date_slider",
+                                        )
+                                        if flows is not None
+                                        else None
+                                    )
+                                ],
+                                id="slider_div",
+                                style={
+                                    "border-top": "dashed",
+                                    "padding-left": "50px",
+                                    "padding-right": "50px",
+                                },
+                                hidden=True,
                             ),
                         ],
                         style={
@@ -191,22 +231,24 @@ def graph_cytoscape(
             return "hide inactive"
 
     @callback(
-        Output("toggle_inactive", "hidden"),
+        Output("menu", "hidden"),
+        Output("slider_div", "hidden"),
         Input("view_selector", "value"),
     )
-    def toggle_inactive(tab):
+    def toggle_flow_controls(tab):
         if tab == "graph":
-            return True
+            return [True, True]
         elif tab == "flows":
-            return False
+            return [False, False]
 
     @callback(
         Output("graph", "children"),
         Input("view_selector", "value"),
         Input("toggle_inactive", "n_clicks"),
         Input("ts_aggregation", "value"),
+        Input("date_slider", "value"),
     )
-    def render_graph(tab, show_inactive, ts_agg):
+    def render_graph(tab, show_inactive, ts_agg, slider_values):
         e = elements[tab]
 
         # remove inactive edges
@@ -217,6 +259,13 @@ def graph_cytoscape(
         for d in e:
             if "source" in d["data"] and "flow" in d["data"]:
                 flow = d["data"]["flow"]
+                # cut flow according to range_slider
+                start, end = (
+                    t_steps[slider_values[0]],
+                    t_steps[slider_values[1]],
+                )
+                flow = flow[start:end]
+
                 match ts_agg:
                     case "mean":
                         d["style"]["label"] = f"{round(flow.mean(), 3)}"
@@ -381,7 +430,7 @@ def graph_cytoscape(
     )
     def show_range_slider(tab):
         if tab == "flows":
-            return dcc.RangeSlider(0, 10, 1, id="date_slider")
+            return dcc.RangeSlider(0, 10, 1, id="date_slider", disabled=True)
         else:
             return None
 
@@ -410,6 +459,13 @@ def graph_cytoscape(
                             y="flow",
                             title=f"OUTflow to {target}",
                         )
+                        flow_mean = flow.mean()
+                        fig.add_hline(
+                            y=flow_mean,
+                            line_dash="dash",
+                            line_color="red",
+                            annotation_text=f"{round(flow_mean, 3)}",
+                        )
                         fig.update_xaxes(rangeslider_visible=True)
                         plots.append(dcc.Graph(figure=fig))
                     if d["data"]["target"] == data["id"]:
@@ -423,6 +479,13 @@ def graph_cytoscape(
                             x=f.index,
                             y="flow",
                             title=f"INflow from {source}",
+                        )
+                        flow_mean = flow.mean()
+                        fig.add_hline(
+                            y=flow_mean,
+                            line_dash="dash",
+                            line_color="red",
+                            annotation_text=f"{round(flow_mean, 3)}",
                         )
                         fig.update_xaxes(rangeslider_visible=True)
                         plots.append(dcc.Graph(figure=fig))
