@@ -142,6 +142,17 @@ class AbstactHeatExchanger(AbstractTechnology):
             },
         )
 
+        self._bus_utilisation = self.create_solph_node(
+            label="utilisation",
+            node_type=Bus,
+        )
+
+        self.create_solph_node(
+            label="source_utilisation",
+            node_type=Source,
+            outputs={self._bus_utilisation: Flow(nominal_value=1)},
+        )
+
         if self.autoconnect:
             highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
                 self.maximum_working_temperature,
@@ -182,6 +193,12 @@ class AbstactHeatExchanger(AbstractTechnology):
                 ]
 
                 gains = self._normalised_gains(warm_temperature)
+                heat_factor = self.heat_carrier.specific_heat_capacity * (
+                    warm_temperature - cold_temperature
+                )
+                inverted_gains = np.array(
+                    [1 / g if g > 0 else 1 for g in gains]
+                )
 
                 self.create_solph_node(
                     label=f"source_{warm_temperature}",
@@ -192,11 +209,16 @@ class AbstactHeatExchanger(AbstractTechnology):
                             max=gains,
                         ),
                         heat_bus_cold_source: Flow(),
+                        self._bus_utilisation: Flow(),
                     },
                     outputs={heat_bus_warm_source: Flow()},
                     conversion_factors={
-                        _bus_source: (warm_temperature - cold_temperature)
-                        * self.heat_carrier.specific_heat_capacity
+                        _bus_source: heat_factor,
+                        self._bus_utilisation: heat_factor
+                        * inverted_gains
+                        / self.nominal_power,
+                        heat_bus_cold_source: 1,
+                        heat_bus_warm_source: 1,
                     },
                 )
 

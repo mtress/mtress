@@ -2,6 +2,7 @@
 """
 Tests for MTRESS HeatExchanger
 """
+import pandas as pd
 import pytest
 from oemof.solph.processing import results
 
@@ -22,6 +23,7 @@ def _heat_source_test_template(
     results_25_20=None,
     results_30_25=None,
     nominal_power=10,
+    power_per_sink=10,
     conductivity_gain_factor=None,
     non_thermal_gains=0,
 ):
@@ -54,8 +56,8 @@ def _heat_source_test_template(
             reservoir_temperature=[0, 0],
             maximum_working_temperature=20,
             minimum_working_temperature=10,
-            nominal_power=500,
-            revenue=42,
+            nominal_power=power_per_sink,
+            revenue=1,
         )
     )
 
@@ -65,8 +67,8 @@ def _heat_source_test_template(
             reservoir_temperature=[0, 0],
             maximum_working_temperature=25,
             minimum_working_temperature=20,
-            nominal_power=500,
-            revenue=120,
+            nominal_power=power_per_sink,
+            revenue=5,
         )
     )
 
@@ -76,8 +78,8 @@ def _heat_source_test_template(
             reservoir_temperature=[0, 0],
             maximum_working_temperature=30,
             minimum_working_temperature=25,
-            nominal_power=500,
-            revenue=125,
+            nominal_power=power_per_sink,
+            revenue=25,
         )
     )
 
@@ -185,8 +187,8 @@ def test_heat_source_5():
         temperature_levels=[10, 20, 25, 30],
         non_thermal_gains=0.1,
         results_20_10=[9, 0],  # 9 = (0.8 * (21 - 20) + 0.1) * 10
-        results_25_20=[0, 9],  # 9 = 10 (see last example) - 1 (results3[1])
-        results_30_25=[0, 1],  # 1 = (0.8 * (30 - 30) + 0.1) * 10
+        results_25_20=[0, 10],  # more profitable than 1 at higher level
+        results_30_25=[0, 0],  # <= 1 = (0.8 * (30 - 30) + 0.1) * 10
     )
 
 
@@ -197,20 +199,21 @@ def test_heat_source_6():
         conductivity_gain_factor=0.1,
         temperature_levels=[10, 20, 25, 30],
         non_thermal_gains=0.9,
-        results_20_10=[5, 0],  # 5 = 10 - 5 (see next example)
-        results_25_20=[5, 1],  # 5 = (0.1 * (21 - 25) + 0.9) * 10
+        results_20_10=[0, 0],
+        results_25_20=[5, 0],  # 5 = (0.1 * (21 - 25) + 0.9) * 10
         results_30_25=[0, 9],  # 9 = (0.1 * (30 - 30) + 0.9) * 10
     )
+
 
 def test_heat_source_7():
     _heat_source_test_template(
         nominal_power=20,
+        power_per_sink=10,
         reservoir_temperature=[21, 30],
         conductivity_gain_factor=0.1,
         temperature_levels=[10, 20, 25, 30],
         non_thermal_gains=0.9,
-        results_20_10=[10, 0],
-        results_25_20=[10, 2],
-        results_30_25=[0, 18],
-)
-
+        results_20_10=[0, 0],
+        results_30_25=[0, 10],  # sink limit uses 10/18 = 5/9 of capacity
+        results_25_20=[10, 80 / 9],  # remaining 4/9 of 20 W
+    )
