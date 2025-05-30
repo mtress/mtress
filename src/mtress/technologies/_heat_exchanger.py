@@ -312,6 +312,7 @@ class HeatSource(AbstactHeatExchanger):
         minimum_delta: float = 1.0,
         conductivity_gain_factor: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
+        working_rate: Optional[TimeseriesSpecifier] = 0,
     ):
 
         super().__init__(
@@ -323,6 +324,7 @@ class HeatSource(AbstactHeatExchanger):
             minimum_delta=minimum_delta,
             conductivity_gain_factor=conductivity_gain_factor,
             non_thermal_gains=non_thermal_gains,
+            working_rate = working_rate,
         )
 
         # Solph model interfaces

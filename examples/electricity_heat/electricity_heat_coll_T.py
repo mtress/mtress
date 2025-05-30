@@ -45,18 +45,18 @@ house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
 house_1.add(carriers.ElectricityCarrier())
-house_1.add(technologies.ElectricityGridConnection(working_rate=0.035))
+house_1.add(technologies.ElectricityGridConnection(working_rate=350))
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[10, 15, 25, 30, 45],
+        temperature_levels=[10, 15,25,45],
     )
 )
 
 house_1.add(
     demands.FixedTemperatureHeating(
         name="space_heating",
-        min_flow_temperature=45,
+        min_flow_temperature=25,
         return_temperature=10,
         time_series=[2e3, 2e3],
     )
@@ -70,13 +70,9 @@ electric_heater = technologies.ResistiveHeater(
 house_1.add(electric_heater)
 
 
-Acoll = 2  # in m2
-# Rad_beam = 850 # in W/m2 beam
-# Rad_diff = 150 # in W/m2  diffuse
-# K_d = 0.97
+Acoll =1.95# in m2
 Rad_tot = 1000  # in W/m2 total radiation, beam and diffuse
 Rad_nom = 1350  # in W/m2 total radiation, beam and diffuse
-
 
 #######################
 house_1.add(
@@ -84,13 +80,11 @@ house_1.add(
         name="thColl",
         reservoir_temperature=[15, 15],
         maximum_working_temperature=45,
-        minimum_working_temperature=15,
-        conductivity_gain_factor=32.56 * Acoll,
-        non_thermal_gains=0.381
-        * Acoll
-        * Rad_tot,
-        nominal_power=Rad_nom
-        * Acoll,
+        minimum_working_temperature=10,
+        conductivity_gain_factor=4.49*Acoll/(Rad_nom*Acoll), 
+        non_thermal_gains=0.381* Acoll* Rad_tot/(Rad_nom*Acoll),
+        nominal_power=Rad_nom* Acoll,
+        working_rate = 0,
     )
 )
 
@@ -123,7 +117,7 @@ Qcoll = flows[
     ("house_1", "thColl", "heat_source"),
 ]
 Qcoll_30 = flows[
-    ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_30")
+    ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_15")
 ]
 Qcoll_45 = flows[
     ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_45")
@@ -132,4 +126,7 @@ Qcoll_25 = flows[
     ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_25")
 ]
 
-print(Qcoll)
+print('Qcoll:', Qcoll.sum()/2)
+print('Qcoll_15:', Qcoll_30.sum()/2)
+print('Qcoll_25:', Qcoll_25.sum()/2)
+print('Qcoll_45:', Qcoll_45.sum()/2)
