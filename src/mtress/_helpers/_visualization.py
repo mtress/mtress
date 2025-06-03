@@ -11,7 +11,7 @@ from oemof.solph.components import (
 
 from copy import deepcopy
 import logging
-from dash import Dash, html, dcc, Input, Output, callback
+from dash import Dash, html, dcc, Input, Output, State, callback
 import plotly.express as px
 import dash_cytoscape as cyto
 import pandas as pd
@@ -112,6 +112,144 @@ def graph_cytoscape(
 
     # init dash cytoscape
     cyto.load_extra_layouts()
+
+    graph = cyto.Cytoscape(
+        id="mtress_model",
+        layout={"name": "klay"},  # cose-bilkent | cola | klay
+        style={
+            "width": "100%",
+            "height": "calc(97vh - 120px)",
+        },
+        wheelSensitivity=0.1,
+        stylesheet=[
+            # Group selectors
+            {
+                "selector": "node",
+                "style": {
+                    "content": "data(label)",
+                    "shape": "cut-rectangle",
+                    "font-size": "36",
+                },
+            },
+            {
+                "selector": "edge",
+                "style": {
+                    "curve-style": "bezier",
+                    "target-arrow-shape": "triangle",
+                    "line-color": "black",
+                    "target-arrow-color": "black",
+                    "font-size": "28",
+                    "width": "6",
+                },
+            },
+            # Class selectors
+            # coloring
+            {
+                "selector": "." + colorscheme["HeatCarrier"],
+                "style": {
+                    "line-color": colorscheme["HeatCarrier"],
+                    "target-arrow-color": colorscheme["HeatCarrier"],
+                },
+            },
+            {
+                "selector": "." + colorscheme["ElectricityCarrier"],
+                "style": {
+                    "line-color": colorscheme["ElectricityCarrier"],
+                    "target-arrow-color": colorscheme["ElectricityCarrier"],
+                },
+            },
+            {
+                "selector": "." + colorscheme["GasCarrier"],
+                "style": {
+                    "line-color": colorscheme["GasCarrier"],
+                    "target-arrow-color": colorscheme["GasCarrier"],
+                },
+            },
+            {
+                "selector": ".inactive",
+                "style": {
+                    "line-color": "lightgrey",
+                    "target-arrow-color": "lightgrey",
+                    "line-style": "dashed",
+                },
+            },
+            {
+                "selector": ".rainbow",
+                "style": {
+                    "line-fill": "linear-gradient",
+                    "line-gradient-stop-colors": RAINBOW,
+                    "target-arrow-color": "firebrick",
+                },
+            },
+            # node shapes
+            {
+                "selector": ".source",
+                "style": {
+                    "shape": "polygon",
+                    "shape-polygon-points": SOURCE_SHAPE,
+                    "text-valign": "center",
+                    "text-halign": "center",
+                    "width": "label",
+                    "height": "label",
+                    "padding": "25px",
+                },
+            },
+            {
+                "selector": ".sink",
+                "style": {
+                    "shape": "polygon",
+                    "shape-polygon-points": SINK_SHAPE,
+                    "text-valign": "center",
+                    "text-halign": "center",
+                    "width": "label",
+                    "height": "label",
+                    "padding": "25px",
+                },
+            },
+            {
+                "selector": ".bus",
+                "style": {
+                    "shape": "ellipse",
+                    "text-valign": "center",
+                    "text-halign": "center",
+                    "width": "label",
+                    "height": "label",
+                    "padding": "25px",
+                },
+            },
+            {
+                "selector": ".converter",
+                "style": {
+                    "shape": "octagon",
+                    "text-valign": "center",
+                    "text-halign": "center",
+                    "width": "label",
+                    "height": "label",
+                    "padding": "25px",
+                },
+            },
+            {
+                "selector": ".storage",
+                "style": {
+                    "shape": "barrel",
+                    "text-valign": "center",
+                    "text-halign": "center",
+                    "width": "label",
+                    "height": "label",
+                    "padding": "25px",
+                },
+            },
+            {
+                "selector": ".parent",
+                "style": {
+                    "shape": "round-rectangle",
+                    "text-valign": "top",
+                },
+            },
+        ],
+        elements=elements["graph"],
+    )
+
     app = Dash()
 
     tabs = [dcc.Tab(label=x, value=x) for x in elements.keys()]
@@ -131,7 +269,22 @@ def graph_cytoscape(
                             html.Hr(style={"margin-right": "-5px"}),
                             html.Div(
                                 [
-                                    html.Button("hello"),
+                                    html.P("layout options"),
+                                    dcc.RadioItems(
+                                        [
+                                            "klay",
+                                            "cose-bilkent",
+                                            "cola",
+                                        ],
+                                        "klay",
+                                        id="layout_alg",
+                                    ),
+                                ]
+                            ),
+                            html.Hr(style={"margin-right": "-5px"}),
+                            html.Div(
+                                [
+                                    html.P("ts options"),
                                     dcc.RadioItems(
                                         ["mean", "total"],
                                         "mean",
@@ -143,7 +296,7 @@ def graph_cytoscape(
                                         n_clicks=0,
                                     ),
                                 ],
-                                id="menu",
+                                id="menu_ts",
                                 hidden=True,
                             ),
                         ],
@@ -151,25 +304,26 @@ def graph_cytoscape(
                     ),
                     html.Div(
                         [
-                            html.Div(id="graph"),
+                            graph,
                             html.Div(
-                                [
-                                    (
+                                (
+                                    [
+                                        html.P(
+                                            f"current selection: {str(t_start)} | {str(t_end)}",
+                                            id="date_slider_selection",
+                                        ),
                                         dcc.RangeSlider(
                                             0,
                                             len(t_steps) - 1,
                                             value=[0, len(t_steps) - 1],
-                                            marks={
-                                                0: str(t_start),
-                                                len(t_steps) - 1: str(t_end),
-                                            },
+                                            marks=None,
                                             allowCross=False,
                                             id="date_slider",
-                                        )
-                                        if flows is not None
-                                        else None
-                                    )
-                                ],
+                                        ),
+                                    ]
+                                    if flows is not None
+                                    else None
+                                ),
                                 id="slider_div",
                                 style={
                                     "border-top": "dashed",
@@ -231,7 +385,7 @@ def graph_cytoscape(
             return "hide inactive"
 
     @callback(
-        Output("menu", "hidden"),
+        Output("menu_ts", "hidden"),
         Output("slider_div", "hidden"),
         Input("view_selector", "value"),
     )
@@ -242,13 +396,13 @@ def graph_cytoscape(
             return [False, False]
 
     @callback(
-        Output("graph", "children"),
+        Output("mtress_model", "elements"),
         Input("view_selector", "value"),
         Input("toggle_inactive", "n_clicks"),
         Input("ts_aggregation", "value"),
         Input("date_slider", "value"),
     )
-    def render_graph(tab, show_inactive, ts_agg, slider_values):
+    def update_graph_edges(tab, show_inactive, ts_agg, slider_values):
         e = elements[tab]
 
         # remove inactive edges
@@ -272,174 +426,31 @@ def graph_cytoscape(
                     case "total":
                         d["style"]["label"] = f"{round(flow.sum(), 3)}"
 
-        return html.Div(
-            [
-                cyto.Cytoscape(
-                    id="mtress_model",
-                    layout={
-                        "name": "cose-bilkent"
-                    },  # cose-bilkent | cola | klay
-                    style={
-                        "width": "100%",
-                        "height": "calc(100vh - 120px)",
-                    },
-                    wheelSensitivity=0.1,
-                    stylesheet=[
-                        # Group selectors
-                        {
-                            "selector": "node",
-                            "style": {
-                                "content": "data(label)",
-                                "shape": "cut-rectangle",
-                                "font-size": "36",
-                            },
-                        },
-                        {
-                            "selector": "edge",
-                            "style": {
-                                "curve-style": "bezier",
-                                "target-arrow-shape": "triangle",
-                                "line-color": "black",
-                                "target-arrow-color": "black",
-                                "font-size": "28",
-                                "width": "6",
-                            },
-                        },
-                        # Class selectors
-                        # coloring
-                        {
-                            "selector": "." + colorscheme["HeatCarrier"],
-                            "style": {
-                                "line-color": colorscheme["HeatCarrier"],
-                                "target-arrow-color": colorscheme[
-                                    "HeatCarrier"
-                                ],
-                            },
-                        },
-                        {
-                            "selector": "."
-                            + colorscheme["ElectricityCarrier"],
-                            "style": {
-                                "line-color": colorscheme[
-                                    "ElectricityCarrier"
-                                ],
-                                "target-arrow-color": colorscheme[
-                                    "ElectricityCarrier"
-                                ],
-                            },
-                        },
-                        {
-                            "selector": "." + colorscheme["GasCarrier"],
-                            "style": {
-                                "line-color": colorscheme["GasCarrier"],
-                                "target-arrow-color": colorscheme[
-                                    "GasCarrier"
-                                ],
-                            },
-                        },
-                        {
-                            "selector": ".inactive",
-                            "style": {
-                                "line-color": "lightgrey",
-                                "target-arrow-color": "lightgrey",
-                                "line-style": "dashed",
-                            },
-                        },
-                        {
-                            "selector": ".rainbow",
-                            "style": {
-                                "line-fill": "linear-gradient",
-                                "line-gradient-stop-colors": RAINBOW,
-                                "target-arrow-color": "firebrick",
-                            },
-                        },
-                        # node shapes
-                        {
-                            "selector": ".source",
-                            "style": {
-                                "shape": "polygon",
-                                "shape-polygon-points": SOURCE_SHAPE,
-                                "text-valign": "center",
-                                "text-halign": "center",
-                                "width": "label",
-                                "height": "label",
-                                "padding": "25px",
-                            },
-                        },
-                        {
-                            "selector": ".sink",
-                            "style": {
-                                "shape": "polygon",
-                                "shape-polygon-points": SINK_SHAPE,
-                                "text-valign": "center",
-                                "text-halign": "center",
-                                "width": "label",
-                                "height": "label",
-                                "padding": "25px",
-                            },
-                        },
-                        {
-                            "selector": ".bus",
-                            "style": {
-                                "shape": "ellipse",
-                                "text-valign": "center",
-                                "text-halign": "center",
-                                "width": "label",
-                                "height": "label",
-                                "padding": "25px",
-                            },
-                        },
-                        {
-                            "selector": ".converter",
-                            "style": {
-                                "shape": "octagon",
-                                "text-valign": "center",
-                                "text-halign": "center",
-                                "width": "label",
-                                "height": "label",
-                                "padding": "25px",
-                            },
-                        },
-                        {
-                            "selector": ".storage",
-                            "style": {
-                                "shape": "barrel",
-                                "text-valign": "center",
-                                "text-halign": "center",
-                                "width": "label",
-                                "height": "label",
-                                "padding": "25px",
-                            },
-                        },
-                        {
-                            "selector": ".parent",
-                            "style": {
-                                "shape": "round-rectangle",
-                                "text-valign": "top",
-                            },
-                        },
-                    ],
-                    elements=e,
-                )
-            ]
-        )
+        graph.elements = e
+        return graph.elements
+
+    @callback(Output("mtress_model", "layout"), Input("layout_alg", "value"))
+    def update_graph_layout(layout):
+        return {"name": layout}
 
     @callback(
-        Output("slider_place", "children"),
-        Input("view_selector", "value"),
+        Output("date_slider_selection", "children"),
+        Input("date_slider", "value"),
     )
-    def show_range_slider(tab):
-        if tab == "flows":
-            return dcc.RangeSlider(0, 10, 1, id="date_slider", disabled=True)
-        else:
-            return None
+    def show_range_slider_values(slider_values):
+        start, end = (
+            t_steps[slider_values[0]],
+            t_steps[slider_values[1]],
+        )
+        return f"current selection: {str(start)} | {str(end)}"
 
     @callback(
         Output("cyto_click_detail", "children"),
         Input("mtress_model", "tapNodeData"),
         Input("view_selector", "value"),
+        Input("date_slider", "value"),
     )
-    def displayTapNodeData(data, tab):
+    def displayTapNodeData(data, tab, slider_values):
         if tab == "flows" and data:
             # print(elements)
             e_out = {}
@@ -450,6 +461,13 @@ def graph_cytoscape(
                     if d["data"]["source"] == data["id"]:
                         target = d["data"]["target"]
                         flow = d["data"]["flow"]
+                        # cut flow according to range_slider
+                        start, end = (
+                            t_steps[slider_values[0]],
+                            t_steps[slider_values[1]],
+                        )
+                        flow = flow[start:end]
+
                         e_out[target] = flow
                         f = pd.DataFrame()
                         f["flow"] = flow
@@ -466,11 +484,18 @@ def graph_cytoscape(
                             line_color="red",
                             annotation_text=f"{round(flow_mean, 3)}",
                         )
-                        fig.update_xaxes(rangeslider_visible=True)
+                        # fig.update_xaxes(rangeslider_visible=True)
                         plots.append(dcc.Graph(figure=fig))
                     if d["data"]["target"] == data["id"]:
                         source = d["data"]["source"]
                         flow = d["data"]["flow"]
+                        # cut flow according to range_slider
+                        start, end = (
+                            t_steps[slider_values[0]],
+                            t_steps[slider_values[1]],
+                        )
+                        flow = flow[start:end]
+
                         e_in[source] = flow
                         f = pd.DataFrame()
                         f["flow"] = flow
@@ -487,7 +512,7 @@ def graph_cytoscape(
                             line_color="red",
                             annotation_text=f"{round(flow_mean, 3)}",
                         )
-                        fig.update_xaxes(rangeslider_visible=True)
+                        # fig.update_xaxes(rangeslider_visible=True)
                         plots.append(dcc.Graph(figure=fig))
 
             print("node: ", data)
