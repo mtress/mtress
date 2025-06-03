@@ -315,6 +315,7 @@ def graph_cytoscape(
                                         dcc.RangeSlider(
                                             0,
                                             len(t_steps) - 1,
+                                            1,
                                             value=[0, len(t_steps) - 1],
                                             marks=None,
                                             allowCross=False,
