@@ -11,7 +11,9 @@ from oemof.solph.components import (
 
 from copy import deepcopy
 import logging
-from dash import Dash, html, dcc, Input, Output, State, callback
+from dash import Dash, html, dcc, Input, Output, callback
+from dash.exceptions import PreventUpdate
+import plotly.graph_objects as go
 import plotly.express as px
 import dash_cytoscape as cyto
 import pandas as pd
@@ -308,9 +310,21 @@ def graph_cytoscape(
                             html.Div(
                                 (
                                     [
-                                        html.P(
-                                            f"current selection: {str(t_start)} | {str(t_end)}",
-                                            id="date_slider_selection",
+                                        html.Div(
+                                            [
+                                                html.P(
+                                                    f"{str(t_start)}",
+                                                    id="date_slider_selection_start",
+                                                ),
+                                                html.P(
+                                                    f"{str(t_end)}",
+                                                    id="date_slider_selection_end",
+                                                ),
+                                            ],
+                                            style={
+                                                "display": "flex",
+                                                "justify-content": "space-between",
+                                            },
                                         ),
                                         dcc.RangeSlider(
                                             0,
@@ -342,11 +356,11 @@ def graph_cytoscape(
                     ),
                     html.Div(
                         [
-                            html.H1("Node details"),
+                            html.H1("Flow details"),
                             html.Hr(style={"margin-left": "-5px"}),
                             html.Div(
                                 id="cyto_click_detail",
-                                style={},
+                                hidden=True,
                             ),
                         ],
                         style={
@@ -388,13 +402,14 @@ def graph_cytoscape(
     @callback(
         Output("menu_ts", "hidden"),
         Output("slider_div", "hidden"),
+        Output("cyto_click_detail", "hidden"),
         Input("view_selector", "value"),
     )
     def toggle_flow_controls(tab):
         if tab == "graph":
-            return [True, True]
+            return [True, True, True]
         elif tab == "flows":
-            return [False, False]
+            return [False, False, False]
 
     @callback(
         Output("mtress_model", "elements"),
@@ -435,28 +450,34 @@ def graph_cytoscape(
         return {"name": layout}
 
     @callback(
-        Output("date_slider_selection", "children"),
-        Input("date_slider", "value"),
+        Output("date_slider_selection_start", "children"),
+        Output("date_slider_selection_end", "children"),
+        Input("date_slider", "drag_value"),
+        prevent_initial_call=True,
     )
     def show_range_slider_values(slider_values):
         start, end = (
             t_steps[slider_values[0]],
             t_steps[slider_values[1]],
         )
-        return f"current selection: {str(start)} | {str(end)}"
+        return [f"{str(start)}", f"{str(end)}"]
 
     @callback(
-        Output("cyto_click_detail", "children"),
+        Output("cyto_click_detail", "children", allow_duplicate=True),
+        Output("mtress_model", "tapEdgeData"),  # reset last edge clicked
         Input("mtress_model", "tapNodeData"),
         Input("view_selector", "value"),
         Input("date_slider", "value"),
+        prevent_initial_call=True,
     )
     def displayTapNodeData(data, tab, slider_values):
+        # TODO: aggregated plot & plot for storages (add storage data!)
+        if data is None or tab != "flows":
+            raise PreventUpdate
         if tab == "flows" and data:
-            # print(elements)
             e_out = {}
             e_in = {}
-            plots = []
+            fig = go.Figure()
             for d in elements["flows"]:
                 if "source" in d["data"] and "flow" in d["data"]:
                     if d["data"]["source"] == data["id"]:
@@ -472,21 +493,14 @@ def graph_cytoscape(
                         e_out[target] = flow
                         f = pd.DataFrame()
                         f["flow"] = flow
-                        fig = px.line(
-                            f,
-                            x=f.index,
-                            y="flow",
-                            title=f"OUTflow to {target}",
+                        fig.add_trace(
+                            go.Scatter(
+                                x=f.index,
+                                y=f["flow"],
+                                mode="lines",
+                                name=target,
+                            )
                         )
-                        flow_mean = flow.mean()
-                        fig.add_hline(
-                            y=flow_mean,
-                            line_dash="dash",
-                            line_color="red",
-                            annotation_text=f"{round(flow_mean, 3)}",
-                        )
-                        # fig.update_xaxes(rangeslider_visible=True)
-                        plots.append(dcc.Graph(figure=fig))
                     if d["data"]["target"] == data["id"]:
                         source = d["data"]["source"]
                         flow = d["data"]["flow"]
@@ -500,41 +514,96 @@ def graph_cytoscape(
                         e_in[source] = flow
                         f = pd.DataFrame()
                         f["flow"] = flow
-                        fig = px.line(
-                            f,
-                            x=f.index,
-                            y="flow",
-                            title=f"INflow from {source}",
+                        fig.add_trace(
+                            go.Bar(
+                                x=f.index,
+                                y=f["flow"],
+                                name=source,
+                            )
                         )
-                        flow_mean = flow.mean()
-                        fig.add_hline(
-                            y=flow_mean,
-                            line_dash="dash",
-                            line_color="red",
-                            annotation_text=f"{round(flow_mean, 3)}",
-                        )
-                        # fig.update_xaxes(rangeslider_visible=True)
-                        plots.append(dcc.Graph(figure=fig))
 
-            print("node: ", data)
             # check if active flows
             msg = "--> "
             if not e_out and not e_in:
                 msg += "no flows available for this node"
+                plot = None
             else:
                 msg += f"this node has {len(e_out)} out- and {len(e_in)} ingoing flows"
+                fig.update_layout(
+                    barmode="stack",
+                    legend=dict(
+                        orientation="h",  # horizontal
+                        yanchor="bottom",  # Positionierung von unten
+                        y=1.02,  # Abstand von der oberen Kante des Plots
+                        xanchor="right",  # Positionierung von rechts
+                        x=1,  # Abstand von der rechten Kante des Plots
+                    ),
+                    margin=dict(l=20, r=20),
+                )
+                plot = dcc.Graph(figure=fig)
 
-            print("---")
-            print("out: ", e_out)
-            print("---")
-            print("in: ", e_in)
-            print("--------------------------------------------------------")
             return [
                 html.P(
                     f"You recently clicked: {data['label']} ({data['id']})"
                 ),
                 html.P(msg),
-            ] + plots
+                plot,
+            ], None
+
+    @callback(
+        Output("cyto_click_detail", "children", allow_duplicate=True),
+        Output("mtress_model", "tapNodeData"),  # reset last node clicked
+        Input("mtress_model", "tapEdgeData"),
+        Input("view_selector", "value"),
+        Input("date_slider", "value"),
+        prevent_initial_call=True,
+    )
+    def displayTapEdgeData(data, tab, slider_values):
+        if data is None or tab != "flows":
+            raise PreventUpdate
+        if tab == "flows" and data:
+            if "flow" in data:
+                source = data["source"]
+                target = data["target"]
+                # get flow series from elements
+                for d in elements["flows"]:
+                    if "source" in d["data"] and "flow" in d["data"]:
+                        if (
+                            source == d["data"]["source"]
+                            and target == d["data"]["target"]
+                        ):
+                            flow = d["data"]["flow"]
+                            break
+                start, end = (
+                    t_steps[slider_values[0]],
+                    t_steps[slider_values[1]],
+                )
+                flow = flow[start:end]
+                f = pd.DataFrame()
+                f["flow"] = flow
+                fig = px.line(
+                    f,
+                    x=f.index,
+                    y="flow",
+                )
+                flow_total = flow.sum()
+                flow_mean = flow.mean()
+                flow_min = flow.min()
+                flow_max = flow.max()
+
+                return [
+                    html.P(f"from: {source}"),
+                    html.P(f"to: {target}"),
+                    dcc.Graph(figure=fig),
+                    html.H3("metrics"),
+                    html.Hr(style={"margin-left": "-5px", "border": "dotted"}),
+                    html.P(f"total: {flow_total}"),
+                    html.P(f"mean: {flow_mean}"),
+                    html.P(f"min: {flow_min}"),
+                    html.P(f"max: {flow_max}"),
+                ], None
+            else:
+                return html.P("no flow available"), None
 
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
     app.run(debug=False)
