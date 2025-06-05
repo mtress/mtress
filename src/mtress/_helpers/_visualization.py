@@ -530,7 +530,10 @@ def graph_cytoscape(
                 msg += "no flows available for this node"
                 plot = None
             else:
-                msg += f"this node has {len(e_out)} out- and {len(e_in)} ingoing flows"
+                msg += (
+                    f"this node has {len(e_out)} out-"
+                    + f"and {len(e_in)} ingoing flows"
+                )
                 fig = go.Figure()
                 for pi in plots_in:
                     fig.add_trace(pi)
