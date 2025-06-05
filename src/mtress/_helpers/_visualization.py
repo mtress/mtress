@@ -477,31 +477,11 @@ def graph_cytoscape(
         if tab == "flows" and data:
             e_out = {}
             e_in = {}
-            fig = go.Figure()
+            plots_in = []
+            plots_out = []
             for d in elements["flows"]:
                 if "source" in d["data"] and "flow" in d["data"]:
-                    if d["data"]["source"] == data["id"]:
-                        target = d["data"]["target"]
-                        flow = d["data"]["flow"]
-                        # cut flow according to range_slider
-                        start, end = (
-                            t_steps[slider_values[0]],
-                            t_steps[slider_values[1]],
-                        )
-                        flow = flow[start:end]
-
-                        e_out[target] = flow
-                        f = pd.DataFrame()
-                        f["flow"] = flow
-                        fig.add_trace(
-                            go.Scatter(
-                                x=f.index,
-                                y=f["flow"],
-                                mode="lines",
-                                name=target,
-                            )
-                        )
-                    if d["data"]["target"] == data["id"]:
+                    if d["data"]["target"] == data["id"]:  # inflows
                         source = d["data"]["source"]
                         flow = d["data"]["flow"]
                         # cut flow according to range_slider
@@ -514,11 +494,33 @@ def graph_cytoscape(
                         e_in[source] = flow
                         f = pd.DataFrame()
                         f["flow"] = flow
-                        fig.add_trace(
-                            go.Bar(
+                        plots_in.append(
+                            go.Scatter(
                                 x=f.index,
                                 y=f["flow"],
+                                stackgroup="one",
                                 name=source,
+                            )
+                        )
+                    if d["data"]["source"] == data["id"]:  # outflows
+                        target = d["data"]["target"]
+                        flow = d["data"]["flow"]
+                        # cut flow according to range_slider
+                        start, end = (
+                            t_steps[slider_values[0]],
+                            t_steps[slider_values[1]],
+                        )
+                        flow = flow[start:end]
+
+                        e_out[target] = flow
+                        f = pd.DataFrame()
+                        f["flow"] = flow
+                        plots_out.append(
+                            go.Scatter(
+                                x=f.index,
+                                y=f["flow"],
+                                mode="lines",
+                                name=target,
                             )
                         )
 
@@ -529,6 +531,11 @@ def graph_cytoscape(
                 plot = None
             else:
                 msg += f"this node has {len(e_out)} out- and {len(e_in)} ingoing flows"
+                fig = go.Figure()
+                for pi in plots_in:
+                    fig.add_trace(pi)
+                for po in plots_out:
+                    fig.add_trace(po)
                 fig.update_layout(
                     barmode="stack",
                     legend=dict(
@@ -586,6 +593,7 @@ def graph_cytoscape(
                     x=f.index,
                     y="flow",
                 )
+                fig.update_layout(margin=dict(l=20, r=20))
                 flow_total = flow.sum()
                 flow_mean = flow.mean()
                 flow_min = flow.min()
