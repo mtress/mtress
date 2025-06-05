@@ -323,7 +323,8 @@ def graph_cytoscape(
                                             ],
                                             style={
                                                 "display": "flex",
-                                                "justify-content": "space-between",
+                                                "justify-content": "space"
+                                                + "-between",
                                             },
                                         ),
                                         dcc.RangeSlider(
