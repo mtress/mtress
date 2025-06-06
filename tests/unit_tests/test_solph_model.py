@@ -29,7 +29,7 @@ from mtress._helpers._visualization import generate_graph
 def test_minimal_initialisation_with_date_range():
     first_index = "2021-07-10 00:00:00"
     last_index = "2021-07-10 15:15:00"
-    frequency = "15T"
+    frequency = "15min"
     date_range = pd.date_range(
         start=first_index,
         end=last_index,
@@ -50,7 +50,7 @@ def test_minimal_initialisation_with_date_range():
 def test_minimal_initialisation_with_time_index_dict():
     first_index = "2021-07-10 00:00:00"
     last_index = "2021-07-10 15:15:00"
-    frequency = "15T"
+    frequency = "15min"
     solph_model = SolphModel(
         meta_model=MetaModel(),
         timeindex={
