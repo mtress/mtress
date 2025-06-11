@@ -92,7 +92,7 @@ def calc_biogas_molar_mass(CH4_share=0.75, C0_2_share=0.25):
 
 
 def calc_natural_gas_molar_mass(
-    CH4_share=0.9, C2H6_share=0.5, C3H8_share=0.3, C4H10_share=0.2
+    CH4_share=0.9, C2H6_share=0.05, C3H8_share=0.03, C4H10_share=0.02
 ):
     """
     Calculate the molar mass of the natural gas depending on different
