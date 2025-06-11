@@ -77,37 +77,11 @@ def calc_biogas_heating_value(
         / (CH4_share * CH4_MOLAR_MASS + CO2_share * CO2_MOLAR_MASS)
     ) * heating_value
 
-
-def calc_biogas_molar_mass(CH4_share=0.75, C0_2_share=0.25):
-    """
-    This function calculates the molar mass of biogas depending on the
-    gas proportion and its molar mass (kg/mol). Only methane (75%) and
-    carbon-dioxide gas (25%) are considered and other impurities are
-    ignored for this calculation.
-    :param CH4_share: Share proportion of methane in biogas
-    :param C0_2_share: Share proportion content of carbon-dioxide in biogas
-    return: in kg/mol
-    """
-    return (CH4_share * CH4_MOLAR_MASS) + (C0_2_share * CO2_MOLAR_MASS)
-
-
-def calc_natural_gas_molar_mass(
-    CH4_share=0.9, C2H6_share=0.05, C3H8_share=0.03, C4H10_share=0.02
-):
-    """
-    Calculate the molar mass of the natural gas depending on different
-    gases present and its proportions. In most cases following gas exists:
-    Methane, ethane, propane, butane, and  other impurities. Other impurity
-    gases are ignored for this calculation. By default, natural gas proportions
-    are methane(90%), ethane(5%), propane(3%), butane (2%).
-    :return: in kg/mol
-    """
-    return (
-        (CH4_share * CH4_MOLAR_MASS)
-        + (C2H6_share * C2H6_MOLAR_MASS)
-        + (C3H8_share * C3H8_MOLAR_MASS)
-        + (C4H10_share * CH4_MOLAR_MASS)
-    )
+def molar_mass(molar_masses: list or tuple, shares: list or tuple):
+    "Calculates the molar mass for a compound from that of its constituents."
+    if len(molar_masses) != len(shares):
+        raise ValueError('The input sizes must match.')
+    return sum(mm*share for mm, share in zip(molar_masses, shares))
 
 
 @dataclass(frozen=True)
@@ -126,7 +100,6 @@ class Gas:
     # molar mass of gas, given in kg/mol
     molar_mass: float
 
-
 # Object of different predefined gases
 
 HYDROGEN = Gas(
@@ -140,14 +113,25 @@ NATURAL_GAS = Gas(
     name="NaturalGas",
     LHV=NG_LHV,
     HHV=NG_HHV,
-    molar_mass=calc_natural_gas_molar_mass(),
+    molar_mass=molar_mass(
+        molar_masses=[
+            CH4_MOLAR_MASS, 
+            C2H6_MOLAR_MASS, 
+            C3H8_MOLAR_MASS, 
+            CH4_MOLAR_MASS
+            ], 
+        shares=[0.9, 0.05, 0.03, 0.02]
+        )
 )
 
 BIOGAS = Gas(
     name="Biogas",
-    LHV=calc_biogas_heating_value(),
-    HHV=calc_biogas_heating_value(),
-    molar_mass=calc_biogas_molar_mass(),
+    LHV=calc_biogas_heating_value(heating_value=CH4_LHV),
+    HHV=calc_biogas_heating_value(heating_value=CH4_HHV),
+    molar_mass=molar_mass(
+        molar_masses=[CH4_MOLAR_MASS, CO2_MOLAR_MASS], 
+        shares=[0.75, 0.25]
+        )
 )
 
 # Bio-methane is primarily considered to have methane and other impurities
