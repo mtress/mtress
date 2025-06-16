@@ -37,13 +37,10 @@ weather = {
 
 
 house_1.add(
-    technologies.Photovoltaics(
+    technologies.RenewableElectricitySource(
         "pv0",
-        (52.729, 8.181),
-        nominal_power=10,
-        weather=weather,
-        surface_azimuth=180,
-        surface_tilt=35,
+        nominal_power=10000,
+        specific_generation="FILE:../input_file.csv:pv",
         fixed=False,
     )
 )
@@ -57,8 +54,8 @@ house_2.add(demands.Electricity(name="demand0", time_series=10))
 solph_representation = SolphModel(
     energy_system,
     timeindex={
-        "start": "2021-07-10 00:00:00",
-        "freq": "60T",
+        "start": "2022-07-10 00:00:00",
+        "freq": "60min",
         "periods": 10,
         "tz": "Europe/Berlin",
     },
@@ -71,21 +68,12 @@ house_1.connect(
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="second_location_pv_detail.png")
-
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="second_location_pv_simple.png")
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-plot = solph_representation.graph(
-    detail=True, flow_results=flows, flow_color=None
-)
-plot.render(outfile="second_location_pv_results.png")
+solph_representation.graph(flow_results=flows)
 
 solved_model.write(
-    "electricity_pv.lp", io_options={"symbolic_solver_labels": True}
+    "second_location_pv.lp", io_options={"symbolic_solver_labels": True}
 )

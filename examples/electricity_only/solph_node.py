@@ -54,13 +54,13 @@ solph_representation = SolphModel(
     timeindex={
         "start": "2021-07-10 00:00:00",
         "end": "2021-07-10 02:00:00",
-        "freq": "60T",
+        "freq": "60min",
     },
 )
 
-carrier_node =  solph_representation.energy_system.node[
-        ("house_1", "ElectricityCarrier", "distribution")
-    ]
+carrier_node = solph_representation.energy_system.node[
+    ("house_1", "ElectricityCarrier", "distribution")
+]
 
 solph_representation.energy_system.add(
     solph.components.GenericStorage(
@@ -100,3 +100,5 @@ print(
         ("house_1", "electricity demand", "sink"),
     ]
 )
+
+solph_representation.graph(flow_results=flows)

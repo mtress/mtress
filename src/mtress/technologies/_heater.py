@@ -5,7 +5,6 @@ import logging
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Converter
 
-from .._abstract_component import AbstractSolphRepresentation
 from ..carriers import ElectricityCarrier, GasCarrier, HeatCarrier
 from ..physics import Gas
 from ._abstract_technology import AbstractTechnology
@@ -13,7 +12,7 @@ from ._abstract_technology import AbstractTechnology
 LOGGER = logging.getLogger(__file__)
 
 
-class AbstractHeater(AbstractTechnology, AbstractSolphRepresentation):
+class AbstractHeater(AbstractTechnology):
     def __init__(
         self,
         name: str,

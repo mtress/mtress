@@ -6,7 +6,6 @@ from typing import Optional
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Sink, Source
 
-from mtress._abstract_component import AbstractSolphRepresentation
 from mtress.carriers import GasCarrier
 from mtress.physics import Gas
 
@@ -15,7 +14,7 @@ from ._abstract_grid_connection import AbstractGridConnection
 LOGGER = logging.getLogger(__file__)
 
 
-class GasGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
+class GasGridConnection(AbstractGridConnection):
     """
     The gas grid connection represents the distribution pipelines for
     a specific gas type, identified by the `gas_type` parameter. It
@@ -85,17 +84,17 @@ class GasGridConnection(AbstractGridConnection, AbstractSolphRepresentation):
 
         if self.working_rate is not None:
             if self.demand_rate:
-                demand_rate = Investment(ep_costs=self.demand_rate)
+                maximum_load = Investment(ep_costs=self.demand_rate)
             else:
-                demand_rate = None
+                maximum_load = None
 
             self.create_solph_node(
                 label="source_import",
                 node_type=Source,
                 outputs={
                     self.b_grid_import: Flow(
+                        nominal_value=maximum_load,
                         variable_costs=self.working_rate,
-                        investment=demand_rate,
                     )
                 },
             )

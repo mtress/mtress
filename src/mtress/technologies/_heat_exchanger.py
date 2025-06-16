@@ -1,17 +1,21 @@
 """This module provides a class representing an air heat exchanger."""
 
+import logging
+from typing import Optional
 import numpy as np
 
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Converter, Sink, Source
 
-from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import HeatCarrier
 from ._abstract_technology import AbstractTechnology
 
 
-class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
+_LOGGER = logging.getLogger(__name__)
+
+
+class AbstactHeatExchanger(AbstractTechnology):
     """
     Heat exchanger (HE)
 
@@ -40,20 +44,33 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         reservoir_temperature: TimeseriesSpecifier,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        nominal_power: float = None,
+        nominal_power: float | None = None,
         minimum_delta: float = 1.0,
+        conductivity_gain_factor: float | None = None,
+        non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
+        working_rate: Optional[TimeseriesSpecifier] = 0,
+        revenue: Optional[TimeseriesSpecifier] = 0,
     ):
         """
         Initialize heat exchanger to draw or expel energy from a source
 
         :param name: Name of the component.
-        :param reservoir_temperature: Reference to air temperature time series
+        :param reservoir_temperature: Temperature of the reservoir (in °C)
         :param minimum_working_temperature: Minimum temperature limit (in °C)
-        :param maximum_working_temperature: maximum temperature limit (in °C)
+        :param maximum_working_temperature: Maximum temperature limit (in °C)
         :param nominal_power: Nominal power of the heat exchanger (in W),
-            default to None
+            is treated as a power limit.
         :param minimum_delta: Specifies the delta between the primary and
-            secondary sides of the HE (in °C)
+            secondary sides of the HE (in °C), needs to be > 1 °C
+        :param conductivity_gain_factor: Gains (in nominal_power/K)
+        :param non_thermal_gains: Additional gains (relative to nominal power)
+        :param working_rate: Working price of imported heat in currency/Wh
+        :param revenue: Revenue from heat exported to a sink in currency/Wh
+
+
+        The heat is (partly) taken from the reservoir. If there are no
+        non_thermal_gains, its temperatre needs to be above (strictly greater)
+        the target temperature.
         """
         super().__init__(name=name)
 
@@ -62,6 +79,22 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         self.maximum_working_temperature = maximum_working_temperature
         self.nominal_power = nominal_power
         self.minimum_delta = minimum_delta
+        self.conductivity_gain_factor = conductivity_gain_factor
+        self.non_thermal_gains = non_thermal_gains
+        self.working_rate = working_rate
+        self.revenue = revenue
+
+        if minimum_delta < 1:
+            raise ValueError("minimum_delta has to be > 1 °C")
+
+        if (
+            np.array(self.non_thermal_gains).max() != 0
+            and not self.conductivity_gain_factor
+        ):
+            raise ValueError(
+                "AbstactHeatExchanger.non_thermal_gains only"
+                " makes sense when conductivity is also set."
+            )
 
     def _build_core(self):
         self.reservoir_temperature = self._solph_model.data.get_timeseries(
@@ -71,72 +104,58 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
 
         self.heat_carrier = self.location.get_carrier(HeatCarrier)
 
-    def _define_source(self):
-        usable_temperature = np.array(
-            [
-                (
-                    self.maximum_working_temperature
-                    if temp >= self.maximum_working_temperature
-                    else temp
-                )
-                for temp in self.reservoir_temperature
-            ]
-        )
+    def _normalised_gains(self, temperature):
+        if self.conductivity_gain_factor is not None:
+            unbound_gains = np.zeros(len(self.reservoir_temperature))
+            # We want a copy but do not know if self.non_thermal_gains
+            # is a scalar or an array.
+            unbound_gains += self.non_thermal_gains
 
+            unbound_gains += (
+                self.reservoir_temperature - temperature
+            ) * self.conductivity_gain_factor
+            return np.clip(unbound_gains, 0, 1)
+        else:
+            # This means full power step at reservoir_temperature.
+            # Only makes sense when non_thermal_gains are zero (see above).
+            return [
+                0 if temperature > t else 1 for t in self.reservoir_temperature
+            ]
+
+    def _define_source(self):
         self._bus_source = _bus_source = self.create_solph_node(
             label="heat_source",
             node_type=Bus,
-            custom_properties={"temperature": usable_temperature},
         )
 
         self.create_solph_node(
             label="source_reservoir",
             node_type=Source,
-            outputs={_bus_source: Flow()},
-            custom_attributes={"temperature": self.reservoir_temperature},
-        )
-
-        b_out = self.create_solph_node(
-            label="out",
-            node_type=Bus,
-            custom_properties={"temperature": usable_temperature},
-        )
-
-        b_in = self.create_solph_node(
-            label="in",
-            node_type=Bus,
-            custom_properties={
-                "temperature": usable_temperature - self.minimum_delta
+            outputs={
+                _bus_source: Flow(
+                    nominal_value=self.nominal_power,
+                    variable_costs=self._solph_model.data.get_timeseries(
+                        self.working_rate,
+                        kind=TimeseriesType.INTERVAL,
+                    ),
+                )
             },
         )
 
-        usability_series = [
-            1 if temp >= self.maximum_working_temperature else 0
-            for temp in self.reservoir_temperature
-        ]
+        self._bus_utilisation = self.create_solph_node(
+            label="utilisation",
+            node_type=Bus,
+        )
 
         self.create_solph_node(
-            label=f"source_limit",
-            node_type=Converter,
-            inputs={
-                _bus_source: Flow(
-                    max=usability_series, nominal_value=self.nominal_power
-                ),
-                b_in: Flow(),
-            },
-            outputs={b_out: Flow()},
-            conversion_factors={
-                _bus_source: self.minimum_delta
-                * self.heat_carrier.specific_heat_capacity
-            },
+            label="source_utilisation",
+            node_type=Source,
+            outputs={self._bus_utilisation: Flow(nominal_value=1)},
         )
 
         if self.autoconnect:
             highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
-                min(
-                    max(self.reservoir_temperature),
-                    self.maximum_working_temperature,
-                )
+                self.maximum_working_temperature,
             )
 
             _, cold_level = self.heat_carrier.get_surrounding_levels(
@@ -173,25 +192,33 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
                     cold_temperature
                 ]
 
-                usability_series = [
-                    1 if temp >= warm_temperature else 0
-                    for temp in self.reservoir_temperature
-                ]
+                gains = self._normalised_gains(warm_temperature)
+                heat_factor = self.heat_carrier.specific_heat_capacity * (
+                    warm_temperature - cold_temperature
+                )
+                inverted_gains = np.array(
+                    [1 / g if g > 0 else 1 for g in gains]
+                )
 
                 self.create_solph_node(
                     label=f"source_{warm_temperature}",
                     node_type=Converter,
                     inputs={
                         _bus_source: Flow(
-                            max=usability_series,
                             nominal_value=self.nominal_power,
+                            max=gains,
                         ),
                         heat_bus_cold_source: Flow(),
+                        self._bus_utilisation: Flow(),
                     },
                     outputs={heat_bus_warm_source: Flow()},
                     conversion_factors={
-                        _bus_source: self.minimum_delta
-                        * self.heat_carrier.specific_heat_capacity
+                        _bus_source: heat_factor,
+                        self._bus_utilisation: heat_factor
+                        * inverted_gains
+                        / self.nominal_power,
+                        heat_bus_cold_source: 1,
+                        heat_bus_warm_source: 1,
                     },
                 )
 
@@ -204,7 +231,16 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
         self.create_solph_node(
             label="sink",
             node_type=Sink,
-            inputs={_bus_sink: Flow()},
+            inputs={
+                _bus_sink: Flow(
+                    variable_costs=-(
+                        self._solph_model.data.get_timeseries(
+                            self.revenue,
+                            kind=TimeseriesType.INTERVAL,
+                        )
+                    )
+                )
+            },
         )
 
         highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
@@ -265,14 +301,18 @@ class AbstactHeatExchanger(AbstractTechnology, AbstractSolphRepresentation):
 
 
 class HeatSource(AbstactHeatExchanger):
+
     def __init__(
         self,
         name: str,
         reservoir_temperature: TimeseriesSpecifier,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        nominal_power: float = None,
+        nominal_power: float | None = None,
         minimum_delta: float = 1.0,
+        conductivity_gain_factor: float | None = None,
+        non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
+        working_rate: Optional[TimeseriesSpecifier] = 0,
     ):
 
         super().__init__(
@@ -282,6 +322,9 @@ class HeatSource(AbstactHeatExchanger):
             maximum_working_temperature=maximum_working_temperature,
             nominal_power=nominal_power,
             minimum_delta=minimum_delta,
+            conductivity_gain_factor=conductivity_gain_factor,
+            non_thermal_gains=non_thermal_gains,
+            working_rate = working_rate,
         )
 
         # Solph model interfaces
@@ -296,14 +339,18 @@ class HeatSource(AbstactHeatExchanger):
 
 
 class HeatSink(AbstactHeatExchanger):
+
     def __init__(
         self,
         name: str,
         reservoir_temperature: TimeseriesSpecifier,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        nominal_power: float = None,
+        nominal_power: float | None = None,
         minimum_delta: float = 1.0,
+        conductivity_gain_factor: float | None = None,
+        non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
+        revenue: float = 0,
     ):
 
         super().__init__(
@@ -313,6 +360,9 @@ class HeatSink(AbstactHeatExchanger):
             maximum_working_temperature=maximum_working_temperature,
             nominal_power=nominal_power,
             minimum_delta=minimum_delta,
+            conductivity_gain_factor=conductivity_gain_factor,
+            non_thermal_gains=non_thermal_gains,
+            revenue=revenue,
         )
 
         # Solph model interfaces
@@ -328,14 +378,17 @@ class HeatSink(AbstactHeatExchanger):
 
 
 class HeatExchanger(AbstactHeatExchanger):
+
     def __init__(
         self,
         name: str,
         reservoir_temperature: TimeseriesSpecifier,
+        nominal_power: float,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        nominal_power: float = None,
         minimum_delta: float = 1.0,
+        conductivity_gain_factor: float | None = None,
+        non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
     ):
 
         super().__init__(
@@ -344,6 +397,8 @@ class HeatExchanger(AbstactHeatExchanger):
             minimum_working_temperature=minimum_working_temperature,
             maximum_working_temperature=maximum_working_temperature,
             nominal_power=nominal_power,
+            conductivity_gain_factor=conductivity_gain_factor,
+            non_thermal_gains=non_thermal_gains,
             minimum_delta=minimum_delta,
         )
 

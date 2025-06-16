@@ -3,13 +3,12 @@
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Converter, Sink, Source
 
-from .._abstract_component import AbstractSolphRepresentation
 from .._data_handler import TimeseriesType
 from ..carriers import HeatCarrier
 from ._abstract_demand import AbstractDemand
 
 
-class AbstractFixedTemperature(AbstractDemand, AbstractSolphRepresentation):
+class AbstractFixedTemperature(AbstractDemand):
     """
     Superclass for heating or coolig with a fixed return temperature.
 
@@ -196,7 +195,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         )
 
         self.create_solph_node(
-            label="Source",
+            label="source",
             node_type=Source,
             outputs={
                 input: Flow(
