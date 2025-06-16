@@ -81,6 +81,8 @@ def molar_mass(molar_masses: list or tuple, shares: list or tuple):
     "Calculates the molar mass for a compound from that of its constituents."
     if len(molar_masses) != len(shares):
         raise ValueError('The input sizes must match.')
+    if sum(shares) != pytest.approx(1.0):
+        raise ValueError('Shares must add up to 1.0.')
     return sum(mm*share for mm, share in zip(molar_masses, shares))
 
 
