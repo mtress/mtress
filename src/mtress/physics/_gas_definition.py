@@ -77,11 +77,15 @@ def calc_biogas_heating_value(
         / (CH4_share * CH4_MOLAR_MASS + CO2_share * CO2_MOLAR_MASS)
     ) * heating_value
 
-def molar_mass(molar_masses: list or tuple, shares: list or tuple):
+def molar_mass(
+    molar_masses: list or tuple, 
+    shares: list or tuple, 
+    tolerance: float = 1e-3
+    ):
     "Calculates the molar mass for a compound from that of its constituents."
     if len(molar_masses) != len(shares):
         raise ValueError('The input sizes must match.')
-    if sum(shares) != pytest.approx(1.0):
+    if abs(sum(shares)-1.0) > tolerance:
         raise ValueError('Shares must add up to 1.0.')
     return sum(mm*share for mm, share in zip(molar_masses, shares))
 
