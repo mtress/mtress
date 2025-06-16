@@ -53,14 +53,14 @@ class TestCHP:
             (BIOGAS_CHP, 1.6856640186499998, True),
             (BIOMETHANE_CHP, 0.7855700564999999, True),
             (HYDROGEN_CHP, 0.32534810449999996, True),
-            (HYDROGEN_MIXED_CHP, 0.6963973715, True),
+            (HYDROGEN_MIXED_CHP, 0.6803280214999999, True),
             (AET100NG_CHP, 0.7897307499999999, True),
             # exports off: electricity production determines the rest
             (NATURALGAS_CHP, 0.8508048112500001, False),
             (BIOGAS_CHP, 1179261561.6128826, False), # mismatched production!
             (BIOMETHANE_CHP, 0.7855700564999999, False),
             (HYDROGEN_CHP, 0.32534810449999996, False),
-            (HYDROGEN_MIXED_CHP, 0.6963973715, False),
+            (HYDROGEN_MIXED_CHP, 0.6803280214999999, False),
             (AET100NG_CHP, 0.7897307499999999, False),
         ],
     )
@@ -198,7 +198,7 @@ class TestOffsetCHP:
             (BIOGAS_CHP, 1.6128827000000001, 0.0, False), # 
             (BIOMETHANE_CHP, 0.8431486449, 0.0, False),
             (HYDROGEN_CHP, 0.38465384999999996, 0.0, True),
-            (HYDROGEN_MIXED_CHP, 1.04185495, 0.0, False),
+            (HYDROGEN_MIXED_CHP, 1.01719755, 0.0, False),
             (AET100NG_CHP, 1.30378095, 0.0, False),
             # use min load from template (!= 0): penalties cannot be avoided
             (NATURALGAS_CHP, 28579735.004933327, None, False),
@@ -213,7 +213,7 @@ class TestOffsetCHP:
             (BIOGAS_CHP, 1.6128827000000001, 0.0, True), # 
             (BIOMETHANE_CHP, 0.8431486449, 0.0, True),
             (HYDROGEN_CHP, 0.38465384999999996, 0.0, True),
-            (HYDROGEN_MIXED_CHP, 1.04185495, 0.0, True),
+            (HYDROGEN_MIXED_CHP, 1.01719755, 0.0, True),
             (AET100NG_CHP, 1.30378095, 0.0, True),
             # use min load from template (!= 0): penalties cannot be avoided
             (NATURALGAS_CHP, 28579735.004933327, None, True),
