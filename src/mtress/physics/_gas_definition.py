@@ -78,16 +78,16 @@ def calc_biogas_heating_value(
     ) * heating_value
 
 def molar_mass(
-    molar_masses: list or tuple, 
-    shares: list or tuple, 
+    molar_masses: dict, 
+    shares: dict, 
     tolerance: float = 1e-3
     ):
     "Calculates the molar mass for a compound from that of its constituents."
-    if len(molar_masses) != len(shares):
+    if set(molar_masses.keys()) != set(shares.keys()):
         raise ValueError('The input sizes must match.')
-    if abs(sum(shares)-1.0) > tolerance:
-        raise ValueError('Shares must add up to 1.0.')
-    return sum(mm*share for mm, share in zip(molar_masses, shares))
+    if abs(sum(shares.values())-1.0) > tolerance:
+        raise ValueError('Shares must add up to one.')
+    return sum(molar_masses[key]*shares[key] for key in molar_masses.keys())
 
 
 @dataclass(frozen=True)
@@ -120,13 +120,18 @@ NATURAL_GAS = Gas(
     LHV=NG_LHV,
     HHV=NG_HHV,
     molar_mass=molar_mass(
-        molar_masses=[
-            CH4_MOLAR_MASS, 
-            C2H6_MOLAR_MASS, 
-            C3H8_MOLAR_MASS, 
-            CH4_MOLAR_MASS
-            ], 
-        shares=[0.9, 0.05, 0.03, 0.02]
+        molar_masses={
+            'CH4': CH4_MOLAR_MASS, 
+            'C2H6': C2H6_MOLAR_MASS, 
+            'C3H8': C3H8_MOLAR_MASS, 
+            'C4H10': C4H10_MOLAR_MASS
+            }, 
+        shares={
+            'CH4': 0.9, 
+            'C2H6': 0.05, 
+            'C3H8': 0.03, 
+            'C4H10': 0.02
+            }
         )
 )
 
@@ -135,8 +140,14 @@ BIOGAS = Gas(
     LHV=calc_biogas_heating_value(heating_value=CH4_LHV),
     HHV=calc_biogas_heating_value(heating_value=CH4_HHV),
     molar_mass=molar_mass(
-        molar_masses=[CH4_MOLAR_MASS, CO2_MOLAR_MASS], 
-        shares=[0.75, 0.25]
+        molar_masses={
+            'CH4': CH4_MOLAR_MASS, 
+            'CO2': CO2_MOLAR_MASS
+            }, 
+        shares={
+            'CH4': 0.75, 
+            'CO2': 0.25
+            }
         )
 )
 
