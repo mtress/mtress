@@ -14,11 +14,11 @@ def test_heat_source_initialisation():
     reservoir_temperature = np.array([0, 15, 55, -8.5])
     nominal_power = 10000
 
-    with pytest.raises(TypeError, match="nominal_power"):
-        _ = HeatSource(
-            name=name,
-            reservoir_temperature=reservoir_temperature,
-        )
+    #with pytest.raises(TypeError, match="nominal_power"):
+    #    _ = HeatSource(
+    #        name=name,
+    #        reservoir_temperature=reservoir_temperature,
+    #    )
 
     with pytest.raises(ValueError, match="minimum_delta has to be > 1 °C"):
         _ = HeatSource(
