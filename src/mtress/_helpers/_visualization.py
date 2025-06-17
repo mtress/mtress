@@ -9,9 +9,14 @@ from oemof.solph.components import (
     OffsetConverter,
 )
 
+from copy import deepcopy
 import logging
 from dash import Dash, html, dcc, Input, Output, callback
+from dash.exceptions import PreventUpdate
+import plotly.graph_objects as go
+import plotly.express as px
 import dash_cytoscape as cyto
+import pandas as pd
 
 from graphviz import Digraph
 
@@ -94,8 +99,159 @@ def graph_cytoscape(
         f,
     )
 
+    # get optimization start- and end-point
+    if flows is not None:
+        e = elements["flows"]
+        for d in e:
+            if "source" in d["data"] and "flow" in d["data"]:
+                flow = d["data"]["flow"]
+                break
+        t_start, t_end, t_steps = (
+            flow.index[0],
+            flow.index[-1],
+            flow.index,
+        )
+
     # init dash cytoscape
     cyto.load_extra_layouts()
+
+    graph = cyto.Cytoscape(
+        id="mtress_model",
+        layout={"name": "klay"},  # cose-bilkent | cola | klay
+        style={
+            "width": "100%",
+            "height": "calc(97vh - 120px)",
+        },
+        wheelSensitivity=0.1,
+        stylesheet=[
+            # Group selectors
+            {
+                "selector": "node",
+                "style": {
+                    "content": "data(label)",
+                    "shape": "cut-rectangle",
+                    "font-size": "36",
+                },
+            },
+            {
+                "selector": "edge",
+                "style": {
+                    "curve-style": "bezier",
+                    "target-arrow-shape": "triangle",
+                    "line-color": "black",
+                    "target-arrow-color": "black",
+                    "font-size": "28",
+                    "width": "6",
+                },
+            },
+            # Class selectors
+            # coloring
+            {
+                "selector": "." + colorscheme["HeatCarrier"],
+                "style": {
+                    "line-color": colorscheme["HeatCarrier"],
+                    "target-arrow-color": colorscheme["HeatCarrier"],
+                },
+            },
+            {
+                "selector": "." + colorscheme["ElectricityCarrier"],
+                "style": {
+                    "line-color": colorscheme["ElectricityCarrier"],
+                    "target-arrow-color": colorscheme["ElectricityCarrier"],
+                },
+            },
+            {
+                "selector": "." + colorscheme["GasCarrier"],
+                "style": {
+                    "line-color": colorscheme["GasCarrier"],
+                    "target-arrow-color": colorscheme["GasCarrier"],
+                },
+            },
+            {
+                "selector": ".inactive",
+                "style": {
+                    "line-color": "lightgrey",
+                    "target-arrow-color": "lightgrey",
+                    "line-style": "dashed",
+                },
+            },
+            {
+                "selector": ".rainbow",
+                "style": {
+                    "line-fill": "linear-gradient",
+                    "line-gradient-stop-colors": RAINBOW,
+                    "target-arrow-color": "firebrick",
+                },
+            },
+            # node shapes
+            {
+                "selector": ".source",
+                "style": {
+                    "shape": "polygon",
+                    "shape-polygon-points": SOURCE_SHAPE,
+                    "text-valign": "center",
+                    "text-halign": "center",
+                    "width": "label",
+                    "height": "label",
+                    "padding": "25px",
+                },
+            },
+            {
+                "selector": ".sink",
+                "style": {
+                    "shape": "polygon",
+                    "shape-polygon-points": SINK_SHAPE,
+                    "text-valign": "center",
+                    "text-halign": "center",
+                    "width": "label",
+                    "height": "label",
+                    "padding": "25px",
+                },
+            },
+            {
+                "selector": ".bus",
+                "style": {
+                    "shape": "ellipse",
+                    "text-valign": "center",
+                    "text-halign": "center",
+                    "width": "label",
+                    "height": "label",
+                    "padding": "25px",
+                },
+            },
+            {
+                "selector": ".converter",
+                "style": {
+                    "shape": "octagon",
+                    "text-valign": "center",
+                    "text-halign": "center",
+                    "width": "label",
+                    "height": "label",
+                    "padding": "25px",
+                },
+            },
+            {
+                "selector": ".storage",
+                "style": {
+                    "shape": "barrel",
+                    "text-valign": "center",
+                    "text-halign": "center",
+                    "width": "label",
+                    "height": "label",
+                    "padding": "25px",
+                },
+            },
+            {
+                "selector": ".parent",
+                "style": {
+                    "shape": "round-rectangle",
+                    "text-valign": "top",
+                },
+            },
+        ],
+        elements=elements["graph"],
+    )
+
     app = Dash()
 
     tabs = [dcc.Tab(label=x, value=x) for x in elements.keys()]
@@ -107,20 +263,131 @@ def graph_cytoscape(
                 value="graph",
                 children=tabs,
             ),
-            html.Button(
-                html.H3("hide inactive"),
-                id="toggle_inactive",
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.H1("Menu"),
+                            html.Hr(style={"margin-right": "-5px"}),
+                            html.Div(
+                                [
+                                    html.P("layout options"),
+                                    dcc.RadioItems(
+                                        [
+                                            "klay",
+                                            "cose-bilkent",
+                                            "cola",
+                                        ],
+                                        "klay",
+                                        id="layout_alg",
+                                    ),
+                                ]
+                            ),
+                            html.Hr(style={"margin-right": "-5px"}),
+                            html.Div(
+                                [
+                                    html.P("ts options"),
+                                    dcc.RadioItems(
+                                        ["mean", "total"],
+                                        "mean",
+                                        id="ts_aggregation",
+                                    ),
+                                    html.Button(
+                                        "hide inactive",
+                                        id="toggle_inactive",
+                                        n_clicks=0,
+                                    ),
+                                ],
+                                id="menu_ts",
+                                hidden=True,
+                            ),
+                        ],
+                        style={"width": "5%", "padding-right": "5px"},
+                    ),
+                    html.Div(
+                        [
+                            graph,
+                            html.Div(
+                                (
+                                    [
+                                        html.Div(
+                                            [
+                                                html.P(
+                                                    f"{str(t_start)}",
+                                                    id="date_slider_selection_start",
+                                                ),
+                                                html.P(
+                                                    f"{str(t_end)}",
+                                                    id="date_slider_selection_end",
+                                                ),
+                                            ],
+                                            style={
+                                                "display": "flex",
+                                                "justify-content": "space"
+                                                + "-between",
+                                            },
+                                        ),
+                                        dcc.RangeSlider(
+                                            0,
+                                            len(t_steps) - 1,
+                                            1,
+                                            value=[0, len(t_steps) - 1],
+                                            marks=None,
+                                            allowCross=False,
+                                            id="date_slider",
+                                        ),
+                                    ]
+                                    if flows is not None
+                                    else None
+                                ),
+                                id="slider_div",
+                                style={
+                                    "border-top": "dashed",
+                                    "padding-left": "50px",
+                                    "padding-right": "50px",
+                                },
+                                hidden=True,
+                            ),
+                        ],
+                        style={
+                            "width": "70%",
+                            "border-left": "solid",
+                            "border-right": "solid",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            html.H1("Flow details"),
+                            html.Hr(style={"margin-left": "-5px"}),
+                            html.Div(
+                                id="cyto_click_detail",
+                                hidden=True,
+                            ),
+                        ],
+                        style={
+                            "width": "25%",
+                            "height": "100%",
+                            "overflowY": "auto",
+                            "padding-left": "5px",
+                        },
+                    ),
+                ],
                 style={
-                    "position": "absolute",
-                    "right": 50,
-                    "top": 15,
-                    "z-index": 10,
+                    "display": "flex",
+                    "align-items": "top",
+                    "overflow": "hidden",
+                    "width": "100%",
+                    "height": "100%",
+                    "border-top": "solid",
                 },
-                hidden=True,
-                n_clicks=0,
             ),
-            html.Div(id="graph"),
-        ]
+        ],
+        style={
+            "height": "100vh",
+            "width": "100%",
+            "overflow": "hidden",
+            "font-family": "Tahoma",
+        },
     )
 
     @callback(
@@ -129,182 +396,226 @@ def graph_cytoscape(
     )
     def change_button(btn_clicks):
         if btn_clicks % 2:
-            return html.H3("show inactive")
+            return "show inactive"
         else:
-            return html.H3("hide inactive")
+            return "hide inactive"
 
     @callback(
-        Output("toggle_inactive", "hidden"), Input("view_selector", "value")
+        Output("menu_ts", "hidden"),
+        Output("slider_div", "hidden"),
+        Output("cyto_click_detail", "hidden"),
+        Input("view_selector", "value"),
     )
-    def toggle_inactive(tab):
+    def toggle_flow_controls(tab):
         if tab == "graph":
-            return True
+            return [True, True, True]
         elif tab == "flows":
-            return False
+            return [False, False, False]
 
     @callback(
-        Output("graph", "children"),
+        Output("mtress_model", "elements"),
         Input("view_selector", "value"),
         Input("toggle_inactive", "n_clicks"),
+        Input("ts_aggregation", "value"),
+        Input("date_slider", "value"),
     )
-    def render_graph(tab, show_inactive):
+    def update_graph_edges(tab, show_inactive, ts_agg, slider_values):
         e = elements[tab]
 
         # remove inactive edges
         if show_inactive % 2:
             e = [item for item in e if item["classes"] != "inactive"]
 
-        return html.Div(
-            [
-                cyto.Cytoscape(
-                    id="mtress_model",
-                    layout={
-                        "name": "cose-bilkent"
-                    },  # cose-bilkent | cola | klay
-                    style={
-                        "width": "100%",
-                        "height": "calc(100vh - 120px)",
-                    },
-                    wheelSensitivity=0.1,
-                    stylesheet=[
-                        # Group selectors
-                        {
-                            "selector": "node",
-                            "style": {
-                                "content": "data(label)",
-                                "shape": "cut-rectangle",
-                                "font-size": "36",
-                            },
-                        },
-                        {
-                            "selector": "edge",
-                            "style": {
-                                "curve-style": "bezier",
-                                "target-arrow-shape": "triangle",
-                                "line-color": "black",
-                                "target-arrow-color": "black",
-                                "font-size": "28",
-                                "width": "6",
-                            },
-                        },
-                        # Class selectors
-                        # coloring
-                        {
-                            "selector": "." + colorscheme["HeatCarrier"],
-                            "style": {
-                                "line-color": colorscheme["HeatCarrier"],
-                                "target-arrow-color": colorscheme[
-                                    "HeatCarrier"
-                                ],
-                            },
-                        },
-                        {
-                            "selector": "."
-                            + colorscheme["ElectricityCarrier"],
-                            "style": {
-                                "line-color": colorscheme[
-                                    "ElectricityCarrier"
-                                ],
-                                "target-arrow-color": colorscheme[
-                                    "ElectricityCarrier"
-                                ],
-                            },
-                        },
-                        {
-                            "selector": "." + colorscheme["GasCarrier"],
-                            "style": {
-                                "line-color": colorscheme["GasCarrier"],
-                                "target-arrow-color": colorscheme[
-                                    "GasCarrier"
-                                ],
-                            },
-                        },
-                        {
-                            "selector": ".inactive",
-                            "style": {
-                                "line-color": "lightgrey",
-                                "target-arrow-color": "lightgrey",
-                                "line-style": "dashed",
-                            },
-                        },
-                        {
-                            "selector": ".rainbow",
-                            "style": {
-                                "line-fill": "linear-gradient",
-                                "line-gradient-stop-colors": RAINBOW,
-                                "target-arrow-color": "firebrick",
-                            },
-                        },
-                        # node shapes
-                        {
-                            "selector": ".source",
-                            "style": {
-                                "shape": "polygon",
-                                "shape-polygon-points": SOURCE_SHAPE,
-                                "text-valign": "center",
-                                "text-halign": "center",
-                                "width": "label",
-                                "height": "label",
-                                "padding": "25px",
-                            },
-                        },
-                        {
-                            "selector": ".sink",
-                            "style": {
-                                "shape": "polygon",
-                                "shape-polygon-points": SINK_SHAPE,
-                                "text-valign": "center",
-                                "text-halign": "center",
-                                "width": "label",
-                                "height": "label",
-                                "padding": "25px",
-                            },
-                        },
-                        {
-                            "selector": ".bus",
-                            "style": {
-                                "shape": "ellipse",
-                                "text-valign": "center",
-                                "text-halign": "center",
-                                "width": "label",
-                                "height": "label",
-                                "padding": "25px",
-                            },
-                        },
-                        {
-                            "selector": ".converter",
-                            "style": {
-                                "shape": "octagon",
-                                "text-valign": "center",
-                                "text-halign": "center",
-                                "width": "label",
-                                "height": "label",
-                                "padding": "25px",
-                            },
-                        },
-                        {
-                            "selector": ".storage",
-                            "style": {
-                                "shape": "barrel",
-                                "text-valign": "center",
-                                "text-halign": "center",
-                                "width": "label",
-                                "height": "label",
-                                "padding": "25px",
-                            },
-                        },
-                        {
-                            "selector": ".parent",
-                            "style": {
-                                "shape": "round-rectangle",
-                                "text-valign": "top",
-                            },
-                        },
-                    ],
-                    elements=e,
+        # set labels on edges according to selection
+        for d in e:
+            if "source" in d["data"] and "flow" in d["data"]:
+                flow = d["data"]["flow"]
+                # cut flow according to range_slider
+                start, end = (
+                    t_steps[slider_values[0]],
+                    t_steps[slider_values[1]],
                 )
-            ]
+                flow = flow[start:end]
+
+                match ts_agg:
+                    case "mean":
+                        d["style"]["label"] = f"{round(flow.mean(), 3)}"
+                    case "total":
+                        d["style"]["label"] = f"{round(flow.sum(), 3)}"
+
+        graph.elements = e
+        return graph.elements
+
+    @callback(Output("mtress_model", "layout"), Input("layout_alg", "value"))
+    def update_graph_layout(layout):
+        return {"name": layout}
+
+    @callback(
+        Output("date_slider_selection_start", "children"),
+        Output("date_slider_selection_end", "children"),
+        Input("date_slider", "drag_value"),
+        prevent_initial_call=True,
+    )
+    def show_range_slider_values(slider_values):
+        start, end = (
+            t_steps[slider_values[0]],
+            t_steps[slider_values[1]],
         )
+        return [f"{str(start)}", f"{str(end)}"]
+
+    @callback(
+        Output("cyto_click_detail", "children", allow_duplicate=True),
+        Output("mtress_model", "tapEdgeData"),  # reset last edge clicked
+        Input("mtress_model", "tapNodeData"),
+        Input("view_selector", "value"),
+        Input("date_slider", "value"),
+        prevent_initial_call=True,
+    )
+    def displayTapNodeData(data, tab, slider_values):
+        # TODO: aggregated plot & plot for storages (add storage data!)
+        if data is None or tab != "flows":
+            raise PreventUpdate
+        if tab == "flows" and data:
+            e_out = {}
+            e_in = {}
+            plots_in = []
+            plots_out = []
+            for d in elements["flows"]:
+                if "source" in d["data"] and "flow" in d["data"]:
+                    if d["data"]["target"] == data["id"]:  # inflows
+                        source = d["data"]["source"]
+                        flow = d["data"]["flow"]
+                        # cut flow according to range_slider
+                        start, end = (
+                            t_steps[slider_values[0]],
+                            t_steps[slider_values[1]],
+                        )
+                        flow = flow[start:end]
+
+                        e_in[source] = flow
+                        f = pd.DataFrame()
+                        f["flow"] = flow
+                        plots_in.append(
+                            go.Scatter(
+                                x=f.index,
+                                y=f["flow"],
+                                stackgroup="one",
+                                name=source,
+                            )
+                        )
+                    if d["data"]["source"] == data["id"]:  # outflows
+                        target = d["data"]["target"]
+                        flow = d["data"]["flow"]
+                        # cut flow according to range_slider
+                        start, end = (
+                            t_steps[slider_values[0]],
+                            t_steps[slider_values[1]],
+                        )
+                        flow = flow[start:end]
+
+                        e_out[target] = flow
+                        f = pd.DataFrame()
+                        f["flow"] = flow
+                        plots_out.append(
+                            go.Scatter(
+                                x=f.index,
+                                y=f["flow"],
+                                mode="lines",
+                                name=target,
+                            )
+                        )
+
+            # check if active flows
+            msg = "--> "
+            if not e_out and not e_in:
+                msg += "no flows available for this node"
+                plot = None
+            else:
+                msg += (
+                    f"this node has {len(e_out)} out-"
+                    + f"and {len(e_in)} ingoing flows"
+                )
+                fig = go.Figure()
+                for pi in plots_in:
+                    fig.add_trace(pi)
+                for po in plots_out:
+                    fig.add_trace(po)
+                fig.update_layout(
+                    barmode="stack",
+                    legend=dict(
+                        orientation="h",  # horizontal
+                        yanchor="bottom",  # Positionierung von unten
+                        y=1.02,  # Abstand von der oberen Kante des Plots
+                        xanchor="right",  # Positionierung von rechts
+                        x=1,  # Abstand von der rechten Kante des Plots
+                    ),
+                    margin=dict(l=20, r=20),
+                )
+                plot = dcc.Graph(figure=fig)
+
+            return [
+                html.P(
+                    f"You recently clicked: {data['label']} ({data['id']})"
+                ),
+                html.P(msg),
+                plot,
+            ], None
+
+    @callback(
+        Output("cyto_click_detail", "children", allow_duplicate=True),
+        Output("mtress_model", "tapNodeData"),  # reset last node clicked
+        Input("mtress_model", "tapEdgeData"),
+        Input("view_selector", "value"),
+        Input("date_slider", "value"),
+        prevent_initial_call=True,
+    )
+    def displayTapEdgeData(data, tab, slider_values):
+        if data is None or tab != "flows":
+            raise PreventUpdate
+        if tab == "flows" and data:
+            if "flow" in data:
+                source = data["source"]
+                target = data["target"]
+                # get flow series from elements
+                for d in elements["flows"]:
+                    if "source" in d["data"] and "flow" in d["data"]:
+                        if (
+                            source == d["data"]["source"]
+                            and target == d["data"]["target"]
+                        ):
+                            flow = d["data"]["flow"]
+                            break
+                start, end = (
+                    t_steps[slider_values[0]],
+                    t_steps[slider_values[1]],
+                )
+                flow = flow[start:end]
+                f = pd.DataFrame()
+                f["flow"] = flow
+                fig = px.line(
+                    f,
+                    x=f.index,
+                    y="flow",
+                )
+                fig.update_layout(margin=dict(l=20, r=20))
+                flow_total = flow.sum()
+                flow_mean = flow.mean()
+                flow_min = flow.min()
+                flow_max = flow.max()
+
+                return [
+                    html.P(f"from: {source}"),
+                    html.P(f"to: {target}"),
+                    dcc.Graph(figure=fig),
+                    html.H3("metrics"),
+                    html.Hr(style={"margin-left": "-5px", "border": "dotted"}),
+                    html.P(f"total: {flow_total}"),
+                    html.P(f"mean: {flow_mean}"),
+                    html.P(f"min: {flow_min}"),
+                    html.P(f"max: {flow_max}"),
+                ], None
+            else:
+                return html.P("no flow available"), None
 
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
     app.run(debug=False)
@@ -469,7 +780,7 @@ def generate_graph(
             graph_edges[source_id].setdefault(target_id, {})
             graph_edges[source_id][target_id]["color"] = edge_color
             if flows is not None:
-                flow = flows[n.label, t.label].mean()  # .sum()
+                flow = flows[n.label, t.label]  # .mean()  # .sum()
                 graph_edges[source_id][target_id]["flow"] = flow
 
     graph_elements = {
@@ -541,7 +852,7 @@ def generate_graph_graphviz(
             if color == "rainbow":
                 color = RAINBOW_GRAPHVIZ
             if flows:
-                flow = edge_attributes["flow"]
+                flow = edge_attributes["flow"].mean()
                 if flow > 0:
                     graph.edge(
                         source,
@@ -605,13 +916,15 @@ def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
                 },
                 "classes": edge_attr["color"],
             }
-            cytoscape_edges.append(e.copy())
+            cytoscape_edges.append(deepcopy(e))
 
             if flows:
                 flow = edge_attr["flow"]
-                if flow > 0:
+                flow_mean = flow.mean()
+                if flow_mean > 0:
+                    e["data"]["flow"] = flow
                     e["style"] = {
-                        "label": str(round(flow, 3)),
+                        "label": str(round(flow_mean, 3)),
                         "text-rotation": "autorotate",
                         "text-background-shape": "round-rectangle",
                         "text-background-opacity": "1",
