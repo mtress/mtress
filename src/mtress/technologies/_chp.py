@@ -145,7 +145,7 @@ HYDROGEN_MIXED_CHP = CHPTemplate(
 # Ansaldo Energia's T100 MGT
 # source: https://www.ansaldoenergia.com/offering/equipment/turbomachinery/microturbines/ae-t-100
 # i.e.: https://www.ansaldoenergia.com/fileadmin/Brochure/AnsaldoEnergia-Microturbine-AE-T100NG-20220907.pdf
-AET100NG_CHP = CHPTemplate(
+NATURALGAS_MGT = CHPTemplate(
     gas_type={NATURAL_GAS: 1},
     maximum_temperature=110, # Celsius (LUT data)
     minimum_temperature=20, # Celsius (LUT data)

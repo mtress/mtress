@@ -22,7 +22,7 @@ from mtress.technologies import (
     BIOMETHANE_CHP,
     HYDROGEN_CHP,
     HYDROGEN_MIXED_CHP,
-    AET100NG_CHP
+    NATURALGAS_MGT
 )
 
 
@@ -54,14 +54,14 @@ class TestCHP:
             (BIOMETHANE_CHP, 0.7855700564999999, True),
             (HYDROGEN_CHP, 0.32534810449999996, True),
             (HYDROGEN_MIXED_CHP, 0.6803280214999999, True),
-            (AET100NG_CHP, 0.7897307499999999, True),
+            (NATURALGAS_MGT, 0.7897307499999999, True),
             # exports off: electricity production determines the rest
             (NATURALGAS_CHP, 0.8508048112500001, False),
             (BIOGAS_CHP, 1179261561.6128826, False), # mismatched production!
             (BIOMETHANE_CHP, 0.7855700564999999, False),
             (HYDROGEN_CHP, 0.32534810449999996, False),
             (HYDROGEN_MIXED_CHP, 0.6803280214999999, False),
-            (AET100NG_CHP, 0.7897307499999999, False),
+            (NATURALGAS_MGT, 0.7897307499999999, False),
         ],
     )
     def test_chp(
@@ -199,14 +199,14 @@ class TestOffsetCHP:
             (BIOMETHANE_CHP, 0.8431486449, 0.0, False),
             (HYDROGEN_CHP, 0.38465384999999996, 0.0, True),
             (HYDROGEN_MIXED_CHP, 1.01719755, 0.0, False),
-            (AET100NG_CHP, 1.30378095, 0.0, False),
+            (NATURALGAS_MGT, 1.30378095, 0.0, False),
             # use min load from template (!= 0): penalties cannot be avoided
             (NATURALGAS_CHP, 28579735.004933327, None, False),
             (BIOGAS_CHP, 25323091.774170972, None, False),
             (BIOMETHANE_CHP, 28550544.92665914, None, False),
             (HYDROGEN_CHP, 29909798.423119232, None, False),
             (HYDROGEN_MIXED_CHP, 40666145.14604045, None, False),
-            (AET100NG_CHP, 143067783.8904824, None, False),
+            (NATURALGAS_MGT, 143067783.8904824, None, False),
             # exports on @ net metering: marginal impact due to huge penalties
             # min load = 0: no (major) penalties
             (NATURALGAS_CHP, 0.9135757499999999, 0.0, True),
@@ -214,14 +214,14 @@ class TestOffsetCHP:
             (BIOMETHANE_CHP, 0.8431486449, 0.0, True),
             (HYDROGEN_CHP, 0.38465384999999996, 0.0, True),
             (HYDROGEN_MIXED_CHP, 1.01719755, 0.0, True),
-            (AET100NG_CHP, 1.30378095, 0.0, True),
+            (NATURALGAS_MGT, 1.30378095, 0.0, True),
             # use min load from template (!= 0): penalties cannot be avoided
             (NATURALGAS_CHP, 28579735.004933327, None, True),
             (BIOGAS_CHP, 25323091.774170972, None, True),
             (BIOMETHANE_CHP, 28550544.92665914, None, True),
             (HYDROGEN_CHP, 29909798.423119232, None, True),
             (HYDROGEN_MIXED_CHP, 40666145.14604045, None, True),
-            (AET100NG_CHP, 143067783.8904824, None, True),
+            (NATURALGAS_MGT, 143067783.8904824, None, True),
         ],
     )
     def test_min_power(
