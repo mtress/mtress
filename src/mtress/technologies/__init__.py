@@ -12,9 +12,11 @@ from ._chp import (
     BIOGAS_CHP,
     BIOMETHANE_CHP,
     CHP,
+    OffsetCHP,
     HYDROGEN_CHP,
     HYDROGEN_MIXED_CHP,
     NATURALGAS_CHP,
+    NATURALGAS_MGT
 )
 from ._compressor import GasCompressor
 from ._electrolyser import (
@@ -63,9 +65,11 @@ __all__ = [
     "PowerWallGenII",
     "HeatPump",
     "COPReference",
+    "OffsetCHP",
     "CHP",
     "ResistiveHeater",
     "GasBoiler",
+    "NATURALGAS_MGT",
     "NATURALGAS_CHP",
     "BIOGAS_CHP",
     "BIOMETHANE_CHP",
