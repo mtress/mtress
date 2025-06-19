@@ -23,14 +23,15 @@ class SlackNode(AbstractTechnology):
     """
     A component that provides sink and source slack nodes.
     Slack nodes are infinte sources of energy.
+    The SlackNode component auto connects to all present carrieres.
 
     Usage:
         1. One may specify only a penalty.
-            The SlackNode component auto connects to all present carrieres.
             All flows have the same, specified, penalty.
-        2. One may specify a penalty for each desired carrier
+        2. One may specify a custom penalty for each desired carrier
             in the following format:
             {CarrierClass[AbstractCarrier]: penalty[float]}
+            NOTE: for all other carriers a default penalty is applied
     """
 
     def __init__(self, penalty: float | dict[AbstractCarrier, float] = 1e9):
@@ -45,17 +46,22 @@ class SlackNode(AbstractTechnology):
         if isinstance(penalty, numbers.Real):
             # set same penalty for all present carriers
             self.penalty = penalty
-            self.auto_connect = True
         elif isinstance(penalty, dict):
             # check for correct dict structure
             if all(
-                issubclass(k, AbstractCarrier) and type(v) == float
-                for k, v in penalty.items()
+                [
+                    issubclass(k, (AbstractCarrier))
+                    and isinstance(v, numbers.Real)
+                    for k, v in penalty.items()
+                ]
             ):
                 self.penalty = penalty
-                self.auto_connect = False
+                self.penalty_default = 1e9
             else:
-                raise ValueError("Specify a penalty for each carrier!")
+                raise ValueError(
+                    "Specifiy penalties in the following format: "
+                    + "{CarrierClass[AbstractCarrier]: penalty[float]}"
+                )
 
     def try_carrier(self, carrier_type: type) -> AbstractCarrier | None:
         try:
@@ -66,56 +72,64 @@ class SlackNode(AbstractTechnology):
 
     def build_core(self):
         """Build oemof solph core structure."""
-        electricity_carrier = None
-        heat_carrier = None
-        gas_carrier = None
+        # get all carriers
+        carriers = self.location._carriers
 
-        if self.auto_connect:
-            # get all carriers
-            electricity_carrier = self.try_carrier(ElectricityCarrier)
-            electricity_penalty = self.penalty
-            heat_carrier = self.try_carrier(HeatCarrier)
-            heat_penalty = self.penalty
-            gas_carrier = self.try_carrier(GasCarrier)
-            gas_penalty = self.penalty
-        else:
-            # get only the specified carriers
-            for k, v in self.penalty.items():
-                if k == ElectricityCarrier:
-                    electricity_carrier = self.try_carrier(ElectricityCarrier)
-                    electricity_penalty = v
-                elif k == HeatCarrier:
-                    heat_carrier = self.try_carrier(HeatCarrier)
-                    heat_penalty = v
-                elif k == GasCarrier:
-                    gas_carrier = self.try_carrier(GasCarrier)
-                    gas_penalty = v
+        # create full penalties dict
+        penalties = {}
+        if isinstance(self.penalty, dict):
+            # check if all specified carriers are available
+            if not set(carriers.keys()).issuperset(set(self.penalty.keys())):
+                raise ValueError(
+                    "You specified penalties for carriers "
+                    + "not available within your system!"
+                )
+            for k in carriers.keys():
+                # add specified penalty
+                if k in self.penalty:
+                    penalties[k] = self.penalty[k]
+                # add default penalty for unspecified carrier
+                else:
+                    penalties[k] = self.penalty_default
+        elif isinstance(self.penalty, numbers.Real):
+            # set penalty for all carriers
+            for k in carriers.keys():
+                penalties[k] = self.penalty
 
         slack_source = {}  # missing energy
         slack_sink = {}  # excess energy
 
-        # collect all nodes to connect to
-        # electricity: distribution node
-        if electricity_carrier is not None:
-            node = electricity_carrier.distribution
-            slack_source[node] = Flow(variable_costs=electricity_penalty)
-            slack_sink[node] = Flow(variable_costs=electricity_penalty)
+        # collect all carrier nodes
+        for k, v in penalties.items():
+            # match default carriers
+            if k == ElectricityCarrier:
+                electricity_carrier = self.location.get_carrier(
+                    ElectricityCarrier
+                )
+                node = electricity_carrier.distribution
+                slack_source[node] = Flow(variable_costs=v)
+                slack_sink[node] = Flow(variable_costs=v)
+            elif k == HeatCarrier:
+                heat_carrier = self.location.get_carrier(HeatCarrier)
+                for h_node in heat_carrier.level_nodes.values():
+                    slack_source[h_node] = Flow(variable_costs=v)
+                    slack_sink[h_node] = Flow(variable_costs=v)
+            elif k == GasCarrier:
+                gas_carrier = self.location.get_carrier(GasCarrier)
+                for gas in gas_carrier.distribution.values():
+                    gas_nodes = list(gas.values())  # always sorted
+                    gas_high = gas_nodes[-1]
+                    slack_source[gas_high] = Flow(variable_costs=v)
 
-        # heat: all T_?? nodes
-        if heat_carrier is not None:
-            for h_node in heat_carrier.level_nodes.values():
-                slack_source[h_node] = Flow(variable_costs=heat_penalty)
-                slack_sink[h_node] = Flow(variable_costs=heat_penalty)
-
-        # gas: highest (missing) and lowest (excess) pressure per gas
-        if gas_carrier is not None:
-            for gas in gas_carrier.distribution.values():
-                gas_nodes = list(gas.values())  # always sorted
-                gas_high = gas_nodes[-1]
-                slack_source[gas_high] = Flow(variable_costs=gas_penalty)
-
-                gas_low = gas_nodes[0]
-                slack_sink[gas_low] = Flow(variable_costs=gas_penalty)
+                    gas_low = gas_nodes[0]
+                    slack_sink[gas_low] = Flow(variable_costs=v)
+            # match any other carrier
+            # NOTE: will connect sink and source to all nodes
+            else:
+                carrier = self.location.get_carrier(k)
+                for node in carrier.solph_nodes:
+                    slack_source[node] = Flow(variable_costs=v)
+                    slack_sink[node] = Flow(variable_costs=v)
 
         # create slack nodes
         self.create_solph_node(
