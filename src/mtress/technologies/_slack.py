@@ -23,18 +23,18 @@ class SlackNode(AbstractTechnology):
     """
     A component that provides sink and source slack nodes.
     Slack nodes are infinte sources of energy.
-    The SlackNode component auto connects to all present carrieres.
 
     Usage:
         1. One may specify only a penalty.
             All flows have the same, specified, penalty.
+            NOTE: The SlackNode component auto connects to all present carrieres.
         2. One may specify a custom penalty for each desired carrier
             in the following format:
             {CarrierClass[AbstractCarrier]: penalty[float]}
-            NOTE: for all other carriers a default penalty is applied
+            NOTE: SlackNode only connects to stated carriers
     """
 
-    def __init__(self, penalty: float | dict[AbstractCarrier, float] = 1e9):
+    def __init__(self, penalty: float | dict[AbstractCarrier, float] = None):
         """
         Initialize SlackNode component with infinite source and sink.
 
@@ -43,6 +43,9 @@ class SlackNode(AbstractTechnology):
             {CarrierClass[AbstractCarrier]: penalty[float]}
         """
         super().__init__(name=self.__class__.__name__)
+        if penalty == None:
+            # apply default penalty
+            self.penalty = 1e9
         if isinstance(penalty, numbers.Real):
             # set same penalty for all present carriers
             self.penalty = penalty
@@ -56,19 +59,11 @@ class SlackNode(AbstractTechnology):
                 ]
             ):
                 self.penalty = penalty
-                self.penalty_default = 1e9
             else:
                 raise ValueError(
                     "Specifiy penalties in the following format: "
                     + "{CarrierClass[AbstractCarrier]: penalty[float]}"
                 )
-
-    def try_carrier(self, carrier_type: type) -> AbstractCarrier | None:
-        try:
-            carrier = self.location.get_carrier(carrier_type)
-        except KeyError:
-            carrier = None
-        return carrier
 
     def build_core(self):
         """Build oemof solph core structure."""
@@ -88,9 +83,6 @@ class SlackNode(AbstractTechnology):
                 # add specified penalty
                 if k in self.penalty:
                     penalties[k] = self.penalty[k]
-                # add default penalty for unspecified carrier
-                else:
-                    penalties[k] = self.penalty_default
         elif isinstance(self.penalty, numbers.Real):
             # set penalty for all carriers
             for k in carriers.keys():

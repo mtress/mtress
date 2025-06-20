@@ -87,7 +87,7 @@ def test_slack_build():
             {
                 carriers.ElectricityCarrier: 1e3,
                 carriers.HeatCarrier: 1e5,
-                # not stating a carrier -> default penalty applied
+                # not stating a carrier -> not connected to slack
                 # carriers.GasCarrier: 1e7,
             }
         )
