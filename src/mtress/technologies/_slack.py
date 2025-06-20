@@ -27,7 +27,7 @@ class SlackNode(AbstractTechnology):
     Usage:
         1. One may specify only a penalty.
             All flows have the same, specified, penalty.
-            NOTE: The SlackNode component auto connects to all present carrieres.
+            NOTE: The SlackNode auto connects to all present carriers.
         2. One may specify a custom penalty for each desired carrier
             in the following format:
             {CarrierClass[AbstractCarrier]: penalty[float]}
@@ -46,7 +46,7 @@ class SlackNode(AbstractTechnology):
         if penalty == None:
             # apply default penalty
             self.penalty = 1e9
-        if isinstance(penalty, numbers.Real):
+        elif isinstance(penalty, numbers.Real):
             # set same penalty for all present carriers
             self.penalty = penalty
         elif isinstance(penalty, dict):
