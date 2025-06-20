@@ -139,4 +139,5 @@ solved_model.write(
     "hydrogen_production.lp", io_options={"symbolic_solver_labels": True}
 )
 
-solph_representation.graph(flow_results=flows)
+# runs into graphviz errors from time to time
+# solph_representation.graph(flow_results=flows)
