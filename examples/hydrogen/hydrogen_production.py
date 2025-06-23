@@ -135,8 +135,8 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-solved_model.write(
-    "hydrogen_production.lp", io_options={"symbolic_solver_labels": True}
-)
+# solved_model.write(
+#     "hydrogen_production.lp", io_options={"symbolic_solver_labels": True}
+# )
 
-solph_representation.graph(flow_results=flows)
+# solph_representation.graph(flow_results=flows)
