@@ -16,9 +16,11 @@ from ._chp import (
     BIOGAS_CHP,
     BIOMETHANE_CHP,
     CHP,
+    OffsetCHP,
     HYDROGEN_CHP,
     HYDROGEN_MIXED_CHP,
     NATURALGAS_CHP,
+    NATURALGAS_MGT
 )
 from ._compressor import GasCompressor
 from ._electrolyser import (
@@ -39,7 +41,6 @@ from ._heat_exchanger import HeatExchanger, HeatSink, HeatSource
 from ._heat_pump import HeatPump, COPReference
 from ._heat_storage import LayeredHeatStorage
 from ._heater import GasBoiler, ResistiveHeater
-from ._photovoltaics import Photovoltaics
 from ._pressure_storage import H2Storage
 from ._renewable_electricity_source import RenewableElectricitySource
 from ._slack import SlackNode
@@ -78,9 +79,11 @@ __all__ = [
     "GenericBatteryModelII",
     "HeatPump",
     "COPReference",
+    "OffsetCHP",
     "CHP",
     "ResistiveHeater",
     "GasBoiler",
+    "NATURALGAS_MGT",
     "NATURALGAS_CHP",
     "BIOGAS_CHP",
     "BIOMETHANE_CHP",
@@ -90,7 +93,6 @@ __all__ = [
     "H2Storage",
     "FuelCell",
     "LayeredHeatStorage",
-    "Photovoltaics",
     "RenewableElectricitySource",
     "GasBoiler",
     "SlackNode",

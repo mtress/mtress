@@ -29,9 +29,8 @@ from ._gas_definition import (
     NATURAL_GAS,
     Gas,
     calc_biogas_heating_value,
-    calc_biogas_molar_mass,
     calc_hydrogen_density,
-    calc_natural_gas_molar_mass,
+    molar_mass
 )
 from ._helper_functions import (
     bar_to_pascal,
@@ -49,8 +48,7 @@ from ._helper_functions import (
 
 __all__ = [
     "kilo_to_mega",
-    "calc_biogas_molar_mass",
-    "calc_natural_gas_molar_mass",
+    "molar_mass",
     "celsius_to_kelvin",
     "kelvin_to_celsius",
     "kJ_to_MWh",

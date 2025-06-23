@@ -17,7 +17,6 @@ from mtress import (
     demands
 )
 from mtress._helpers import get_flows
-# from mtress._helpers._visualization import render_series
 
 os.chdir(os.path.dirname(__file__))
 
@@ -60,8 +59,8 @@ solph_representation = SolphModel(
     energy_system,
     timeindex={
         "start": "2021-07-10 10:00:00",
-        "end": "2021-07-10 12:00:00",
-        "freq": "60T",
+        "end": "2021-07-10 13:00:00",
+        "freq": "60min",
         "tz": "Europe/Berlin",
     },
 )
@@ -87,8 +86,4 @@ plt.xticks(
 plt.ylabel("Power (W)")
 plt.show()
 
-plot = solph_representation.graph(
-    detail=True, flow_results=flows, flow_color=None
-)
-# plot.render(view=True) # works 
-# plot.render(outfile="electricity_battery_results.png")
+solph_representation.graph(flow_results=flows)

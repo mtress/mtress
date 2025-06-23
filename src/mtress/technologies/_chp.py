@@ -3,8 +3,12 @@
 import logging
 from dataclasses import dataclass
 
-from oemof.solph import Flow
-from oemof.solph.components import Converter
+from oemof.solph import Flow, Bus, NonConvex
+from oemof.solph.components import ( 
+    Converter, 
+    OffsetConverter,
+    slope_offset_from_nonconvex_input
+    )
 
 from .._helpers._util import enable_templating
 from ..carriers import ElectricityCarrier, GasCarrier
@@ -65,8 +69,12 @@ class CHPTemplate:
     maximum_temperature: float
     minimum_temperature: float
     input_pressure: float
-    electric_efficiency: float
-    thermal_efficiency: float
+    nominal_electrical_efficiency: float
+    nominal_thermal_efficiency: float
+    min_load_electrical_efficiency: float
+    min_load_thermal_efficiency: float
+    normalised_min_load: float
+    nominal_power: float
 
 
 NATURALGAS_CHP = CHPTemplate(
@@ -74,8 +82,12 @@ NATURALGAS_CHP = CHPTemplate(
     maximum_temperature=85,
     minimum_temperature=20,
     input_pressure=1,
-    electric_efficiency=0.421,
-    thermal_efficiency=0.454,
+    nominal_electrical_efficiency=0.421,
+    nominal_thermal_efficiency=0.454,
+    min_load_electrical_efficiency=0.421,
+    min_load_thermal_efficiency=0.454,
+    normalised_min_load=0.1,
+    nominal_power=500e3 # W (electrical)
 )
 
 BIOGAS_CHP = CHPTemplate(
@@ -83,8 +95,12 @@ BIOGAS_CHP = CHPTemplate(
     maximum_temperature=85,
     minimum_temperature=20,
     input_pressure=1,
-    electric_efficiency=0.427,
-    thermal_efficiency=0.408,
+    nominal_electrical_efficiency=0.427,
+    nominal_thermal_efficiency=0.408,
+    min_load_electrical_efficiency=0.427,
+    min_load_thermal_efficiency=0.408,
+    normalised_min_load=0.1,
+    nominal_power=500e3 # W (electrical)
 )
 
 BIOMETHANE_CHP = CHPTemplate(
@@ -92,8 +108,12 @@ BIOMETHANE_CHP = CHPTemplate(
     maximum_temperature=85,
     minimum_temperature=20,
     input_pressure=1,
-    electric_efficiency=0.427,
-    thermal_efficiency=0.46,
+    nominal_electrical_efficiency=0.427,
+    nominal_thermal_efficiency=0.46,
+    min_load_electrical_efficiency=0.427,
+    min_load_thermal_efficiency=0.46,
+    normalised_min_load=0.1,
+    nominal_power=500e3 # W (electrical)
 )
 
 HYDROGEN_CHP = CHPTemplate(
@@ -101,8 +121,12 @@ HYDROGEN_CHP = CHPTemplate(
     maximum_temperature=90,
     minimum_temperature=20,
     input_pressure=1,
-    electric_efficiency=0.39,
-    thermal_efficiency=0.474,
+    nominal_electrical_efficiency=0.39,
+    nominal_thermal_efficiency=0.474,
+    min_load_electrical_efficiency=0.39,
+    min_load_thermal_efficiency=0.474,
+    normalised_min_load=0.1,
+    nominal_power=500e3 # W (electrical)
 )
 
 HYDROGEN_MIXED_CHP = CHPTemplate(
@@ -110,10 +134,29 @@ HYDROGEN_MIXED_CHP = CHPTemplate(
     maximum_temperature=85,
     minimum_temperature=20,
     input_pressure=1,
-    electric_efficiency=0.363,
-    thermal_efficiency=0.557,
+    nominal_electrical_efficiency=0.363,
+    nominal_thermal_efficiency=0.557,
+    min_load_electrical_efficiency=0.363,
+    min_load_thermal_efficiency=0.557,
+    normalised_min_load=0.1,
+    nominal_power=500e3 # W (electrical)
 )
 
+# Ansaldo Energia's T100 MGT
+# source: https://www.ansaldoenergia.com/offering/equipment/turbomachinery/microturbines/ae-t-100
+# i.e.: https://www.ansaldoenergia.com/fileadmin/Brochure/AnsaldoEnergia-Microturbine-AE-T100NG-20220907.pdf
+NATURALGAS_MGT = CHPTemplate(
+    gas_type={NATURAL_GAS: 1},
+    maximum_temperature=110, # Celsius (LUT data)
+    minimum_temperature=20, # Celsius (LUT data)
+    input_pressure=0.1, # 0.02-0.1 bar 
+    nominal_electrical_efficiency=0.295, # average @ nom. load
+    nominal_thermal_efficiency=0.500, # average @ nom. load
+    min_load_electrical_efficiency=0.239, # average @ min. load
+    min_load_thermal_efficiency=0.490, # average @ min. load
+    normalised_min_load=0.45,
+    nominal_power=100e3 # W (electrical)
+    )
 
 class CHP(AbstractHeater):
     """
@@ -152,8 +195,9 @@ class CHP(AbstractHeater):
         minimum_temperature: float,
         nominal_power: float,
         input_pressure: float,
-        electric_efficiency: float,
-        thermal_efficiency: float,
+        nominal_electrical_efficiency: float,
+        nominal_thermal_efficiency: float,
+        allow_electricity_feed_in: bool = True
     ):
         """
         Initialize CHP component.
@@ -167,9 +211,9 @@ class CHP(AbstractHeater):
         :param nominal_power: Nominal electric output capacity of the CHP
             (in Watts)
         :param input_pressure: Input pressure of gas or gases (in bar).
-        :param electric_efficiency: Electric conversion efficiency
+        :param nominal_electrical_efficiency: Electric conversion efficiency
             (LHV) of the CHP
-        :param thermal_efficiency: Thermal conversion efficiency
+        :param nominal_thermal_efficiency: Thermal conversion efficiency
             (LHV) of the CHP
 
         """
@@ -182,8 +226,9 @@ class CHP(AbstractHeater):
         self.gas_type = gas_type
         self.nominal_power = nominal_power
         self.input_pressure = input_pressure
-        self.electric_efficiency = electric_efficiency
-        self.thermal_efficiency = thermal_efficiency
+        self.nominal_electrical_efficiency = nominal_electrical_efficiency
+        self.nominal_thermal_efficiency = nominal_thermal_efficiency
+        self.allow_electricity_feed_in = allow_electricity_feed_in
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -199,59 +244,396 @@ class CHP(AbstractHeater):
             for gas, vol_fraction in self.gas_type.items()
         )
         # Convert volume fractions to mass fractions in the gas_type dictionary
-        self.gas_type = {
+        # self.gas_type = {
+        #     gas: (vol_fraction * gas.molar_mass) / denominator
+        #     for gas, vol_fraction in self.gas_type.items()
+        # }
+        mass_fractions = {
             gas: (vol_fraction * gas.molar_mass) / denominator
             for gas, vol_fraction in self.gas_type.items()
-        }
+            }
+            
+        # *********************************************************************
+        # *********************************************************************
 
-        gas_bus = {}  # gas bus for each gas type
-        gas_LHV = 0  # Calculate LHV of gas or gas-mixtures
-
-        for gas, share in self.gas_type.items():
+        # Add gas connections
+        gas_buses = {}  # gas bus for each gas type
+        for gas, mass_fraction in mass_fractions.items():
+            # gas bus
             gas_carrier = self.location.get_carrier(GasCarrier)
             _, pressure_level = gas_carrier.get_surrounding_levels(
                 gas, self.input_pressure
             )
-            gas_bus[gas] = gas_carrier.distribution[gas][pressure_level]
-
-            # Calculate LHV of gas or gas-mixture
-            gas_LHV += gas.LHV * share
-
-        # convert gas in kg to heat in Wh with thermal efficiency conversion
-        heat_output = self.thermal_efficiency * gas_LHV
+            gas_buses[gas] = gas_carrier.distribution[gas][pressure_level]
+        
         # Add electrical connection
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
-        electrical_bus = electricity_carrier.distribution
-        # convert gas in kg to electricity in Wh with thermal
-        # efficiency conversion
-        electrical_output = self.electric_efficiency * gas_LHV
-        # convert nominal electrical capacity in watts to nominal
-        # gas consumption in kg
-        nominal_gas_consumption = self.nominal_power / (
-            self.electric_efficiency * gas_LHV
+        
+        # Add heat connection? probably done in super().build_core()
+        # self.heat_bus
+        
+        # *********************************************************************
+        # *********************************************************************
+                
+        gas_mix_LHV = sum(
+            gas.LHV * mass_fraction
+            for gas, mass_fraction in mass_fractions.items()
+            )
+        
+        # nominal gas mix consumption
+        nominal_gas_mix_consumption = self.nominal_power/(
+            self.nominal_electrical_efficiency*gas_mix_LHV
+            )
+        
+        # Electrical efficiency with conversion from gas in kg
+        # to electricity in W
+        gas_to_elec_cf = (
+            self.nominal_electrical_efficiency * gas_mix_LHV
+        )
+        
+        # thermal efficiency with conversion from gas in kg to heat in W.
+        gas_to_heat_cf = (
+            self.nominal_thermal_efficiency * gas_mix_LHV
+        )
+        
+        # *********************************************************************
+        # *********************************************************************
+                
+        if self.allow_electricity_feed_in:
+            
+            splitter = self.create_solph_node(
+                label="splitter",
+                node_type=Bus,
+                outputs={
+                    electricity_carrier.feed_in: Flow(),
+                    electricity_carrier.distribution: Flow(),
+                },
+            )
+            
+            # entry node: gases come in, gas mix goes out
+            gas_mixer_bus = self.create_solph_node(
+                label="mixer",
+                node_type=Bus,
+                inputs={
+                    gas_bus: Flow()
+                    for gas, gas_bus in gas_buses.items()
+                },
+            )
+            
+            # final node: gas mix goes in, heat and electricity come out
+            self.create_solph_node(
+                label="CHP",
+                node_type=Converter,
+                inputs={
+                    gas_mixer_bus: Flow(
+                        nominal_value=nominal_gas_mix_consumption
+                        )
+                },
+                outputs={
+                    self.heat_bus: Flow(),
+                    splitter: Flow(),
+                },
+                conversion_factors={
+                    gas_mixer_bus: 1,
+                    self.heat_bus: gas_to_heat_cf,
+                    splitter: gas_to_elec_cf,
+                },
+                )
+        else:
+                        
+            # entry node: gases come in, gas mix goes out
+            gas_mixer_bus = self.create_solph_node(
+                label="mixer",
+                node_type=Bus,
+                inputs={
+                    gas_bus: Flow()
+                    for gas, gas_bus in gas_buses.items()
+                },
+            )
+            
+            # final node: gas mix goes in, heat and electricity come out
+            self.create_solph_node(
+                label="CHP",
+                node_type=Converter,
+                inputs={
+                    gas_mixer_bus: Flow(
+                        nominal_value=nominal_gas_mix_consumption
+                        )
+                },
+                outputs={
+                    self.heat_bus: Flow(),
+                    electricity_carrier.distribution: Flow(),
+                },
+                conversion_factors={
+                    gas_mixer_bus: 1,
+                    self.heat_bus: gas_to_heat_cf,
+                    electricity_carrier.distribution: gas_to_elec_cf,
+                },
+                )
+        
+class OffsetCHP(AbstractHeater):
+    """
+    Combined heat and power (CHP) technology, also known as cogeneration,
+    produces electricity and heat on-site. CHP systems increase energy
+    security by producing energy at the point of use, and significantly
+    improve energy efficiency. Depending on design, they can typically,
+    accepts different types of gas or gas-mixtures as fuel input. The
+    alternator connected to the gas engine, reciprocating engine or steam
+    generator (boiler) produces electricity. For heat recovery, usually,
+    the cooling water circuits of the engine are first linked to a plate
+    heat exchanger which facilitates the transfer of hot water to an external
+    hot-water circuit, typically on a 90°C/70°C flow/return basis. Any excess
+    heat should be dumped using adjacent heat dump radiators to facilitate
+    the correct operation of the engine. Heat extracted from CHP could be
+    utilized for various applications, including, hot water, space heating,
+    industrial processes, etc.
+    
+    This class allows users to characterise the nominal and part-load
+    performance of a CHP unit using two setpoints. The performance variation
+    between these two setpoints is assumed to be linear. If the maximum load is
+    expected to exceed the nominal capacity (normalised_max_load >= 1) the
+    efficiency values will be extrapolated based on the linear curves.
+    
+    """
+
+
+    @enable_templating(CHPTemplate)
+    def __init__(
+        self,
+        name: str,
+        gas_type: dict[Gas, float],
+        maximum_temperature: float,
+        minimum_temperature: float,
+        nominal_power: float,
+        input_pressure: float,
+        nominal_electrical_efficiency: float,
+        nominal_thermal_efficiency: float,
+        min_load_electrical_efficiency: float,
+        min_load_thermal_efficiency: float,
+        normalised_min_load: float,
+        normalised_max_load: float = 1,
+        allow_electricity_feed_in: bool = True
+    ):
+        """
+        
+        """
+        super().__init__(
+            name=name,
+            maximum_temperature=maximum_temperature,
+            minimum_temperature=minimum_temperature,
         )
 
-        # Conversion factors for the converter
-        conversion = {
-            gas_bus[gas]: share for gas, share in self.gas_type.items()
-        }
-        conversion.update(
-            {
-                self.heat_bus: heat_output,
-                electrical_bus: electrical_output,
+        self.gas_type = gas_type
+        self.nominal_power = nominal_power
+        self.input_pressure = input_pressure
+        self.nominal_electrical_efficiency = nominal_electrical_efficiency
+        self.nominal_thermal_efficiency = nominal_thermal_efficiency
+        self.min_load_electrical_efficiency = min_load_electrical_efficiency
+        self.min_load_thermal_efficiency = min_load_thermal_efficiency
+        self.normalised_min_load = normalised_min_load
+        self.normalised_max_load = normalised_max_load
+        self.allow_electricity_feed_in = allow_electricity_feed_in
+
+    def build_core(self):
+        """Build core structure of oemof.solph representation."""
+        super().build_core()
+
+        # Convert volume (vol% )fraction into mass fraction (%) as unit
+        # of gases in MTRESS are considered in mass (kg).
+        # W(i) =
+        # Vol. fraction(i) * molar_mass(i)/ ∑(Vol. fraction(i) * molar_mass(i))
+        # Calculate the denominator first
+        denominator = sum(
+            vol_fraction * gas.molar_mass
+            for gas, vol_fraction in self.gas_type.items()
+        )
+        # Convert volume fractions to mass fractions in the gas_type dictionary
+        mass_fractions = {
+            gas: (vol_fraction * gas.molar_mass) / denominator
+            for gas, vol_fraction in self.gas_type.items()
             }
-        )
+            
+        # *********************************************************************
+        # *********************************************************************
 
-        self.create_solph_node(
-            label="CHP",
-            node_type=Converter,
-            inputs={
-                gas_bus[gas]: Flow(nominal_value=nominal_gas_consumption)
-                for gas in self.gas_type.keys()
-            },
-            outputs={
-                electrical_bus: Flow(),
-                self.heat_bus: Flow(),
-            },
-            conversion_factors=conversion,
+        # Add gas connections
+        gas_buses = {}  # gas bus for each gas type
+        for gas, mass_fraction in mass_fractions.items():
+            # gas bus
+            gas_carrier = self.location.get_carrier(GasCarrier)
+            _, pressure_level = gas_carrier.get_surrounding_levels(
+                gas, self.input_pressure
+            )
+            gas_buses[gas] = gas_carrier.distribution[gas][pressure_level]
+        
+        # Add electrical connection
+        electricity_carrier = self.location.get_carrier(ElectricityCarrier)
+        
+        # Add heat connection? probably done in super().build_core()
+        # self.heat_bus
+        
+        # *********************************************************************
+        # *********************************************************************
+                
+        gas_mix_LHV = sum(
+            gas.LHV * mass_fraction
+            for gas, mass_fraction in mass_fractions.items()
+            )
+        
+        # nominal gas mix consumption
+        nominal_gas_mix_consumption = self.nominal_power/(
+            self.nominal_electrical_efficiency*gas_mix_LHV
+            )
+        
+        # nominal_fuel_consumption = (
+        #     self.nominal_power/self.nominal_electrical_efficiency
+        #     )
+        # min_load_fuel_consumption = (
+        #     self.normalised_min_load*nominal_fuel_consumption
+        #     )
+        
+        # Electrical efficiency with conversion from gas in kg
+        # to electricity in W
+        nominal_electrical_output = (
+            self.nominal_electrical_efficiency * gas_mix_LHV
         )
+        
+        # thermal efficiency with conversion from gas in kg to heat in W.
+        nominal_heat_output = (
+            self.nominal_thermal_efficiency * gas_mix_LHV
+        )
+        
+        min_load_electrical_output = (
+            self.min_load_electrical_efficiency * gas_mix_LHV
+        )
+        min_load_heat_output = (
+            self.min_load_thermal_efficiency * gas_mix_LHV
+        )
+        
+        # *********************************************************************
+        # *********************************************************************
+        
+        if self.allow_electricity_feed_in:
+            
+            splitter_bus = self.create_solph_node(
+                label="splitter",
+                node_type=Bus,
+                outputs={
+                    electricity_carrier.feed_in: Flow(),
+                    electricity_carrier.distribution: Flow(),
+                },
+            )
+            
+            # entry node: gases come in, gas mix goes out
+            gas_mixer_bus = self.create_solph_node(
+                label="mixer",
+                node_type=Bus,
+                inputs={
+                    gas_bus: Flow()
+                    for gas, gas_bus in gas_buses.items()
+                },
+            )
+            
+            # final node: gas mix goes in, heat and electricity come out
+    
+            # offset mode
+            slope_el, offset_el = (
+                slope_offset_from_nonconvex_input(
+                    self.normalised_max_load,
+                    self.normalised_min_load,
+                    nominal_electrical_output,
+                    min_load_electrical_output,
+                )
+            )
+    
+            slope_ht, offset_ht = (
+                slope_offset_from_nonconvex_input(
+                    self.normalised_max_load,
+                    self.normalised_min_load,
+                    nominal_heat_output,
+                    min_load_heat_output,
+                )
+            )
+    
+            self.create_solph_node(
+                label="CHP",
+                node_type=OffsetConverter,
+                inputs={
+                    gas_mixer_bus: Flow(
+                        nominal_value=nominal_gas_mix_consumption,
+                        max=self.normalised_max_load,
+                        min=self.normalised_min_load,
+                        nonconvex=NonConvex(),
+                    ),
+                },
+                outputs={
+                    splitter_bus: Flow(),
+                    self.heat_bus: Flow(),
+                },
+                conversion_factors={
+                    splitter_bus: slope_el,
+                    self.heat_bus: slope_ht,
+                },
+                normed_offsets={
+                    splitter_bus: offset_el,
+                    self.heat_bus: offset_ht,
+                },
+            )
+            
+        else:
+            
+            # entry node: gases come in, gas mix goes out
+            gas_mixer_bus = self.create_solph_node(
+                label="mixer",
+                node_type=Bus,
+                inputs={
+                    gas_bus: Flow()
+                    for gas, gas_bus in gas_buses.items()
+                }
+            )
+            
+            # final node: gas mix goes in, heat and electricity come out
+            
+            # offset mode
+            slope_el, offset_el = (
+                slope_offset_from_nonconvex_input(
+                    self.normalised_max_load,
+                    self.normalised_min_load,
+                    nominal_electrical_output,
+                    min_load_electrical_output,
+                )
+            )
+    
+            slope_ht, offset_ht = (
+                slope_offset_from_nonconvex_input(
+                    self.normalised_max_load,
+                    self.normalised_min_load,
+                    nominal_heat_output,
+                    min_load_heat_output,
+                )
+            )
+    
+            self.create_solph_node(
+                label="CHP",
+                node_type=OffsetConverter,
+                inputs={
+                    gas_mixer_bus: Flow(
+                        nominal_value=nominal_gas_mix_consumption,
+                        max=self.normalised_max_load,
+                        min=self.normalised_min_load,
+                        nonconvex=NonConvex(),
+                    ),
+                },
+                outputs={
+                    electricity_carrier.distribution: Flow(),
+                    self.heat_bus: Flow(),
+                },
+                conversion_factors={
+                    electricity_carrier.distribution: slope_el,
+                    self.heat_bus: slope_ht,
+                },
+                normed_offsets={
+                    electricity_carrier.distribution: offset_el,
+                    self.heat_bus: offset_ht,
+                },
+            )

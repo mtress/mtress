@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, Set, Tuple
-
-from graphviz import Digraph
+from typing import Dict, Iterable, Set
 
 from ._abstract_component import AbstractComponent
 from ._interfaces import NamedElement
@@ -98,30 +96,3 @@ class Location(NamedElement):
 
         for component in self._components:
             yield component
-
-    def graph(
-        self,
-        detail: bool = True,
-        flow_results=None,
-        flow_color: dict = None,
-        colorscheme: dict = None,
-    ) -> Tuple[Digraph, set]:
-        """
-        Generate graphviz visualization of the MTRESS location.
-
-        :param detail: Include solph nodes.
-        """
-        graph = Digraph(name=f"cluster_{self.identifier}")
-        graph.attr("graph", label=self.name)
-
-        external_edges = set()
-
-        for component in self.components:
-            subgraph, edges = component.graph(
-                detail, flow_results, flow_color, colorscheme
-            )
-
-            external_edges.update(edges)
-            graph.subgraph(subgraph)
-
-        return graph, external_edges

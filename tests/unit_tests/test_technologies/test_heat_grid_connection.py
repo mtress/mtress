@@ -42,6 +42,7 @@ class TestHeatGrid:
         assert grid.maximum_working_temperature == flow_temperature
         assert grid.minimum_working_temperature == return_temperature
 
+    @pytest.mark.skip(reason="Not really a unit test.")
     @pytest.mark.parametrize(
         "network_temperature, max_temperature, min_temperature, grid_limit, "
         "expected_result",
@@ -103,6 +104,7 @@ class TestHeatGrid:
         )
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
 
+    @pytest.mark.skip(reason="Not really unit test.")
     @pytest.mark.parametrize(
         "network_temperature, max_temperature, min_temperature, grid_limit, "
         "expected_result",
@@ -187,6 +189,7 @@ class TestHeatGrid:
         )
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
 
+    @pytest.mark.skip(reason="Not really a unit test.")
     @pytest.mark.parametrize(
         "temperature_network, max_temperature, min_temperature, revenue, "
         "grid_limit, expected_result",

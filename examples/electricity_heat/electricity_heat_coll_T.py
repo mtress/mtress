@@ -1,11 +1,12 @@
 """
-Basic working 'electricity and heat' example.
+Basic working 'electricity_heat_coll' example.
 
-Basic working 'electricity and heat' example which includes a location (house),
+Basic working example which includes a location (house),
 electricity wise: an electricity carrier which acts as a electricity
-source/supply from the official grid (working price of 0.035 ct/Wh) as well as
-a demand (consumer) with a demand time series.
-And heat wise: a heat carrier, a heat pump, an heat exchanger as well as
+source/supply from the official grid (working price of 0.035 ct/Wh) which
+is solely used to supply the required electricity for an electric
+heater used as back up to the collector.
+And heat wise: a heat carrier, a solar collector as well as
 a heat demand time series.
 
 At first an energy system (here meta_model) is defined with a time series
@@ -22,6 +23,7 @@ created and the solver output is written to an .lp file.
 """
 
 import os
+import pandas as pd
 
 from oemof.solph.processing import results
 
@@ -43,26 +45,20 @@ house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
 house_1.add(carriers.ElectricityCarrier())
-house_1.add(technologies.ElectricityGridConnection(working_rate=0.035))
-
-house_1.add(
-    demands.Electricity(
-        name="electricity demand",
-        time_series=[9, 13],
-    )
-)
+house_1.add(technologies.ElectricityGridConnection(working_rate=350))
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[10, 15, 20, 30, 40, 55],
+        temperature_levels=[10, 15,25,45],
     )
 )
+
 house_1.add(
     demands.FixedTemperatureHeating(
         name="space_heating",
-        min_flow_temperature=40,
-        return_temperature=30,
-        time_series=[50, 60],
+        min_flow_temperature=25,
+        return_temperature=10,
+        time_series=[2e3, 2e3],
     )
 )
 
@@ -73,24 +69,22 @@ electric_heater = technologies.ResistiveHeater(
 )
 house_1.add(electric_heater)
 
-house_1.add(
-    technologies.HeatPump(
-        name="HeatPump",
-        thermal_power_limit=None,
-        max_temp_primary=20,
-        min_temp_primary=10,
-        max_temp_secondary=40,
-        min_temp_secondary=30,
-    )
-)
 
+Acoll =1.95# in m2
+Rad_tot = 1000  # in W/m2 total radiation, beam and diffuse
+Rad_nom = 1350  # in W/m2 total radiation, beam and diffuse
+
+#######################
 house_1.add(
     technologies.HeatSource(
-        name="Air_HE",
-        reservoir_temperature=20,
-        maximum_working_temperature=40,
+        name="thColl",
+        reservoir_temperature=[15, 15],
+        maximum_working_temperature=45,
         minimum_working_temperature=10,
-        nominal_power=1e4,
+        conductivity_gain_factor=4.49*Acoll/(Rad_nom*Acoll), 
+        non_thermal_gains=0.381* Acoll* Rad_tot/(Rad_nom*Acoll),
+        nominal_power=Rad_nom* Acoll,
+        working_rate = 0,
     )
 )
 
@@ -105,12 +99,34 @@ solph_representation = SolphModel(
 
 solph_representation.build_solph_model()
 
-solved_model = solph_representation.solve(solve_kwargs={"tee": True})
+plot = solph_representation.graph(
+    path="electricity_heat_coll_detail.png"
+)
+
+solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 myresults = results(solved_model)
 flows = get_flows(myresults)
 
-solved_model.write(
-    "electricity_heat.lp", io_options={"symbolic_solver_labels": True}
+plot = solph_representation.graph(
+    flow_results=flows,
+    path="electricity_heat_coll_results.png",
 )
 
-solph_representation.graph(flow_results=flows)
+Qcoll = flows[
+    ("house_1", "thColl", "source_reservoir"),
+    ("house_1", "thColl", "heat_source"),
+]
+Qcoll_30 = flows[
+    ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_15")
+]
+Qcoll_45 = flows[
+    ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_45")
+]
+Qcoll_25 = flows[
+    ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_25")
+]
+
+print('Qcoll:', Qcoll.sum()/2)
+print('Qcoll_15:', Qcoll_30.sum()/2)
+print('Qcoll_25:', Qcoll_25.sum()/2)
+print('Qcoll_45:', Qcoll_45.sum()/2)

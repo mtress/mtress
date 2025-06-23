@@ -69,20 +69,21 @@ class ElectricityGridConnection(AbstractGridConnection):
 
         if self.working_rate is not None:
             if self.demand_rate:
-                demand_rate = Investment(ep_costs=self.demand_rate)
+                maximum_load = Investment(
+                    ep_costs=self.demand_rate, max=self.grid_import_limit
+                )
             else:
-                demand_rate = None
+                maximum_load = self.grid_import_limit
 
             self.create_solph_node(
                 label="source_import",
                 node_type=Source,
                 outputs={
                     b_grid_import: Flow(
-                        nominal_value=self.grid_import_limit,
+                        nominal_value=maximum_load,
                         variable_costs=self._solph_model.data.get_timeseries(
                             self.working_rate, kind=TimeseriesType.INTERVAL
                         ),
-                        investment=demand_rate,
                     )
                 },
             )

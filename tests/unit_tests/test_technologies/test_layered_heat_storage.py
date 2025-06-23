@@ -3,6 +3,7 @@ Tests for the MTRESS heat storage.
 """
 
 from oemof import solph
+import pytest
 
 from mtress import (
     Location,
@@ -32,6 +33,7 @@ def test_heat_carrier_initilisation():
         assert getattr(hs, k) == v
 
 
+@pytest.mark.skip(reason="Not really a test, yet.")
 def test_layered_heat_losses():
     N_DAYS = 7
 

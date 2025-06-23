@@ -50,14 +50,11 @@ weather = {
 }
 
 house_1.add(
-    technologies.Photovoltaics(
+    technologies.RenewableElectricitySource(
         "pv0",
-        (52.729, 8.181),
-        nominal_power=2000e3,
-        weather=weather,
-        surface_azimuth=180,
-        surface_tilt=35,
-        fixed=True,
+        nominal_power=2e6,
+        specific_generation="FILE:../input_file.csv:pv",
+        fixed=False,
     )
 )
 
@@ -121,30 +118,19 @@ solph_representation = SolphModel(
     timeindex={
         "start": "2022-07-01 08:00:00",
         "end": "2022-07-01 09:00:00",
-        "freq": "15T",
+        "freq": "15min",
         "tz": "Europe/Berlin",
     },
 )
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(detail=True)
-plot.render(outfile="hydrogen_plant_detail.png")
-
-plot = solph_representation.graph(detail=False)
-plot.render(outfile="hydrogen_plant_simple.png")
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-
-logging.info("Optimise the energy system")
 myresults = results(solved_model)
 flows = get_flows(myresults)
-
-plot = solph_representation.graph(
-    detail=True, flow_results=flows, flow_color=None
-)
-# plot.render(outfile="hydrogen_plant_results.png")
 
 solved_model.write(
     "hydrogen_plant.lp", io_options={"symbolic_solver_labels": True}
 )
+
+solph_representation.graph(flow_results=flows)

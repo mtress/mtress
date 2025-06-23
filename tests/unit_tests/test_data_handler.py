@@ -13,7 +13,7 @@ from mtress._data_handler import DataHandler, TimeseriesType
 def date_range():
     first_index = "2021-07-10 00:00:00"
     last_index = "2021-07-10 01:00:00"
-    frequency = "15T"
+    frequency = "15min"
     return pd.date_range(
         start=first_index,
         end=last_index,
