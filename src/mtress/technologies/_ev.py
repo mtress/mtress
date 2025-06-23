@@ -38,7 +38,7 @@ GenericSegmentB_EV = ElectricVehicleTemplate(
     charging_efficiency=0.95,  # 90% round trip?
     discharging_efficiency=0.95,  # 90% round trip?
     loss_rate=0,  # ?
-    consumption_per_distance=0.174,  # 17.4 kWh/100km = 0.174 kWh/km
+    consumption_per_distance=0.174*1e3,  # 17.4 kWh/100km = 0.174 kWh/km
 )
 
 # Nissan Leaf
@@ -50,7 +50,7 @@ GenericSegmentC_EV = ElectricVehicleTemplate(
     charging_efficiency=0.96,  # 90% round trip? used 96% for tests
     discharging_efficiency=0.95,  # 90% round trip?
     loss_rate=0,  # ?
-    consumption_per_distance=0.178,  # 17.8 kWh/100km = 0.178 kWh/km
+    consumption_per_distance=.178*1e3,  # 17.8 kWh/100km = 0.178 kWh/km
 )
 
 

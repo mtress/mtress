@@ -231,6 +231,10 @@ class TestBatteryStorage:
             true_discharging
             ):
         
+        if mutex and solver == 'cbc':
+            # skip tests involving mutex if cbc is to be used (no sos support)
+            return
+        
         # tests
         # - to force the battery to charge and discharge at the same time
         # - to force charging and discharging to be mutually exclusive
@@ -324,17 +328,7 @@ class TestBatteryStorage:
             ("house_1", "bs", "Battery_Storage"),
             ("house_1", "ElectricityCarrier", "distribution"),
         ]
-        print('charging')
-        print(charging_power)
-        print(true_charging)
-        # print(charging_power[:-1])
-        print('discharging')
-        print(discharging_power)
-        print(true_discharging)
-        # print(discharging_power[:-1])
-        # solved_model.pprint()
-        # assert math.isclose(sum(charging_power[:-1]), 0, abs_tol=1e-3)
-        # assert math.isclose(sum(discharging_power[:-1]), 0, abs_tol=1e-3)
+        
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
         
@@ -360,18 +354,3 @@ class TestBatteryStorage:
                     true_discharging[i], 
                     abs_tol=1e-3
                     )
-        #         charging
-        # 2022-06-01 08:00:00+02:00    1.500000
-        # 2022-06-01 09:00:00+02:00    1.347826
-        # 2022-06-01 10:00:00+02:00    1.500000
-        # 2022-06-01 11:00:00+02:00         NaN
-        # Freq: 60min, Name: flow, dtype: float64
-        # [1.5, 1.65, 1.197826]
-        # discharging
-        # 2022-06-01 08:00:00+02:00    1.500000
-        # 2022-06-01 09:00:00+02:00    1.047826
-        # 2022-06-01 10:00:00+02:00    1.500000
-        # 2022-06-01 11:00:00+02:00         NaN
-        # Freq: 60min, Name: flow, dtype: float64
-        # [1.5, 1.35, 1.197826]
-        # F
