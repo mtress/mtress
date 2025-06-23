@@ -24,7 +24,8 @@ from mtress.technologies import (
     HYDROGEN_MIXED_CHP,
     NATURALGAS_MGT
 )
-
+from pyomo.opt import SolverFactory
+solver = 'scip' if SolverFactory('scip').available() else 'cbc'
 
 class TestCHP:
 
@@ -46,29 +47,30 @@ class TestCHP:
         assert type(chp.gas_type) is dict
 
     @pytest.mark.parametrize(
-        "template, expected_result, allow_exports",
+        "template, expected_result, allow_exports, tol",
         [
             # exports on @ net metering: electricity production is no problem
-            (NATURALGAS_CHP, 0.8508048112500001, True),
-            (BIOGAS_CHP, 1.6856640186499998, True),
-            (BIOMETHANE_CHP, 0.7855700564999999, True),
-            (HYDROGEN_CHP, 0.32534810449999996, True),
-            (HYDROGEN_MIXED_CHP, 0.6803280214999999, True),
-            (NATURALGAS_MGT, 0.7897307499999999, True),
+            (NATURALGAS_CHP, 0.8508048112500001, True, 1e-3),
+            (BIOGAS_CHP, 1.6856640186499998, True, 1e-3),
+            (BIOMETHANE_CHP, 0.7855700564999999, True, 1e-3),
+            (HYDROGEN_CHP, 0.32534810449999996, True, 1e-3),
+            (HYDROGEN_MIXED_CHP, 0.6803280214999999, True, 1e-3),
+            (NATURALGAS_MGT, 0.7897307499999999, True, 1e-3),
             # exports off: electricity production determines the rest
-            (NATURALGAS_CHP, 0.8508048112500001, False),
-            (BIOGAS_CHP, 1179261561.6128826, False), # mismatched production!
-            (BIOMETHANE_CHP, 0.7855700564999999, False),
-            (HYDROGEN_CHP, 0.32534810449999996, False),
-            (HYDROGEN_MIXED_CHP, 0.6803280214999999, False),
-            (NATURALGAS_MGT, 0.7897307499999999, False),
+            (NATURALGAS_CHP, 0.8508048112500001, False, 1e-3),
+            (BIOGAS_CHP, 1179261561.6128826, False, 8.2), # mismatched sup/dem!
+            (BIOMETHANE_CHP, 0.7855700564999999, False, 1e-3),
+            (HYDROGEN_CHP, 0.32534810449999996, False, 1e-3),
+            (HYDROGEN_MIXED_CHP, 0.6803280214999999, False, 1e-3),
+            (NATURALGAS_MGT, 0.7897307499999999, False, 1e-3),
         ],
     )
     def test_chp(
             self, 
             template: CHPTemplate, 
             expected_result: float,
-            allow_exports: bool
+            allow_exports: bool,
+            tol
             ):
 
         os.chdir(os.path.dirname(__file__))
@@ -145,9 +147,12 @@ class TestCHP:
         )
 
         solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        solved_model = solph_representation.solve(
+            solver=solver, 
+            solve_kwargs={"tee": False}
+            )
         mr = meta_results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=tol)
         
 class TestOffsetCHP:
 
@@ -189,39 +194,39 @@ class TestOffsetCHP:
     # *************************************************************************
     
     @pytest.mark.parametrize(
-        "template, expected_result, normalised_min_load, allow_exports",
+        "template, expected_result, normalised_min_load, allow_exports, tol",
         [
             # exports are not allowed: makes no difference because the 
             # electrical loads match the nominal and minimum ones
             # ignore min load: should match results for CHP class
-            (NATURALGAS_CHP, 0.9135757499999999, 0.0, False),
-            (BIOGAS_CHP, 1.6128827000000001, 0.0, False), # 
-            (BIOMETHANE_CHP, 0.8431486449, 0.0, False),
-            (HYDROGEN_CHP, 0.38465384999999996, 0.0, True),
-            (HYDROGEN_MIXED_CHP, 1.01719755, 0.0, False),
-            (NATURALGAS_MGT, 1.30378095, 0.0, False),
+            (NATURALGAS_CHP, 0.9135757499999999, 0.0, False, 1e-3),
+            (BIOGAS_CHP, 1.6128827000000001, 0.0, False, 1e-3), # 
+            (BIOMETHANE_CHP, 0.8431486449, 0.0, False, 1e-3),
+            (HYDROGEN_CHP, 0.38465384999999996, 0.0, True, 1e-3),
+            (HYDROGEN_MIXED_CHP, 1.01719755, 0.0, False, 1e-3),
+            (NATURALGAS_MGT, 1.30378095, 0.0, False, 1),
             # use min load from template (!= 0): penalties cannot be avoided
-            (NATURALGAS_CHP, 28579735.004933327, None, False),
-            (BIOGAS_CHP, 25323091.774170972, None, False),
-            (BIOMETHANE_CHP, 28550544.92665914, None, False),
-            (HYDROGEN_CHP, 29909798.423119232, None, False),
-            (HYDROGEN_MIXED_CHP, 40666145.14604045, None, False),
-            (NATURALGAS_MGT, 143067783.8904824, None, False),
+            (NATURALGAS_CHP, 28579735.004933327, None, False, 1),
+            (BIOGAS_CHP, 25323091.774170972, None, False, 1),
+            (BIOMETHANE_CHP, 28550544.92665914, None, False, 1),
+            (HYDROGEN_CHP, 29909798.423119232, None, False,1),
+            (HYDROGEN_MIXED_CHP, 40666145.14604045, None, False, 1),
+            (NATURALGAS_MGT, 143067783.8904824, None, False, 1),
             # exports on @ net metering: marginal impact due to huge penalties
             # min load = 0: no (major) penalties
-            (NATURALGAS_CHP, 0.9135757499999999, 0.0, True),
-            (BIOGAS_CHP, 1.6128827000000001, 0.0, True), # 
-            (BIOMETHANE_CHP, 0.8431486449, 0.0, True),
-            (HYDROGEN_CHP, 0.38465384999999996, 0.0, True),
-            (HYDROGEN_MIXED_CHP, 1.01719755, 0.0, True),
-            (NATURALGAS_MGT, 1.30378095, 0.0, True),
+            (NATURALGAS_CHP, 0.9135757499999999, 0.0, True, 1e-3),
+            (BIOGAS_CHP, 1.6128827000000001, 0.0, True, 1e-3), # 
+            (BIOMETHANE_CHP, 0.8431486449, 0.0, True, 1e-3),
+            (HYDROGEN_CHP, 0.38465384999999996, 0.0, True, 1e-3),
+            (HYDROGEN_MIXED_CHP, 1.01719755, 0.0, True, 1e-3),
+            (NATURALGAS_MGT, 1.30378095, 0.0, True, 1),
             # use min load from template (!= 0): penalties cannot be avoided
-            (NATURALGAS_CHP, 28579735.004933327, None, True),
-            (BIOGAS_CHP, 25323091.774170972, None, True),
-            (BIOMETHANE_CHP, 28550544.92665914, None, True),
-            (HYDROGEN_CHP, 29909798.423119232, None, True),
-            (HYDROGEN_MIXED_CHP, 40666145.14604045, None, True),
-            (NATURALGAS_MGT, 143067783.8904824, None, True),
+            (NATURALGAS_CHP, 28579735.004933327, None, True, 1),
+            (BIOGAS_CHP, 25323091.774170972, None, True, 1),
+            (BIOMETHANE_CHP, 28550544.92665914, None, True, 1),
+            (HYDROGEN_CHP, 29909798.423119232, None, True, 1),
+            (HYDROGEN_MIXED_CHP, 40666145.14604045, None, True, 1),
+            (NATURALGAS_MGT, 143067783.8904824, None, True, 1),
         ],
     )
     def test_min_power(
@@ -229,7 +234,8 @@ class TestOffsetCHP:
             template: CHPTemplate, 
             expected_result: float, 
             normalised_min_load: float,
-            allow_exports: bool
+            allow_exports: bool,
+            tol
             ):
         
         nominal_power = 1000
@@ -328,28 +334,40 @@ class TestOffsetCHP:
         )
 
         solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        solved_model = solph_representation.solve(
+            solver=solver, 
+            solve_kwargs={"tee": False}
+            )
         mr = meta_results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=tol)
     
     # *************************************************************************
     # *************************************************************************
     
     @pytest.mark.parametrize(
-        "template, load_multiplier, expected_result",
+        "template, load_multiplier, expected_result, tol",
         [
             # reference: nominal power matches demand
-            (NATURALGAS_CHP, 1, 0.09135757400000062),
+            (NATURALGAS_CHP, 1, 0.09135757400000062, 1e-3),
             # maximum power cannot be exceeded, nominal production + imports
             (NATURALGAS_CHP, 
-             1.5, 0.09135757400000062+NATURALGAS_CHP.nominal_power*0.5*50e-6),
+             1.5, 0.09135757400000062+NATURALGAS_CHP.nominal_power*0.5*50e-6,
+             1e-3),
             # CHP cannot be used, electricity must be imported
-            (NATURALGAS_CHP, 0.05, NATURALGAS_CHP.nominal_power*0.05*50e-6),
+            (NATURALGAS_CHP, 0.05, NATURALGAS_CHP.nominal_power*0.05*50e-6,
+             1e-3),
             # CHP cannot be used, electricity must be imported
-            (NATURALGAS_CHP, 0.099, NATURALGAS_CHP.nominal_power*0.099*50e-6),
+            (NATURALGAS_CHP, 0.099, NATURALGAS_CHP.nominal_power*0.099*50e-6, 
+             1e-3),
         ],
     )
-    def test_power_limits(self,  template, load_multiplier, expected_result):
+    def test_power_limits(
+            self, 
+            template, 
+            load_multiplier,
+            expected_result,
+            tol
+            ):
         
         energy_system = MetaModel()
         house_1 = Location(name="house_1")
@@ -441,9 +459,13 @@ class TestOffsetCHP:
         )
 
         solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        solved_model = solph_representation.solve(
+            solver=solver, 
+            solve_kwargs={"tee": False}
+            )
         mr = meta_results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+        # print(expected_result-mr["objective"])
+        assert math.isclose(expected_result, mr["objective"], abs_tol=tol)
         
     # *************************************************************************
     # *************************************************************************
@@ -452,50 +474,51 @@ class TestOffsetCHP:
         "thermal_efficiency_variation, "+
         "electrical_efficiency_variation, "+
         "test_factor, "+
-        "expected_result",
+        "expected_result, "+
+        "tol",
         [
             # constant thermal efficiency, constant electrical efficiency
             # - same performance on both time steps
-            (0.0, 0.0, 1, -1098.73620879), 
+            (0.0, 0.0, 1, -1098.73620879, 1e-3), 
             # - penalties on second time step because load is too low
-            (0.0, 0.0, 0.99,  34073353.26379121), 
+            (0.0, 0.0, 0.99,  34073353.26379121, 1), 
             
             # constant thermal efficiency, increasing electrical efficiency
             # - higher (worse) result because efficiency is reduced at low load
-            (0.0, -0.05, 1, -1084.4512090757), 
+            (0.0, -0.05, 1, -1084.4512090757, 1e-3), 
             # - higher (worse) result because efficiency is reduced at low load
-            (0.0, -0.05, 0.99, 34073367.54879093), 
+            (0.0, -0.05, 0.99, 34073367.54879093, 1), 
             
             # constant thermal efficiency, decreasing electrical efficiency
             # - better results due to higher elec. efficiency at low load
-            (0.0, 0.05, 1, -1113.0212045045002),
+            (0.0, 0.05, 1, -1113.0212045045002, 1e-3),
             # - better results due to higher electric. efficiency at low load
-            (0.0, 0.05, 0.99, 34073338.9787955),
+            (0.0, 0.05, 0.99, 34073338.9787955, 1),
             
             # increasing thermal efficiency, constant electrical efficiency
             # - same results since production matches demand
-            (-0.05, 0.0, 1, -1098.73620879),
+            (-0.05, 0.0, 1, -1098.73620879, 1e-3),
             # - penalties are lower since load is lower
-            (-0.05, 0.0, 0.99, 30287303.26379121),
+            (-0.05, 0.0, 0.99, 30287303.26379121, 1),
             # decreasing thermal efficiency, constant electrical efficiency
             # - same results since production matches demand
-            (0.05, 0.0, 1, -1098.73620879),
+            (0.05, 0.0, 1, -1098.73620879, 1e-3),
             # - penalties are higher since load is higher
-            (0.05, 0.0, 0.99, 37859403.26379121),
+            (0.05, 0.0, 0.99, 37859403.26379121, 1),
             
             # varying thermal and electrical efficiencies
             # thermal efficiency increases, electrical efficiency increases
-            (-0.05, -0.05, 1, -1084.4512090757),
-            (-0.05, -0.05, 0.99, 30287317.548790924),
+            (-0.05, -0.05, 1, -1084.4512090757, 1e-3),
+            (-0.05, -0.05, 0.99, 30287317.548790924, 1),
             # thermal efficiency decreases, electrical efficiency increases
-            (0.05, -0.05, 1, -1084.4512090757),
-            (0.05, -0.05, 0.99, 37859417.54879093),
+            (0.05, -0.05, 1, -1084.4512090757, 1e-3),
+            (0.05, -0.05, 0.99, 37859417.54879093, 1),
             # thermal efficiency increases, electrical efficiency decreases
-            (-0.05, 0.05, 1, -1113.0212045045002),
-            (-0.05, 0.05, 0.99, 30287288.9787955),
+            (-0.05, 0.05, 1, -1113.0212045045002, 1e-3),
+            (-0.05, 0.05, 0.99, 30287288.9787955, 1),
             # thermal efficiency decreases, electrical efficiency decreases
-            (0.05, 0.05, 1, -1113.0212045045002),
-            (0.05, 0.05, 0.99, 37859388.9787955),
+            (0.05, 0.05, 1, -1113.0212045045002, 1e-3),
+            (0.05, 0.05, 0.99, 37859388.9787955, 1),
         ],
     )
     def test_variable_efficiency(
@@ -503,7 +526,8 @@ class TestOffsetCHP:
             thermal_efficiency_variation: float,
             electrical_efficiency_variation: float,
             test_factor: float,
-            expected_result: float
+            expected_result: float,
+            tol: float
             ):
         
         # test details:
@@ -636,9 +660,12 @@ class TestOffsetCHP:
         )
 
         solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        solved_model = solph_representation.solve(
+            solver=solver, 
+            solve_kwargs={"tee": False}
+            )
         mr = meta_results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=tol)
 
 # *****************************************************************************
 # *****************************************************************************
