@@ -20,7 +20,6 @@ from mtress import (
 )
 from pandas import Series
 
-
 class TestGenericElectricVehicle:
 
     def check_ev_obj(

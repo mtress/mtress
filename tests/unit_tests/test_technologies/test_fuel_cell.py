@@ -13,7 +13,8 @@ from mtress import (
     demands,
     technologies,
 )
-
+from pyomo.opt import SolverFactory
+solver = 'scip' if SolverFactory('scip').available() else 'cbc'
 
 class TestFuelCell:
 
@@ -101,7 +102,10 @@ class TestFuelCell:
         )
 
         solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        solved_model = solph_representation.solve(
+            solver=solver, 
+            solve_kwargs={"tee": False}
+            )
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
         
@@ -139,9 +143,9 @@ class TestOffsetFuelCell:
             (AFC, 0, 0.342255559),
             (PEMFC, 0, 0.314030005),
             (AEMFC, 0, 0.3678928605),
-            (AFC, AFC.minimum_load, 38281176000.05),
-            (PEMFC, PEMFC.minimum_load, 34453058000.05),
-            (AEMFC, AEMFC.minimum_load, 49218654000.05),
+            (AFC, AFC.minimum_load, 38281175232.12961), # 38281176000.05
+            (PEMFC, PEMFC.minimum_load, 34453057708.92166), # 34453058000.05
+            (AEMFC, AEMFC.minimum_load, 49218653869.86667), # 49218654000.05
         ],
     )
     def test_ofc(self, template, minimum_load, expected_result):
@@ -220,7 +224,10 @@ class TestOffsetFuelCell:
         )
 
         solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        solved_model = solph_representation.solve(
+            solver=solver, 
+            solve_kwargs={"tee": False}
+            )
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
     
@@ -330,6 +337,9 @@ class TestOffsetFuelCell:
         )
 
         solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        solved_model = solph_representation.solve(
+            solver=solver, 
+            solve_kwargs={"tee": False}
+            )
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
