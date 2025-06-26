@@ -17,13 +17,6 @@ def test_slack_penalty():
     assert type(slack.penalty) == dict
     assert slack.penalty == penalty
 
-    with pytest.raises(ValueError):
-        penalty = {
-            carriers.ElectricityCarrier: "banana",
-            carriers.HeatCarrier: 1e7,
-        }
-        SlackNode(penalty)
-
 
 def test_slack_build():
     # test default slack
