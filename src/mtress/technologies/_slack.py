@@ -34,7 +34,7 @@ class SlackNode(AbstractTechnology):
             NOTE: SlackNode only connects to stated carriers
     """
 
-    def __init__(self, penalty: float | dict[AbstractCarrier, float] = None):
+    def __init__(self, penalty: float | dict[AbstractCarrier, float] = 1e9):
         """
         Initialize SlackNode component with infinite source and sink.
 
@@ -43,27 +43,8 @@ class SlackNode(AbstractTechnology):
             {CarrierClass[AbstractCarrier]: penalty[float]}
         """
         super().__init__(name=self.__class__.__name__)
-        if penalty == None:
-            # apply default penalty
-            self.penalty = 1e9
-        elif isinstance(penalty, numbers.Real):
-            # set same penalty for all present carriers
-            self.penalty = penalty
-        elif isinstance(penalty, dict):
-            # check for correct dict structure
-            if all(
-                [
-                    issubclass(k, (AbstractCarrier))
-                    and isinstance(v, numbers.Real)
-                    for k, v in penalty.items()
-                ]
-            ):
-                self.penalty = penalty
-            else:
-                raise ValueError(
-                    "Specifiy penalties in the following format: "
-                    + "{CarrierClass[AbstractCarrier]: penalty[float]}"
-                )
+
+        self.penalty = penalty
 
     def build_core(self):
         """Build oemof solph core structure."""
