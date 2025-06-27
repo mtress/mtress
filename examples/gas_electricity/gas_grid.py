@@ -129,4 +129,4 @@ flows = get_flows(myresults)
 
 solved_model.write("gas_grid.lp", io_options={"symbolic_solver_labels": True})
 
-solph_representation.graph(flow_results=flows)
+# solph_representation.graph(flow_results=flows)

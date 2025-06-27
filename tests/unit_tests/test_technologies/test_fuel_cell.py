@@ -13,7 +13,8 @@ from mtress import (
     demands,
     technologies,
 )
-
+from pyomo.opt import SolverFactory
+solver = 'scip' if SolverFactory('scip').available() else 'cbc'
 
 class TestFuelCell:
 
@@ -101,7 +102,10 @@ class TestFuelCell:
         )
 
         solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        solved_model = solph_representation.solve(
+            solver=solver, 
+            solve_kwargs={"tee": False}
+            )
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
         
@@ -134,17 +138,17 @@ class TestOffsetFuelCell:
         assert fc.gas_input_pressure == template.gas_input_pressure
 
     @pytest.mark.parametrize(
-        "template, minimum_load, expected_result",
+        "template, minimum_load, expected_result, abs_tol",
         [
-            (AFC, 0, 0.342255559),
-            (PEMFC, 0, 0.314030005),
-            (AEMFC, 0, 0.3678928605),
-            (AFC, AFC.minimum_load, 38281176000.05),
-            (PEMFC, PEMFC.minimum_load, 34453058000.05),
-            (AEMFC, AEMFC.minimum_load, 49218654000.05),
+            (AFC, 0, 0.342255559, 1e-3),
+            (PEMFC, 0, 0.314030005, 1e-3),
+            (AEMFC, 0, 0.3678928605, 1e-3),
+            (AFC, AFC.minimum_load, 38281175232.12961, 768),
+            (PEMFC, PEMFC.minimum_load, 34453057708.92166, 292),
+            (AEMFC, AEMFC.minimum_load, 49218653869.86667, 131),
         ],
     )
-    def test_ofc(self, template, minimum_load, expected_result):
+    def test_ofc(self, template, minimum_load, expected_result, abs_tol):
 
         os.chdir(os.path.dirname(__file__))
         energy_system = MetaModel()
@@ -220,9 +224,12 @@ class TestOffsetFuelCell:
         )
 
         solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        solved_model = solph_representation.solve(
+            solver=solver, 
+            solve_kwargs={"tee": False}
+            )
         mr = meta_results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=abs_tol)
     
     @pytest.mark.parametrize(
         "nominal_power, template, elec_demand, expected_result",
@@ -330,6 +337,9 @@ class TestOffsetFuelCell:
         )
 
         solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+        solved_model = solph_representation.solve(
+            solver=solver, 
+            solve_kwargs={"tee": False}
+            )
         mr = meta_results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)

@@ -7,7 +7,11 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
-from ._battery_storage import BatteryStorage, PowerWallGenI, PowerWallGenII
+from ._battery_storage import ( 
+    BatteryStorage, 
+    GenericBatteryModelI, 
+    GenericBatteryModelII
+    )
 from ._chp import (
     BIOGAS_CHP,
     BIOMETHANE_CHP,
@@ -26,6 +30,12 @@ from ._electrolyser import (
     Electrolyser,
     OffsetElectrolyser,
 )
+from ._ev import (
+    ElectricVehicle, 
+    GenericElectricVehicle,
+    GenericSegmentB_EV, 
+    GenericSegmentC_EV,
+    )
 from ._fuel_cell import AEMFC, AFC, PEMFC, FuelCell, OffsetFuelCell
 from ._heat_exchanger import HeatExchanger, HeatSink, HeatSource
 from ._heat_pump import HeatPump, COPReference
@@ -60,9 +70,13 @@ __all__ = [
     "PEMFC",
     "AEMFC",
     "AFC",
+    "ElectricVehicle",
+    "GenericElectricVehicle",
+    "GenericSegmentB_EV",
+    "GenericSegmentC_EV", 
     "BatteryStorage",
-    "PowerWallGenI",
-    "PowerWallGenII",
+    "GenericBatteryModelI",
+    "GenericBatteryModelII",
     "HeatPump",
     "COPReference",
     "OffsetCHP",

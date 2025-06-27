@@ -1,8 +1,9 @@
 """This module provides Battery Storage"""
 
-from oemof.solph import Flow
+from oemof.solph import Flow, Bus
 from oemof.solph.components import GenericStorage
 from dataclasses import dataclass
+import pyomo.environ as pyo
 
 from ..carriers import ElectricityCarrier
 from ._abstract_technology import AbstractTechnology
@@ -32,8 +33,8 @@ class BatteryStorageTemplate:
     loss_rate: float
 
 
-# PowerWallGenI (source: https://doi.org/10.1109/SEST.2019.8849064)
-PowerWallGenI = BatteryStorageTemplate(
+# GenericBatteryModelI (source: https://doi.org/10.1109/SEST.2019.8849064)
+GenericBatteryModelI = BatteryStorageTemplate(
     nominal_capacity=6.4e3,  # 6.4 kWh
     charging_C_Rate=3.3 / 6.4,  # 3.3 kW
     discharging_C_Rate=3.3 / 6.4,  # 3.3 kW
@@ -42,8 +43,8 @@ PowerWallGenI = BatteryStorageTemplate(
     loss_rate=0,  # ?
 )
 
-# PowerWallGenII (source: PowerWall 2 datasheet)
-PowerWallGenII = BatteryStorageTemplate(
+# GenericBatteryModelII (source: PowerWall 2 datasheet)
+GenericBatteryModelII = BatteryStorageTemplate(
     nominal_capacity=13.5e3,  # 1.5 kWh
     charging_C_Rate=5 / 13.5,  # 5 kW
     discharging_C_Rate=5 / 13.5,  # 5 kW
@@ -54,7 +55,33 @@ PowerWallGenII = BatteryStorageTemplate(
 
 
 class BatteryStorage(AbstractTechnology):
-    """Battery Storage Component"""
+    """
+    Battery Storage Component
+    
+    :param name: Name of the component
+    :param nominal_capacity: Nominal capacity of the battery (in Wh)
+    :param charging_C_Rate: Charging C-rate, default to 1
+    :param discharging_C_Rate: Discharging C-rate, default to 1
+    :param charging_efficiency: Efficiency during battery charging,
+                                default to 0.98.
+    :param discharging_efficiency: Efficiency during battery discharging,
+                                   default to 0.95.
+    :param loss_rate: Loss rate of a battery storage, default to 0.
+    :param initial_soc: Initial state of charge of a battery,
+        default to 0.5.
+    :param min_soc: Minimum state of charge of a battery, default to 0.1.
+    :param fixed_losses_absolute: numeric (iterable or scalar), losses per
+        hour that are independent of storage content and independent of
+        nominal storage capacity.
+    :param one_sense_per_time_step: boolean, default to False, determines
+        whether the model allows for charging and discharging within the 
+        same time interval (=False) or not (=True). 
+    :param shared_limit: boolean, default to True, limits the (average) 
+        charging and discharging power during a time interval to a given limit,
+        defined as the average between the respective power limits. Please note
+        this constraint is only introduced if charging and discharging can take
+        place during the same time interval (one_sense_per_time_step=False).
+    """
 
     @enable_templating(BatteryStorageTemplate)
     def __init__(
@@ -69,25 +96,11 @@ class BatteryStorage(AbstractTechnology):
         initial_soc: float = 0.5,
         min_soc: float = 0.1,
         fixed_losses_absolute: TimeseriesSpecifier = 0.0,
+        one_sense_per_time_step: bool = False,
+        shared_limit: bool = True
     ):
         """
         Initialize Battery Storage.
-
-        :param name: Name of the component
-        :param nominal_capacity: Nominal capacity of the battery (in Wh)
-        :param charging_C_Rate: Charging C-rate, default to 1
-        :param discharging_C_Rate: Discharging C-rate, default to 1
-        :param charging_efficiency: Efficiency during battery charging,
-                                    default to 0.98.
-        :param discharging_efficiency: Efficiency during battery discharging,
-                                       default to 0.95.
-        :param loss_rate: Loss rate of a battery storage, default to 0.
-        :param initial_soc: Initial state of charge of a battery,
-            default to 0.5.
-        :param min_soc: Minimum state of charge of a battery, default to 0.1.
-        :param fixed_losses_absolute: numeric (iterable or scalar), losses per
-            hour that are independent of storage content and independent of
-            nominal storage capacity.
         """
 
         super().__init__(name=name)
@@ -101,12 +114,14 @@ class BatteryStorage(AbstractTechnology):
         self.initial_soc = initial_soc
         self.min_soc = min_soc
         self.fixed_losses_absolute = fixed_losses_absolute
+        self.one_sense_per_time_step = one_sense_per_time_step
+        self.shared_limit = shared_limit
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         electricity = self.location.get_carrier(ElectricityCarrier)
 
-        self.create_solph_node(
+        self.thatbus = self.create_solph_node(
             label="Battery_Storage",
             node_type=GenericStorage,
             inputs={
@@ -128,3 +143,49 @@ class BatteryStorage(AbstractTechnology):
             outflow_conversion_factor=self.discharging_efficiency,
             fixed_losses_absolute=self.fixed_losses_absolute,
         )
+        
+    def add_constraints(self):
+        """Add constraints to the model."""
+        electricity = self.location.get_carrier(ElectricityCarrier)
+        
+        if self.one_sense_per_time_step:
+            # charging and discharging cannot happen during the same time step
+            # >> use special ordered sets of type 1
+            model = self._solph_model.model
+            def rule_sos1_constraint(m, t):
+                return [
+                    m.flow[electricity.distribution, self.thatbus, t],
+                    m.flow[self.thatbus, electricity.distribution, t] 
+                    ]
+            setattr(
+                model,
+                str(self.create_label(f"{self.name}_sos1_constraint")),
+                pyo.SOSConstraint(
+                    model.TIMESTEPS, 
+                    rule=rule_sos1_constraint, 
+                    sos=1
+                    )
+            )
+        else:
+            # charging and discharging can happen during the same time step
+            # >> apply a shared limit to reflect time dedicated to one or the 
+            # other (charging and discharging are mutually-exclusive, but both
+            # can take place during the same time step)
+            if self.shared_limit:
+                model = self._solph_model.model
+                def rule_shared_limit(m, t):
+                    return (
+                        # charging
+                        m.flow[electricity.distribution, self.thatbus, t] 
+                        +
+                        # discharging
+                        m.flow[self.thatbus, electricity.distribution, t] 
+                    ) <= (
+                        self.discharging_C_Rate+self.charging_C_Rate
+                        )*self.nominal_capacity/2
+                
+                setattr(
+                    model,
+                    str(self.create_label(f"{self.name}_shared_limit")),
+                    pyo.Constraint(model.TIMESTEPS, rule=rule_shared_limit),
+                )
