@@ -75,7 +75,7 @@ class TestGridConnection:
         )
         solph_representation.build_solph_model()
 
-        solved_model = solph_representation.solve(solve_kwargs={"tee": True})
+        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = meta_results(solved_model)
         myresults = results(solved_model)
         flows = get_flows(myresults)
@@ -135,7 +135,6 @@ class TestGridExport:
             },
         )
         solph_representation.build_solph_model()
-        solved_model = solph_representation.solve(solve_kwargs={"tee": True})
+        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = meta_results(solved_model)
-
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)

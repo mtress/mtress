@@ -139,4 +139,5 @@ flows = get_flows(myresults)
 #     "hydrogen_production.lp", io_options={"symbolic_solver_labels": True}
 # )
 
+# runs into graphviz errors from time to time
 # solph_representation.graph(flow_results=flows)
