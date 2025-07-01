@@ -124,8 +124,9 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 )
 
                 self.storage_components[temperature] = storage
-
-                gain_flow = {bus: Flow()}
+                
+                if self.u_value is not None:
+                    gain_flow = {bus: Flow()}
 
     def add_constraints(self):
         """Add constraints to the model."""
