@@ -813,35 +813,44 @@ def generate_graph_graphviz(
     # 2. determine COMPONENTS of LOCATIONS
     # (children of LOCATIONS)
     for l, c in locations.items():
-        loc_graph = Digraph(name=f"cluster_{l}")
-        loc_graph.attr("graph", label=l)
         components = [k for k, v in nodes.items() if v["parent"] == l]
-        for comp in components:
-            comp_graph = Digraph(name=f"cluster_{comp}")
-            comp_graph.attr(
-                "graph",
-                label=nodes[comp]["label"],
-                style="dashed",  # border of component
-                color="black",
-            )
-            # 3. determine NODES of COMPONENTS
-            # (children of COMPONENTS)
-            c_n = [k for k, v in nodes.items() if v["parent"] == comp]
-            c[comp] = c_n
-
-            # draw nodes
-            for n in c_n:
-                label = nodes[n]["label"]
-                shape = SHAPES_GRAPHVIZ.get(nodes[n]["shape"], "rectangle")
-                comp_graph.node(
-                    name=n,
-                    label=label,
-                    shape=shape,
+        if components:  # location
+            loc_graph = Digraph(name=f"cluster_{l}")
+            loc_graph.attr("graph", label=l)
+            for comp in components:
+                comp_graph = Digraph(name=f"cluster_{comp}")
+                comp_graph.attr(
+                    "graph",
+                    label=nodes[comp]["label"],
+                    style="dashed",  # border of component
+                    color="black",
                 )
-            # draw component
-            loc_graph.subgraph(comp_graph)
-        # draw location
-        graph.subgraph(loc_graph)
+                # 3. determine NODES of COMPONENTS
+                # (children of COMPONENTS)
+                c_n = [k for k, v in nodes.items() if v["parent"] == comp]
+                c[comp] = c_n
+
+                # draw nodes
+                for n in c_n:
+                    label = nodes[n]["label"]
+                    shape = SHAPES_GRAPHVIZ.get(nodes[n]["shape"], "rectangle")
+                    comp_graph.node(
+                        name=n,
+                        label=label,
+                        shape=shape,
+                    )
+                # draw component
+                loc_graph.subgraph(comp_graph)
+            # draw location
+            graph.subgraph(loc_graph)
+        else:  # floaty boy
+            label = nodes[l]["label"]
+            shape = SHAPES_GRAPHVIZ.get(nodes[l]["shape"], "rectangle")
+            graph.node(
+                name=l,
+                label=label,
+                shape=shape,
+            )
 
     # --- EDGES
     for source, targets in edges.items():
