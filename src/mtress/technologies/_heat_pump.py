@@ -16,6 +16,9 @@ from oemof.solph.components import Converter, Source
 
 from ..carriers import ElectricityCarrier, HeatCarrier
 from ..physics import calc_cop
+from ..physics import calc_cop_linear_3var
+from ..physics import calc_cop_piecewise_2
+from ..physics import calc_cop_piecewise
 from ._abstract_technology import AbstractTechnology
 
 
@@ -62,6 +65,9 @@ class HeatPump(AbstractTechnology):
         self,
         name: str,
         ref_cop: COPReference = None,
+        # TODO: add method_cop and parameters
+        method_cop: str = "lorenz",
+        options_cop: dict = None,
         thermal_power_limit: float = None,
         electrical_power_limit: float = None,
         max_temp_primary: float = None,
@@ -71,9 +77,10 @@ class HeatPump(AbstractTechnology):
         min_temp_secondary: float = None,
         min_delta_temp_secondary: float = 5.0,
     ):
+
         """
         Initialize heat pump component.
-
+        # TODO: Add new cop parameters
         :param thermal_power_limit: Thermal power limit on all
             temperature ranges
         :param cop_0_35: COP for the temperature rise 0°C to 35°C
@@ -94,6 +101,8 @@ class HeatPump(AbstractTechnology):
             ref_cop = COPReference()
 
         self.ref_cop = ref_cop
+        self.method_cop = method_cop
+        self.options_cop = options_cop
         self.electrical_power_limit = electrical_power_limit
         self.thermal_power_limit = thermal_power_limit
 
@@ -250,12 +259,22 @@ class HeatPump(AbstractTechnology):
         q_in = self.q_in[temp_primary_in]
         q_out = self.q_out[temp_secondary_out]
 
-        cop = calc_cop(
+        # TODO: give meaningful names
+        methods_cop= {"lorenz": calc_cop,
+                      "linear": calc_cop_linear_3var,
+                      "piecewise": calc_cop_piecewise,
+                      "piecewise2": calc_cop_piecewise_2,
+                      }
+
+
+
+        cop = methods_cop[self.method_cop](
             ref_cop=self.ref_cop,
             temp_primary_in=temp_primary_in,
             temp_primary_out=temp_primary_out,
             temp_secondary_in=temp_secondary_in,
             temp_secondary_out=temp_secondary_out,
+            options_cop = self.options_cop,
         )
 
         self.create_solph_node(

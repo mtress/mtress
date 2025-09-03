@@ -35,6 +35,9 @@ from ._gas_definition import (
 from ._helper_functions import (
     bar_to_pascal,
     calc_cop,
+    calc_cop_piecewise_2,
+    calc_cop_linear_3var,
+    calc_cop_piecewise,
     calc_isothermal_compression_energy,
     celsius_to_kelvin,
     kelvin_to_celsius,
