@@ -110,6 +110,7 @@ def calc_cop(
     temp_secondary_out: float = None,
     temp_primary_out: float = None,
     temp_secondary_in: float = None,
+    options_cop: dict = {},
 ):
     """
     :param ref_cop: Data class representing the reference COP

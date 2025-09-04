@@ -260,7 +260,7 @@ class HeatPump(AbstractTechnology):
         q_out = self.q_out[temp_secondary_out]
 
         # TODO: give meaningful names
-        methods_cop= {"lorenz": calc_cop,
+        method_cop= {"lorenz": calc_cop,
                       "linear": calc_cop_linear_3var,
                       "piecewise": calc_cop_piecewise,
                       "piecewise2": calc_cop_piecewise_2,
@@ -268,7 +268,7 @@ class HeatPump(AbstractTechnology):
 
 
 
-        cop = methods_cop[self.method_cop](
+        cop = method_cop[self.method_cop](
             ref_cop=self.ref_cop,
             temp_primary_in=temp_primary_in,
             temp_primary_out=temp_primary_out,

@@ -76,6 +76,7 @@ house_1.add(electric_heater)
 house_1.add(
     technologies.HeatPump(
         name="HeatPump",
+        method_cop="lorenz",
         thermal_power_limit=None,
         max_temp_primary=20,
         min_temp_primary=10,
