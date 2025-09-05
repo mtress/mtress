@@ -27,28 +27,22 @@ def fit_segments_3temps(data):
     Ts_out = np.array([d[3] for d in data])
     COP = np.array([d[4] for d in data])
 
-    masks = {
-        'lt30': Te_in <= 35,
-    }
-
-    fits = {}
-    for key, mask in masks.items():
-        X = np.vstack([Te_in[mask], Ts_in[mask], Ts_out[mask], np.ones_like(Te_in[mask])]).T
-        coeffs, *_ = np.linalg.lstsq(X, COP[mask], rcond=None)
-        fits[key] = coeffs  # a, e, f, g
+    X = np.vstack([Te_in, Ts_in, Ts_out, np.ones_like(Te_in)]).T
+    coeffs, *_ = np.linalg.lstsq(X, COP, rcond=None)
+    fits = coeffs  # a, e, f, g
+    a, e, f, g = fits
     return fits
 
-# Fit models
+
+# Obtaining the fit models for the input data 
 fits30 = fit_segments_3temps(data_30)
 fits50 = fit_segments_3temps(data_50)
 
-print('here it comes',fits30)
-
 # Print equations
 def print_eqs_3temp(fits, label):
+    a, e, f, g = fits
     print(f"\n--- 3 VAR EQ COP equations for {label} ---")
-    for region, (a, e, f, g) in fits.items():
-        print(f": COP = {a:.4f}·Te_in + {e:.4f}·Ts_in + {f:.4f}·Ts_out + {g:.4f}")
+    print(f"COP = {a:.4f}·Te_in + {e:.4f}·Ts_in + {f:.4f}·Ts_out + {g:.4f}")
 
 print_eqs_3temp(fits30, "Ts_out = 35°C")
 print_eqs_3temp(fits50, "Ts_out = 55°C")
@@ -63,6 +57,8 @@ Te_range = np.linspace(min(Te30.min(), Te50.min()), max(Te30.max(), Te50.max()),
 plt.figure(figsize=(10, 6))
 plt.scatter(Te30, COP30, color='C0', label='Data (Ts_out=35°C)', marker='o')
 plt.scatter(Te50, COP50, color='C1', label='Data (Ts_out=55°C)', marker='s')
+
+
 
 a30, e30, f30, g30 = fits30
 y30 = a30 * Te30 + e30 * 30 + f30 * 35 + g30
