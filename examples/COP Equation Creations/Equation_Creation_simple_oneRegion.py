@@ -26,12 +26,9 @@ def fit_segments_3temps(data):
     Ts_in = np.array([d[2] for d in data])
     Ts_out = np.array([d[3] for d in data])
     COP = np.array([d[4] for d in data])
-#comment out to have only one single line describing the COP, i.e. one "region" for the curve
-#comment them out if you want to have different distinct coefficients for different regions
+
     masks = {
-        'lt30': Te_in <= 30,
-        #'6_10': (Te_in >= 6) & (Te_in <= 10),
-        'gt30': Te_in > 30
+        'lt30': Te_in <= 35,
     }
 
     fits = {}
@@ -44,12 +41,14 @@ def fit_segments_3temps(data):
 # Fit models
 fits30 = fit_segments_3temps(data_30)
 fits50 = fit_segments_3temps(data_50)
+
 print('here it comes',fits30)
+
 # Print equations
 def print_eqs_3temp(fits, label):
     print(f"\n--- 3 VAR EQ COP equations for {label} ---")
     for region, (a, e, f, g) in fits.items():
-        print(f"{region}: COP = {a:.4f}·Te_in + {e:.4f}·Ts_in + {f:.4f}·Ts_out + {g:.4f}")
+        print(f": COP = {a:.4f}·Te_in + {e:.4f}·Ts_in + {f:.4f}·Ts_out + {g:.4f}")
 
 print_eqs_3temp(fits30, "Ts_out = 35°C")
 print_eqs_3temp(fits50, "Ts_out = 55°C")
@@ -65,7 +64,27 @@ plt.figure(figsize=(10, 6))
 plt.scatter(Te30, COP30, color='C0', label='Data (Ts_out=35°C)', marker='o')
 plt.scatter(Te50, COP50, color='C1', label='Data (Ts_out=55°C)', marker='s')
 
-for region in ['lt30', 'gt30']:
+a30, e30, f30, g30 = fits30
+y30 = a30 * Te30 + e30 * 30 + f30 * 35 + g30
+plt.plot(Te30, y30, '-', color='C0', label=f'Fit 30°C (Tc-in)')
+
+a50, e50, f50, g50 = fits50
+y50 = a50 * Te50 + e50 * 50 + f50 * 55 + g50
+plt.plot(Te50, y50, '--', color='C1', label=f'Fit 50°C (Tc-in)')
+
+plt.title("3 VAR EQ COP vs Te_in — Fitted Segments (Te_in, Ts_in, Ts_out)")
+plt.xlabel("Te_in (°C)") 
+plt.ylabel("COP")
+plt.grid(True, linestyle="--", alpha=0.4)
+plt.legend(ncol=2, fontsize=8)
+plt.tight_layout()
+plt.show()
+
+
+
+
+#ploting for different regions
+""" for region in ['lt30', 'gt30']:
     # Te range
     if region == 'lt30':
         x_vals = Te_range[Te_range <= 25]
@@ -84,9 +103,10 @@ for region in ['lt30', 'gt30']:
     plt.plot(x_vals, y50, '--', color='C1', label=f'Fit 50°C ({region})')
 
 plt.title("3 VAR EQ COP vs Te_in — Fitted Segments (Te_in, Ts_in, Ts_out)")
-plt.xlabel("Te_in (°C)")
+plt.xlabel("Te_in (°C)") 
 plt.ylabel("COP")
 plt.grid(True, linestyle="--", alpha=0.4)
 plt.legend(ncol=2, fontsize=8)
 plt.tight_layout()
 plt.show()
+"""

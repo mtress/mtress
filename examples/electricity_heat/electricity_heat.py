@@ -54,13 +54,13 @@ house_1.add(
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[10, 15, 20, 30, 40, 55],
+        temperature_levels=[0, 7, 12, 20, 30, 35, 55],
     )
 )
 house_1.add(
     demands.FixedTemperatureHeating(
         name="space_heating",
-        min_flow_temperature=40,
+        min_flow_temperature=35,
         return_temperature=30,
         time_series=[50, 60],
     )
@@ -76,11 +76,15 @@ house_1.add(electric_heater)
 house_1.add(
     technologies.HeatPump(
         name="HeatPump",
-        method_cop="lorenz",
+        method_cop="linear",
+        options_cop = {
+                35: (0.0850, 0.0526, 0.0613, 0.0018),  # A, E, F, G
+                55: (0.0470, 0.0247, 0.0271, 0.0005),
+                },
         thermal_power_limit=None,
         max_temp_primary=20,
-        min_temp_primary=10,
-        max_temp_secondary=40,
+        min_temp_primary=0,
+        max_temp_secondary=35,
         min_temp_secondary=30,
     )
 )
@@ -88,9 +92,9 @@ house_1.add(
 house_1.add(
     technologies.HeatSource(
         name="Air_HE",
-        reservoir_temperature=20,
+        reservoir_temperature=12,
         maximum_working_temperature=40,
-        minimum_working_temperature=10,
+        minimum_working_temperature=0,
         nominal_power=1e4,
     )
 )
@@ -115,3 +119,11 @@ solved_model.write(
 )
 
 solph_representation.graph(flow_results=flows)
+
+
+Qc= flows[('house_1','HeatPump','heat_budget_source'),('house_1','HeatPump','heat_budget')]
+Pel = flows [('house_1','ElectricityCarrier','distribution'),('house_1','HeatPump','electricity')]
+
+COP = Qc/Pel
+
+print (COP)
