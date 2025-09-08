@@ -8,9 +8,9 @@ data_30 = [
     ( 30,  35, 30, 35, 6.40),
 ]
 data_50 = [
-    (-10,   -5, 50, 55, 2.30),
-    (0,    5, 50, 55, 3.20),
-    (15,   20, 50, 55, 4.00),
+    (-5,   0, 50, 55, 2.30),
+    (0,    5, 50, 55, 2.60),
+    (20,   25, 50, 55, 4.00),
     (30,   35, 50, 55, 4.50),
 ]
 
@@ -76,33 +76,3 @@ plt.legend(ncol=2, fontsize=8)
 plt.tight_layout()
 plt.show()
 
-
-
-
-#ploting for different regions
-""" for region in ['lt30', 'gt30']:
-    # Te range
-    if region == 'lt30':
-        x_vals = Te_range[Te_range <= 25]
-    # elif region == 'gt25':
-    #    x_vals = Te_range[(Te_range >= 25) #& (Te_range <= 10)
-    #                      ]
-    else:
-        x_vals = Te_range[Te_range > 25] 
-
-    a30, e30, f30, g30 = fits30[region]
-    y30 = a30 * x_vals + e30 * 30 + f30 * 35 + g30
-    plt.plot(x_vals, y30, '-', color='C0', label=f'Fit 30°C ({region})')
-
-    a50, e50, f50, g50 = fits50[region]
-    y50 = a50 * x_vals + e50 * 50 + f50 * 55 + g50
-    plt.plot(x_vals, y50, '--', color='C1', label=f'Fit 50°C ({region})')
-
-plt.title("3 VAR EQ COP vs Te_in — Fitted Segments (Te_in, Ts_in, Ts_out)")
-plt.xlabel("Te_in (°C)") 
-plt.ylabel("COP")
-plt.grid(True, linestyle="--", alpha=0.4)
-plt.legend(ncol=2, fontsize=8)
-plt.tight_layout()
-plt.show()
-"""

@@ -54,14 +54,14 @@ house_1.add(
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[0, 7, 12, 20, 30, 35, 55],
+        temperature_levels=[-5,0, 7, 12, 20, 30, 50, 55],
     )
 )
 house_1.add(
     demands.FixedTemperatureHeating(
         name="space_heating",
-        min_flow_temperature=35,
-        return_temperature=30,
+        min_flow_temperature=55,
+        return_temperature=50,
         time_series=[50, 60],
     )
 )
@@ -73,28 +73,43 @@ electric_heater = technologies.ResistiveHeater(
 )
 house_1.add(electric_heater)
 
+cop_ref_point = technologies.COPReference(
+    cop=2.9,
+    warm_side_in=30,
+    warm_side_out=35,
+    cold_side_in=0,
+    cold_side_out=-5,
+)
+
+
+
 house_1.add(
     technologies.HeatPump(
         name="HeatPump",
         method_cop="linear",
+        ref_cop = cop_ref_point,
+
+        #defining your fitted coefficients for 35 and 55 supply temperatures - caution: using other temperature levels than 35 and 55 will give error. 
         options_cop = {
-                35: (0.0850, 0.0526, 0.0613, 0.0018),  # A, E, F, G
-                55: (0.0470, 0.0247, 0.0271, 0.0005),
-                },
+        "cop_eqs": {
+        35: (0.100, 0.0409, 0.0477, 0.0014),  # A, E, F, G
+        55: (0.0644, 0.0208, 0.0229, 0.0004),  # A, E, F, G
+            }
+        },            
         thermal_power_limit=None,
         max_temp_primary=20,
-        min_temp_primary=0,
-        max_temp_secondary=35,
-        min_temp_secondary=30,
+        min_temp_primary=-20,
+        max_temp_secondary=55,
+        min_temp_secondary=50,
     )
 )
 
 house_1.add(
     technologies.HeatSource(
         name="Air_HE",
-        reservoir_temperature=12,
+        reservoir_temperature=0,
         maximum_working_temperature=40,
-        minimum_working_temperature=0,
+        minimum_working_temperature=-20,
         nominal_power=1e4,
     )
 )
