@@ -67,8 +67,20 @@ def test_heat_carrier_build():
         timeindex=pd.date_range("2025-01-01", periods=3, freq="h"),
     )
 
-    hc = HeatCarrier(temperature_levels=[10, 20])  # two levels -> two nodes
+    temperature_levels = [10, 20]
+
+    hc = HeatCarrier(
+        temperature_levels=temperature_levels
+    )  # two levels -> two nodes
     hc.register_solph_model(solph_model=solph_model)
     hc.build_core()
 
     assert len(solph_model.energy_system.node) == 2  # model has two nodes
+
+    for temperature_level in temperature_levels:
+        assert (
+            solph_model.energy_system.node[
+                ("HeatCarrier", f"T_{temperature_level}")
+            ].custom_properties["temperature"]
+            == temperature_level
+        )

@@ -68,4 +68,5 @@ class HeatCarrier(AbstractLayeredCarrier):
             self.level_nodes[temperature] = self.create_solph_node(
                 label=f"T_{temperature:.0f}",
                 node_type=Bus,
+                custom_properties={"temperature": temperature},
             )
