@@ -134,7 +134,6 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Source,
             outputs={
                 _bus_source: Flow(
-                    nominal_value=self.nominal_power,
                     variable_costs=self._solph_model.data.get_timeseries(
                         self.working_rate,
                         kind=TimeseriesType.INTERVAL,
@@ -151,7 +150,11 @@ class AbstactHeatExchanger(AbstractTechnology):
         self._source_utilisation = self.create_solph_node(
             label="source_utilisation",
             node_type=Source,
-            outputs={self._bus_utilisation: Flow()},
+            outputs={
+                self._bus_utilisation: Flow(
+                    nominal_capacity=self.nominal_power,
+                )
+            },
         )
 
         if self.autoconnect:
@@ -206,7 +209,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                     node_type=Converter,
                     inputs={
                         _bus_source: Flow(
-                            nominal_value=self.nominal_power,
+                            nominal_capacity=self.nominal_power,
                             max=gains,
                         ),
                         heat_bus_cold_source: Flow(),
@@ -229,7 +232,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             for ts in m.TIMESTEPS:
                 expr = (
                     m.flow[self._source_utilisation, self._bus_utilisation, ts]
-                    <= m.flow[self._heat_reservoir, self._bus_source, ts]
+                    >= m.flow[self._heat_reservoir, self._bus_source, ts]
                 )
                 getattr(m, name).add(ts, expr)
 
@@ -311,7 +314,8 @@ class AbstactHeatExchanger(AbstractTechnology):
                 outputs={
                     heat_bus_cold_sink: Flow(),
                     _bus_sink: Flow(
-                        max=internal_sequence, nominal_value=self.nominal_power
+                        max=internal_sequence,
+                        nominal_capacity=self.nominal_power,
                     ),
                 },
                 conversion_factors={
@@ -346,7 +350,7 @@ class HeatSource(AbstactHeatExchanger):
             minimum_delta=minimum_delta,
             conductivity_gain_factor=conductivity_gain_factor,
             non_thermal_gains=non_thermal_gains,
-            working_rate = working_rate,
+            working_rate=working_rate,
         )
 
         # Solph model interfaces

@@ -117,14 +117,14 @@ def _heat_source_test_template(
     if results_20_10 is not None:
         # lower temperature and revenue, allowed in both step
         assert math.isclose(
-            flow_20_10.iloc[0], 
-            results_20_10[0], 
-            abs_tol=1e-3
+            flow_20_10.iloc[0],
+            results_20_10[0],
+            abs_tol=1e-3,
         )
         assert math.isclose(
             flow_20_10.iloc[1],
             results_20_10[1],
-            abs_tol=1e-3
+            abs_tol=1e-3,
         )
     else:
         print(flow_20_10)
@@ -132,14 +132,14 @@ def _heat_source_test_template(
     if results_25_20 is not None:
         # higher temperature and revenue, only allowed in second step
         assert math.isclose(
-            flow_25_20.iloc[0], 
+            flow_25_20.iloc[0],
             results_25_20[0],
-            abs_tol=1e-3
+            abs_tol=1e-3,
         )
         assert math.isclose(
             flow_25_20.iloc[1],
-            results_25_20[1], 
-            abs_tol=1e-3
+            results_25_20[1],
+            abs_tol=1e-3,
         )
     else:
         print(flow_25_20)
@@ -147,14 +147,14 @@ def _heat_source_test_template(
     if results_30_25 is not None:
         # higherst temperature and revenue, not allowed at all
         assert math.isclose(
-            flow_30_25.iloc[0], 
-            results_30_25[0], 
-            abs_tol=1e-3
+            flow_30_25.iloc[0],
+            results_30_25[0],
+            abs_tol=1e-3,
         )
         assert math.isclose(
             flow_30_25.iloc[1],
             results_30_25[1],
-            abs_tol=1e-3
+            abs_tol=1e-3,
         )
     else:
         print(flow_30_25)
