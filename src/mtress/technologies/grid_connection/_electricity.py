@@ -40,6 +40,8 @@ class ElectricityGridConnection(AbstractGridConnection):
         self.grid_import = None
 
     def build_core(self):
+        super().build_core()
+
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
         self.grid_import = b_grid_import = self.create_solph_node(

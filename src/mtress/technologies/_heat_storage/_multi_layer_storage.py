@@ -83,6 +83,8 @@ class LayeredHeatStorage(AbstractHeatStorage):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         # Create storage components according to the temperature levels defined
         # by the heat carrier object
 
@@ -124,7 +126,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 )
 
                 self.storage_components[temperature] = storage
-                
+
                 if self.u_value is not None:
                     gain_flow = {bus: Flow()}
 

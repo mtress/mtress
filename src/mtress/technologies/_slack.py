@@ -48,6 +48,8 @@ class SlackNode(AbstractTechnology):
 
     def build_core(self):
         """Build oemof solph core structure."""
+        super().build_core()
+
         # get all carriers
         carriers = self.location._carriers
 

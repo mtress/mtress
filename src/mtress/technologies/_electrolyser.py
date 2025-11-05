@@ -121,6 +121,7 @@ class AbstractElectrolyser(AbstractHeater):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         super().build_core()
+
         # Electrical connection
         self.electricity_carrier = self.location.get_carrier(
             ElectricityCarrier
@@ -217,6 +218,7 @@ class Electrolyser(AbstractElectrolyser):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         super().build_core()
+
         self.create_solph_node(
             label="electrolyser",
             node_type=Converter,

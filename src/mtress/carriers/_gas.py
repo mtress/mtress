@@ -37,6 +37,8 @@ class GasCarrier(AbstractLayeredCarrier):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         for gas, pressures in self.levels.items():
             pressure_low = None
             self.distribution[gas] = {}

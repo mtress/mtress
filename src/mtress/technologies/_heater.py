@@ -32,6 +32,7 @@ class AbstractHeater(AbstractTechnology):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
 
         self.heat_bus = heat_bus = self.create_solph_node(
             label="heat",
@@ -105,7 +106,6 @@ class ResistiveHeater(AbstractHeater):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-
         super().build_core()
 
         # Add electrical connection
@@ -170,7 +170,6 @@ class GasBoiler(AbstractHeater):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-
         super().build_core()
 
         gas_carrier = self.location.get_carrier(GasCarrier)

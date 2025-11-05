@@ -110,6 +110,7 @@ class AbstractFuelCell(AbstractHeater):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         super().build_core()
+
         # Gas connection as an input to Fuel Cell
         self.gas_carrier = self.location.get_carrier(GasCarrier)
 
@@ -384,7 +385,6 @@ class OffsetFuelCell(AbstractFuelCell):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-
         super().build_core()
 
         min_load_electrical_output = (

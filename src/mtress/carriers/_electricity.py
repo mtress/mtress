@@ -40,6 +40,8 @@ class ElectricityCarrier(AbstractCarrier):
         self.feed_in = None
 
     def build_core(self):
+        super().build_core()
+
         self.distribution = self.create_solph_node(
             label="distribution",
             node_type=Bus,

@@ -58,6 +58,8 @@ class GasGridConnection(AbstractGridConnection):
         self.b_grid_export = None
 
     def build_core(self):
+        super().build_core()
+
         gas_carrier = self.location.get_carrier(GasCarrier)
 
         pressure_level_low, pressure_level_high = (

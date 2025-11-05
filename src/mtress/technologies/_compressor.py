@@ -38,6 +38,8 @@ class GasCompressor(AbstractTechnology):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         gas_carrier = self.location.get_carrier(GasCarrier)
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
