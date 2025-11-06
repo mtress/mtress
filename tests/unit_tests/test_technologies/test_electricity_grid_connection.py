@@ -1,5 +1,5 @@
 from mtress.technologies import ElectricityGridConnection
-from oemof.solph.processing import meta_results, results
+from oemof.solph import Results, results
 import math
 import pytest
 from mtress import (
@@ -76,7 +76,7 @@ class TestGridConnection:
         solph_representation.build_solph_model()
 
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
-        mr = meta_results(solved_model)
+        mr = Results(solved_model)
         myresults = results(solved_model)
         flows = get_flows(myresults)
         grid_flow = flows[
@@ -136,5 +136,5 @@ class TestGridExport:
         )
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
-        mr = meta_results(solved_model)
+        mr = Results(solved_model)
         assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)

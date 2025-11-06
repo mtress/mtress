@@ -1,6 +1,6 @@
 import math
 import pytest
-from oemof.solph.processing import meta_results, results
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
@@ -96,7 +96,7 @@ class TestHeatGrid:
 
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-        mr = meta_results(solved_model)
+        mr = Results(solved_model)
 
         assert (
             solved_model.solver_results.Solver.Termination_condition
@@ -181,7 +181,7 @@ class TestHeatGrid:
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-        mr = meta_results(solved_model)
+        mr = Results(solved_model)
 
         assert (
             solved_model.solver_results.Solver.Termination_condition
@@ -268,7 +268,7 @@ class TestHeatGrid:
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-        mr = meta_results(solved_model)
+        mr = Results(solved_model)
 
         assert (
             solved_model.solver_results.Solver.Termination_condition
@@ -282,7 +282,7 @@ class TestHeatGrid:
 if __name__ == "__main__":
 
     import os
-    from oemof.solph.processing import results, meta_results
+    from oemof.solph import Results
     from mtress import (
         Location,
         MetaModel,
@@ -291,7 +291,7 @@ if __name__ == "__main__":
         demands,
         technologies,
     )
-    from mtress._helpers import get_flows
+
     from mtress.physics import HYDROGEN
     from mtress.technologies import PEM_ELECTROLYSER
 
@@ -367,7 +367,7 @@ if __name__ == "__main__":
 
     myresults = results(solved_model)
     flows = get_flows(myresults)
-    mr = meta_results(solved_model)
+    mr = Results(solved_model)
 
     plot = solph_representation.graph(detail=True, flow_results=flows)
     plot.render(outfile="heat_grid_export.png")

@@ -3,7 +3,6 @@
 Tests for coefficient of performance calculations.
 """
 import math
-
 import pytest
 
 from mtress.physics import (

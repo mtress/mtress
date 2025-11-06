@@ -7,14 +7,14 @@ import os
 
 import matplotlib.pyplot as plt
 from oemof.solph.processing import results
-from oemof.solph.processing import meta_results
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
     SolphModel,
     carriers,
     technologies,
-    demands
+    demands,
 )
 from mtress._helpers import get_flows
 
@@ -32,8 +32,8 @@ house_1.add(
         # revenue=2,
         # grid_import_limit=1000,
         # grid_export_limit=1000,
-        )
     )
+)
 
 battery = technologies.BatteryStorage(
     name="Battery",
@@ -43,7 +43,7 @@ battery = technologies.BatteryStorage(
     charging_efficiency=1,
     initial_soc=0.1,
     loss_rate=0,
-    fixed_losses_absolute=[1e1, 1e1]
+    fixed_losses_absolute=[1e1, 1e1],
 )
 
 house_1.add(battery)
