@@ -1,23 +1,6 @@
 """Utility functions for the analysis of solph results."""
 
 
-def get_flows(results):
-    """
-    Extract flows from results dictionary.
-
-    :param results: Results from solph optimization
-    """
-    flows = {
-        (source_node.label, destination_node.label): result["sequences"][
-            "flow"
-        ]
-        for (source_node, destination_node), result in results.items()
-        if destination_node is not None and not source_node == destination_node
-    }
-
-    return flows
-
-
 def get_storage_content(results):
     """
     Extract storage content from results dictionary.
