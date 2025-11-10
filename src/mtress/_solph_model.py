@@ -124,9 +124,7 @@ class SolphModel:
 
     def solve(
         self,
-        solver: str = "cbc",
-        solve_kwargs: dict = None,
-        cmdline_options: dict = None,
+        **kwargs
     ):
         """Solve generated energy system model."""
 
@@ -135,13 +133,6 @@ class SolphModel:
             self.build_solph_model()
         else:
             LOGGER.info("Using solph model built before.")
-
-        kwargs = {"solver": solver}
-        if solve_kwargs is not None:
-            kwargs["solve_kwargs"] = solve_kwargs
-
-        if cmdline_options is not None:
-            kwargs["cmdline_options"] = cmdline_options
 
         LOGGER.info("Solving the optimisation model.")
         self.model.solve(**kwargs)
