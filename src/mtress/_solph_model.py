@@ -126,7 +126,7 @@ class SolphModel:
         self,
         **kwargs
     ):
-        """Solve generated energy system model."""
+        """Solve energy system model (wraps `oemof.solph.Model.solve`)."""
 
         if self.model is None:
             LOGGER.info("Building solph model.")
