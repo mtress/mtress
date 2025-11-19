@@ -121,7 +121,8 @@ class HeatPump(AbstractTechnology):
             node_type=Bus,
             inputs={
                 electricity_carrier.distribution: Flow(
-                    nominal_value=self.electrical_power_limit
+                    custom_attributes={"unit": "W"},
+                    nominal_value=self.electrical_power_limit,
                 )
             },
         )
@@ -135,7 +136,10 @@ class HeatPump(AbstractTechnology):
             label="heat_budget_source",
             node_type=Source,
             outputs={
-                heat_budget_bus: Flow(nominal_value=self.thermal_power_limit)
+                heat_budget_bus: Flow(
+                    custom_attributes={"unit": "W"},
+                    nominal_value=self.thermal_power_limit,
+                )
             },
         )
 
@@ -217,11 +221,11 @@ class HeatPump(AbstractTechnology):
             )
             self.q_in[int(temp_heigh)] = q_side
             inputs = {
-                heat_bus_warm: Flow(),
+                heat_bus_warm: Flow(custom_attributes={"unit": "kg/h"}),
             }
             outputs = {
-                q_side: Flow(),
-                heat_bus_cold: Flow(),
+                q_side: Flow(custom_attributes={"unit": "W"}),
+                heat_bus_cold: Flow(custom_attributes={"unit": "kg/h"}),
             }
         else:
             q_side = self.create_solph_node(
@@ -229,8 +233,11 @@ class HeatPump(AbstractTechnology):
                 node_type=Bus,
             )
             self.q_out[int(temp_heigh)] = q_side
-            inputs = {q_side: Flow(), heat_bus_cold: Flow()}
-            outputs = {heat_bus_warm: Flow()}
+            inputs = {
+                q_side: Flow(custom_attributes={"unit": "W"}),
+                heat_bus_cold: Flow(custom_attributes={"unit": "kg/h"}),
+            }
+            outputs = {heat_bus_warm: Flow(custom_attributes={"unit": "kg/h"})}
 
         self.create_solph_node(
             label=f"HE_{side}_{temp_heigh:.0f}",
@@ -262,12 +269,12 @@ class HeatPump(AbstractTechnology):
             label=f"cop_{temp_primary_in:.0f}_{temp_secondary_out:.0f}",
             node_type=Converter,
             inputs={
-                q_in: Flow(),
-                self.electricity_bus: Flow(),
-                self.heat_budget_bus: Flow(),
+                q_in: Flow(custom_attributes={"unit": "W"}),
+                self.electricity_bus: Flow(custom_attributes={"unit": "W"}),
+                self.heat_budget_bus: Flow(custom_attributes={"unit": "W"}),
             },
             outputs={
-                q_out: Flow(),
+                q_out: Flow(custom_attributes={"unit": "W"}),
             },
             conversion_factors={
                 self.electricity_bus: 1 / cop,

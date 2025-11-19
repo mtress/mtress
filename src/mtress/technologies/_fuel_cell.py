@@ -252,11 +252,14 @@ class FuelCell(AbstractFuelCell):
             label="fuel_cell",
             node_type=Converter,
             inputs={
-                self.gas_bus: Flow(nominal_value=self.nominal_gas_consumption),
+                self.gas_bus: Flow(
+                    custom_attributes={"unit": "kg/h"},
+                    nominal_value=self.nominal_gas_consumption,
+                ),
             },
             outputs={
-                self.electricity_bus: Flow(),
-                self.heat_bus: Flow(),
+                self.electricity_bus: Flow(custom_attributes={"unit": "W"}),
+                self.heat_bus: Flow(custom_attributes={"unit": "W"}),
             },
             conversion_factors={
                 self.gas_bus: 1,
@@ -418,6 +421,7 @@ class OffsetFuelCell(AbstractFuelCell):
             node_type=OffsetConverter,
             inputs={
                 self.gas_bus: Flow(
+                    custom_attributes={"unit": "kg/h"},
                     nominal_value=self.nominal_gas_consumption,
                     max=self.maximum_load,
                     min=self.minimum_load,
@@ -425,8 +429,8 @@ class OffsetFuelCell(AbstractFuelCell):
                 ),
             },
             outputs={
-                self.electricity_bus: Flow(),
-                self.heat_bus: Flow(),
+                self.electricity_bus: Flow(custom_attributes={"unit": "W"}),
+                self.heat_bus: Flow(custom_attributes={"unit": "W"}),
             },
             conversion_factors={
                 self.electricity_bus: slope_el,
