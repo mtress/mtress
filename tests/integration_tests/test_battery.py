@@ -321,12 +321,12 @@ class TestBatteryStorage:
         myresults = results(solved_model)
         flows = get_flows(myresults)
         charging_power = flows[
-            ("house_1", "ElectricityCarrier", "distribution"),
-            ("house_1", "bs", "Battery_Storage"),
+            ("distribution", "ElectricityCarrier", "house_1"),
+            ("Battery_Storage", "bs", "house_1"),
         ]
         discharging_power = flows[
-            ("house_1", "bs", "Battery_Storage"),
-            ("house_1", "ElectricityCarrier", "distribution"),
+            ("Battery_Storage", "bs", "house_1"),
+            ("distribution", "ElectricityCarrier", "house_1"),
         ]
         
         mr = meta_results(solved_model)
