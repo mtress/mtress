@@ -215,9 +215,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                         heat_bus_cold_source: Flow(
                             custom_attributes={"unit": "kg/h"}
                         ),
-                        self._bus_utilisation: Flow(
-                            custom_attributes={"unit": "W"}
-                        ),
+                        self._bus_utilisation: Flow(),
                     },
                     outputs={
                         heat_bus_warm_source: Flow(
