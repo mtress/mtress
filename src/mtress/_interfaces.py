@@ -14,6 +14,11 @@ class NamedElement(ABC):
         self._node = None
 
     @property
+    def node(self) -> Node:
+        """Return node that represents the current element"""
+        return self._node
+
+    @property
     def name(self) -> str:
         """Return name."""
         return self._name
