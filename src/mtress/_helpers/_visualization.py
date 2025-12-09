@@ -432,7 +432,7 @@ def graph_cytoscape(
         for d in e:
             if "source" in d["data"] and "flow" in d["data"]:
                 flow = d["data"]["flow"]
-                unit = d["data"]["unit"]
+                unit = d["data"].get("unit", "")
                 # cut flow according to range_slider
                 start, end = (
                     t_steps[slider_values[0]],
@@ -869,7 +869,7 @@ def generate_graph_graphviz(
                 color = RAINBOW_GRAPHVIZ
             if flows:
                 flow = edge_attributes["flow"].mean()
-                unit = edge_attributes["unit"]
+                unit = edge_attributes.get("unit", "")
                 if flow > 0:
                     graph.edge(
                         source,
@@ -937,7 +937,7 @@ def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
 
             if flows:
                 flow = edge_attr["flow"]
-                unit = edge_attr["unit"]
+                unit = edge_attr.get("unit", "")
                 flow_mean = flow.mean()
                 if flow_mean > 0:
                     e["data"]["flow"] = flow
