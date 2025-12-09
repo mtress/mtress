@@ -152,9 +152,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             label="source_utilisation",
             node_type=Source,
             outputs={
-                self._bus_utilisation: Flow(
-                    custom_attributes={"unit": "W"}, nominal_value=1
-                )
+                self._bus_utilisation: Flow(nominal_value=1)
             },
         )
 
