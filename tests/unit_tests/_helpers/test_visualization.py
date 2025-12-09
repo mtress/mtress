@@ -5,7 +5,7 @@ Tests for the MTRESS visualization helper module.
 
 import jsonschema
 
-from oemof.solph.processing import results
+from oemof.solph import Results
 
 from mtress import (
     Location,
@@ -15,7 +15,7 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
+
 from mtress._helpers._visualization import (
     generate_graph,
     generate_graph_cytoscape,
@@ -65,8 +65,8 @@ def test_graph():
     solph_representation.build_solph_model()
 
     solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-    myresults = results(solved_model)
-    flows = get_flows(myresults)
+    myresults = Results(solved_model)
+    flows = myresults["flow"]
 
     colorscheme = {
         "ElectricityCarrier": "orange",

@@ -1,6 +1,6 @@
 import math
 import pytest
-from oemof.solph.processing import meta_results, results
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
@@ -96,13 +96,13 @@ class TestHeatGrid:
 
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-        mr = meta_results(solved_model)
+        mr = Results(solved_model)
 
         assert (
             solved_model.solver_results.Solver.Termination_condition
             == "optimal"
         )
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
 
     @pytest.mark.skip(reason="Not really unit test.")
     @pytest.mark.parametrize(
@@ -181,13 +181,13 @@ class TestHeatGrid:
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-        mr = meta_results(solved_model)
+        mr = Results(solved_model)
 
         assert (
             solved_model.solver_results.Solver.Termination_condition
             == "optimal"
         )
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
 
     @pytest.mark.skip(reason="Not really a unit test.")
     @pytest.mark.parametrize(
@@ -268,21 +268,19 @@ class TestHeatGrid:
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-        mr = meta_results(solved_model)
+        mr = Results(solved_model)
 
         assert (
             solved_model.solver_results.Solver.Termination_condition
             == "optimal"
         )
-        assert math.isclose(
-            expected_result, float(mr["objective"]), abs_tol=3e-2
-        )
+        assert math.isclose(expected_result, float(mr.objective), abs_tol=3e-2)
 
 
 if __name__ == "__main__":
 
     import os
-    from oemof.solph.processing import results, meta_results
+    from oemof.solph import Results
     from mtress import (
         Location,
         MetaModel,
@@ -291,7 +289,7 @@ if __name__ == "__main__":
         demands,
         technologies,
     )
-    from mtress._helpers import get_flows
+
     from mtress.physics import HYDROGEN
     from mtress.technologies import PEM_ELECTROLYSER
 
@@ -365,11 +363,6 @@ if __name__ == "__main__":
     solph_representation.build_solph_model()
     solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-    myresults = results(solved_model)
-    flows = get_flows(myresults)
-    mr = meta_results(solved_model)
-
-    plot = solph_representation.graph(detail=True, flow_results=flows)
-    plot.render(outfile="heat_grid_export.png")
-
-    print("cost is: ", mr["objective"])
+    mr = Results(solved_model)
+    flows = mr["flow"]
+    print("cost is: ", mr.objective)

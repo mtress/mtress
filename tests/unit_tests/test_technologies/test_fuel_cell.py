@@ -4,7 +4,7 @@ from mtress.physics import HYDROGEN
 import math
 import pytest
 import os
-from oemof.solph.processing import meta_results
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
@@ -14,7 +14,9 @@ from mtress import (
     technologies,
 )
 from pyomo.opt import SolverFactory
-solver = 'scip' if SolverFactory('scip').available() else 'cbc'
+
+solver = "scip" if SolverFactory("scip").available() else "cbc"
+
 
 class TestFuelCell:
 
@@ -103,14 +105,10 @@ class TestFuelCell:
 
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(
-            solver=solver, 
-            solve_kwargs={"tee": False}
-            )
-        mr = meta_results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
-        
-        
-        
+            solver=solver, solve_kwargs={"tee": False}
+        )
+        mr = Results(solved_model)
+        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
 
 
 class TestOffsetFuelCell:
@@ -225,31 +223,26 @@ class TestOffsetFuelCell:
 
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(
-            solver=solver, 
-            solve_kwargs={"tee": False}
-            )
-        mr = meta_results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=abs_tol)
-    
+            solver=solver, solve_kwargs={"tee": False}
+        )
+        mr = Results(solved_model)
+        assert math.isclose(expected_result, mr.objective, abs_tol=abs_tol)
+
     @pytest.mark.parametrize(
         "nominal_power, template, elec_demand, expected_result",
         [
             # reference: nominal power matches demand
             (1000, PEMFC, 1000, 8.3341668e-05),
             # maximum power cannot be exceeded (imports are needed)
-            (1000, PEMFC, 1500, 8.3341668e-05+500*50e-6),
+            (1000, PEMFC, 1500, 8.3341668e-05 + 500 * 50e-6),
             # minimum power has to be observed (=leads to penalties)
-            (1000, PEMFC, 50, 50*50e-6),
+            (1000, PEMFC, 50, 50 * 50e-6),
         ],
     )
     def test_power_limits(
-            self, 
-            nominal_power, 
-            template, 
-            elec_demand, 
-            expected_result
-            ):
-        
+        self, nominal_power, template, elec_demand, expected_result
+    ):
+
         os.chdir(os.path.dirname(__file__))
         energy_system = MetaModel()
         house_1 = Location(name="house_1")
@@ -258,10 +251,9 @@ class TestOffsetFuelCell:
         house_1.add(carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
-                working_rate=50e-6,
-                revenue=50e-6
-                )
+                working_rate=50e-6, revenue=50e-6
             )
+        )
 
         house_1.add(
             carriers.GasCarrier(
@@ -287,12 +279,12 @@ class TestOffsetFuelCell:
         house_1.add(
             SlackNode(
                 {
-                    carriers.HeatCarrier: 0.0, 
-                    # carriers.GasCarrier: 1e9, 
+                    carriers.HeatCarrier: 0.0,
+                    # carriers.GasCarrier: 1e9,
                     # carriers.ElectricityCarrier: 1e9
-                    }
-                )
+                }
             )
+        )
 
         fc = OffsetFuelCell(
             name="fc",
@@ -338,8 +330,7 @@ class TestOffsetFuelCell:
 
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(
-            solver=solver, 
-            solve_kwargs={"tee": False}
-            )
-        mr = meta_results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+            solver=solver, solve_kwargs={"tee": False}
+        )
+        mr = Results(solved_model)
+        assert math.isclose(expected_result, mr.objective, abs_tol=1e-3)

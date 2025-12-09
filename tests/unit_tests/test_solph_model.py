@@ -10,7 +10,7 @@ import jsonschema
 import pandas as pd
 import pytest
 
-from oemof.solph.processing import results
+from oemof.solph import Results
 
 from mtress import (
     Connection,
@@ -22,7 +22,7 @@ from mtress import (
     technologies,
 )
 from mtress.technologies.grid_connection import ElectricityGridConnection
-from mtress._helpers import get_flows
+
 from mtress._helpers._visualization import generate_graph
 
 
