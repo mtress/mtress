@@ -9,6 +9,7 @@ from mtress import (
     technologies,
 )
 
+from mtress._helpers import get_flow_units
 
 os.chdir(os.path.dirname(__file__))
 
@@ -101,8 +102,10 @@ solph_representation.build_solph_model()
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = Results(solved_model)
 flows = myresults["flow"]
+units = get_flow_units(solph_representation)
 
 solph_representation.graph(
     flow_results=flows,
+    units=units,
     path="2_heat_source_and_demand_model.png",
 )

@@ -80,22 +80,34 @@ class SlackNode(AbstractTechnology):
                     ElectricityCarrier
                 )
                 node = electricity_carrier.distribution
-                slack_source[node] = Flow(variable_costs=v)
-                slack_sink[node] = Flow(variable_costs=v)
+                slack_source[node] = Flow(
+                    custom_attributes={"unit": "W"}, variable_costs=v
+                )
+                slack_sink[node] = Flow(
+                    custom_attributes={"unit": "W"}, variable_costs=v
+                )
             elif k == HeatCarrier:
                 heat_carrier = self.location.get_carrier(HeatCarrier)
                 for h_node in heat_carrier.level_nodes.values():
-                    slack_source[h_node] = Flow(variable_costs=v)
-                    slack_sink[h_node] = Flow(variable_costs=v)
+                    slack_source[h_node] = Flow(
+                        custom_attributes={"unit": "kg/h"}, variable_costs=v
+                    )
+                    slack_sink[h_node] = Flow(
+                        custom_attributes={"unit": "kg/h"}, variable_costs=v
+                    )
             elif k == GasCarrier:
                 gas_carrier = self.location.get_carrier(GasCarrier)
                 for gas in gas_carrier.distribution.values():
                     gas_nodes = list(gas.values())  # always sorted
                     gas_high = gas_nodes[-1]
-                    slack_source[gas_high] = Flow(variable_costs=v)
+                    slack_source[gas_high] = Flow(
+                        custom_attributes={"unit": "kg/h"}, variable_costs=v
+                    )
 
                     gas_low = gas_nodes[0]
-                    slack_sink[gas_low] = Flow(variable_costs=v)
+                    slack_sink[gas_low] = Flow(
+                        custom_attributes={"unit": "kg/h"}, variable_costs=v
+                    )
             # match any other carrier
             # NOTE: will connect sink and source to all nodes
             else:

@@ -1,6 +1,14 @@
 """Utility functions for the analysis of solph results."""
 
 
+def get_flow_units(solph_model):
+    units = {}
+    flows = solph_model.model.flows
+    for k, v in flows.items():
+        units[k] = v.custom_properties.get("unit", "")
+    return units
+
+
 def get_storage_content(results):
     """
     Extract storage content from results dictionary.

@@ -221,11 +221,14 @@ class Electrolyser(AbstractElectrolyser):
             label="electrolyser",
             node_type=Converter,
             inputs={
-                self.electrical_bus: Flow(nominal_value=self.nominal_power),
+                self.electrical_bus: Flow(
+                    custom_attributes={"unit": "W"},
+                    nominal_value=self.nominal_power,
+                ),
             },
             outputs={
-                self.h2_bus: Flow(),
-                self.heat_bus: Flow(),
+                self.h2_bus: Flow(custom_attributes={"unit": "kg/h"}),
+                self.heat_bus: Flow(custom_attributes={"unit": "W"}),
             },
             conversion_factors={
                 self.electrical_bus: 1,
@@ -349,13 +352,21 @@ class OffsetElectrolyser(AbstractElectrolyser):
             node_type=OffsetConverter,
             inputs={
                 self.electrical_bus: Flow(
+                    custom_attributes={"unit": "W"},
                     nominal_value=self.nominal_power,
                     max=self.maximum_load,
                     min=self.minimum_load,
                     nonconvex=solph.NonConvex(),
                 ),
             },
-            outputs={self.h2_bus: Flow(), self.heat_bus: Flow()},
+            outputs={
+                self.h2_bus: Flow(
+                    custom_attributes={"unit": "kg/h"},
+                ),
+                self.heat_bus: Flow(
+                    custom_attributes={"unit": "W"},
+                ),
+            },
             conversion_factors={
                 self.h2_bus: slope_h2,
                 self.heat_bus: slope_th,

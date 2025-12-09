@@ -9,6 +9,7 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 from ._array_cast import numeric_array
+from ._results import get_flow_units
 from ._util import get_from_dict, read_input_data, update_in_dict
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "get_from_dict",
     "read_input_data",
     "update_in_dict",
+    "get_flow_units",
 ]

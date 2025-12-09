@@ -315,7 +315,7 @@ class TestBatteryStorage:
         solph_representation.build_solph_model()
         if expected_result is None:
             # infeasibility is expected: a warning will be raised
-            with pytest.warns(UserWarning):
+            with pytest.raises(RuntimeError):
                 solved_model = solph_representation.solve(
                     solver=solver, solve_kwargs={"tee": False}
                 )
