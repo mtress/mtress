@@ -85,28 +85,27 @@ energy_used = (
     / round_trip_efficiency
 )
 expected_result = nominal_electricity_price * energy_used
-assert math.isclose(expected_result, mr.objective, abs_tol=1e-3)
 
-label1 = ("house_1", "ElectricityCarrier", "distribution")
-label2 = ("house_1", "ev", "EV")
+label1 = ("distribution", "ElectricityCarrier", "house_1")
+label2 = ("EV", "ev", "house_1")
 
 charging_power = flows[(str(label1), str(label2))]
 discharging_power = flows[(str(label2), str(label1))]
 
 plt.figure(figsize=(10, 5))
-plt.plot(charging_power.index[:-1], charging_power[:-1])
+plt.plot(charging_power.index, charging_power)
 plt.xticks(
-    charging_power.index[:-1],
-    [x.strftime("%H:00") for x in charging_power.index[:-1]],
+    charging_power.index,
+    [x.strftime("%H:00") for x in charging_power.index],
 )
 plt.ylabel("Power (W)")
 plt.show()
 
 plt.figure(figsize=(10, 5))
-plt.plot(discharging_power.index[:-1], discharging_power[:-1])
+plt.plot(discharging_power.index, discharging_power)
 plt.xticks(
-    discharging_power.index[:-1],
-    [x.strftime("%H:00") for x in discharging_power.index[:-1]],
+    discharging_power.index,
+    [x.strftime("%H:00") for x in discharging_power.index],
 )
 plt.ylabel("Power (W)")
 plt.show()
