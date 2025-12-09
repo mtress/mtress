@@ -34,6 +34,7 @@ from mtress import (
     demands,
     technologies,
 )
+from mtress._helpers import get_flow_units
 
 os.chdir(os.path.dirname(__file__))
 
@@ -101,11 +102,9 @@ solph_representation.build_solph_model()
 solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 myresults = Results(solved_model)
 flows = myresults["flow"]
+units = get_flow_units(solph_representation)
+solph_representation.graph(flow_results=flows, units=units)
 
-# plot = solph_representation.graph(
-#     flow_results=flows,
-#     path="electricity_heat_coll_results.png",
-# )
 label1 = ("house_1", "thColl", "source_reservoir")
 label2 = ("house_1", "thColl", "heat_source")
 Qcoll = flows[str(label1), str(label2)]
