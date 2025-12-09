@@ -84,7 +84,8 @@ class TestSlack:
             # same penalty for all
             (
                 {
-                    carriers.ElectricityCarrier: 100000,  # = 1e5 as integer literal
+                    carriers.ElectricityCarrier: 100000,
+                    # = 1e5 as integer literal
                     carriers.HeatCarrier: 1e5,
                     carriers.GasCarrier: 1e5,
                 },
@@ -97,7 +98,8 @@ class TestSlack:
                 {
                     carriers.ElectricityCarrier: 2000,
                     carriers.HeatCarrier: 1e4,
-                    # carriers.GasCarrier: 0.5*1e7, # omit to trigger infeasibility
+                    # carriers.GasCarrier: 0.5*1e7, # omit to trigger
+                    # infeasibility
                 },
                 None,
             ),
