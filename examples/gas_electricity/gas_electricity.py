@@ -5,9 +5,7 @@ CHP implementation for heat and power generation.
 
 import logging
 import os
-
-from oemof.solph.processing import results
-
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
@@ -19,8 +17,6 @@ from mtress import (
 from mtress.physics import HYDROGEN, NATURAL_GAS
 from mtress.technologies import HYDROGEN_MIXED_CHP
 
-from mtress._helpers import get_flows
-
 LOGGER = logging.getLogger(__file__)
 
 os.chdir(os.path.dirname(__file__))
@@ -30,7 +26,6 @@ energy_system = MetaModel()
 house_1 = Location(name="house_1")
 
 energy_system.add_location(house_1)
-
 
 house_1.add(carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=0.35))
@@ -43,7 +38,6 @@ house_1.add(
         revenue=None,
     )
 )
-
 house_1.add(
     technologies.GasGridConnection(
         name="H2_Grid",
@@ -53,7 +47,6 @@ house_1.add(
         revenue=None,
     )
 )
-
 house_1.add(
     carriers.GasCarrier(
         gases={
@@ -62,20 +55,17 @@ house_1.add(
         }
     )
 )
-
 house_1.add(
     demands.Electricity(
         name="electricity_demand",
         time_series="FILE:../input_file.csv:electricity",
     )
 )
-
 house_1.add(carriers.HeatCarrier(temperature_levels=[20, 80]))
 
 
 # Choose default CHP template (HYDROGEN_MIXED_CHP) and change gas
 # shares (vol %)
-
 house_1.add(
     technologies.CHP(
         name="Mixed_CHP",
@@ -84,7 +74,6 @@ house_1.add(
         template=HYDROGEN_MIXED_CHP,
     )
 )
-
 # Add heat demands
 house_1.add(
     demands.FixedTemperatureHeating(
@@ -108,13 +97,11 @@ solph_representation = SolphModel(
 )
 
 solph_representation.build_solph_model()
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-myresults = results(solved_model)
-flows = get_flows(myresults)
+myresults = Results(solved_model)
+flows = myresults["flow"]
 
 solved_model.write(
     "gas_electricity.lp", io_options={"symbolic_solver_labels": True}
 )
-
 solph_representation.graph(flow_results=flows)

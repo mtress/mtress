@@ -16,7 +16,6 @@ meta_model.solve and the solver output is written to an .lp file.
 import os
 
 from oemof import solph
-
 from mtress import (
     Location,
     MetaModel,
@@ -25,7 +24,7 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
+
 
 os.chdir(os.path.dirname(__file__))
 meta_model = MetaModel()
@@ -55,14 +54,12 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-myresults = solph.processing.results(solved_model)
-flows = get_flows(myresults)
+myresults = solph.Results(solved_model)
+flows = myresults["flow"]
 
-print(
-    flows[
-        ("house_1", "electricity demand", "input"),
-        ("house_1", "electricity demand", "sink"),
-    ]
-)
+label1 = ("house_1", "electricity demand", "input")
+label2 = ("house_1", "electricity demand", "sink")
+flow_electricity = flows[(str(label1), str(label2))]
 
+print(flow_electricity)
 solph_representation.graph(flow_results=flows)

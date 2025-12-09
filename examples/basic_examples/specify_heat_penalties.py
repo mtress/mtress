@@ -5,8 +5,7 @@ when there is excess or missing heat
 """
 
 import os
-
-from oemof.solph.processing import results, meta_results
+from oemof.solph import Results
 
 from mtress import (
     Location,
@@ -16,7 +15,7 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
+
 
 os.chdir(os.path.dirname(__file__))
 
@@ -50,13 +49,10 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-myresults = results(solved_model)
-flows = get_flows(myresults)
-
-mr = meta_results(solved_model)
+mr = Results(solved_model)
+flows = mr["flow"]
 
 # Print the objective value.
 # Here it contains the cost of the operation including penalties.
-print(mr["objective"])
-
+print(mr.objective)
 solph_representation.graph(flow_results=flows)

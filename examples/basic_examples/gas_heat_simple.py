@@ -3,8 +3,7 @@ Basic working 'heat' example to ilustrate the use of a boiler.
 """
 
 import os
-
-from oemof.solph.processing import results
+from oemof.solph import Results
 
 from mtress import (
     Location,
@@ -14,7 +13,6 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
 from mtress.physics import NATURAL_GAS
 
 os.chdir(os.path.dirname(__file__))
@@ -73,7 +71,6 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": False})
-myresults = results(solved_model)
-flows = get_flows(myresults)
-
+myresults = Results(solved_model)
+flows = myresults["flow"]
 solph_representation.graph(flow_results=flows)

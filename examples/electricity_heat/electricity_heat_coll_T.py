@@ -24,8 +24,7 @@ created and the solver output is written to an .lp file.
 
 import os
 import pandas as pd
-
-from oemof.solph.processing import results
+from oemof.solph import Results
 
 from mtress import (
     Location,
@@ -35,7 +34,6 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
 
 os.chdir(os.path.dirname(__file__))
 
@@ -49,7 +47,7 @@ house_1.add(technologies.ElectricityGridConnection(working_rate=350))
 
 house_1.add(
     carriers.HeatCarrier(
-        temperature_levels=[10, 15,25,45],
+        temperature_levels=[10, 15, 25, 45],
     )
 )
 
@@ -70,7 +68,7 @@ electric_heater = technologies.ResistiveHeater(
 house_1.add(electric_heater)
 
 
-Acoll =1.95# in m2
+Acoll = 1.95  # in m2
 Rad_tot = 1000  # in W/m2 total radiation, beam and diffuse
 Rad_nom = 1350  # in W/m2 total radiation, beam and diffuse
 
@@ -81,10 +79,10 @@ house_1.add(
         reservoir_temperature=[15, 15],
         maximum_working_temperature=45,
         minimum_working_temperature=10,
-        conductivity_gain_factor=4.49*Acoll/(Rad_nom*Acoll), 
-        non_thermal_gains=0.381* Acoll* Rad_tot/(Rad_nom*Acoll),
-        nominal_power=Rad_nom* Acoll,
-        working_rate = 0,
+        conductivity_gain_factor=4.49 * Acoll / (Rad_nom * Acoll),
+        non_thermal_gains=0.381 * Acoll * Rad_tot / (Rad_nom * Acoll),
+        nominal_power=Rad_nom * Acoll,
+        working_rate=0,
     )
 )
 
@@ -99,34 +97,30 @@ solph_representation = SolphModel(
 
 solph_representation.build_solph_model()
 
-plot = solph_representation.graph(
-    path="electricity_heat_coll_detail.png"
-)
-
+# plot = solph_representation.graph(path="electricity_heat_coll_detail.png")
 solved_model = solph_representation.solve(solve_kwargs={"tee": False})
-myresults = results(solved_model)
-flows = get_flows(myresults)
+myresults = Results(solved_model)
+flows = myresults["flow"]
 
-plot = solph_representation.graph(
-    flow_results=flows,
-    path="electricity_heat_coll_results.png",
-)
+# plot = solph_representation.graph(
+#     flow_results=flows,
+#     path="electricity_heat_coll_results.png",
+# )
+label1 = ("house_1", "thColl", "source_reservoir")
+label2 = ("house_1", "thColl", "heat_source")
+Qcoll = flows[str(label1), str(label2)]
 
-Qcoll = flows[
-    ("house_1", "thColl", "source_reservoir"),
-    ("house_1", "thColl", "heat_source"),
-]
-Qcoll_30 = flows[
-    ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_15")
-]
-Qcoll_45 = flows[
-    ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_45")
-]
-Qcoll_25 = flows[
-    ("house_1", "thColl", "heat_source"), ("house_1", "thColl", "source_25")
-]
+label1 = ("house_1", "thColl", "heat_source")
+label2 = ("house_1", "thColl", "source_15")
+Qcoll_30 = flows[str(label1), str(label2)]
 
-print('Qcoll:', Qcoll.sum()/2)
-print('Qcoll_15:', Qcoll_30.sum()/2)
-print('Qcoll_25:', Qcoll_25.sum()/2)
-print('Qcoll_45:', Qcoll_45.sum()/2)
+label2 = ("house_1", "thColl", "source_45")
+Qcoll_45 = flows[str(label1), str(label2)]
+
+label2 = ("house_1", "thColl", "source_25")
+Qcoll_25 = flows[str(label1), str(label2)]
+
+print("Qcoll:", Qcoll.sum() / 2)
+print("Qcoll_15:", Qcoll_30.sum() / 2)
+print("Qcoll_25:", Qcoll_25.sum() / 2)
+print("Qcoll_45:", Qcoll_45.sum() / 2)

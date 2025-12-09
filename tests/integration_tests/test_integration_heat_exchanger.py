@@ -3,10 +3,9 @@
 Tests for MTRESS HeatExchanger
 """
 import pandas as pd
-import pytest
 import math
-from oemof.solph.processing import results
 
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
@@ -14,7 +13,6 @@ from mtress import (
     carriers,
     technologies,
 )
-from mtress._helpers import get_flows
 
 
 def _heat_source_test_template(
@@ -94,68 +92,41 @@ def _heat_source_test_template(
     )
 
     solph_representation.build_solph_model()
-
     solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 
-    myresults = results(solved_model)
+    myresults = Results(solved_model)
+    flows = myresults["flow"]
 
-    flows = get_flows(myresults)
+    label1 = ("house_1", "HeatSink_20_10", "output")
+    label2 = ("house_1", "HeatSink_20_10", "sink")
+    flow_20_10 = flows[str(label1), str(label2)]
 
-    flow_20_10 = flows[
-        ("house_1", "HeatSink_20_10", "output"),
-        ("house_1", "HeatSink_20_10", "sink"),
-    ]
-    flow_25_20 = flows[
-        ("house_1", "HeatSink_25_20", "output"),
-        ("house_1", "HeatSink_25_20", "sink"),
-    ]
-    flow_30_25 = flows[
-        ("house_1", "HeatSink_30_25", "output"),
-        ("house_1", "HeatSink_30_25", "sink"),
-    ]
+    label1 = ("house_1", "HeatSink_25_20", "output")
+    label2 = ("house_1", "HeatSink_25_20", "sink")
+    flow_25_20 = flows[str(label1), str(label2)]
+
+    label1 = ("house_1", "HeatSink_30_25", "output")
+    label2 = ("house_1", "HeatSink_30_25", "sink")
+    flow_30_25 = flows[str(label1), str(label2)]
 
     if results_20_10 is not None:
         # lower temperature and revenue, allowed in both step
-        assert math.isclose(
-            flow_20_10.iloc[0], 
-            results_20_10[0], 
-            abs_tol=1e-3
-        )
-        assert math.isclose(
-            flow_20_10.iloc[1],
-            results_20_10[1],
-            abs_tol=1e-3
-        )
+        assert math.isclose(flow_20_10.iloc[0], results_20_10[0], abs_tol=1e-3)
+        assert math.isclose(flow_20_10.iloc[1], results_20_10[1], abs_tol=1e-3)
     else:
         print(flow_20_10)
 
     if results_25_20 is not None:
         # higher temperature and revenue, only allowed in second step
-        assert math.isclose(
-            flow_25_20.iloc[0], 
-            results_25_20[0],
-            abs_tol=1e-3
-        )
-        assert math.isclose(
-            flow_25_20.iloc[1],
-            results_25_20[1], 
-            abs_tol=1e-3
-        )
+        assert math.isclose(flow_25_20.iloc[0], results_25_20[0], abs_tol=1e-3)
+        assert math.isclose(flow_25_20.iloc[1], results_25_20[1], abs_tol=1e-3)
     else:
         print(flow_25_20)
 
     if results_30_25 is not None:
         # higherst temperature and revenue, not allowed at all
-        assert math.isclose(
-            flow_30_25.iloc[0], 
-            results_30_25[0], 
-            abs_tol=1e-3
-        )
-        assert math.isclose(
-            flow_30_25.iloc[1],
-            results_30_25[1],
-            abs_tol=1e-3
-        )
+        assert math.isclose(flow_30_25.iloc[0], results_30_25[0], abs_tol=1e-3)
+        assert math.isclose(flow_30_25.iloc[1], results_30_25[1], abs_tol=1e-3)
     else:
         print(flow_30_25)
 
@@ -242,3 +213,8 @@ def test_heat_source_7():
         results_30_25=[0, 10],  # sink limit uses 10/18 = 5/9 of capacity
         results_25_20=[10, 80 / 9],  # remaining 4/9 of 20 W
     )
+
+
+if __name__ == "__main__":
+
+    test_heat_source_1()
