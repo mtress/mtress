@@ -64,6 +64,8 @@ class GasStorage(AbstractHomogenousStorage, AbstractTechnology):
 
     def build_core(self) -> None:
         """Build the core structure of mtress representation."""
+        super().build_core()
+
         gas_carrier = self.location.get_carrier(GasCarrier)
         solph_storage_arguments = {
             "nominal_storage_capacity": self._storage_content(
