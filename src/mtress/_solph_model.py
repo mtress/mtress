@@ -83,6 +83,7 @@ class SolphModel:
                 connection.carrier, connection.destination
             )
 
+    @property
     def nodes(self):
         # access oemof.network.nodes
         return self.energy_system.nodes
