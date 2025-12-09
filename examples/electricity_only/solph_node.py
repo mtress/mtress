@@ -29,6 +29,7 @@ from mtress import (
     demands,
     technologies,
 )
+from mtress._helpers import get_flow_units
 
 os.chdir(os.path.dirname(__file__))
 meta_model = MetaModel()
@@ -89,4 +90,5 @@ label1 = ("house_1", "electricity demand", "input")
 label2 = ("house_1", "electricity demand", "sink")
 print(flows[(str(label1), str(label2))])
 
-solph_representation.graph(flow_results=flows)
+units = get_flow_units(solph_representation)
+solph_representation.graph(flow_results=flows, units=units)
