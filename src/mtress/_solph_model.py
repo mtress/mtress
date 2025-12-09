@@ -99,6 +99,7 @@ class SolphModel:
     def graph(
         self,
         flow_results: dict = None,
+        units: dict = None,
         flow_color: dict = None,
         colorscheme: dict = None,
         path: str = "model.png",
@@ -106,6 +107,7 @@ class SolphModel:
         graph_graphviz(
             nodes=self.nodes(),
             flows=flow_results,
+            units=units,
             flow_color=flow_color,
             colorscheme=colorscheme,
             path=path,
@@ -114,36 +116,26 @@ class SolphModel:
     def graph_interactive(
         self,
         flow_results: dict = None,
+        units: dict = None,
         flow_color: dict = None,
         colorscheme: dict = None,
     ):
         graph_cytoscape(
             nodes=self.nodes(),
             flows=flow_results,
+            units=units,
             flow_color=flow_color,
             colorscheme=colorscheme,
         )
 
-    def solve(
-        self,
-        solver: str = "cbc",
-        solve_kwargs: dict = None,
-        cmdline_options: dict = None,
-    ):
-        """Solve generated energy system model."""
+    def solve(self, **kwargs):
+        """Solve energy system model (wraps `oemof.solph.Model.solve`)."""
 
         if self.model is None:
             LOGGER.info("Building solph model.")
             self.build_solph_model()
         else:
             LOGGER.info("Using solph model built before.")
-
-        kwargs = {"solver": solver}
-        if solve_kwargs is not None:
-            kwargs["solve_kwargs"] = solve_kwargs
-
-        if cmdline_options is not None:
-            kwargs["cmdline_options"] = cmdline_options
 
         LOGGER.info("Solving the optimisation model.")
         self.model.solve(**kwargs)

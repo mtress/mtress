@@ -128,13 +128,15 @@ class BatteryStorage(AbstractTechnology):
             node_type=GenericStorage,
             inputs={
                 electricity.distribution: Flow(
-                    nominal_value=self.nominal_capacity * self.charging_C_Rate
+                    custom_attributes={"unit": "W"},
+                    nominal_value=self.nominal_capacity * self.charging_C_Rate,
                 )
             },
             outputs={
                 electricity.distribution: Flow(
+                    custom_attributes={"unit": "W"},
                     nominal_value=self.nominal_capacity
-                    * self.discharging_C_Rate
+                    * self.discharging_C_Rate,
                 )
             },
             nominal_storage_capacity=self.nominal_capacity,

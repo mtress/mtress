@@ -63,6 +63,7 @@ SINK_SHAPE = "0.75, 1, 1, -1, -1, -1, -0.75, 1"
 def graph_graphviz(
     nodes,
     flows,
+    units: dict,
     flow_color: dict,
     colorscheme: dict,
     path: str = "model.png",
@@ -74,7 +75,7 @@ def graph_graphviz(
     # get graphviz digraph
     f = flows is not None
     graph = generate_graph_graphviz(
-        generate_graph(nodes, flows, flow_color, colorscheme),
+        generate_graph(nodes, flows, units, flow_color, colorscheme),
         f,
     )
 
@@ -85,6 +86,7 @@ def graph_graphviz(
 def graph_cytoscape(
     nodes,
     flows,
+    units: dict,
     flow_color: dict,
     colorscheme: dict,
 ):
@@ -95,7 +97,7 @@ def graph_cytoscape(
     # get cytoscape elements
     f = flows is not None
     elements = generate_graph_cytoscape(
-        generate_graph(nodes, flows, flow_color, colorscheme),
+        generate_graph(nodes, flows, units, flow_color, colorscheme),
         f,
     )
 
@@ -430,6 +432,7 @@ def graph_cytoscape(
         for d in e:
             if "source" in d["data"] and "flow" in d["data"]:
                 flow = d["data"]["flow"]
+                unit = d["data"].get("unit", "")
                 # cut flow according to range_slider
                 start, end = (
                     t_steps[slider_values[0]],
@@ -439,9 +442,9 @@ def graph_cytoscape(
 
                 match ts_agg:
                     case "mean":
-                        d["style"]["label"] = f"{round(flow.mean(), 3)}"
+                        d["style"]["label"] = f"{round(flow.mean(), 3)} {unit}"
                     case "total":
-                        d["style"]["label"] = f"{round(flow.sum(), 3)}"
+                        d["style"]["label"] = f"{round(flow.sum(), 3)} {unit}"
 
         graph.elements = e
         return graph.elements
@@ -695,6 +698,7 @@ def get_flow_color(node, flow_color: dict, colorscheme: dict) -> None:
 def generate_graph(
     nodes,
     flows,
+    units: dict = None,
     flow_color: dict = None,
     colorscheme: dict = None,
 ) -> dict:
@@ -780,8 +784,11 @@ def generate_graph(
             graph_edges[source_id].setdefault(target_id, {})
             graph_edges[source_id][target_id]["color"] = edge_color
             if flows is not None:
-                flow = flows[n.label, t.label]  # .mean()  # .sum()
+                flow = flows[(n, t)]  # .mean()  # .sum()
                 graph_edges[source_id][target_id]["flow"] = flow
+                if units is not None:
+                    unit = units[(n, t)]
+                    graph_edges[source_id][target_id]["unit"] = unit
 
     graph_elements = {
         "nodes": graph_nodes,
@@ -862,11 +869,12 @@ def generate_graph_graphviz(
                 color = RAINBOW_GRAPHVIZ
             if flows:
                 flow = edge_attributes["flow"].mean()
+                unit = edge_attributes.get("unit", "")
                 if flow > 0:
                     graph.edge(
                         source,
                         target,
-                        label=f"{round(flow, 3)}",
+                        label=f"{round(flow, 3)} {unit}",
                         color=color,
                     )
                 else:
@@ -929,11 +937,13 @@ def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
 
             if flows:
                 flow = edge_attr["flow"]
+                unit = edge_attr.get("unit", "")
                 flow_mean = flow.mean()
                 if flow_mean > 0:
                     e["data"]["flow"] = flow
+                    e["data"]["unit"] = unit
                     e["style"] = {
-                        "label": str(round(flow_mean, 3)),
+                        "label": str(f"{round(flow_mean, 3)} {unit}"),
                         "text-rotation": "autorotate",
                         "text-background-shape": "round-rectangle",
                         "text-background-opacity": "1",

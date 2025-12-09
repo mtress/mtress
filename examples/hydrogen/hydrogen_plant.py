@@ -2,9 +2,7 @@
 
 import logging
 import os
-
-from oemof.solph.processing import results
-
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
@@ -13,7 +11,7 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
+from mtress._helpers import get_flow_units
 from mtress.physics import HYDROGEN
 from mtress.technologies import AFC, PEM_ELECTROLYSER
 
@@ -27,12 +25,10 @@ house_1 = Location(name="house_1")
 
 energy_system.add_location(house_1)
 
-
 house_1.add(carriers.ElectricityCarrier())
 house_1.add(
     technologies.ElectricityGridConnection(working_rate=70e-3, revenue=0)
 )
-
 house_1.add(
     carriers.GasCarrier(
         gases={
@@ -48,7 +44,6 @@ weather = {
     "temp_dew": "FILE:../input_file.csv:temp_dew",
     "pressure": "FILE:../input_file.csv:pressure",
 }
-
 house_1.add(
     technologies.RenewableElectricitySource(
         "pv0",
@@ -57,14 +52,12 @@ house_1.add(
         fixed=False,
     )
 )
-
 house_1.add(
     demands.Electricity(
         name="electricity_demand",
         time_series="FILE:../input_file.csv:electricity",
     )
 )
-
 house_1.add(
     demands.GasDemand(
         name="H2_demand",
@@ -73,8 +66,6 @@ house_1.add(
         pressure=40,
     )
 )
-
-
 house_1.add(
     technologies.H2Storage(
         name="H2_Storage",
@@ -82,9 +73,7 @@ house_1.add(
         power_limit=10,
     )
 )
-
 house_1.add(carriers.HeatCarrier(temperature_levels=[20, 40]))
-
 house_1.add(
     technologies.Electrolyser(
         name="PEM_Ely",
@@ -124,13 +113,12 @@ solph_representation = SolphModel(
 )
 
 solph_representation.build_solph_model()
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-myresults = results(solved_model)
-flows = get_flows(myresults)
+myresults = Results(solved_model)
+flows = myresults["flow"]
+units = get_flow_units(solph_representation)
+solph_representation.graph(flow_results=flows, units=units)
 
 solved_model.write(
     "hydrogen_plant.lp", io_options={"symbolic_solver_labels": True}
 )
-
-solph_representation.graph(flow_results=flows)

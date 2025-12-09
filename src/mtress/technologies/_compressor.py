@@ -48,7 +48,8 @@ class GasCompressor(AbstractTechnology):
             node_type=Bus,
             inputs={
                 electricity_carrier.distribution: Flow(
-                    nominal_value=self.nominal_power
+                    custom_attributes={"unit": "W"},
+                    nominal_value=self.nominal_power,
                 )
             },
         )
@@ -60,13 +61,17 @@ class GasCompressor(AbstractTechnology):
                     label=f"compress_{pressure_low}_{pressure}",
                     node_type=Converter,
                     inputs={
-                        electrical_input: Flow(),
-                        gas_carrier.outputs[self.gas_type][
-                            pressure_low
-                        ]: Flow(),
+                        electrical_input: Flow(
+                            custom_attributes={"unit": "W"}
+                        ),
+                        gas_carrier.outputs[self.gas_type][pressure_low]: Flow(
+                            custom_attributes={"unit": "kg/h"}
+                        ),
                     },
                     outputs={
-                        gas_carrier.outputs[self.gas_type][pressure]: Flow()
+                        gas_carrier.outputs[self.gas_type][pressure]: Flow(
+                            custom_attributes={"unit": "kg/h"}
+                        )
                     },
                     conversion_factors={
                         gas_carrier.outputs[self.gas_type][pressure_low]: 1,

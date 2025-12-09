@@ -13,4 +13,9 @@ from ._solph_model import SolphModel
 
 __version__ = "3.0.0a5"
 
-__all__ = ["Connection", "Location", "MetaModel", "SolphModel"]
+__all__ = [
+    "Connection",
+    "Location",
+    "MetaModel",
+    "SolphModel",
+]

@@ -58,7 +58,11 @@ class GasDemand(AbstractDemand):
         gas_bus = self.create_solph_node(
             label="input",
             node_type=Bus,
-            inputs={gas_carrier.outputs[self.gas_type][pressure]: Flow()},
+            inputs={
+                gas_carrier.outputs[self.gas_type][pressure]: Flow(
+                    custom_attributes={"unit": "kg/h"}
+                )
+            },
         )
 
         self.create_solph_node(
@@ -66,6 +70,7 @@ class GasDemand(AbstractDemand):
             node_type=Sink,
             inputs={
                 gas_bus: Flow(
+                    custom_attributes={"unit": "kg/h"},
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL

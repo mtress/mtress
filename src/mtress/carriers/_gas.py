@@ -53,7 +53,11 @@ class GasCarrier(AbstractLayeredCarrier):
                     bus = self.create_solph_node(
                         label=f"{gas.name}_{pressure}",
                         node_type=Bus,
-                        outputs={self.distribution[gas][pressure_low]: Flow()},
+                        outputs={
+                            self.distribution[gas][pressure_low]: Flow(
+                                custom_attributes={"unit": "kg/h"}
+                            )
+                        },
                     )
                 self.distribution[gas][pressure] = bus
 

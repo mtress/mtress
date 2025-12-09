@@ -302,8 +302,12 @@ class CHP(AbstractHeater):
                 label="splitter",
                 node_type=Bus,
                 outputs={
-                    electricity_carrier.feed_in: Flow(),
-                    electricity_carrier.distribution: Flow(),
+                    electricity_carrier.feed_in: Flow(
+                        custom_attributes={"unit": "W"}
+                    ),
+                    electricity_carrier.distribution: Flow(
+                        custom_attributes={"unit": "W"}
+                    ),
                 },
             )
 
@@ -311,7 +315,10 @@ class CHP(AbstractHeater):
             gas_mixer_bus = self.create_solph_node(
                 label="mixer",
                 node_type=Bus,
-                inputs={gas_bus: Flow() for gas, gas_bus in gas_buses.items()},
+                inputs={
+                    gas_bus: Flow(custom_attributes={"unit": "kg/h"})
+                    for gas, gas_bus in gas_buses.items()
+                },
             )
 
             # final node: gas mix goes in, heat and electricity come out
@@ -320,12 +327,13 @@ class CHP(AbstractHeater):
                 node_type=Converter,
                 inputs={
                     gas_mixer_bus: Flow(
-                        nominal_value=nominal_gas_mix_consumption
+                        custom_attributes={"unit": "kg/h"},
+                        nominal_value=nominal_gas_mix_consumption,
                     )
                 },
                 outputs={
-                    self.heat_bus: Flow(),
-                    splitter: Flow(),
+                    self.heat_bus: Flow(custom_attributes={"unit": "W"}),
+                    splitter: Flow(custom_attributes={"unit": "W"}),
                 },
                 conversion_factors={
                     gas_mixer_bus: 1,
@@ -339,7 +347,10 @@ class CHP(AbstractHeater):
             gas_mixer_bus = self.create_solph_node(
                 label="mixer",
                 node_type=Bus,
-                inputs={gas_bus: Flow() for gas, gas_bus in gas_buses.items()},
+                inputs={
+                    gas_bus: Flow(custom_attributes={"unit": "kg/h"})
+                    for gas, gas_bus in gas_buses.items()
+                },
             )
 
             # final node: gas mix goes in, heat and electricity come out
@@ -348,12 +359,15 @@ class CHP(AbstractHeater):
                 node_type=Converter,
                 inputs={
                     gas_mixer_bus: Flow(
-                        nominal_value=nominal_gas_mix_consumption
+                        custom_attributes={"unit": "kg/h"},
+                        nominal_value=nominal_gas_mix_consumption,
                     )
                 },
                 outputs={
-                    self.heat_bus: Flow(),
-                    electricity_carrier.distribution: Flow(),
+                    self.heat_bus: Flow(custom_attributes={"unit": "W"}),
+                    electricity_carrier.distribution: Flow(
+                        custom_attributes={"unit": "W"}
+                    ),
                 },
                 conversion_factors={
                     gas_mixer_bus: 1,
@@ -504,8 +518,12 @@ class OffsetCHP(AbstractHeater):
                 label="splitter",
                 node_type=Bus,
                 outputs={
-                    electricity_carrier.feed_in: Flow(),
-                    electricity_carrier.distribution: Flow(),
+                    electricity_carrier.feed_in: Flow(
+                        custom_attributes={"unit": "W"}
+                    ),
+                    electricity_carrier.distribution: Flow(
+                        custom_attributes={"unit": "W"}
+                    ),
                 },
             )
 
@@ -513,7 +531,10 @@ class OffsetCHP(AbstractHeater):
             gas_mixer_bus = self.create_solph_node(
                 label="mixer",
                 node_type=Bus,
-                inputs={gas_bus: Flow() for gas, gas_bus in gas_buses.items()},
+                inputs={
+                    gas_bus: Flow(custom_attributes={"unit": "kg/h"})
+                    for gas, gas_bus in gas_buses.items()
+                },
             )
 
             # final node: gas mix goes in, heat and electricity come out
@@ -538,6 +559,7 @@ class OffsetCHP(AbstractHeater):
                 node_type=OffsetConverter,
                 inputs={
                     gas_mixer_bus: Flow(
+                        custom_attributes={"unit": "kg/h"},
                         nominal_value=nominal_gas_mix_consumption,
                         max=self.normalised_max_load,
                         min=self.normalised_min_load,
@@ -545,8 +567,8 @@ class OffsetCHP(AbstractHeater):
                     ),
                 },
                 outputs={
-                    splitter_bus: Flow(),
-                    self.heat_bus: Flow(),
+                    splitter_bus: Flow(custom_attributes={"unit": "W"}),
+                    self.heat_bus: Flow(custom_attributes={"unit": "W"}),
                 },
                 conversion_factors={
                     splitter_bus: slope_el,
@@ -564,7 +586,10 @@ class OffsetCHP(AbstractHeater):
             gas_mixer_bus = self.create_solph_node(
                 label="mixer",
                 node_type=Bus,
-                inputs={gas_bus: Flow() for gas, gas_bus in gas_buses.items()},
+                inputs={
+                    gas_bus: Flow(custom_attributes={"unit": "kg/h"})
+                    for gas, gas_bus in gas_buses.items()
+                },
             )
 
             # final node: gas mix goes in, heat and electricity come out
@@ -589,6 +614,7 @@ class OffsetCHP(AbstractHeater):
                 node_type=OffsetConverter,
                 inputs={
                     gas_mixer_bus: Flow(
+                        custom_attributes={"unit": "kg/h"},
                         nominal_value=nominal_gas_mix_consumption,
                         max=self.normalised_max_load,
                         min=self.normalised_min_load,
@@ -596,8 +622,10 @@ class OffsetCHP(AbstractHeater):
                     ),
                 },
                 outputs={
-                    electricity_carrier.distribution: Flow(),
-                    self.heat_bus: Flow(),
+                    electricity_carrier.distribution: Flow(
+                        custom_attributes={"unit": "W"}
+                    ),
+                    self.heat_bus: Flow(custom_attributes={"unit": "W"}),
                 },
                 conversion_factors={
                     electricity_carrier.distribution: slope_el,
