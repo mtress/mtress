@@ -97,18 +97,17 @@ def _heat_source_test_template(
     myresults = Results(solved_model)
     flows = myresults["flow"]
 
-    flow_20_10 = flows[
-        solved_model.energy_system[("house_1", "HeatSink_20_10", "output")],
-        ("house_1", "HeatSink_20_10", "sink"),
-    ]
-    flow_25_20 = flows[
-        ("house_1", "HeatSink_25_20", "output"),
-        ("house_1", "HeatSink_25_20", "sink"),
-    ]
-    flow_30_25 = flows[
-        ("house_1", "HeatSink_30_25", "output"),
-        ("house_1", "HeatSink_30_25", "sink"),
-    ]
+    label1 = ("house_1", "HeatSink_20_10", "output")
+    label2 = ("house_1", "HeatSink_20_10", "sink")
+    flow_20_10 = flows[str(label1), str(label2)]
+
+    label1 = ("house_1", "HeatSink_25_20", "output")
+    label2 = ("house_1", "HeatSink_25_20", "sink")
+    flow_25_20 = flows[str(label1), str(label2)]
+
+    label1 = ("house_1", "HeatSink_30_25", "output")
+    label2 = ("house_1", "HeatSink_30_25", "sink")
+    flow_30_25 = flows[str(label1), str(label2)]
 
     if results_20_10 is not None:
         # lower temperature and revenue, allowed in both step
@@ -214,3 +213,8 @@ def test_heat_source_7():
         results_30_25=[0, 10],  # sink limit uses 10/18 = 5/9 of capacity
         results_25_20=[10, 80 / 9],  # remaining 4/9 of 20 W
     )
+
+
+if __name__ == "__main__":
+
+    test_heat_source_1()

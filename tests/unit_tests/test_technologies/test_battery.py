@@ -6,7 +6,7 @@ from mtress.technologies import (
 from mtress.technologies._battery_storage import BatteryStorageTemplate
 from mtress.technologies import RenewableElectricitySource
 from pandas import Series
-from mtress._helpers import get_flows
+
 
 # from mtress.physics import HYDROGEN
 import math
@@ -100,7 +100,7 @@ class TestBatteryStorage:
         )
 
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
 
     @pytest.mark.parametrize(
         "template, fixed_load, _type, expected_result",
@@ -177,7 +177,7 @@ class TestBatteryStorage:
             solver=solver, solve_kwargs={"tee": False}
         )
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
 
     @pytest.mark.parametrize(
         "surplus, shared_limit, mutex, "
@@ -335,7 +335,7 @@ class TestBatteryStorage:
         ]
 
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=1e-3)
 
         if shared_limit:
             # with a shared limit, the amplitudes might change but not the dif.

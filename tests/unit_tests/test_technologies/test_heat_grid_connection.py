@@ -102,7 +102,7 @@ class TestHeatGrid:
             solved_model.solver_results.Solver.Termination_condition
             == "optimal"
         )
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
 
     @pytest.mark.skip(reason="Not really unit test.")
     @pytest.mark.parametrize(
@@ -187,7 +187,7 @@ class TestHeatGrid:
             solved_model.solver_results.Solver.Termination_condition
             == "optimal"
         )
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
 
     @pytest.mark.skip(reason="Not really a unit test.")
     @pytest.mark.parametrize(
@@ -274,9 +274,7 @@ class TestHeatGrid:
             solved_model.solver_results.Solver.Termination_condition
             == "optimal"
         )
-        assert math.isclose(
-            expected_result, float(mr["objective"]), abs_tol=3e-2
-        )
+        assert math.isclose(expected_result, float(mr.objective), abs_tol=3e-2)
 
 
 if __name__ == "__main__":
@@ -365,11 +363,6 @@ if __name__ == "__main__":
     solph_representation.build_solph_model()
     solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-    myresults = results(solved_model)
-    flows = get_flows(myresults)
     mr = Results(solved_model)
-
-    plot = solph_representation.graph(detail=True, flow_results=flows)
-    plot.render(outfile="heat_grid_export.png")
-
-    print("cost is: ", mr["objective"])
+    flows = mr["flow"]
+    print("cost is: ", mr.objective)

@@ -1,5 +1,5 @@
 from mtress.technologies import ElectricityGridConnection
-from oemof.solph import Results, results
+from oemof.solph import Results
 import math
 import pytest
 from mtress import (
@@ -10,7 +10,6 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
 
 
 class TestGridConnection:
@@ -77,16 +76,17 @@ class TestGridConnection:
 
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = Results(solved_model)
-        myresults = results(solved_model)
-        flows = get_flows(myresults)
-        grid_flow = flows[
-            ("house_1", "ElectricityGridConnection", "source_import"),
-            ("house_1", "ElectricityGridConnection", "grid_import"),
-        ]
+        flows = mr["flow"]
 
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        label1 = ("house_1", "ElectricityGridConnection", "source_import")
+        label2 = ("house_1", "ElectricityGridConnection", "grid_import")
+        grid_flow = (str(label1), str(label2))
+
+        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
         if grid_limit is not None:
-            assert math.isclose(grid_flow.iloc[0], grid_limit, abs_tol=3e-3)
+            assert math.isclose(
+                flows[grid_flow].iloc[0], grid_limit, abs_tol=3e-3
+            )
 
 
 class TestGridExport:
@@ -137,4 +137,4 @@ class TestGridExport:
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)

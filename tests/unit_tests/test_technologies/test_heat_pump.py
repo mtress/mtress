@@ -110,4 +110,4 @@ def test_heat_pump_heating_example():
 
     pyomo_objective = 640.7893695
 
-    assert math.isclose(pyomo_objective, mr["objective"], abs_tol=3e-3)
+    assert math.isclose(pyomo_objective, mr.objective, abs_tol=3e-3)

@@ -141,11 +141,11 @@ class TestGenericElectricVehicle:
         )
 
         solph_representation.build_solph_model()
-        solveResultslph_representation.solve(solve_kwargs={"tee": False})
+        solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=1e-3)
         assert math.isclose(
-            mr["objective"],
+            mr.objective,
             self.result(
                 template,
                 renewables=renewables if renewable_generation else [0, 0],
@@ -243,9 +243,9 @@ class TestGenericElectricVehicle:
         # solph_representation.model.write('thatproblem.lp')
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=1e-3)
         assert math.isclose(
-            mr["objective"],
+            mr.objective,
             self.result(template, losses=_losses),
             abs_tol=1e-3,
         )
@@ -360,9 +360,9 @@ class TestGenericElectricVehicle:
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=1e-3)
         assert math.isclose(
-            mr["objective"],
+            mr.objective,
             self.other_result(template, discharge=discharge),
             abs_tol=1e-3,
         )
@@ -621,7 +621,7 @@ class TestGenericElectricVehicle:
         # solph_representation.model.write('thatproblem.lp')
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=1e-3)
 
     # *************************************************************************
     # *************************************************************************
@@ -1096,7 +1096,7 @@ class TestElectricVehicle:
         # solph_representation.model.write('thatproblem.lp')
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=1e-3)
 
     # *************************************************************************
     # *************************************************************************
@@ -1213,7 +1213,7 @@ class TestElectricVehicle:
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
+        assert math.isclose(expected_result, mr.objective, abs_tol=1e-3)
 
     # *************************************************************************
     # *************************************************************************
