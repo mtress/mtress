@@ -20,9 +20,7 @@ support this way of modelling.
 """
 
 import os
-
 from oemof import solph
-
 from mtress import (
     Location,
     MetaModel,
@@ -31,7 +29,6 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
 
 os.chdir(os.path.dirname(__file__))
 meta_model = MetaModel()
@@ -77,28 +74,19 @@ solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-myresults = solph.processing.results(solved_model)
-flows = get_flows(myresults)
+myresults = solph.Results(solved_model)
+flows = myresults["flow"]
 
-print(
-    flows[
-        ("house_1", "ElectricityGridConnection", "source_import"),
-        ("house_1", "ElectricityGridConnection", "grid_import"),
-    ]
-)
+label1 = ("house_1", "ElectricityGridConnection", "source_import")
+label2 = ("house_1", "ElectricityGridConnection", "grid_import")
+print(flows[(str(label1), str(label2))])
 
-print(
-    flows[
-        ("house_1", "ElectricityCarrier", "distribution"),
-        ("vanilla_solph_storage"),
-    ]
-)
+label1 = ("house_1", "ElectricityCarrier", "distribution")
+label2 = "vanilla_solph_storage"
+print(flows[(str(label1), str(label2))])
 
-print(
-    flows[
-        ("house_1", "electricity demand", "input"),
-        ("house_1", "electricity demand", "sink"),
-    ]
-)
+label1 = ("house_1", "electricity demand", "input")
+label2 = ("house_1", "electricity demand", "sink")
+print(flows[(str(label1), str(label2))])
 
 solph_representation.graph(flow_results=flows)

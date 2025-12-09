@@ -3,8 +3,6 @@ Basic working 'EV' example.
 """
 
 import os
-
-# from oemof import solph
 import math
 import matplotlib.pyplot as plt
 from mtress import (
@@ -15,8 +13,6 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
-from oemof.solph.processing import results
 from oemof.solph import Results
 
 # from pandas import Series
@@ -76,9 +72,8 @@ solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-mr = meta_results(solved_model)
-myresults = results(solved_model)
-flows = get_flows(myresults)
+mr = Results(solved_model)
+flows = mr["flow"]
 round_trip_efficiency = (
     technologies.GenericSegmentB_EV.charging_efficiency
     * technologies.GenericSegmentB_EV.discharging_efficiency
@@ -89,15 +84,13 @@ energy_used = (
     / round_trip_efficiency
 )
 expected_result = nominal_electricity_price * energy_used
-assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
-charging_power = flows[
-    ("house_1", "ElectricityCarrier", "distribution"),
-    ("house_1", "ev", "EV"),
-]
-discharging_power = flows[
-    ("house_1", "ev", "EV"),
-    ("house_1", "ElectricityCarrier", "distribution"),
-]
+assert math.isclose(expected_result, mr.objective, abs_tol=1e-3)
+
+label1 = ("house_1", "ElectricityCarrier", "distribution")
+label2 = ("house_1", "ev", "EV")
+
+charging_power = flows[(str(label1), str(label2))]
+discharging_power = flows[(str(label2), str(label1))]
 
 plt.figure(figsize=(10, 5))
 plt.plot(charging_power.index[:-1], charging_power[:-1])

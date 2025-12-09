@@ -3,9 +3,7 @@ Basic working 'electricity' example.
 """
 
 import os
-
-from oemof.solph.processing import results
-
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
@@ -14,7 +12,6 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
 
 os.chdir(os.path.dirname(__file__))
 
@@ -50,11 +47,10 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-myresults = results(solved_model)
-flows = get_flows(myresults)
+myresults = Results(solved_model)
+flows = myresults["flow"]
 
 solved_model.write(
     "electricity_pv.lp", io_options={"symbolic_solver_labels": True}
 )
-
 solph_representation.graph(flow_results=flows)
