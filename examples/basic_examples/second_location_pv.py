@@ -12,6 +12,7 @@ from mtress import (
     demands,
     technologies,
 )
+from mtress._helpers import get_flow_units
 
 os.chdir(os.path.dirname(__file__))
 
@@ -68,8 +69,8 @@ solph_representation.build_solph_model()
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = Results(solved_model)
 flows = myresults["flow"]
-
-solph_representation.graph(flow_results=flows)
+units = get_flow_units(solph_representation)
+solph_representation.graph(flow_results=flows, units=units)
 
 solved_model.write(
     "second_location_pv.lp", io_options={"symbolic_solver_labels": True}
