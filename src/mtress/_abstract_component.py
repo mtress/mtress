@@ -53,7 +53,13 @@ class AbstractComponent(NamedElement):
         return _subnode
 
     def build_core(self):
-        self._node = self._location._node.subnode(Node, local_name=self.name)
+        if self._location:
+            self._node = self._location.node.subnode(
+                Node,
+                local_name=self.name,
+            )
+        else:
+            self._node = Node(label=self.name)
 
     @property
     def solph_nodes(self) -> list:
