@@ -14,6 +14,7 @@ from mtress import (
     technologies,
     demands,
 )
+from mtress._helpers import get_flow_units
 
 os.chdir(os.path.dirname(__file__))
 
@@ -81,4 +82,5 @@ plt.xticks(
 plt.ylabel("Power (W)")
 plt.show()
 
-solph_representation.graph(flow_results=flows)
+units = get_flow_units(solph_representation)
+solph_representation.graph(flow_results=flows, units=units)

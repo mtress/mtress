@@ -13,6 +13,7 @@ from mtress import (
     demands,
     technologies,
 )
+from mtress._helpers import get_flow_units
 from oemof.solph import Results
 
 # from pandas import Series
@@ -110,4 +111,5 @@ plt.xticks(
 plt.ylabel("Power (W)")
 plt.show()
 
-solph_representation.graph(flow_results=flows)
+units = get_flow_units(solph_representation)
+solph_representation.graph(flow_results=flows, units=units)
