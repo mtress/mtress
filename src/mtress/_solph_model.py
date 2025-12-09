@@ -74,6 +74,7 @@ class SolphModel:
         """Build the `oemof.solph` representation of the energy system."""
         for location in self._meta_model._locations:
             location.build_core()
+            self.energy_system.add(location.node)
 
         for component in self._meta_model.components:
             component.establish_interconnections()
