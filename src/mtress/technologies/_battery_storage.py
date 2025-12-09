@@ -163,7 +163,7 @@ class BatteryStorage(AbstractTechnology):
 
             setattr(
                 model,
-                str(self.create_label(f"{self.name}_sos1_constraint")),
+                f"{self.node.label}_sos1_constraint",
                 pyo.SOSConstraint(
                     model.TIMESTEPS, rule=rule_sos1_constraint, sos=1
                 ),
@@ -189,6 +189,6 @@ class BatteryStorage(AbstractTechnology):
 
                 setattr(
                     model,
-                    str(self.create_label(f"{self.name}_shared_limit")),
+                    f"{self.node.label}_shared_limit",
                     pyo.Constraint(model.TIMESTEPS, rule=rule_shared_limit),
                 )

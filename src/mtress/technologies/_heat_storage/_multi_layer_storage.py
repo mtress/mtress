@@ -138,7 +138,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
         shared_limit(
             model=model,
             quantity=model.GenericStorageBlock.storage_content,
-            limit_name=str(self.create_label("storage_limit")),
+            limit_name=f"{self.node.label}_storage_limit",
             components=self.storage_components.values(),
             weights=len(self.storage_components) * [1],
             upper_limit=self.volume * H2O_DENSITY,
@@ -185,6 +185,6 @@ class LayeredHeatStorage(AbstractHeatStorage):
 
                 setattr(
                     model,
-                    str(self.create_label(f"losses_{upper_temperature}")),
+                    f"{self.node.label}_losses_{upper_temperature}",
                     po.Constraint(model.TIMESTEPS, rule=equate_variables_rule),
                 )

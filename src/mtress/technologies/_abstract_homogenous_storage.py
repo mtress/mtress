@@ -136,7 +136,7 @@ class AbstractHomogenousStorage(AbstractComponent):
         """Add constraints."""
         contraint_args = {
             "model": self._solph_model.model,
-            "name": self.create_label("level_constraint"),
+            "name": f"{self.node.label}_level_constraint",
             "storage_component": self.storage,
             "multiplexer_bus": self.multiplexer,
             "input_levels": self.storage_multiplexer_inputs,
