@@ -105,7 +105,7 @@ class SolphModel:
         path: str = "model.png",
     ):
         graph_graphviz(
-            nodes=self.nodes(),
+            nodes=self.nodes,
             flows=flow_results,
             units=units,
             flow_color=flow_color,
@@ -121,7 +121,7 @@ class SolphModel:
         colorscheme: dict = None,
     ):
         graph_cytoscape(
-            nodes=self.nodes(),
+            nodes=self.nodes,
             flows=flow_results,
             units=units,
             flow_color=flow_color,
