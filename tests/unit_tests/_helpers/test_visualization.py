@@ -65,7 +65,7 @@ def test_graph():
     solph_representation.build_solph_model()
 
     solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-    myresults = results(solved_model)
+    myresults = Results(solved_model)
     flows = myresults["flow"]
 
     colorscheme = {
