@@ -335,6 +335,7 @@ class GenericElectricVehicle(BatteryStorage):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
 
         electricity = self.location.get_carrier(ElectricityCarrier)
 

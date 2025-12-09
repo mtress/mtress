@@ -38,6 +38,8 @@ class Electricity(AbstractDemand):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
         bus = self.create_solph_node(

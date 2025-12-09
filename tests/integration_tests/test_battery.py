@@ -325,8 +325,8 @@ class TestBatteryStorage:
         )
         myresults = Results(solved_model)
         flows = myresults["flow"]
-        label1 = ("house_1", "ElectricityCarrier", "distribution")
-        label2 = ("house_1", "bs", "Battery_Storage")
+        label1 = ("distribution", "ElectricityCarrier", "house_1"),
+        label2 = ("Battery_Storage", "bs", "house_1")
 
         charging_power = flows[(str(label1), str(label2))]
         discharging_power = flows[(str(label2), str(label1))]

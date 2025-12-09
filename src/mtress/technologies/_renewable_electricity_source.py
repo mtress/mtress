@@ -51,6 +51,8 @@ class RenewableElectricitySource(AbstractTechnology):
 
     def build_core(self):
         """Build oemof solph core structure."""
+        super().build_core()
+
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
         if self.fixed:

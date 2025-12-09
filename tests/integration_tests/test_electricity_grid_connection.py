@@ -78,8 +78,8 @@ class TestGridConnection:
         mr = Results(solved_model)
         flows = mr["flow"]
 
-        label1 = ("house_1", "ElectricityGridConnection", "source_import")
-        label2 = ("house_1", "ElectricityGridConnection", "grid_import")
+        label1 = ("source_import", "ElectricityGridConnection", "house_1")
+        label2 = ("grid_import", "ElectricityGridConnection", "house_1")
         grid_flow = (str(label1), str(label2))
 
         assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)

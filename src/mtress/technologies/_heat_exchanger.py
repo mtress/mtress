@@ -349,6 +349,7 @@ class HeatSource(AbstactHeatExchanger):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
         self._build_core()
 
     def establish_interconnections(self) -> None:
@@ -387,6 +388,7 @@ class HeatSink(AbstactHeatExchanger):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
 
         self._build_core()
 
@@ -425,6 +427,7 @@ class HeatExchanger(AbstactHeatExchanger):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
         self._build_core()
 
     def establish_interconnections(self) -> None:

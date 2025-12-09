@@ -57,8 +57,8 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = solph.Results(solved_model)
 flows = myresults["flow"]
 
-label1 = ("house_1", "electricity demand", "input")
-label2 = ("house_1", "electricity demand", "sink")
+label1 = ("input", "electricity demand", "house_1")
+label2 = ("sink", "electricity demand", "house_1")
 flow_electricity = flows[(str(label1), str(label2))]
 
 print(flow_electricity)

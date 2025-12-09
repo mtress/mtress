@@ -69,15 +69,17 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 mr = Results(solved_model)
 flows = mr["flow"]
 
-label1 = ("house_1", "ElectricityCarrier", "distribution")
-label2 = ("house_1", "Battery", "Battery_Storage")
+label1 = ("distribution", "ElectricityCarrier", "house_1")
+label2 = ("Battery_Storage", "Battery", "house_1")
 charging_power = flows[(str(label1), str(label2))]
 
+print(charging_power)
+
 plt.figure(figsize=(10, 5))
-plt.plot(charging_power.index[:-1], charging_power[:-1])
+plt.plot(charging_power.index, charging_power)
 plt.xticks(
-    charging_power.index[:-1],
-    [x.strftime("%H:00") for x in charging_power.index[:-1]],
+    charging_power.index,
+    [x.strftime("%H:00") for x in charging_power.index],
 )
 plt.ylabel("Power (W)")
 plt.show()

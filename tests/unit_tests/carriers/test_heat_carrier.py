@@ -74,13 +74,15 @@ def test_heat_carrier_build():
     )  # two levels -> two nodes
     hc.register_solph_model(solph_model=solph_model)
     hc.build_core()
+    solph_model.energy_system.add(hc.node)
 
-    assert len(solph_model.energy_system.node) == 2  # model has two nodes
+    # model has one node for the HeatCarrier containing two subnodes
+    assert len(solph_model.energy_system.node) == 3
 
     for temperature_level in temperature_levels:
         assert (
             solph_model.energy_system.node[
-                ("HeatCarrier", f"T_{temperature_level}")
+                (f"T_{temperature_level}", "HeatCarrier")
             ].custom_properties["temperature"]
             == temperature_level
         )

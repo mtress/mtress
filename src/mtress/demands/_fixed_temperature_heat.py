@@ -81,6 +81,8 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         carrier = self.location.get_carrier(HeatCarrier)
 
         if self.flow_temperature not in carrier.levels:
@@ -164,6 +166,8 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         carrier = self.location.get_carrier(HeatCarrier)
 
         inputs = {}

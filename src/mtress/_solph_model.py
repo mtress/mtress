@@ -72,8 +72,9 @@ class SolphModel:
 
     def _build_solph_energy_system(self):
         """Build the `oemof.solph` representation of the energy system."""
-        for component in self._meta_model.components:
-            component.build_core()
+        for location in self._meta_model._locations:
+            location.build_core()
+            self.energy_system.add(location.node)
 
         for component in self._meta_model.components:
             component.establish_interconnections()
@@ -83,6 +84,7 @@ class SolphModel:
                 connection.carrier, connection.destination
             )
 
+    @property
     def nodes(self):
         # access oemof.network.nodes
         return self.energy_system.nodes
@@ -103,7 +105,7 @@ class SolphModel:
         path: str = "model.png",
     ):
         graph_graphviz(
-            nodes=self.nodes(),
+            nodes=self.nodes,
             flows=flow_results,
             units=units,
             flow_color=flow_color,
@@ -119,7 +121,7 @@ class SolphModel:
         colorscheme: dict = None,
     ):
         graph_cytoscape(
-            nodes=self.nodes(),
+            nodes=self.nodes,
             flows=flow_results,
             units=units,
             flow_color=flow_color,
