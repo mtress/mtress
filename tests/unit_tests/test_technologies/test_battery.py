@@ -325,14 +325,11 @@ class TestBatteryStorage:
         )
         myresults = Results(solved_model)
         flows = myresults["flow"]
-        charging_power = flows[
-            ("house_1", "ElectricityCarrier", "distribution"),
-            ("house_1", "bs", "Battery_Storage"),
-        ]
-        discharging_power = flows[
-            ("house_1", "bs", "Battery_Storage"),
-            ("house_1", "ElectricityCarrier", "distribution"),
-        ]
+        label1 = ("house_1", "ElectricityCarrier", "distribution")
+        label2 = ("house_1", "bs", "Battery_Storage")
+
+        charging_power = flows[(str(label1), str(label2))]
+        discharging_power = flows[(str(label2), str(label1))]
 
         mr = Results(solved_model)
         assert math.isclose(expected_result, mr.objective, abs_tol=1e-3)
