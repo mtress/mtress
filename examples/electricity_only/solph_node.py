@@ -57,7 +57,7 @@ solph_representation = SolphModel(
 )
 
 carrier_node = solph_representation.energy_system.node[
-    ("house_1", "ElectricityCarrier", "distribution")
+    ("distribution", "ElectricityCarrier", "house_1")
 ]
 
 solph_representation.energy_system.add(
@@ -78,16 +78,16 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = solph.Results(solved_model)
 flows = myresults["flow"]
 
-label1 = ("house_1", "ElectricityGridConnection", "source_import")
-label2 = ("house_1", "ElectricityGridConnection", "grid_import")
+label1 = ("source_import", "ElectricityGridConnection", "house_1")
+label2 = ("grid_import", "ElectricityGridConnection", "house_1")
 print(flows[(str(label1), str(label2))])
 
-label1 = ("house_1", "ElectricityCarrier", "distribution")
+label1 = ("distribution", "ElectricityCarrier", "house_1")
 label2 = "vanilla_solph_storage"
 print(flows[(str(label1), str(label2))])
 
-label1 = ("house_1", "electricity demand", "input")
-label2 = ("house_1", "electricity demand", "sink")
+label1 = ("input", "electricity demand", "house_1")
+label2 = ("sink", "electricity demand", "house_1")
 print(flows[(str(label1), str(label2))])
 
 units = get_flow_units(solph_representation)
