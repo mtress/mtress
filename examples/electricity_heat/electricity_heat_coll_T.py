@@ -98,25 +98,24 @@ solph_representation = SolphModel(
 
 solph_representation.build_solph_model()
 
-# plot = solph_representation.graph(path="electricity_heat_coll_detail.png")
 solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 myresults = Results(solved_model)
 flows = myresults["flow"]
 units = get_flow_units(solph_representation)
 solph_representation.graph(flow_results=flows, units=units)
 
-label1 = ("house_1", "thColl", "source_reservoir")
-label2 = ("house_1", "thColl", "heat_source")
+label1 = ("source_reservoir", "thColl", "house_1")
+label2 = ("heat_source", "thColl", "house_1")
 Qcoll = flows[str(label1), str(label2)]
 
-label1 = ("house_1", "thColl", "heat_source")
-label2 = ("house_1", "thColl", "source_15")
+label1 = ("heat_source", "thColl", "house_1")
+label2 = ("source_15", "thColl", "house_1")
 Qcoll_30 = flows[str(label1), str(label2)]
 
-label2 = ("house_1", "thColl", "source_45")
+label2 = ("source_45", "thColl", "house_1")
 Qcoll_45 = flows[str(label1), str(label2)]
 
-label2 = ("house_1", "thColl", "source_25")
+label2 = ("source_25", "thColl", "house_1")
 Qcoll_25 = flows[str(label1), str(label2)]
 
 print("Qcoll:", Qcoll.sum() / 2)
