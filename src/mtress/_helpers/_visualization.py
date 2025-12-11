@@ -8,6 +8,8 @@ from oemof.solph.components import (
     Source,
     OffsetConverter,
 )
+from oemof.network.network.nodes import QualifiedLabel
+from oemof.network.network.nodes import Node
 
 from copy import deepcopy
 import logging
@@ -730,9 +732,10 @@ def generate_graph(
 
     for n in nodes:
         # get nodes
-        if type(n.label) == tuple:
-            # mtress node
-            identifier = list(n.label)
+        if type(n.label) == QualifiedLabel and type(n) != Node:
+            # oemof.network node
+            # reverse label
+            identifier = list(reversed(list(n.label)))
 
             current_label, current_id = None, None
             is_parent = False
@@ -756,14 +759,14 @@ def generate_graph(
                 if is_parent:
                     graph_nodes[current_id]["children"].add(child_id)
                 graph_nodes_tracker.add(current_id)
-        elif type(n.label) == str:
-            # manually added oemof node (floaty boy)
+        elif type(n.label) == str and type(n) != Node:
+            # manually added oemof node (floaty boy) or location
             identifier = n.label
             graph_nodes.setdefault(
                 identifier,
                 {
                     "label": identifier,
-                    "children": None,
+                    "children": set(),  # always allow children
                     "parent": None,
                     "shape": SHAPES.get(type(n), "rectangle"),
                 },
@@ -774,11 +777,16 @@ def generate_graph(
             edge_color = flow_color.get(tuple(n.label), {}).get(
                 tuple(t.label), "black"
             )
+            # reverse labels if class QualifiedLabel
             source_id = (
-                "-".join(n.label) if type(n.label) == tuple else n.label
+                "-".join(list(reversed(list(n.label))))
+                if type(n.label) == QualifiedLabel
+                else n.label
             )
             target_id = (
-                "-".join(t.label) if type(t.label) == tuple else t.label
+                "-".join(list(reversed(list(t.label))))
+                if type(t.label) == QualifiedLabel
+                else t.label
             )
             graph_edges.setdefault(source_id, {})
             graph_edges[source_id].setdefault(target_id, {})
