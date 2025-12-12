@@ -274,7 +274,9 @@ class TestHeatGrid:
             solved_model.solver_results.Solver.Termination_condition
             == "optimal"
         )
-        assert math.isclose(expected_result, float(mr["objective"]), abs_tol=3e-2)
+        assert math.isclose(
+            expected_result, float(mr["objective"]), abs_tol=3e-2
+        )
 
 
 if __name__ == "__main__":
