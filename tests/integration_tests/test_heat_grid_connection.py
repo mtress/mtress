@@ -102,7 +102,7 @@ class TestHeatGrid:
             solved_model.solver_results.Solver.Termination_condition
             == "optimal"
         )
-        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
 
     @pytest.mark.skip(reason="Not really unit test.")
     @pytest.mark.parametrize(
@@ -187,7 +187,7 @@ class TestHeatGrid:
             solved_model.solver_results.Solver.Termination_condition
             == "optimal"
         )
-        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
 
     @pytest.mark.skip(reason="Not really a unit test.")
     @pytest.mark.parametrize(
@@ -274,7 +274,7 @@ class TestHeatGrid:
             solved_model.solver_results.Solver.Termination_condition
             == "optimal"
         )
-        assert math.isclose(expected_result, float(mr.objective), abs_tol=3e-2)
+        assert math.isclose(expected_result, float(mr["objective"]), abs_tol=3e-2)
 
 
 if __name__ == "__main__":
@@ -365,4 +365,4 @@ if __name__ == "__main__":
 
     mr = Results(solved_model)
     flows = mr["flow"]
-    print("cost is: ", mr.objective)
+    print("cost is: ", mr["objective"])

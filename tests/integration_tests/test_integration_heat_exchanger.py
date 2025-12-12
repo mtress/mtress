@@ -97,16 +97,16 @@ def _heat_source_test_template(
     myresults = Results(solved_model)
     flows = myresults["flow"]
 
-    label1 = ("house_1", "HeatSink_20_10", "output")
-    label2 = ("house_1", "HeatSink_20_10", "sink")
+    label1 = ("output", "HeatSink_20_10", "house_1")
+    label2 = ("sink", "HeatSink_20_10", "house_1")
     flow_20_10 = flows[str(label1), str(label2)]
 
-    label1 = ("house_1", "HeatSink_25_20", "output")
-    label2 = ("house_1", "HeatSink_25_20", "sink")
+    label1 = ("output", "HeatSink_25_20", "house_1")
+    label2 = ("sink", "HeatSink_25_20", "house_1")
     flow_25_20 = flows[str(label1), str(label2)]
 
-    label1 = ("house_1", "HeatSink_30_25", "output")
-    label2 = ("house_1", "HeatSink_30_25", "sink")
+    label1 = ("output", "HeatSink_30_25", "house_1")
+    label2 = ("sink", "HeatSink_30_25", "house_1")
     flow_30_25 = flows[str(label1), str(label2)]
 
     if results_20_10 is not None:

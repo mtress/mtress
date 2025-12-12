@@ -55,5 +55,5 @@ units = get_flow_units(solph_representation)
 
 # Print the objective value.
 # Here it contains the cost of the operation including penalties.
-print(mr.objective)
+print(mr["objective"])
 solph_representation.graph(flow_results=flows, units=units)

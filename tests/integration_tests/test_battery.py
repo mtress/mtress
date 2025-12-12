@@ -100,7 +100,7 @@ class TestBatteryStorage:
         )
 
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
 
     @pytest.mark.parametrize(
         "template, fixed_load, _type, expected_result",
@@ -177,7 +177,7 @@ class TestBatteryStorage:
             solver=solver, solve_kwargs={"tee": False}
         )
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
 
     @pytest.mark.parametrize(
         "surplus, shared_limit, mutex, "
@@ -325,14 +325,14 @@ class TestBatteryStorage:
         )
         myresults = Results(solved_model)
         flows = myresults["flow"]
-        label1 = ("distribution", "ElectricityCarrier", "house_1"),
+        label1 = ("distribution", "ElectricityCarrier", "house_1")
         label2 = ("Battery_Storage", "bs", "house_1")
 
         charging_power = flows[(str(label1), str(label2))]
         discharging_power = flows[(str(label2), str(label1))]
 
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr.objective, abs_tol=1e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=1e-3)
 
         if shared_limit:
             # with a shared limit, the amplitudes might change but not the dif.

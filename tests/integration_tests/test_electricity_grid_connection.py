@@ -82,7 +82,7 @@ class TestGridConnection:
         label2 = ("grid_import", "ElectricityGridConnection", "house_1")
         grid_flow = (str(label1), str(label2))
 
-        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
         if grid_limit is not None:
             assert math.isclose(
                 flows[grid_flow].iloc[0], grid_limit, abs_tol=3e-3
@@ -137,4 +137,4 @@ class TestGridExport:
         solph_representation.build_solph_model()
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)

@@ -156,7 +156,7 @@ class TestCHP:
             solver=solver, solve_kwargs={"tee": False}
         )
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr.objective, abs_tol=tol)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=tol)
 
 
 class TestOffsetCHP:
@@ -341,7 +341,7 @@ class TestOffsetCHP:
             solver=solver, solve_kwargs={"tee": False}
         )
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr.objective, abs_tol=tol)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=tol)
 
     # *************************************************************************
     # *************************************************************************
@@ -468,8 +468,8 @@ class TestOffsetCHP:
             solver=solver, solve_kwargs={"tee": False}
         )
         mr = Results(solved_model)
-        # print(expected_result-mr.objective)
-        assert math.isclose(expected_result, mr.objective, abs_tol=tol)
+        # print(expected_result-mr["objective"])
+        assert math.isclose(expected_result, mr["objective"], abs_tol=tol)
 
     # *************************************************************************
     # *************************************************************************
@@ -661,7 +661,7 @@ class TestOffsetCHP:
             solver=solver, solve_kwargs={"tee": False}
         )
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr.objective, abs_tol=tol)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=tol)
 
 
 # *****************************************************************************

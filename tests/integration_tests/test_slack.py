@@ -58,7 +58,7 @@ class TestSlack:
 
         solved_model = solph_representation.solve(solve_kwargs={"tee": False})
         mr = Results(solved_model)
-        assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
+        assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
 
     @pytest.mark.parametrize(
         "penalties, expected_result",
@@ -166,4 +166,4 @@ class TestSlack:
                 solve_kwargs={"tee": False}
             )
             mr = Results(solved_model)
-            assert math.isclose(expected_result, mr.objective, abs_tol=3e-3)
+            assert math.isclose(expected_result, mr["objective"], abs_tol=3e-3)
