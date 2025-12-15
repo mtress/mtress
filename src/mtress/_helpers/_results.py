@@ -9,6 +9,14 @@ def get_flow_units(solph_model):
     return units
 
 
+def get_flow_colors(solph_model):
+    colors = {}
+    flows = solph_model.model.flows
+    for k, v in flows.items():
+        colors[k] = v.custom_properties.get("flow_color", "")
+    return colors
+
+
 def get_storage_content(results):
     """
     Extract storage content from results dictionary.
