@@ -11,6 +11,8 @@ from .technologies.grid_connection._abstract_grid_connection import (
     AbstractGridConnection,
 )
 
+from oemof.network import Node
+
 
 class Location(NamedElement):
     """
@@ -96,3 +98,9 @@ class Location(NamedElement):
 
         for component in self._components:
             yield component
+
+    def build_core(self):
+        self._node = Node(label=self.name)
+
+        for component in self.components:
+            component.build_core()

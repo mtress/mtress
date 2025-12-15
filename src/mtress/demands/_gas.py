@@ -48,6 +48,8 @@ class GasDemand(AbstractDemand):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         gas_carrier = self.location.get_carrier(GasCarrier)
         _, pressure = gas_carrier.get_surrounding_levels(
             self.gas_type, self.pressure

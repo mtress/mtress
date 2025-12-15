@@ -41,6 +41,7 @@ class HeatGridConnection(AbstractGridConnection, AbstactHeatExchanger):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
         super()._build_core()
 
     def establish_interconnections(self) -> None:
@@ -73,6 +74,7 @@ class HeatGridInterconnection(AbstractGridConnection):
         self.level_nodes = {}
 
     def build_core(self):
+        super().build_core()
 
         heat_carrier = self.location.get_carrier(HeatCarrier)
 

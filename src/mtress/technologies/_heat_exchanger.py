@@ -152,9 +152,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             label="source_utilisation",
             node_type=Source,
             outputs={
-                self._bus_utilisation: Flow(
-                    custom_attributes={"unit": "W"}, nominal_value=1
-                )
+                self._bus_utilisation: Flow(nominal_value=1)
             },
         )
 
@@ -217,9 +215,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                         heat_bus_cold_source: Flow(
                             custom_attributes={"unit": "kg/h"}
                         ),
-                        self._bus_utilisation: Flow(
-                            custom_attributes={"unit": "W"}
-                        ),
+                        self._bus_utilisation: Flow(),
                     },
                     outputs={
                         heat_bus_warm_source: Flow(
@@ -353,6 +349,7 @@ class HeatSource(AbstactHeatExchanger):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
         self._build_core()
 
     def establish_interconnections(self) -> None:
@@ -391,6 +388,7 @@ class HeatSink(AbstactHeatExchanger):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
 
         self._build_core()
 
@@ -429,6 +427,7 @@ class HeatExchanger(AbstactHeatExchanger):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
         self._build_core()
 
     def establish_interconnections(self) -> None:

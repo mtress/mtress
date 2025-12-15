@@ -113,6 +113,8 @@ class HeatPump(AbstractTechnology):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         # Add electrical connection
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 

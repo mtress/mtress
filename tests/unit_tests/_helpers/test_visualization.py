@@ -5,7 +5,7 @@ Tests for the MTRESS visualization helper module.
 
 import jsonschema
 
-from oemof.solph.processing import results
+from oemof.solph import Results
 
 from mtress import (
     Location,
@@ -15,7 +15,7 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
+
 from mtress._helpers._visualization import (
     generate_graph,
     generate_graph_cytoscape,
@@ -65,8 +65,8 @@ def test_graph():
     solph_representation.build_solph_model()
 
     solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-    myresults = results(solved_model)
-    flows = get_flows(myresults)
+    myresults = Results(solved_model)
+    flows = myresults["flow"]
 
     colorscheme = {
         "ElectricityCarrier": "orange",
@@ -76,18 +76,18 @@ def test_graph():
     colors.add("orange")  # only electricity in the system
 
     flow_color = {
-        ("house_1", "demand1", "input"): {
-            ("house_1", "demand1", "sink"): "red"
+        ("input", "demand1", "house_1"): {
+            ("sink", "demand1", "house_1"): "red"
         },
-        ("house_1", "ElectricityGridConnection", "source_import"): {
-            ("house_1", "ElectricityGridConnection", "grid_import"): "blue"
+        ("source_import", "ElectricityGridConnection", "house_1"): {
+            ("grid_import", "ElectricityGridConnection", "house_1"): "blue"
         },
     }
     colors.add("red")
     colors.add("blue")
 
     graph_elements = generate_graph(
-        nodes=solph_representation.nodes(),
+        nodes=solph_representation.nodes,
         flows=flows,
         flow_color=flow_color,
         colorscheme=colorscheme,

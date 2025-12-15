@@ -8,6 +8,8 @@ from oemof.solph.components import (
     Source,
     OffsetConverter,
 )
+from oemof.network.network.nodes import QualifiedLabel
+from oemof.network.network.nodes import Node
 
 from copy import deepcopy
 import logging
@@ -63,6 +65,7 @@ SINK_SHAPE = "0.75, 1, 1, -1, -1, -1, -0.75, 1"
 def graph_graphviz(
     nodes,
     flows,
+    units: dict,
     flow_color: dict,
     colorscheme: dict,
     path: str = "model.png",
@@ -74,7 +77,7 @@ def graph_graphviz(
     # get graphviz digraph
     f = flows is not None
     graph = generate_graph_graphviz(
-        generate_graph(nodes, flows, flow_color, colorscheme),
+        generate_graph(nodes, flows, units, flow_color, colorscheme),
         f,
     )
 
@@ -85,6 +88,7 @@ def graph_graphviz(
 def graph_cytoscape(
     nodes,
     flows,
+    units: dict,
     flow_color: dict,
     colorscheme: dict,
 ):
@@ -95,7 +99,7 @@ def graph_cytoscape(
     # get cytoscape elements
     f = flows is not None
     elements = generate_graph_cytoscape(
-        generate_graph(nodes, flows, flow_color, colorscheme),
+        generate_graph(nodes, flows, units, flow_color, colorscheme),
         f,
     )
 
@@ -430,6 +434,7 @@ def graph_cytoscape(
         for d in e:
             if "source" in d["data"] and "flow" in d["data"]:
                 flow = d["data"]["flow"]
+                unit = d["data"].get("unit", "")
                 # cut flow according to range_slider
                 start, end = (
                     t_steps[slider_values[0]],
@@ -439,9 +444,9 @@ def graph_cytoscape(
 
                 match ts_agg:
                     case "mean":
-                        d["style"]["label"] = f"{round(flow.mean(), 3)}"
+                        d["style"]["label"] = f"{round(flow.mean(), 3)} {unit}"
                     case "total":
-                        d["style"]["label"] = f"{round(flow.sum(), 3)}"
+                        d["style"]["label"] = f"{round(flow.sum(), 3)} {unit}"
 
         graph.elements = e
         return graph.elements
@@ -695,6 +700,7 @@ def get_flow_color(node, flow_color: dict, colorscheme: dict) -> None:
 def generate_graph(
     nodes,
     flows,
+    units: dict = None,
     flow_color: dict = None,
     colorscheme: dict = None,
 ) -> dict:
@@ -726,9 +732,10 @@ def generate_graph(
 
     for n in nodes:
         # get nodes
-        if type(n.label) == tuple:
-            # mtress node
-            identifier = list(n.label)
+        if type(n.label) == QualifiedLabel and type(n) != Node:
+            # oemof.network node
+            # reverse label
+            identifier = list(reversed(list(n.label)))
 
             current_label, current_id = None, None
             is_parent = False
@@ -752,14 +759,14 @@ def generate_graph(
                 if is_parent:
                     graph_nodes[current_id]["children"].add(child_id)
                 graph_nodes_tracker.add(current_id)
-        elif type(n.label) == str:
-            # manually added oemof node (floaty boy)
+        elif type(n.label) == str and type(n) != Node:
+            # manually added oemof node (floaty boy) or location
             identifier = n.label
             graph_nodes.setdefault(
                 identifier,
                 {
                     "label": identifier,
-                    "children": None,
+                    "children": set(),  # always allow children
                     "parent": None,
                     "shape": SHAPES.get(type(n), "rectangle"),
                 },
@@ -770,18 +777,26 @@ def generate_graph(
             edge_color = flow_color.get(tuple(n.label), {}).get(
                 tuple(t.label), "black"
             )
+            # reverse labels if class QualifiedLabel
             source_id = (
-                "-".join(n.label) if type(n.label) == tuple else n.label
+                "-".join(list(reversed(list(n.label))))
+                if type(n.label) == QualifiedLabel
+                else n.label
             )
             target_id = (
-                "-".join(t.label) if type(t.label) == tuple else t.label
+                "-".join(list(reversed(list(t.label))))
+                if type(t.label) == QualifiedLabel
+                else t.label
             )
             graph_edges.setdefault(source_id, {})
             graph_edges[source_id].setdefault(target_id, {})
             graph_edges[source_id][target_id]["color"] = edge_color
             if flows is not None:
-                flow = flows[n.label, t.label]  # .mean()  # .sum()
+                flow = flows[(n, t)]  # .mean()  # .sum()
                 graph_edges[source_id][target_id]["flow"] = flow
+                if units is not None:
+                    unit = units[(n, t)]
+                    graph_edges[source_id][target_id]["unit"] = unit
 
     graph_elements = {
         "nodes": graph_nodes,
@@ -862,11 +877,12 @@ def generate_graph_graphviz(
                 color = RAINBOW_GRAPHVIZ
             if flows:
                 flow = edge_attributes["flow"].mean()
+                unit = edge_attributes.get("unit", "")
                 if flow > 0:
                     graph.edge(
                         source,
                         target,
-                        label=f"{round(flow, 3)}",
+                        label=f"{round(flow, 3)} {unit}",
                         color=color,
                     )
                 else:
@@ -929,11 +945,13 @@ def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
 
             if flows:
                 flow = edge_attr["flow"]
+                unit = edge_attr.get("unit", "")
                 flow_mean = flow.mean()
                 if flow_mean > 0:
                     e["data"]["flow"] = flow
+                    e["data"]["unit"] = unit
                     e["style"] = {
-                        "label": str(round(flow_mean, 3)),
+                        "label": str(f"{round(flow_mean, 3)} {unit}"),
                         "text-rotation": "autorotate",
                         "text-background-shape": "round-rectangle",
                         "text-background-opacity": "1",

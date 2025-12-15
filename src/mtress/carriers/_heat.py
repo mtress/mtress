@@ -63,6 +63,7 @@ class HeatCarrier(AbstractLayeredCarrier):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
 
         for temperature in self._levels:
             self.level_nodes[temperature] = self.create_solph_node(
