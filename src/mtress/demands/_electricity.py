@@ -7,6 +7,8 @@ from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier as ElectricityCarrier
 from ._abstract_demand import AbstractDemand
 
+from .._constants import ELECTRICITY_COLOR
+
 
 class Electricity(AbstractDemand):
     """
@@ -47,7 +49,10 @@ class Electricity(AbstractDemand):
             node_type=Bus,
             inputs={
                 electricity_carrier.distribution: Flow(
-                    custom_properties={"unit": "W"}
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": ELECTRICITY_COLOR,
+                    }
                 )
             },
         )
@@ -57,7 +62,10 @@ class Electricity(AbstractDemand):
             node_type=Sink,
             inputs={
                 bus: Flow(
-                    custom_properties={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": ELECTRICITY_COLOR,
+                    },
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL

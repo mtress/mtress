@@ -11,6 +11,8 @@ from mtress.physics import Gas
 
 from ._abstract_grid_connection import AbstractGridConnection
 
+from ..._constants import GAS_COLOR
+
 LOGGER = logging.getLogger(__file__)
 
 
@@ -73,7 +75,10 @@ class GasGridConnection(AbstractGridConnection):
             node_type=Bus,
             inputs={
                 gas_carrier.inputs[self.gas_type][pressure_level_high]: Flow(
-                    custom_properties={"unit": "kg/h"}
+                    custom_properties={
+                        "unit": "kg/h",
+                        "flow_color": GAS_COLOR,
+                    }
                 )
             },
         )
@@ -83,7 +88,10 @@ class GasGridConnection(AbstractGridConnection):
             node_type=Bus,
             outputs={
                 gas_carrier.inputs[self.gas_type][pressure_level_low]: Flow(
-                    custom_properties={"unit": "kg/h"}
+                    custom_properties={
+                        "unit": "kg/h",
+                        "flow_color": GAS_COLOR,
+                    }
                 )
             },
         )
@@ -112,7 +120,10 @@ class GasGridConnection(AbstractGridConnection):
                 inputs={
                     self.b_grid_export: Flow(
                         variable_costs=-self.revenue,
-                        custom_properties={"unit": "kg/h"},
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": GAS_COLOR,
+                        },
                     )
                 },
             )
@@ -124,7 +135,10 @@ class GasGridConnection(AbstractGridConnection):
         # TODO create the actual flows between the location
         # in establish interconnections
         self.b_grid_export.outputs[other.b_grid_import] = Flow(
-            custom_properties={"unit": "kg/h"}
+            custom_properties={
+                "unit": "kg/h",
+                "flow_color": GAS_COLOR,
+            }
         )
         if self.grid_pressure < other.grid_pressure:
             raise ValueError(

@@ -18,6 +18,8 @@ from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier
 from ._abstract_technology import AbstractTechnology
 
+from .._constants import ELECTRICITY_COLOR
+
 
 class RenewableElectricitySource(AbstractTechnology):
     """A generic renewable electricity source."""
@@ -57,7 +59,10 @@ class RenewableElectricitySource(AbstractTechnology):
 
         if self.fixed:
             flow = Flow(
-                custom_properties={"unit": "W"},
+                custom_properties={
+                    "unit": "W",
+                    "flow_color": ELECTRICITY_COLOR,
+                },
                 nominal_value=self.nominal_power,
                 variable_costs=self._solph_model.data.get_timeseries(
                     self.working_rate, kind=TimeseriesType.INTERVAL
@@ -68,7 +73,10 @@ class RenewableElectricitySource(AbstractTechnology):
             )
         else:
             flow = Flow(
-                custom_properties={"unit": "W"},
+                custom_properties={
+                    "unit": "W",
+                    "flow_color": ELECTRICITY_COLOR,
+                },
                 nominal_value=self.nominal_power,
                 variable_costs=self._solph_model.data.get_timeseries(
                     self.working_rate, kind=TimeseriesType.INTERVAL
@@ -83,10 +91,16 @@ class RenewableElectricitySource(AbstractTechnology):
             node_type=Bus,
             outputs={
                 electricity_carrier.feed_in: Flow(
-                    custom_properties={"unit": "W"}
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": ELECTRICITY_COLOR,
+                    }
                 ),
                 electricity_carrier.distribution: Flow(
-                    custom_properties={"unit": "W"}
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": ELECTRICITY_COLOR,
+                    }
                 ),
             },
         )

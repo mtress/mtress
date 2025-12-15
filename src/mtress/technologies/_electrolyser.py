@@ -13,6 +13,8 @@ from ..carriers import ElectricityCarrier, GasCarrier
 from ..physics import HYDROGEN
 from ._heater import AbstractHeater
 
+from .._constants import ELECTRICITY_COLOR, GAS_COLOR, HEAT_COLOR
+
 LOGGER = logging.getLogger(__file__)
 
 
@@ -224,13 +226,26 @@ class Electrolyser(AbstractElectrolyser):
             node_type=Converter,
             inputs={
                 self.electrical_bus: Flow(
-                    custom_properties={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": ELECTRICITY_COLOR,
+                    },
                     nominal_value=self.nominal_power,
                 ),
             },
             outputs={
-                self.h2_bus: Flow(custom_properties={"unit": "kg/h"}),
-                self.heat_bus: Flow(custom_properties={"unit": "W"}),
+                self.h2_bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "flow_color": GAS_COLOR,
+                    }
+                ),
+                self.heat_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": HEAT_COLOR,
+                    }
+                ),
             },
             conversion_factors={
                 self.electrical_bus: 1,
@@ -354,7 +369,10 @@ class OffsetElectrolyser(AbstractElectrolyser):
             node_type=OffsetConverter,
             inputs={
                 self.electrical_bus: Flow(
-                    custom_properties={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": ELECTRICITY_COLOR,
+                    },
                     nominal_value=self.nominal_power,
                     max=self.maximum_load,
                     min=self.minimum_load,
@@ -363,10 +381,16 @@ class OffsetElectrolyser(AbstractElectrolyser):
             },
             outputs={
                 self.h2_bus: Flow(
-                    custom_properties={"unit": "kg/h"},
+                    custom_properties={
+                        "unit": "kg/h",
+                        "flow_color": GAS_COLOR,
+                    },
                 ),
                 self.heat_bus: Flow(
-                    custom_properties={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": HEAT_COLOR,
+                    },
                 ),
             },
             conversion_factors={

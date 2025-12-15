@@ -11,6 +11,8 @@ from ..physics import (
 )
 from ._abstract_technology import AbstractTechnology
 
+from .._constants import ELECTRICITY_COLOR, GAS_COLOR
+
 
 class GasCompressor(AbstractTechnology):
     """Ideal gas compressor."""
@@ -48,7 +50,10 @@ class GasCompressor(AbstractTechnology):
             node_type=Bus,
             inputs={
                 electricity_carrier.distribution: Flow(
-                    custom_properties={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": ELECTRICITY_COLOR,
+                    },
                     nominal_value=self.nominal_power,
                 )
             },
@@ -62,15 +67,24 @@ class GasCompressor(AbstractTechnology):
                     node_type=Converter,
                     inputs={
                         electrical_input: Flow(
-                            custom_properties={"unit": "W"}
+                            custom_properties={
+                                "unit": "W",
+                                "flow_color": ELECTRICITY_COLOR,
+                            }
                         ),
                         gas_carrier.outputs[self.gas_type][pressure_low]: Flow(
-                            custom_properties={"unit": "kg/h"}
+                            custom_properties={
+                                "unit": "kg/h",
+                                "flow_color": GAS_COLOR,
+                            }
                         ),
                     },
                     outputs={
                         gas_carrier.outputs[self.gas_type][pressure]: Flow(
-                            custom_properties={"unit": "kg/h"}
+                            custom_properties={
+                                "unit": "kg/h",
+                                "flow_color": GAS_COLOR,
+                            }
                         )
                     },
                     conversion_factors={

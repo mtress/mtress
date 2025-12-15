@@ -3,6 +3,7 @@
 from oemof.solph import Bus, Flow
 
 from ._abstract_carrier import AbstractLayeredCarrier
+from .._constants import GAS_COLOR
 
 
 class GasCarrier(AbstractLayeredCarrier):
@@ -55,7 +56,10 @@ class GasCarrier(AbstractLayeredCarrier):
                         node_type=Bus,
                         outputs={
                             self.distribution[gas][pressure_low]: Flow(
-                                custom_properties={"unit": "kg/h"}
+                                custom_properties={
+                                    "unit": "kg/h",
+                                    "flow_color": GAS_COLOR,
+                                }
                             )
                         },
                     )

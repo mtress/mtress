@@ -15,6 +15,8 @@ from ..carriers import ElectricityCarrier, GasCarrier
 from ..physics import BIO_METHANE, BIOGAS, HYDROGEN, NATURAL_GAS, Gas
 from ._heater import AbstractHeater
 
+from .._constants import ELECTRICITY_COLOR, GAS_COLOR, HEAT_COLOR
+
 LOGGER = logging.getLogger(__file__)
 
 
@@ -303,10 +305,16 @@ class CHP(AbstractHeater):
                 node_type=Bus,
                 outputs={
                     electricity_carrier.feed_in: Flow(
-                        custom_properties={"unit": "W"}
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": ELECTRICITY_COLOR,
+                        }
                     ),
                     electricity_carrier.distribution: Flow(
-                        custom_properties={"unit": "W"}
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": ELECTRICITY_COLOR,
+                        }
                     ),
                 },
             )
@@ -316,7 +324,12 @@ class CHP(AbstractHeater):
                 label="mixer",
                 node_type=Bus,
                 inputs={
-                    gas_bus: Flow(custom_properties={"unit": "kg/h"})
+                    gas_bus: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": GAS_COLOR,
+                        }
+                    )
                     for gas, gas_bus in gas_buses.items()
                 },
             )
@@ -327,13 +340,26 @@ class CHP(AbstractHeater):
                 node_type=Converter,
                 inputs={
                     gas_mixer_bus: Flow(
-                        custom_properties={"unit": "kg/h"},
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": GAS_COLOR,
+                        },
                         nominal_value=nominal_gas_mix_consumption,
                     )
                 },
                 outputs={
-                    self.heat_bus: Flow(custom_properties={"unit": "W"}),
-                    splitter: Flow(custom_properties={"unit": "W"}),
+                    self.heat_bus: Flow(
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": HEAT_COLOR,
+                        }
+                    ),
+                    splitter: Flow(
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": ELECTRICITY_COLOR,
+                        }
+                    ),
                 },
                 conversion_factors={
                     gas_mixer_bus: 1,
@@ -359,14 +385,25 @@ class CHP(AbstractHeater):
                 node_type=Converter,
                 inputs={
                     gas_mixer_bus: Flow(
-                        custom_properties={"unit": "kg/h"},
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": GAS_COLOR,
+                        },
                         nominal_value=nominal_gas_mix_consumption,
                     )
                 },
                 outputs={
-                    self.heat_bus: Flow(custom_properties={"unit": "W"}),
+                    self.heat_bus: Flow(
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": HEAT_COLOR,
+                        }
+                    ),
                     electricity_carrier.distribution: Flow(
-                        custom_properties={"unit": "W"}
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": ELECTRICITY_COLOR,
+                        }
                     ),
                 },
                 conversion_factors={
@@ -519,10 +556,16 @@ class OffsetCHP(AbstractHeater):
                 node_type=Bus,
                 outputs={
                     electricity_carrier.feed_in: Flow(
-                        custom_properties={"unit": "W"}
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": ELECTRICITY_COLOR,
+                        }
                     ),
                     electricity_carrier.distribution: Flow(
-                        custom_properties={"unit": "W"}
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": ELECTRICITY_COLOR,
+                        }
                     ),
                 },
             )
@@ -532,7 +575,12 @@ class OffsetCHP(AbstractHeater):
                 label="mixer",
                 node_type=Bus,
                 inputs={
-                    gas_bus: Flow(custom_properties={"unit": "kg/h"})
+                    gas_bus: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": GAS_COLOR,
+                        }
+                    )
                     for gas, gas_bus in gas_buses.items()
                 },
             )
@@ -559,7 +607,10 @@ class OffsetCHP(AbstractHeater):
                 node_type=OffsetConverter,
                 inputs={
                     gas_mixer_bus: Flow(
-                        custom_properties={"unit": "kg/h"},
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": GAS_COLOR,
+                        },
                         nominal_value=nominal_gas_mix_consumption,
                         max=self.normalised_max_load,
                         min=self.normalised_min_load,
@@ -567,8 +618,18 @@ class OffsetCHP(AbstractHeater):
                     ),
                 },
                 outputs={
-                    splitter_bus: Flow(custom_properties={"unit": "W"}),
-                    self.heat_bus: Flow(custom_properties={"unit": "W"}),
+                    splitter_bus: Flow(
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": ELECTRICITY_COLOR,
+                        }
+                    ),
+                    self.heat_bus: Flow(
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": HEAT_COLOR,
+                        }
+                    ),
                 },
                 conversion_factors={
                     splitter_bus: slope_el,
@@ -587,7 +648,12 @@ class OffsetCHP(AbstractHeater):
                 label="mixer",
                 node_type=Bus,
                 inputs={
-                    gas_bus: Flow(custom_properties={"unit": "kg/h"})
+                    gas_bus: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": GAS_COLOR,
+                        }
+                    )
                     for gas, gas_bus in gas_buses.items()
                 },
             )
@@ -614,7 +680,10 @@ class OffsetCHP(AbstractHeater):
                 node_type=OffsetConverter,
                 inputs={
                     gas_mixer_bus: Flow(
-                        custom_properties={"unit": "kg/h"},
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": GAS_COLOR,
+                        },
                         nominal_value=nominal_gas_mix_consumption,
                         max=self.normalised_max_load,
                         min=self.normalised_min_load,
@@ -623,9 +692,17 @@ class OffsetCHP(AbstractHeater):
                 },
                 outputs={
                     electricity_carrier.distribution: Flow(
-                        custom_properties={"unit": "W"}
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": ELECTRICITY_COLOR,
+                        }
                     ),
-                    self.heat_bus: Flow(custom_properties={"unit": "W"}),
+                    self.heat_bus: Flow(
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": HEAT_COLOR,
+                        }
+                    ),
                 },
                 conversion_factors={
                     electricity_carrier.distribution: slope_el,

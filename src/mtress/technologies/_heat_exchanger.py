@@ -11,6 +11,8 @@ from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import HeatCarrier
 from ._abstract_technology import AbstractTechnology
 
+from .._constants import HEAT_COLOR
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,7 +135,10 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Source,
             outputs={
                 _bus_source: Flow(
-                    custom_properties={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": HEAT_COLOR,
+                    },
                     nominal_value=self.nominal_power,
                     variable_costs=self._solph_model.data.get_timeseries(
                         self.working_rate,
@@ -206,18 +211,27 @@ class AbstactHeatExchanger(AbstractTechnology):
                     node_type=Converter,
                     inputs={
                         _bus_source: Flow(
-                            custom_properties={"unit": "W"},
+                            custom_properties={
+                                "unit": "W",
+                                "flow_color": HEAT_COLOR,
+                            },
                             nominal_value=self.nominal_power,
                             max=gains,
                         ),
                         heat_bus_cold_source: Flow(
-                            custom_properties={"unit": "kg/h"}
+                            custom_properties={
+                                "unit": "kg/h",
+                                "flow_color": HEAT_COLOR,
+                            }
                         ),
                         self._bus_utilisation: Flow(),
                     },
                     outputs={
                         heat_bus_warm_source: Flow(
-                            custom_properties={"unit": "kg/h"}
+                            custom_properties={
+                                "unit": "kg/h",
+                                "flow_color": HEAT_COLOR,
+                            }
                         )
                     },
                     conversion_factors={
@@ -241,7 +255,10 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Sink,
             inputs={
                 _bus_sink: Flow(
-                    custom_properties={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": HEAT_COLOR,
+                    },
                     variable_costs=-(
                         self._solph_model.data.get_timeseries(
                             self.revenue,
@@ -294,15 +311,24 @@ class AbstactHeatExchanger(AbstractTechnology):
                 node_type=Converter,
                 inputs={
                     heat_bus_warm_sink: Flow(
-                        custom_properties={"unit": "kg/h"}
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": HEAT_COLOR,
+                        }
                     ),
                 },
                 outputs={
                     heat_bus_cold_sink: Flow(
-                        custom_properties={"unit": "kg/h"}
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": HEAT_COLOR,
+                        }
                     ),
                     _bus_sink: Flow(
-                        custom_properties={"unit": "W"},
+                        custom_properties={
+                            "unit": "W",
+                            "flow_color": HEAT_COLOR,
+                        },
                         max=internal_sequence,
                         nominal_value=self.nominal_power,
                     ),

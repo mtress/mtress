@@ -18,6 +18,8 @@ from ..carriers._abstract_carrier import AbstractCarrier
 from ..carriers import ElectricityCarrier, HeatCarrier, GasCarrier
 from ._abstract_technology import AbstractTechnology
 
+from .._constants import ELECTRICITY_COLOR, GAS_COLOR, HEAT_COLOR
+
 
 class SlackNode(AbstractTechnology):
     """
@@ -83,19 +85,35 @@ class SlackNode(AbstractTechnology):
                 )
                 node = electricity_carrier.distribution
                 slack_source[node] = Flow(
-                    custom_properties={"unit": "W"}, variable_costs=v
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": ELECTRICITY_COLOR,
+                    },
+                    variable_costs=v,
                 )
                 slack_sink[node] = Flow(
-                    custom_properties={"unit": "W"}, variable_costs=v
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": ELECTRICITY_COLOR,
+                    },
+                    variable_costs=v,
                 )
             elif k == HeatCarrier:
                 heat_carrier = self.location.get_carrier(HeatCarrier)
                 for h_node in heat_carrier.level_nodes.values():
                     slack_source[h_node] = Flow(
-                        custom_properties={"unit": "kg/h"}, variable_costs=v
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": HEAT_COLOR,
+                        },
+                        variable_costs=v,
                     )
                     slack_sink[h_node] = Flow(
-                        custom_properties={"unit": "kg/h"}, variable_costs=v
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": HEAT_COLOR,
+                        },
+                        variable_costs=v,
                     )
             elif k == GasCarrier:
                 gas_carrier = self.location.get_carrier(GasCarrier)
@@ -103,12 +121,20 @@ class SlackNode(AbstractTechnology):
                     gas_nodes = list(gas.values())  # always sorted
                     gas_high = gas_nodes[-1]
                     slack_source[gas_high] = Flow(
-                        custom_properties={"unit": "kg/h"}, variable_costs=v
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": GAS_COLOR,
+                        },
+                        variable_costs=v,
                     )
 
                     gas_low = gas_nodes[0]
                     slack_sink[gas_low] = Flow(
-                        custom_properties={"unit": "kg/h"}, variable_costs=v
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": GAS_COLOR,
+                        },
+                        variable_costs=v,
                     )
             # match any other carrier
             # NOTE: will connect sink and source to all nodes

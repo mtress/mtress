@@ -20,6 +20,8 @@ from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR
 
 from ._abstract_heat_storage import AbstractHeatStorage
 
+from ..._constants import HEAT_COLOR
+
 
 class LayeredHeatStorage(AbstractHeatStorage):
     """
@@ -110,13 +112,19 @@ class LayeredHeatStorage(AbstractHeatStorage):
                     node_type=Bus,
                     inputs={
                         level_node: Flow(
-                            custom_properties={"unit": "kg/h"},
+                            custom_properties={
+                                "unit": "kg/h",
+                                "flow_color": HEAT_COLOR,
+                            },
                             nominal_value=self.power_limit,
                         )
                     },
                     outputs={
                         level_node: Flow(
-                            custom_properties={"unit": "kg/h"},
+                            custom_properties={
+                                "unit": "kg/h",
+                                "flow_color": HEAT_COLOR,
+                            },
                             nominal_value=self.power_limit,
                         )
                     }
@@ -128,8 +136,22 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 storage = self.create_solph_node(
                     label=f"{temperature:.0f}",
                     node_type=GenericStorage,
-                    inputs={bus: Flow(custom_properties={"unit": "kg/h"})},
-                    outputs={bus: Flow(custom_properties={"unit": "kg/h"})},
+                    inputs={
+                        bus: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "flow_color": HEAT_COLOR,
+                            }
+                        )
+                    },
+                    outputs={
+                        bus: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "flow_color": HEAT_COLOR,
+                            }
+                        )
+                    },
                     nominal_storage_capacity=self.volume * H2O_DENSITY,
                     balanced=self.balanced,
                     initial_storage_level=initial_storage_level,
@@ -138,7 +160,14 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 self.storage_components[temperature] = storage
 
                 if self.u_value is not None:
-                    gain_flow = {bus: Flow(custom_properties={"unit": "kg/h"})}
+                    gain_flow = {
+                        bus: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "flow_color": HEAT_COLOR,
+                            }
+                        )
+                    }
 
     def add_constraints(self):
         """Add constraints to the model."""
