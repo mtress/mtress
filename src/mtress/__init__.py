@@ -11,9 +11,6 @@ from ._location import Location
 from ._meta_model import Connection, MetaModel
 from ._solph_model import SolphModel
 
-ELECTRICITY_COLOR = "orange"
-GAS_COLOR = "steelblue"
-HEAT_COLOR = "maroon"
 
 __version__ = "3.0.0a5"
 
