@@ -55,7 +55,7 @@ class GasCarrier(AbstractLayeredCarrier):
                         node_type=Bus,
                         outputs={
                             self.distribution[gas][pressure_low]: Flow(
-                                custom_attributes={"unit": "kg/h"}
+                                custom_properties={"unit": "kg/h"}
                             )
                         },
                     )

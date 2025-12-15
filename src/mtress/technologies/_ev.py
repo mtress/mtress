@@ -344,7 +344,7 @@ class GenericElectricVehicle(BatteryStorage):
             node_type=GenericStorage,
             inputs={
                 electricity.distribution: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={"unit": "W"},
                     nominal_value=self.nominal_capacity * self.charging_C_Rate,
                     max=self._solph_model.data.get_timeseries(
                         self.plugged_in_profile, kind=TimeseriesType.INTERVAL
@@ -353,7 +353,7 @@ class GenericElectricVehicle(BatteryStorage):
             },
             outputs={
                 electricity.distribution: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={"unit": "W"},
                     nominal_value=self.nominal_capacity
                     * self.discharging_C_Rate,
                     max=self._solph_model.data.get_timeseries(

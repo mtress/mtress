@@ -73,7 +73,7 @@ class GasGridConnection(AbstractGridConnection):
             node_type=Bus,
             inputs={
                 gas_carrier.inputs[self.gas_type][pressure_level_high]: Flow(
-                    custom_attributes={"unit": "kg/h"}
+                    custom_properties={"unit": "kg/h"}
                 )
             },
         )
@@ -83,7 +83,7 @@ class GasGridConnection(AbstractGridConnection):
             node_type=Bus,
             outputs={
                 gas_carrier.inputs[self.gas_type][pressure_level_low]: Flow(
-                    custom_attributes={"unit": "kg/h"}
+                    custom_properties={"unit": "kg/h"}
                 )
             },
         )
@@ -112,7 +112,7 @@ class GasGridConnection(AbstractGridConnection):
                 inputs={
                     self.b_grid_export: Flow(
                         variable_costs=-self.revenue,
-                        custom_attributes={"unit": "kg/h"},
+                        custom_properties={"unit": "kg/h"},
                     )
                 },
             )
@@ -124,7 +124,7 @@ class GasGridConnection(AbstractGridConnection):
         # TODO create the actual flows between the location
         # in establish interconnections
         self.b_grid_export.outputs[other.b_grid_import] = Flow(
-            custom_attributes={"unit": "kg/h"}
+            custom_properties={"unit": "kg/h"}
         )
         if self.grid_pressure < other.grid_pressure:
             raise ValueError(

@@ -123,7 +123,7 @@ class HeatPump(AbstractTechnology):
             node_type=Bus,
             inputs={
                 electricity_carrier.distribution: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={"unit": "W"},
                     nominal_value=self.electrical_power_limit,
                 )
             },
@@ -139,7 +139,7 @@ class HeatPump(AbstractTechnology):
             node_type=Source,
             outputs={
                 heat_budget_bus: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={"unit": "W"},
                     nominal_value=self.thermal_power_limit,
                 )
             },
@@ -223,11 +223,11 @@ class HeatPump(AbstractTechnology):
             )
             self.q_in[int(temp_heigh)] = q_side
             inputs = {
-                heat_bus_warm: Flow(custom_attributes={"unit": "kg/h"}),
+                heat_bus_warm: Flow(custom_properties={"unit": "kg/h"}),
             }
             outputs = {
-                q_side: Flow(custom_attributes={"unit": "W"}),
-                heat_bus_cold: Flow(custom_attributes={"unit": "kg/h"}),
+                q_side: Flow(custom_properties={"unit": "W"}),
+                heat_bus_cold: Flow(custom_properties={"unit": "kg/h"}),
             }
         else:
             q_side = self.create_solph_node(
@@ -236,10 +236,10 @@ class HeatPump(AbstractTechnology):
             )
             self.q_out[int(temp_heigh)] = q_side
             inputs = {
-                q_side: Flow(custom_attributes={"unit": "W"}),
-                heat_bus_cold: Flow(custom_attributes={"unit": "kg/h"}),
+                q_side: Flow(custom_properties={"unit": "W"}),
+                heat_bus_cold: Flow(custom_properties={"unit": "kg/h"}),
             }
-            outputs = {heat_bus_warm: Flow(custom_attributes={"unit": "kg/h"})}
+            outputs = {heat_bus_warm: Flow(custom_properties={"unit": "kg/h"})}
 
         self.create_solph_node(
             label=f"HE_{side}_{temp_heigh:.0f}",
@@ -271,12 +271,12 @@ class HeatPump(AbstractTechnology):
             label=f"cop_{temp_primary_in:.0f}_{temp_secondary_out:.0f}",
             node_type=Converter,
             inputs={
-                q_in: Flow(custom_attributes={"unit": "W"}),
-                self.electricity_bus: Flow(custom_attributes={"unit": "W"}),
-                self.heat_budget_bus: Flow(custom_attributes={"unit": "W"}),
+                q_in: Flow(custom_properties={"unit": "W"}),
+                self.electricity_bus: Flow(custom_properties={"unit": "W"}),
+                self.heat_budget_bus: Flow(custom_properties={"unit": "W"}),
             },
             outputs={
-                q_out: Flow(custom_attributes={"unit": "W"}),
+                q_out: Flow(custom_properties={"unit": "W"}),
             },
             conversion_factors={
                 self.electricity_bus: 1 / cop,

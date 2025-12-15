@@ -133,7 +133,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Source,
             outputs={
                 _bus_source: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={"unit": "W"},
                     nominal_value=self.nominal_power,
                     variable_costs=self._solph_model.data.get_timeseries(
                         self.working_rate,
@@ -151,9 +151,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.create_solph_node(
             label="source_utilisation",
             node_type=Source,
-            outputs={
-                self._bus_utilisation: Flow(nominal_value=1)
-            },
+            outputs={self._bus_utilisation: Flow(nominal_value=1)},
         )
 
         if self.autoconnect:
@@ -208,18 +206,18 @@ class AbstactHeatExchanger(AbstractTechnology):
                     node_type=Converter,
                     inputs={
                         _bus_source: Flow(
-                            custom_attributes={"unit": "W"},
+                            custom_properties={"unit": "W"},
                             nominal_value=self.nominal_power,
                             max=gains,
                         ),
                         heat_bus_cold_source: Flow(
-                            custom_attributes={"unit": "kg/h"}
+                            custom_properties={"unit": "kg/h"}
                         ),
                         self._bus_utilisation: Flow(),
                     },
                     outputs={
                         heat_bus_warm_source: Flow(
-                            custom_attributes={"unit": "kg/h"}
+                            custom_properties={"unit": "kg/h"}
                         )
                     },
                     conversion_factors={
@@ -243,7 +241,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Sink,
             inputs={
                 _bus_sink: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={"unit": "W"},
                     variable_costs=-(
                         self._solph_model.data.get_timeseries(
                             self.revenue,
@@ -296,15 +294,15 @@ class AbstactHeatExchanger(AbstractTechnology):
                 node_type=Converter,
                 inputs={
                     heat_bus_warm_sink: Flow(
-                        custom_attributes={"unit": "kg/h"}
+                        custom_properties={"unit": "kg/h"}
                     ),
                 },
                 outputs={
                     heat_bus_cold_sink: Flow(
-                        custom_attributes={"unit": "kg/h"}
+                        custom_properties={"unit": "kg/h"}
                     ),
                     _bus_sink: Flow(
-                        custom_attributes={"unit": "W"},
+                        custom_properties={"unit": "W"},
                         max=internal_sequence,
                         nominal_value=self.nominal_power,
                     ),

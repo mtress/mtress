@@ -99,13 +99,13 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             label="output",
             node_type=Bus,
         )
-        outputs[output] = Flow(custom_attributes={"unit": "W"})
+        outputs[output] = Flow(custom_properties={"unit": "W"})
 
         inputs[carrier.level_nodes[self.flow_temperature]] = Flow(
-            custom_attributes={"unit": "kg/h"}
+            custom_properties={"unit": "kg/h"}
         )
         outputs[carrier.level_nodes[self.return_temperature]] = Flow(
-            custom_attributes={"unit": "kg/h"}
+            custom_properties={"unit": "kg/h"}
         )
 
         conversion_factors = {
@@ -128,7 +128,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             node_type=Sink,
             inputs={
                 output: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={"unit": "W"},
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL
@@ -183,13 +183,13 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             node_type=Bus,
         )
 
-        inputs[input] = Flow(custom_attributes={"unit": "W"})
+        inputs[input] = Flow(custom_properties={"unit": "W"})
 
         outputs[carrier.level_nodes[self.return_temperature]] = Flow(
-            custom_attributes={"unit": "kg/h"}
+            custom_properties={"unit": "kg/h"}
         )
         inputs[carrier.level_nodes[minimum_t]] = Flow(
-            custom_attributes={"unit": "kg/h"}
+            custom_properties={"unit": "kg/h"}
         )
 
         conversion_factors = {
@@ -212,7 +212,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             node_type=Source,
             outputs={
                 input: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={"unit": "W"},
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL

@@ -49,7 +49,7 @@ class ElectricityGridConnection(AbstractGridConnection):
             node_type=Bus,
             outputs={
                 electricity_carrier.distribution: Flow(
-                    custom_attributes={"unit": "W"}
+                    custom_properties={"unit": "W"}
                 )
             },
         )
@@ -59,7 +59,7 @@ class ElectricityGridConnection(AbstractGridConnection):
             node_type=Bus,
             inputs={
                 electricity_carrier.feed_in: Flow(
-                    custom_attributes={"unit": "W"}
+                    custom_properties={"unit": "W"}
                 )
             },
         )
@@ -69,7 +69,7 @@ class ElectricityGridConnection(AbstractGridConnection):
                 node_type=Sink,
                 inputs={
                     b_grid_export: Flow(
-                        custom_attributes={"unit": "W"},
+                        custom_properties={"unit": "W"},
                         nominal_value=self.grid_export_limit,
                         variable_costs=-self._solph_model.data.get_timeseries(
                             self.revenue, kind=TimeseriesType.INTERVAL
@@ -91,7 +91,7 @@ class ElectricityGridConnection(AbstractGridConnection):
                 node_type=Source,
                 outputs={
                     b_grid_import: Flow(
-                        custom_attributes={"unit": "W"},
+                        custom_properties={"unit": "W"},
                         nominal_value=maximum_load,
                         variable_costs=self._solph_model.data.get_timeseries(
                             self.working_rate, kind=TimeseriesType.INTERVAL
@@ -107,5 +107,5 @@ class ElectricityGridConnection(AbstractGridConnection):
         # TODO create the actual flows between the location in
         # establish interconnections
         self.grid_export.outputs[other.grid_import] = Flow(
-            custom_attributes={"unit": "W"}
+            custom_properties={"unit": "W"}
         )

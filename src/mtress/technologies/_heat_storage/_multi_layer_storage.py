@@ -110,13 +110,13 @@ class LayeredHeatStorage(AbstractHeatStorage):
                     node_type=Bus,
                     inputs={
                         level_node: Flow(
-                            custom_attributes={"unit": "kg/h"},
+                            custom_properties={"unit": "kg/h"},
                             nominal_value=self.power_limit,
                         )
                     },
                     outputs={
                         level_node: Flow(
-                            custom_attributes={"unit": "kg/h"},
+                            custom_properties={"unit": "kg/h"},
                             nominal_value=self.power_limit,
                         )
                     }
@@ -128,8 +128,8 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 storage = self.create_solph_node(
                     label=f"{temperature:.0f}",
                     node_type=GenericStorage,
-                    inputs={bus: Flow(custom_attributes={"unit": "kg/h"})},
-                    outputs={bus: Flow(custom_attributes={"unit": "kg/h"})},
+                    inputs={bus: Flow(custom_properties={"unit": "kg/h"})},
+                    outputs={bus: Flow(custom_properties={"unit": "kg/h"})},
                     nominal_storage_capacity=self.volume * H2O_DENSITY,
                     balanced=self.balanced,
                     initial_storage_level=initial_storage_level,
@@ -138,7 +138,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 self.storage_components[temperature] = storage
 
                 if self.u_value is not None:
-                    gain_flow = {bus: Flow(custom_attributes={"unit": "kg/h"})}
+                    gain_flow = {bus: Flow(custom_properties={"unit": "kg/h"})}
 
     def add_constraints(self):
         """Add constraints to the model."""

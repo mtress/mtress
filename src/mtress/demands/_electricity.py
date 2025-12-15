@@ -47,7 +47,7 @@ class Electricity(AbstractDemand):
             node_type=Bus,
             inputs={
                 electricity_carrier.distribution: Flow(
-                    custom_attributes={"unit": "W"}
+                    custom_properties={"unit": "W"}
                 )
             },
         )
@@ -57,7 +57,7 @@ class Electricity(AbstractDemand):
             node_type=Sink,
             inputs={
                 bus: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={"unit": "W"},
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL

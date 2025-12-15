@@ -57,7 +57,7 @@ class RenewableElectricitySource(AbstractTechnology):
 
         if self.fixed:
             flow = Flow(
-                custom_attributes={"unit": "W"},
+                custom_properties={"unit": "W"},
                 nominal_value=self.nominal_power,
                 variable_costs=self._solph_model.data.get_timeseries(
                     self.working_rate, kind=TimeseriesType.INTERVAL
@@ -68,7 +68,7 @@ class RenewableElectricitySource(AbstractTechnology):
             )
         else:
             flow = Flow(
-                custom_attributes={"unit": "W"},
+                custom_properties={"unit": "W"},
                 nominal_value=self.nominal_power,
                 variable_costs=self._solph_model.data.get_timeseries(
                     self.working_rate, kind=TimeseriesType.INTERVAL
@@ -83,10 +83,10 @@ class RenewableElectricitySource(AbstractTechnology):
             node_type=Bus,
             outputs={
                 electricity_carrier.feed_in: Flow(
-                    custom_attributes={"unit": "W"}
+                    custom_properties={"unit": "W"}
                 ),
                 electricity_carrier.distribution: Flow(
-                    custom_attributes={"unit": "W"}
+                    custom_properties={"unit": "W"}
                 ),
             },
         )
