@@ -109,6 +109,10 @@ class GasGridConnection(AbstractGridConnection):
                     self.b_grid_import: Flow(
                         nominal_value=maximum_load,
                         variable_costs=self.working_rate,
+                        custom_properties={
+                            "unit": "kg/h",
+                            "flow_color": GAS_COLOR,
+                        },
                     )
                 },
             )
