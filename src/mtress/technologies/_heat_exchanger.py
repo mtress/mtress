@@ -156,7 +156,15 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.create_solph_node(
             label="source_utilisation",
             node_type=Source,
-            outputs={self._bus_utilisation: Flow(nominal_value=1)},
+            outputs={
+                self._bus_utilisation: Flow(
+                    nominal_value=1,
+                    custom_properties={
+                        "unit": "W",
+                        "flow_color": HEAT_COLOR,
+                    },
+                )
+            },
         )
 
         if self.autoconnect:
