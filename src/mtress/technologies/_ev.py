@@ -1,8 +1,10 @@
 """This module covers Electric Vehicles"""
 
+from oemof.tools.debugging import ExperimentalFeatureWarning
 from oemof.solph import Flow
 from oemof.solph.components import GenericStorage
 from dataclasses import dataclass
+import warnings
 
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier
@@ -103,6 +105,10 @@ class GenericElectricVehicle(BatteryStorage):
         **kwargs,
     ):
         """Initialize Electric Vehicle instance."""
+        warnings.warn(
+            message="The EV class is untested and might jeild wrong resulds.",
+            category=ExperimentalFeatureWarning,
+        )
 
         # call super class constructor
         BatteryStorage.__init__(self, **kwargs)
