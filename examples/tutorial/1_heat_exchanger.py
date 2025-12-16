@@ -67,7 +67,6 @@ myresults = Results(solved_model)
 flows = myresults["flow"]
 units = get_flow_units(solph_representation)
 flow_colors = get_flow_colors(solph_representation)
-print(flow_colors)
 
 solph_representation.graph(
     flow_results=flows,
