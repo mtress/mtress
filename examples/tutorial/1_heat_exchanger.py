@@ -9,7 +9,7 @@ from mtress import (
     technologies,
 )
 
-from mtress._helpers import get_flow_units
+from mtress._helpers import get_flow_units, get_flow_colors
 
 os.chdir(os.path.dirname(__file__))
 
@@ -66,9 +66,12 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = Results(solved_model)
 flows = myresults["flow"]
 units = get_flow_units(solph_representation)
+flow_colors = get_flow_colors(solph_representation)
+print(flow_colors)
 
 solph_representation.graph(
     flow_results=flows,
     units=units,
+    flow_colors=flow_colors,
     path="1_heat_exchanger_model.png",
 )

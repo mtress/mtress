@@ -19,7 +19,7 @@ from mtress import (
     technologies,
 )
 
-from mtress._helpers import get_flow_units
+from mtress._helpers import get_flow_units, get_flow_colors
 
 os.chdir(os.path.dirname(__file__))
 
@@ -91,44 +91,30 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 myresults = Results(solved_model)
 flows = myresults["flow"]
 units = get_flow_units(solph_representation)
+flow_colors = get_flow_colors(solph_representation)
 
 # indicate usage of SlackNode with a rainbow-colored scheme
-flow_color = {
-    ("missing_energy", "SlackNode", "house_1"): {
-        (
-            "distribution",
-            "ElectricityCarrier",
-            "house_1",
-        ): "rainbow",
-        ("T_5", "HeatCarrier", "house_1"): "rainbow",
-        ("T_10", "HeatCarrier", "house_1"): "rainbow",
-        ("T_20", "HeatCarrier", "house_1"): "rainbow",
-        ("T_30", "HeatCarrier", "house_1"): "rainbow",
-        ("T_40", "HeatCarrier", "house_1"): "rainbow",
-    },
-    ("distribution", "ElectricityCarrier", "house_1"): {
-        ("excess_energy", "SlackNode", "house_1"): "rainbow"
-    },
-    ("T_5", "HeatCarrier", "house_1"): {
-        ("excess_energy", "SlackNode", "house_1"): "rainbow"
-    },
-    ("T_10", "HeatCarrier", "house_1"): {
-        ("excess_energy", "SlackNode", "house_1"): "rainbow"
-    },
-    ("T_20", "HeatCarrier", "house_1"): {
-        ("excess_energy", "SlackNode", "house_1"): "rainbow"
-    },
-    ("T_30", "HeatCarrier", "house_1"): {
-        ("excess_energy", "SlackNode", "house_1"): "rainbow"
-    },
-    ("T_40", "HeatCarrier", "house_1"): {
-        ("excess_energy", "SlackNode", "house_1"): "rainbow"
-    },
-}
+# (overwrite default flow colors)
+slack_node_missing = solph_representation.energy_system._nodes[
+    ("missing_energy", "SlackNode", "house_1")
+]
+slack_node_excess = solph_representation.energy_system._nodes[
+    ("excess_energy", "SlackNode", "house_1")
+]
+for x in slack_node_missing.outputs.keys():
+    flow_colors[(slack_node_missing, x)] = "rainbow"
+for x in slack_node_excess.inputs.keys():
+    flow_colors[(x, slack_node_excess)] = "rainbow"
 
 solph_representation.graph(
     flow_results=flows,
     units=units,
-    flow_color=flow_color,
+    flow_colors=flow_colors,
     path="4_slack_model.png",
+)
+
+solph_representation.graph_interactive(
+    flow_results=flows,
+    units=units,
+    flow_colors=flow_colors,
 )
