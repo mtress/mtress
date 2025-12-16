@@ -232,7 +232,12 @@ class AbstactHeatExchanger(AbstractTechnology):
                                 "flow_color": HEAT_COLOR,
                             }
                         ),
-                        self._bus_utilisation: Flow(),
+                        self._bus_utilisation: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "flow_color": HEAT_COLOR,
+                            }
+                        ),
                     },
                     outputs={
                         heat_bus_warm_source: Flow(
