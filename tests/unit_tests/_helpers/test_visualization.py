@@ -20,6 +20,7 @@ from mtress._helpers._visualization import (
     generate_graph,
     generate_graph_cytoscape,
 )
+from mtress._helpers import get_flow_colors
 
 
 def test_graph():
@@ -68,41 +69,26 @@ def test_graph():
     myresults = Results(solved_model)
     flows = myresults["flow"]
 
-    colorscheme = {
-        "ElectricityCarrier": "orange",
-        "GasCarrier": "steelblue",
-        "HeatCarrier": "maroon",
-    }
-    colors.add("orange")  # only electricity in the system
+    flow_colors = get_flow_colors(solph_representation)
 
-    flow_color = {
-        ("input", "demand1", "house_1"): {
-            ("sink", "demand1", "house_1"): "red"
-        },
-        ("source_import", "ElectricityGridConnection", "house_1"): {
-            ("grid_import", "ElectricityGridConnection", "house_1"): "blue"
-        },
-    }
-    colors.add("red")
-    colors.add("blue")
+    colors.add("orange")  # only electricity in the system
 
     graph_elements = generate_graph(
         nodes=solph_representation.nodes,
         flows=flows,
-        flow_color=flow_color,
-        colorscheme=colorscheme,
+        flow_colors=flow_colors,
     )
 
     # check all nodes present
-    nodes = graph_elements["nodes"]
-    assert set(nodes) == set(nodes.keys())
+    graph_nodes = graph_elements["nodes"]
+    assert set(nodes) == set(graph_nodes.keys())
 
     # check graph colors okay
     edges = graph_elements["edges"]
     graph_colors = set()
 
-    for source, targets in edges.items():
-        for target, edge_attributes in targets.items():
+    for _, targets in edges.items():
+        for _, edge_attributes in targets.items():
             graph_colors.add(edge_attributes["color"])
     assert colors == graph_colors
 
