@@ -13,7 +13,7 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flow_units
+from mtress._helpers import get_flow_units, get_flow_colors
 from mtress.physics import NATURAL_GAS
 
 os.chdir(os.path.dirname(__file__))
@@ -75,4 +75,7 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 myresults = Results(solved_model)
 flows = myresults["flow"]
 units = get_flow_units(solph_representation)
-solph_representation.graph(flow_results=flows, units=units)
+flow_colors = get_flow_colors(solph_representation)
+solph_representation.graph(
+    flow_results=flows, units=units, flow_colors=flow_colors
+)

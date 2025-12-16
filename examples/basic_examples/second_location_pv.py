@@ -12,7 +12,7 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flow_units
+from mtress._helpers import get_flow_units, get_flow_colors
 
 os.chdir(os.path.dirname(__file__))
 
@@ -70,7 +70,10 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = Results(solved_model)
 flows = myresults["flow"]
 units = get_flow_units(solph_representation)
-solph_representation.graph(flow_results=flows, units=units)
+flow_colors = get_flow_colors(solph_representation)
+solph_representation.graph(
+    flow_results=flows, units=units, flow_colors=flow_colors
+)
 
 solved_model.write(
     "second_location_pv.lp", io_options={"symbolic_solver_labels": True}
