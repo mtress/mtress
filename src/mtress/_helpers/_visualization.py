@@ -40,13 +40,6 @@ SHAPES_GRAPHVIZ = {
     "storage": "cylinder",
 }
 
-
-COLORS = {
-    "ElectricityCarrier": "orange",
-    "GasCarrier": "steelblue",
-    "HeatCarrier": "maroon",
-}
-
 RAINBOW = """darkslateblue cornflowerblue
             deepskyblue chartreuse
             gold darkorange firebrick"""
@@ -631,7 +624,6 @@ def generate_graph(
     flows,
     units: dict = None,
     flow_colors: dict = None,
-    colorscheme: dict = None,
 ) -> dict:
     """
     Function to generate a simple dict representation
@@ -643,9 +635,6 @@ def generate_graph(
     :param colorscheme: a dictionary which assigns a color
         per MTRESS energy carrier
     """
-    if colorscheme is None:
-        # set to default
-        colorscheme = COLORS
 
     # determine color of edges
     if flow_colors is None:
