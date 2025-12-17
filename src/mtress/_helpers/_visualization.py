@@ -11,6 +11,8 @@ from oemof.solph.components import (
 from oemof.network.network.nodes import QualifiedLabel
 from oemof.network.network.nodes import Node
 
+from .._constants import ELECTRICITY_COLOR, GAS_COLOR, HEAT_COLOR
+
 from copy import deepcopy
 import logging
 from dash import Dash, html, dcc, Input, Output, callback
@@ -134,24 +136,24 @@ def graph_cytoscape(
             # Class selectors
             # coloring
             {
-                "selector": "." + colorscheme["HeatCarrier"],
+                "selector": "." + HEAT_COLOR,
                 "style": {
-                    "line-color": colorscheme["HeatCarrier"],
-                    "target-arrow-color": colorscheme["HeatCarrier"],
+                    "line-color": HEAT_COLOR,
+                    "target-arrow-color": HEAT_COLOR,
                 },
             },
             {
-                "selector": "." + colorscheme["ElectricityCarrier"],
+                "selector": "." + ELECTRICITY_COLOR,
                 "style": {
-                    "line-color": colorscheme["ElectricityCarrier"],
-                    "target-arrow-color": colorscheme["ElectricityCarrier"],
+                    "line-color": ELECTRICITY_COLOR,
+                    "target-arrow-color": ELECTRICITY_COLOR,
                 },
             },
             {
-                "selector": "." + colorscheme["GasCarrier"],
+                "selector": "." + GAS_COLOR,
                 "style": {
-                    "line-color": colorscheme["GasCarrier"],
-                    "target-arrow-color": colorscheme["GasCarrier"],
+                    "line-color": GAS_COLOR,
+                    "target-arrow-color": GAS_COLOR,
                 },
             },
             {
