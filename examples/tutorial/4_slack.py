@@ -112,9 +112,3 @@ solph_representation.graph(
     flow_colors=flow_colors,
     path="4_slack_model.png",
 )
-
-solph_representation.graph_interactive(
-    flow_results=flows,
-    units=units,
-    flow_colors=flow_colors,
-)
