@@ -60,17 +60,12 @@ def graph_graphviz(
     flows,
     units: dict,
     flow_colors: dict,
-    colorscheme: dict,
     path: str = "model.png",
 ) -> None:
-    if colorscheme is None:
-        # set to default
-        colorscheme = COLORS
-
     # get graphviz digraph
     f = flows is not None
     graph = generate_graph_graphviz(
-        generate_graph(nodes, flows, units, flow_colors, colorscheme),
+        generate_graph(nodes, flows, units, flow_colors),
         f,
     )
 
@@ -83,16 +78,11 @@ def graph_cytoscape(
     flows,
     units: dict,
     flow_colors: dict,
-    colorscheme: dict,
 ):
-    if colorscheme is None:
-        # set to default
-        colorscheme = COLORS
-
     # get cytoscape elements
     f = flows is not None
     elements = generate_graph_cytoscape(
-        generate_graph(nodes, flows, units, flow_colors, colorscheme),
+        generate_graph(nodes, flows, units, flow_colors),
         f,
     )
 
