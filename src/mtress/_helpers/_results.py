@@ -9,7 +9,7 @@ def get_flow_units(solph_model):
     return units
 
 
-def get_flow_colors(solph_model):
+def get_energy_types(solph_model):
     colors = {}
     flows = solph_model.model.flows
     for k, v in flows.items():

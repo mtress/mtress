@@ -19,7 +19,7 @@ from mtress import (
     technologies,
 )
 
-from mtress._helpers import get_flow_units, get_flow_colors
+from mtress._helpers import get_flow_units, get_energy_types
 
 os.chdir(os.path.dirname(__file__))
 
@@ -91,7 +91,7 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 myresults = Results(solved_model)
 flows = myresults["flow"]
 units = get_flow_units(solph_representation)
-flow_colors = get_flow_colors(solph_representation)
+flow_colors = get_energy_types(solph_representation)
 
 # indicate usage of SlackNode with a rainbow-colored scheme
 # (overwrite default flow colors)

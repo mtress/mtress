@@ -14,7 +14,7 @@ from mtress import (
     technologies,
     demands,
 )
-from mtress._helpers import get_flow_units, get_flow_colors
+from mtress._helpers import get_flow_units, get_energy_types
 
 os.chdir(os.path.dirname(__file__))
 
@@ -85,7 +85,7 @@ plt.ylabel("Power (W)")
 plt.show()
 
 units = get_flow_units(solph_representation)
-flow_colors = get_flow_colors(solph_representation)
+flow_colors = get_energy_types(solph_representation)
 solph_representation.graph(
     flow_results=flows, units=units, flow_colors=flow_colors
 )

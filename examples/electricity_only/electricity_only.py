@@ -24,7 +24,7 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flow_units, get_flow_colors
+from mtress._helpers import get_flow_units, get_energy_types
 
 os.chdir(os.path.dirname(__file__))
 meta_model = MetaModel()
@@ -64,7 +64,7 @@ flow_electricity = flows[(str(label1), str(label2))]
 print(flow_electricity)
 
 units = get_flow_units(solph_representation)
-flow_colors = get_flow_colors(solph_representation)
+flow_colors = get_energy_types(solph_representation)
 solph_representation.graph(
     flow_results=flows, units=units, flow_colors=flow_colors
 )

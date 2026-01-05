@@ -20,7 +20,7 @@ from mtress._helpers._visualization import (
     generate_graph,
     generate_graph_cytoscape,
 )
-from mtress._helpers import get_flow_colors
+from mtress._helpers import get_energy_types
 
 
 def test_graph():
@@ -69,7 +69,7 @@ def test_graph():
     myresults = Results(solved_model)
     flows = myresults["flow"]
 
-    flow_colors = get_flow_colors(solph_representation)
+    flow_colors = get_energy_types(solph_representation)
 
     colors.add("orange")  # only electricity in the system
 
