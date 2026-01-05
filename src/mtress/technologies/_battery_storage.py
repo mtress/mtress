@@ -132,7 +132,7 @@ class BatteryStorage(AbstractTechnology):
                 electricity.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     },
                     nominal_value=self.nominal_capacity * self.charging_C_Rate,
                 )
@@ -141,7 +141,7 @@ class BatteryStorage(AbstractTechnology):
                 electricity.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     },
                     nominal_value=self.nominal_capacity
                     * self.discharging_C_Rate,

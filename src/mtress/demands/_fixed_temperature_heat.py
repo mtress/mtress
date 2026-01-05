@@ -102,14 +102,14 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             node_type=Bus,
         )
         outputs[output] = Flow(
-            custom_properties={"unit": "W", "flow_color": HEAT_COLOR}
+            custom_properties={"unit": "W", "energy_type": HEAT_COLOR}
         )
 
         inputs[carrier.level_nodes[self.flow_temperature]] = Flow(
-            custom_properties={"unit": "kg/h", "flow_color": HEAT_COLOR}
+            custom_properties={"unit": "kg/h", "energy_type": HEAT_COLOR}
         )
         outputs[carrier.level_nodes[self.return_temperature]] = Flow(
-            custom_properties={"unit": "kg/h", "flow_color": HEAT_COLOR}
+            custom_properties={"unit": "kg/h", "energy_type": HEAT_COLOR}
         )
 
         conversion_factors = {
@@ -132,7 +132,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             node_type=Sink,
             inputs={
                 output: Flow(
-                    custom_properties={"unit": "W", "flow_color": HEAT_COLOR},
+                    custom_properties={"unit": "W", "energy_type": HEAT_COLOR},
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL
@@ -188,14 +188,14 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         )
 
         inputs[input] = Flow(
-            custom_properties={"unit": "W", "flow_color": HEAT_COLOR}
+            custom_properties={"unit": "W", "energy_type": HEAT_COLOR}
         )
 
         outputs[carrier.level_nodes[self.return_temperature]] = Flow(
-            custom_properties={"unit": "kg/h", "flow_color": HEAT_COLOR}
+            custom_properties={"unit": "kg/h", "energy_type": HEAT_COLOR}
         )
         inputs[carrier.level_nodes[minimum_t]] = Flow(
-            custom_properties={"unit": "kg/h", "flow_color": HEAT_COLOR}
+            custom_properties={"unit": "kg/h", "energy_type": HEAT_COLOR}
         )
 
         conversion_factors = {
@@ -218,7 +218,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             node_type=Source,
             outputs={
                 input: Flow(
-                    custom_properties={"unit": "W", "flow_color": HEAT_COLOR},
+                    custom_properties={"unit": "W", "energy_type": HEAT_COLOR},
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL

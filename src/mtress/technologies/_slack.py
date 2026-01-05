@@ -87,14 +87,14 @@ class SlackNode(AbstractTechnology):
                 slack_source[node] = Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     },
                     variable_costs=v,
                 )
                 slack_sink[node] = Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     },
                     variable_costs=v,
                 )
@@ -104,14 +104,14 @@ class SlackNode(AbstractTechnology):
                     slack_source[h_node] = Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "flow_color": HEAT_COLOR,
+                            "energy_type": HEAT_COLOR,
                         },
                         variable_costs=v,
                     )
                     slack_sink[h_node] = Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "flow_color": HEAT_COLOR,
+                            "energy_type": HEAT_COLOR,
                         },
                         variable_costs=v,
                     )
@@ -123,7 +123,7 @@ class SlackNode(AbstractTechnology):
                     slack_source[gas_high] = Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "flow_color": GAS_COLOR,
+                            "energy_type": GAS_COLOR,
                         },
                         variable_costs=v,
                     )
@@ -132,7 +132,7 @@ class SlackNode(AbstractTechnology):
                     slack_sink[gas_low] = Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "flow_color": GAS_COLOR,
+                            "energy_type": GAS_COLOR,
                         },
                         variable_costs=v,
                     )

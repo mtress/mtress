@@ -228,7 +228,7 @@ class Electrolyser(AbstractElectrolyser):
                 self.electrical_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     },
                     nominal_value=self.nominal_power,
                 ),
@@ -237,13 +237,13 @@ class Electrolyser(AbstractElectrolyser):
                 self.h2_bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": GAS_COLOR,
+                        "energy_type": GAS_COLOR,
                     }
                 ),
                 self.heat_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 ),
             },
@@ -371,7 +371,7 @@ class OffsetElectrolyser(AbstractElectrolyser):
                 self.electrical_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     },
                     nominal_value=self.nominal_power,
                     max=self.maximum_load,
@@ -383,13 +383,13 @@ class OffsetElectrolyser(AbstractElectrolyser):
                 self.h2_bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": GAS_COLOR,
+                        "energy_type": GAS_COLOR,
                     },
                 ),
                 self.heat_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     },
                 ),
             },

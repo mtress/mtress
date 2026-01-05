@@ -61,13 +61,13 @@ class AbstractHeater(AbstractTechnology):
                     bus_cold: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "flow_color": HEAT_COLOR,
+                            "energy_type": HEAT_COLOR,
                         }
                     ),
                     heat_bus: Flow(
                         custom_properties={
                             "unit": "W",
-                            "flow_color": HEAT_COLOR,
+                            "energy_type": HEAT_COLOR,
                         }
                     ),
                 },
@@ -75,7 +75,7 @@ class AbstractHeater(AbstractTechnology):
                     bus_warm: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "flow_color": HEAT_COLOR,
+                            "energy_type": HEAT_COLOR,
                         }
                     ),
                 },
@@ -136,7 +136,7 @@ class ResistiveHeater(AbstractHeater):
                 electrical_bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     }
                 )
             },
@@ -144,7 +144,7 @@ class ResistiveHeater(AbstractHeater):
                 self.heat_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     },
                     nominal_value=self.thermal_power_limit,
                 )
@@ -215,7 +215,7 @@ class GasBoiler(AbstractHeater):
                 gas_bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": GAS_COLOR,
+                        "energy_type": GAS_COLOR,
                     }
                 ),
             },
@@ -223,7 +223,7 @@ class GasBoiler(AbstractHeater):
                 self.heat_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     },
                     nominal_value=self.thermal_power_limit,
                 ),

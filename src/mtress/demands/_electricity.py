@@ -7,7 +7,7 @@ from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier as ElectricityCarrier
 from ._abstract_demand import AbstractDemand
 
-from .._constants import ELECTRICITY_COLOR
+from .._constants import EnergyType
 
 
 class Electricity(AbstractDemand):
@@ -51,7 +51,7 @@ class Electricity(AbstractDemand):
                 electricity_carrier.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "flow_color": EnergyType.ELECTRICITY,
                     }
                 )
             },

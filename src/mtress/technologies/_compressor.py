@@ -52,7 +52,7 @@ class GasCompressor(AbstractTechnology):
                 electricity_carrier.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     },
                     nominal_value=self.nominal_power,
                 )
@@ -69,13 +69,13 @@ class GasCompressor(AbstractTechnology):
                         electrical_input: Flow(
                             custom_properties={
                                 "unit": "W",
-                                "flow_color": ELECTRICITY_COLOR,
+                                "energy_type": ELECTRICITY_COLOR,
                             }
                         ),
                         gas_carrier.outputs[self.gas_type][pressure_low]: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "flow_color": GAS_COLOR,
+                                "energy_type": GAS_COLOR,
                             }
                         ),
                     },
@@ -83,7 +83,7 @@ class GasCompressor(AbstractTechnology):
                         gas_carrier.outputs[self.gas_type][pressure]: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "flow_color": GAS_COLOR,
+                                "energy_type": GAS_COLOR,
                             }
                         )
                     },

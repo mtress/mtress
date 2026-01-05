@@ -77,7 +77,7 @@ class GasGridConnection(AbstractGridConnection):
                 gas_carrier.inputs[self.gas_type][pressure_level_high]: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": GAS_COLOR,
+                        "energy_type": GAS_COLOR,
                     }
                 )
             },
@@ -90,7 +90,7 @@ class GasGridConnection(AbstractGridConnection):
                 gas_carrier.inputs[self.gas_type][pressure_level_low]: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": GAS_COLOR,
+                        "energy_type": GAS_COLOR,
                     }
                 )
             },
@@ -111,7 +111,7 @@ class GasGridConnection(AbstractGridConnection):
                         variable_costs=self.working_rate,
                         custom_properties={
                             "unit": "kg/h",
-                            "flow_color": GAS_COLOR,
+                            "energy_type": GAS_COLOR,
                         },
                     )
                 },
@@ -126,7 +126,7 @@ class GasGridConnection(AbstractGridConnection):
                         variable_costs=-self.revenue,
                         custom_properties={
                             "unit": "kg/h",
-                            "flow_color": GAS_COLOR,
+                            "energy_type": GAS_COLOR,
                         },
                     )
                 },
@@ -141,7 +141,7 @@ class GasGridConnection(AbstractGridConnection):
         self.b_grid_export.outputs[other.b_grid_import] = Flow(
             custom_properties={
                 "unit": "kg/h",
-                "flow_color": GAS_COLOR,
+                "energy_type": GAS_COLOR,
             }
         )
         if self.grid_pressure < other.grid_pressure:

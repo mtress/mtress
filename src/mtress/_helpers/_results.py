@@ -13,7 +13,7 @@ def get_flow_colors(solph_model):
     colors = {}
     flows = solph_model.model.flows
     for k, v in flows.items():
-        colors[k] = v.custom_properties.get("flow_color", "")
+        colors[k] = v.custom_properties.get("energy_type", "")
     return colors
 
 

@@ -58,7 +58,7 @@ class GasCarrier(AbstractLayeredCarrier):
                             self.distribution[gas][pressure_low]: Flow(
                                 custom_properties={
                                     "unit": "kg/h",
-                                    "flow_color": GAS_COLOR,
+                                    "energy_type": GAS_COLOR,
                                 }
                             )
                         },

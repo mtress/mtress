@@ -101,7 +101,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                         outputs[level]: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "flow_color": HEAT_COLOR,
+                                "energy_type": HEAT_COLOR,
                             }
                         )
                     },
@@ -116,7 +116,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                         inputs[level]: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "flow_color": HEAT_COLOR,
+                                "energy_type": HEAT_COLOR,
                             }
                         )
                     },
@@ -131,7 +131,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                 bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     },
                     nominal_value=power_limit,
                 )
@@ -141,7 +141,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                 bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     },
                     nominal_value=power_limit,
                 )
@@ -159,7 +159,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                 self.multiplexer: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 )
             },
@@ -167,7 +167,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                 self.multiplexer: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 )
             },

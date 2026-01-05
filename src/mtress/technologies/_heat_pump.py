@@ -127,7 +127,7 @@ class HeatPump(AbstractTechnology):
                 electricity_carrier.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     },
                     nominal_value=self.electrical_power_limit,
                 )
@@ -146,7 +146,7 @@ class HeatPump(AbstractTechnology):
                 heat_budget_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     },
                     nominal_value=self.thermal_power_limit,
                 )
@@ -234,7 +234,7 @@ class HeatPump(AbstractTechnology):
                 heat_bus_warm: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 ),
             }
@@ -242,13 +242,13 @@ class HeatPump(AbstractTechnology):
                 q_side: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 ),
                 heat_bus_cold: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 ),
             }
@@ -262,13 +262,13 @@ class HeatPump(AbstractTechnology):
                 q_side: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 ),
                 heat_bus_cold: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 ),
             }
@@ -276,7 +276,7 @@ class HeatPump(AbstractTechnology):
                 heat_bus_warm: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 )
             }
@@ -314,19 +314,19 @@ class HeatPump(AbstractTechnology):
                 q_in: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 ),
                 self.electricity_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     }
                 ),
                 self.heat_budget_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 ),
             },
@@ -334,7 +334,7 @@ class HeatPump(AbstractTechnology):
                 q_out: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 ),
             },

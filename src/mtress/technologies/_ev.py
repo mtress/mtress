@@ -355,7 +355,7 @@ class GenericElectricVehicle(BatteryStorage):
                 electricity.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     },
                     nominal_value=self.nominal_capacity * self.charging_C_Rate,
                     max=self._solph_model.data.get_timeseries(
@@ -367,7 +367,7 @@ class GenericElectricVehicle(BatteryStorage):
                 electricity.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     },
                     nominal_value=self.nominal_capacity
                     * self.discharging_C_Rate,

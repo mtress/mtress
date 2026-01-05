@@ -114,7 +114,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         level_node: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "flow_color": HEAT_COLOR,
+                                "energy_type": HEAT_COLOR,
                             },
                             nominal_value=self.power_limit,
                         )
@@ -123,7 +123,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         level_node: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "flow_color": HEAT_COLOR,
+                                "energy_type": HEAT_COLOR,
                             },
                             nominal_value=self.power_limit,
                         )
@@ -140,7 +140,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         bus: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "flow_color": HEAT_COLOR,
+                                "energy_type": HEAT_COLOR,
                             }
                         )
                     },
@@ -148,7 +148,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         bus: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "flow_color": HEAT_COLOR,
+                                "energy_type": HEAT_COLOR,
                             }
                         )
                     },
@@ -164,7 +164,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         bus: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "flow_color": HEAT_COLOR,
+                                "energy_type": HEAT_COLOR,
                             }
                         )
                     }

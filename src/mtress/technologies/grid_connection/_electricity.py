@@ -53,7 +53,7 @@ class ElectricityGridConnection(AbstractGridConnection):
                 electricity_carrier.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     }
                 )
             },
@@ -66,7 +66,7 @@ class ElectricityGridConnection(AbstractGridConnection):
                 electricity_carrier.feed_in: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     }
                 )
             },
@@ -79,7 +79,7 @@ class ElectricityGridConnection(AbstractGridConnection):
                     b_grid_export: Flow(
                         custom_properties={
                             "unit": "W",
-                            "flow_color": ELECTRICITY_COLOR,
+                            "energy_type": ELECTRICITY_COLOR,
                         },
                         nominal_value=self.grid_export_limit,
                         variable_costs=-self._solph_model.data.get_timeseries(
@@ -104,7 +104,7 @@ class ElectricityGridConnection(AbstractGridConnection):
                     b_grid_import: Flow(
                         custom_properties={
                             "unit": "W",
-                            "flow_color": ELECTRICITY_COLOR,
+                            "energy_type": ELECTRICITY_COLOR,
                         },
                         nominal_value=maximum_load,
                         variable_costs=self._solph_model.data.get_timeseries(
@@ -123,6 +123,6 @@ class ElectricityGridConnection(AbstractGridConnection):
         self.grid_export.outputs[other.grid_import] = Flow(
             custom_properties={
                 "unit": "W",
-                "flow_color": ELECTRICITY_COLOR,
+                "energy_type": ELECTRICITY_COLOR,
             }
         )

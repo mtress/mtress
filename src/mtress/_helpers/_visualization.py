@@ -42,6 +42,12 @@ SHAPES_GRAPHVIZ = {
     "storage": "cylinder",
 }
 
+COLOR_SCHEME = {
+    1: "orange",  # Electricity
+    2: "maroon",  # Heat
+    3: "steelblue",  # Gas
+}
+
 RAINBOW = """darkslateblue cornflowerblue
             deepskyblue chartreuse
             gold darkorange firebrick"""

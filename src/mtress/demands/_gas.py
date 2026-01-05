@@ -64,7 +64,7 @@ class GasDemand(AbstractDemand):
                 gas_carrier.outputs[self.gas_type][pressure]: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": GAS_COLOR,
+                        "energy_type": GAS_COLOR,
                     }
                 )
             },
@@ -77,7 +77,7 @@ class GasDemand(AbstractDemand):
                 gas_bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": GAS_COLOR,
+                        "energy_type": GAS_COLOR,
                     },
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(

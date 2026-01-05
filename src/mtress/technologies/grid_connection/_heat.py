@@ -92,7 +92,7 @@ class HeatGridInterconnection(AbstractGridConnection):
                     heat_carrier.level_nodes[temperature]: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "flow_color": HEAT_COLOR,
+                            "energy_type": HEAT_COLOR,
                         }
                     ),
                 },
@@ -100,7 +100,7 @@ class HeatGridInterconnection(AbstractGridConnection):
                     heat_carrier.level_nodes[temperature]: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "flow_color": HEAT_COLOR,
+                            "energy_type": HEAT_COLOR,
                         }
                     ),
                 },
@@ -116,12 +116,12 @@ class HeatGridInterconnection(AbstractGridConnection):
             node1_t.inputs[node2_t] = Flow(
                 custom_properties={
                     "unit": "kg/h",
-                    "flow_color": HEAT_COLOR,
+                    "energy_type": HEAT_COLOR,
                 }
             )
             node1_t.outputs[node2_t] = Flow(
                 custom_properties={
                     "unit": "kg/h",
-                    "flow_color": HEAT_COLOR,
+                    "energy_type": HEAT_COLOR,
                 }
             )

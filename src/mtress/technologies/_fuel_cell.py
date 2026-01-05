@@ -258,7 +258,7 @@ class FuelCell(AbstractFuelCell):
                 self.gas_bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": GAS_COLOR,
+                        "energy_type": GAS_COLOR,
                     },
                     nominal_value=self.nominal_gas_consumption,
                 ),
@@ -267,13 +267,13 @@ class FuelCell(AbstractFuelCell):
                 self.electricity_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     }
                 ),
                 self.heat_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 ),
             },
@@ -438,7 +438,7 @@ class OffsetFuelCell(AbstractFuelCell):
                 self.gas_bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "flow_color": GAS_COLOR,
+                        "energy_type": GAS_COLOR,
                     },
                     nominal_value=self.nominal_gas_consumption,
                     max=self.maximum_load,
@@ -450,13 +450,13 @@ class OffsetFuelCell(AbstractFuelCell):
                 self.electricity_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": ELECTRICITY_COLOR,
                     }
                 ),
                 self.heat_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": HEAT_COLOR,
+                        "energy_type": HEAT_COLOR,
                     }
                 ),
             },
