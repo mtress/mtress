@@ -42,7 +42,7 @@ SHAPES_GRAPHVIZ = {
     "storage": "cylinder",
 }
 
-COLOR_SCHEME = {
+COLOUR_SCHEME = {
     0: "black",  # Undefined
     1: "orange",  # Electricity
     2: "maroon",  # Heat
@@ -68,14 +68,14 @@ def graph_graphviz(
     nodes,
     flows,
     units: dict,
-    flow_colors: dict,
-    color_scheme: dict,
+    flow_colours: dict,
+    colour_scheme: dict,
     path: str = "model.png",
 ) -> None:
     # get graphviz digraph
     f = flows is not None
     graph = generate_graph_graphviz(
-        generate_graph(nodes, flows, units, flow_colors, color_scheme),
+        generate_graph(nodes, flows, units, flow_colours, colour_scheme),
         f,
     )
 
@@ -87,13 +87,13 @@ def graph_cytoscape(
     nodes,
     flows,
     units: dict,
-    flow_colors: dict,
-    color_scheme: dict,
+    flow_colours: dict,
+    colour_scheme: dict,
 ):
     # get cytoscape elements
     f = flows is not None
     elements = generate_graph_cytoscape(
-        generate_graph(nodes, flows, units, flow_colors, color_scheme),
+        generate_graph(nodes, flows, units, flow_colours, colour_scheme),
         f,
     )
 
@@ -136,40 +136,42 @@ def graph_cytoscape(
                 "style": {
                     "curve-style": "bezier",
                     "target-arrow-shape": "triangle",
-                    "line-color": "black",
-                    "target-arrow-color": "black",
+                    "line-colour": "black",
+                    "target-arrow-colour": "black",
                     "font-size": "28",
                     "width": "6",
                 },
             },
             # Class selectors
-            # coloring
+            # colouring
             {
-                "selector": "." + COLOR_SCHEME[EnergyType.HEAT],
+                "selector": "." + COLOUR_SCHEME[EnergyType.HEAT],
                 "style": {
-                    "line-color": COLOR_SCHEME[EnergyType.HEAT],
-                    "target-arrow-color": COLOR_SCHEME[EnergyType.HEAT],
+                    "line-colour": COLOUR_SCHEME[EnergyType.HEAT],
+                    "target-arrow-colour": COLOUR_SCHEME[EnergyType.HEAT],
                 },
             },
             {
-                "selector": "." + COLOR_SCHEME[EnergyType.ELECTRICITY],
+                "selector": "." + COLOUR_SCHEME[EnergyType.ELECTRICITY],
                 "style": {
-                    "line-color": COLOR_SCHEME[EnergyType.ELECTRICITY],
-                    "target-arrow-color": COLOR_SCHEME[EnergyType.ELECTRICITY],
+                    "line-colour": COLOUR_SCHEME[EnergyType.ELECTRICITY],
+                    "target-arrow-colour": COLOUR_SCHEME[
+                        EnergyType.ELECTRICITY
+                    ],
                 },
             },
             {
-                "selector": "." + COLOR_SCHEME[EnergyType.GAS],
+                "selector": "." + COLOUR_SCHEME[EnergyType.GAS],
                 "style": {
-                    "line-color": COLOR_SCHEME[EnergyType.GAS],
-                    "target-arrow-color": COLOR_SCHEME[EnergyType.GAS],
+                    "line-colour": COLOUR_SCHEME[EnergyType.GAS],
+                    "target-arrow-colour": COLOUR_SCHEME[EnergyType.GAS],
                 },
             },
             {
                 "selector": ".inactive",
                 "style": {
-                    "line-color": "lightgrey",
-                    "target-arrow-color": "lightgrey",
+                    "line-colour": "lightgrey",
+                    "target-arrow-colour": "lightgrey",
                     "line-style": "dashed",
                 },
             },
@@ -177,8 +179,8 @@ def graph_cytoscape(
                 "selector": ".rainbow",
                 "style": {
                     "line-fill": "linear-gradient",
-                    "line-gradient-stop-colors": RAINBOW,
-                    "target-arrow-color": "firebrick",
+                    "line-gradient-stop-colours": RAINBOW,
+                    "target-arrow-colour": "firebrick",
                 },
             },
             # node shapes
@@ -624,8 +626,8 @@ def generate_graph(
     nodes,
     flows,
     units: dict = None,
-    flow_colors: dict = None,
-    color_scheme: dict = None,
+    flow_colours: dict = None,
+    colour_scheme: dict = None,
 ) -> dict:
     """
     Function to generate a simple dict representation
@@ -633,18 +635,18 @@ def generate_graph(
 
     :param nodes: the oemof.solph.EnergySystem.nodes
     :param flows: [OPTIONAL] the resulting flows of the solved energy system
-    :param flow_color: a dictionary of already determined colors for edges
-    :param colorscheme: a dictionary which assigns a color
+    :param flow_colour: a dictionary of already determined colours for edges
+    :param colourscheme: a dictionary which assigns a colour
         per MTRESS energy carrier
     """
 
-    # determine color of edges
-    if flow_colors is None:
-        flow_colors = {}
+    # determine colour of edges
+    if flow_colours is None:
+        flow_colours = {}
 
-    # set default color scheme
-    if color_scheme is None:
-        color_scheme = COLOR_SCHEME
+    # set default colour scheme
+    if colour_scheme is None:
+        colour_scheme = COLOUR_SCHEME
 
     # data structures for storing nodes and edges
     graph_nodes = {}
@@ -708,9 +710,9 @@ def generate_graph(
             )
             graph_edges.setdefault(source_id, {})
             graph_edges[source_id].setdefault(target_id, {})
-            energy_type = flow_colors.get((n, t), 0)
-            flow_color = color_scheme.get(energy_type)
-            graph_edges[source_id][target_id]["color"] = flow_color
+            energy_type = flow_colours.get((n, t), 0)
+            flow_colour = colour_scheme.get(energy_type)
+            graph_edges[source_id][target_id]["colour"] = flow_colour
             if flows is not None:
                 flow = flows[(n, t)]  # .mean()  # .sum()
                 graph_edges[source_id][target_id]["flow"] = flow
@@ -758,7 +760,7 @@ def generate_graph_graphviz(
                     "graph",
                     label=nodes[comp]["label"],
                     style="dashed",  # border of component
-                    color="black",
+                    colour="black",
                 )
                 # 3. determine NODES of COMPONENTS
                 # (children of COMPONENTS)
@@ -792,9 +794,9 @@ def generate_graph_graphviz(
         # one source can have multiple targets
         for target, edge_attributes in targets.items():
             # draw edge for every target
-            color = edge_attributes["color"]
-            if color == "rainbow":
-                color = RAINBOW_GRAPHVIZ
+            colour = edge_attributes["colour"]
+            if colour == "rainbow":
+                colour = RAINBOW_GRAPHVIZ
             if flows:
                 flow = edge_attributes["flow"].mean()
                 unit = edge_attributes.get("unit", "")
@@ -803,21 +805,21 @@ def generate_graph_graphviz(
                         source,
                         target,
                         label=f"{round(flow, 3)} {unit}",
-                        color=color,
+                        colour=colour,
                     )
                 else:
                     graph.edge(
                         source,
                         target,
                         label="",
-                        color="grey",
+                        colour="grey",
                     )
             else:
                 graph.edge(
                     source,
                     target,
                     label="",
-                    color=color,
+                    colour=colour,
                 )
 
     return graph
@@ -859,7 +861,7 @@ def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
                     "source": source,
                     "target": t,
                 },
-                "classes": edge_attr["color"],
+                "classes": edge_attr["colour"],
             }
             cytoscape_edges.append(deepcopy(e))
 
@@ -875,7 +877,7 @@ def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
                         "text-rotation": "autorotate",
                         "text-background-shape": "round-rectangle",
                         "text-background-opacity": "1",
-                        "color": "white",
+                        "colour": "white",
                     }
                 else:
                     e["classes"] = "inactive"
