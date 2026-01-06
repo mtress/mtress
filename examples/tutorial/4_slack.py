@@ -93,6 +93,15 @@ flows = myresults["flow"]
 units = get_flow_units(solph_representation)
 flow_colors = get_energy_types(solph_representation)
 
+# custom color scheme
+color_scheme = {
+    0: "black",  # Undefined
+    1: "orange",  # Electricity
+    2: "maroon",  # Heat
+    3: "steelblue",  # Gas
+    4: "rainbow",
+}
+
 # indicate usage of SlackNode with a rainbow-colored scheme
 # (overwrite default flow colors)
 slack_node_missing = solph_representation.energy_system._nodes[
@@ -102,13 +111,14 @@ slack_node_excess = solph_representation.energy_system._nodes[
     ("excess_energy", "SlackNode", "house_1")
 ]
 for x in slack_node_missing.outputs.keys():
-    flow_colors[(slack_node_missing, x)] = "rainbow"
+    flow_colors[(slack_node_missing, x)] = 4  # rainbow
 for x in slack_node_excess.inputs.keys():
-    flow_colors[(x, slack_node_excess)] = "rainbow"
+    flow_colors[(x, slack_node_excess)] = 4  # rainbow
 
 solph_representation.graph(
     flow_results=flows,
     units=units,
     flow_colors=flow_colors,
+    color_scheme=color_scheme,
     path="4_slack_model.png",
 )
