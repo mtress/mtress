@@ -144,8 +144,8 @@ def graph_cytoscape(
                 "style": {
                     "curve-style": "bezier",
                     "target-arrow-shape": "triangle",
-                    "line-colour": "black",
-                    "target-arrow-colour": "black",
+                    "line-color": "black",
+                    "target-arrow-color": "black",
                     "font-size": "28",
                     "width": "6",
                 },
@@ -155,15 +155,15 @@ def graph_cytoscape(
             {
                 "selector": "." + colour_scheme[EnergyType.HEAT],
                 "style": {
-                    "line-colour": colour_scheme[EnergyType.HEAT],
-                    "target-arrow-colour": colour_scheme[EnergyType.HEAT],
+                    "line-color": colour_scheme[EnergyType.HEAT],
+                    "target-arrow-color": colour_scheme[EnergyType.HEAT],
                 },
             },
             {
                 "selector": "." + colour_scheme[EnergyType.ELECTRICITY],
                 "style": {
-                    "line-colour": colour_scheme[EnergyType.ELECTRICITY],
-                    "target-arrow-colour": colour_scheme[
+                    "line-color": colour_scheme[EnergyType.ELECTRICITY],
+                    "target-arrow-color": colour_scheme[
                         EnergyType.ELECTRICITY
                     ],
                 },
@@ -171,15 +171,15 @@ def graph_cytoscape(
             {
                 "selector": "." + colour_scheme[EnergyType.GAS],
                 "style": {
-                    "line-colour": colour_scheme[EnergyType.GAS],
-                    "target-arrow-colour": colour_scheme[EnergyType.GAS],
+                    "line-color": colour_scheme[EnergyType.GAS],
+                    "target-arrow-color": colour_scheme[EnergyType.GAS],
                 },
             },
             {
                 "selector": ".inactive",
                 "style": {
-                    "line-colour": "lightgrey",
-                    "target-arrow-colour": "lightgrey",
+                    "line-color": "lightgrey",
+                    "target-arrow-color": "lightgrey",
                     "line-style": "dashed",
                 },
             },
@@ -187,8 +187,8 @@ def graph_cytoscape(
                 "selector": ".rainbow",
                 "style": {
                     "line-fill": "linear-gradient",
-                    "line-gradient-stop-colours": RAINBOW,
-                    "target-arrow-colour": "firebrick",
+                    "line-gradient-stop-colors": RAINBOW,
+                    "target-arrow-color": "firebrick",
                 },
             },
             # node shapes
@@ -716,6 +716,7 @@ def generate_graph(
             graph_edges[source_id].setdefault(target_id, {})
             energy_type = flow_colours.get((n, t), 0)
             flow_colour = colour_scheme.get(energy_type)
+            print(energy_type, flow_colour)
             graph_edges[source_id][target_id]["colour"] = flow_colour
             if flows is not None:
                 flow = flows[(n, t)]  # .mean()  # .sum()
@@ -809,21 +810,21 @@ def generate_graph_graphviz(
                         source,
                         target,
                         label=f"{round(flow, 3)} {unit}",
-                        colour=colour,
+                        color=colour,
                     )
                 else:
                     graph.edge(
                         source,
                         target,
                         label="",
-                        colour="grey",
+                        color="grey",
                     )
             else:
                 graph.edge(
                     source,
                     target,
                     label="",
-                    colour=colour,
+                    color=colour,
                 )
 
     return graph
@@ -881,7 +882,7 @@ def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
                         "text-rotation": "autorotate",
                         "text-background-shape": "round-rectangle",
                         "text-background-opacity": "1",
-                        "colour": "white",
+                        "color": "white",
                     }
                 else:
                     e["classes"] = "inactive"
