@@ -43,10 +43,10 @@ SHAPES_GRAPHVIZ = {
 }
 
 COLOUR_SCHEME = {
-    0: "black",  # Undefined
-    1: "orange",  # Electricity
-    2: "maroon",  # Heat
-    3: "steelblue",  # Gas
+    EnergyType.UNDEFINED: "black",
+    EnergyType.ELECTRICITY: "orange",
+    EnergyType.HEAT: "maroon",
+    EnergyType.GAS: "steelblue",
 }
 
 RAINBOW = """darkslateblue cornflowerblue
