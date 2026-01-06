@@ -710,7 +710,6 @@ def generate_graph(
             graph_edges[source_id].setdefault(target_id, {})
             energy_type = flow_colors.get((n, t), 0)
             flow_color = color_scheme.get(energy_type)
-            print(energy_type, flow_color)
             graph_edges[source_id][target_id]["color"] = flow_color
             if flows is not None:
                 flow = flows[(n, t)]  # .mean()  # .sum()
