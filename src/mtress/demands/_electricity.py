@@ -51,7 +51,7 @@ class Electricity(AbstractDemand):
                 electricity_carrier.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": EnergyType.ELECTRICITY,
+                        "energy_type": EnergyType.ELECTRICITY,
                     }
                 )
             },
@@ -64,7 +64,7 @@ class Electricity(AbstractDemand):
                 bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "flow_color": ELECTRICITY_COLOR,
+                        "energy_type": EnergyType.ELECTRICITY,
                     },
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
