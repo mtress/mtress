@@ -644,9 +644,12 @@ def generate_graph(
     :param nodes: the oemof.solph.EnergySystem.nodes
     :param flows: [OPTIONAL] the resulting flows of the solved energy system
     :param flow_colour: a dictionary of already determined colours for edges
-    :param colourscheme: a dictionary which assigns a colour
+    :param colour_scheme: a dictionary which assigns a colour
         per MTRESS energy carrier
     """
+    # set default color scheme
+    if colour_scheme is None:
+        colour_scheme = COLOUR_SCHEME
 
     # determine colour of edges
     if flow_colours is None:
