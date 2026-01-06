@@ -99,7 +99,7 @@ colour_scheme = {
     1: "orange",  # Electricity
     2: "maroon",  # Heat
     3: "steelblue",  # Gas
-    4: "rainbow",
+    4: "rainbow",  # Slack
 }
 
 # indicate usage of SlackNode with a rainbow-coloured scheme
