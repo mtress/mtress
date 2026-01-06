@@ -18,7 +18,7 @@ from ..carriers import ElectricityCarrier, HeatCarrier
 from ..physics import calc_cop
 from ._abstract_technology import AbstractTechnology
 
-from .._constants import ELECTRICITY_COLOR, HEAT_COLOR
+from .._constants import EnergyType
 
 
 @dataclass
@@ -127,7 +127,7 @@ class HeatPump(AbstractTechnology):
                 electricity_carrier.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": ELECTRICITY_COLOR,
+                        "energy_type": EnergyType.ELECTRICITY,
                     },
                     nominal_value=self.electrical_power_limit,
                 )
@@ -146,7 +146,7 @@ class HeatPump(AbstractTechnology):
                 heat_budget_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     },
                     nominal_value=self.thermal_power_limit,
                 )
@@ -234,7 +234,7 @@ class HeatPump(AbstractTechnology):
                 heat_bus_warm: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     }
                 ),
             }
@@ -242,13 +242,13 @@ class HeatPump(AbstractTechnology):
                 q_side: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     }
                 ),
                 heat_bus_cold: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     }
                 ),
             }
@@ -262,13 +262,13 @@ class HeatPump(AbstractTechnology):
                 q_side: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     }
                 ),
                 heat_bus_cold: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     }
                 ),
             }
@@ -276,7 +276,7 @@ class HeatPump(AbstractTechnology):
                 heat_bus_warm: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     }
                 )
             }
@@ -314,19 +314,19 @@ class HeatPump(AbstractTechnology):
                 q_in: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     }
                 ),
                 self.electricity_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": ELECTRICITY_COLOR,
+                        "energy_type": EnergyType.ELECTRICITY,
                     }
                 ),
                 self.heat_budget_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     }
                 ),
             },
@@ -334,7 +334,7 @@ class HeatPump(AbstractTechnology):
                 q_out: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     }
                 ),
             },

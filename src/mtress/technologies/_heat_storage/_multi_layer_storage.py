@@ -20,7 +20,7 @@ from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR
 
 from ._abstract_heat_storage import AbstractHeatStorage
 
-from ..._constants import HEAT_COLOR
+from ..._constants import EnergyType
 
 
 class LayeredHeatStorage(AbstractHeatStorage):
@@ -114,7 +114,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         level_node: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "energy_type": HEAT_COLOR,
+                                "energy_type": EnergyType.HEAT,
                             },
                             nominal_value=self.power_limit,
                         )
@@ -123,7 +123,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         level_node: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "energy_type": HEAT_COLOR,
+                                "energy_type": EnergyType.HEAT,
                             },
                             nominal_value=self.power_limit,
                         )
@@ -140,7 +140,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         bus: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "energy_type": HEAT_COLOR,
+                                "energy_type": EnergyType.HEAT,
                             }
                         )
                     },
@@ -148,7 +148,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         bus: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "energy_type": HEAT_COLOR,
+                                "energy_type": EnergyType.HEAT,
                             }
                         )
                     },
@@ -164,7 +164,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         bus: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "energy_type": HEAT_COLOR,
+                                "energy_type": EnergyType.HEAT,
                             }
                         )
                     }

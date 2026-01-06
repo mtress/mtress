@@ -15,7 +15,7 @@ from ..carriers import ElectricityCarrier, GasCarrier
 from ..physics import BIO_METHANE, BIOGAS, HYDROGEN, NATURAL_GAS, Gas
 from ._heater import AbstractHeater
 
-from .._constants import ELECTRICITY_COLOR, GAS_COLOR, HEAT_COLOR
+from .._constants import EnergyType
 
 LOGGER = logging.getLogger(__file__)
 
@@ -307,13 +307,13 @@ class CHP(AbstractHeater):
                     electricity_carrier.feed_in: Flow(
                         custom_properties={
                             "unit": "W",
-                            "energy_type": ELECTRICITY_COLOR,
+                            "energy_type": EnergyType.ELECTRICITY,
                         }
                     ),
                     electricity_carrier.distribution: Flow(
                         custom_properties={
                             "unit": "W",
-                            "energy_type": ELECTRICITY_COLOR,
+                            "energy_type": EnergyType.ELECTRICITY,
                         }
                     ),
                 },
@@ -327,7 +327,7 @@ class CHP(AbstractHeater):
                     gas_bus: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": GAS_COLOR,
+                            "energy_type": EnergyType.GAS,
                         }
                     )
                     for gas, gas_bus in gas_buses.items()
@@ -342,7 +342,7 @@ class CHP(AbstractHeater):
                     gas_mixer_bus: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": GAS_COLOR,
+                            "energy_type": EnergyType.GAS,
                         },
                         nominal_value=nominal_gas_mix_consumption,
                     )
@@ -351,13 +351,13 @@ class CHP(AbstractHeater):
                     self.heat_bus: Flow(
                         custom_properties={
                             "unit": "W",
-                            "energy_type": HEAT_COLOR,
+                            "energy_type": EnergyType.HEAT,
                         }
                     ),
                     splitter: Flow(
                         custom_properties={
                             "unit": "W",
-                            "energy_type": ELECTRICITY_COLOR,
+                            "energy_type": EnergyType.ELECTRICITY,
                         }
                     ),
                 },
@@ -387,7 +387,7 @@ class CHP(AbstractHeater):
                     gas_mixer_bus: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": GAS_COLOR,
+                            "energy_type": EnergyType.GAS,
                         },
                         nominal_value=nominal_gas_mix_consumption,
                     )
@@ -396,13 +396,13 @@ class CHP(AbstractHeater):
                     self.heat_bus: Flow(
                         custom_properties={
                             "unit": "W",
-                            "energy_type": HEAT_COLOR,
+                            "energy_type": EnergyType.HEAT,
                         }
                     ),
                     electricity_carrier.distribution: Flow(
                         custom_properties={
                             "unit": "W",
-                            "energy_type": ELECTRICITY_COLOR,
+                            "energy_type": EnergyType.ELECTRICITY,
                         }
                     ),
                 },
@@ -558,13 +558,13 @@ class OffsetCHP(AbstractHeater):
                     electricity_carrier.feed_in: Flow(
                         custom_properties={
                             "unit": "W",
-                            "energy_type": ELECTRICITY_COLOR,
+                            "energy_type": EnergyType.ELECTRICITY,
                         }
                     ),
                     electricity_carrier.distribution: Flow(
                         custom_properties={
                             "unit": "W",
-                            "energy_type": ELECTRICITY_COLOR,
+                            "energy_type": EnergyType.ELECTRICITY,
                         }
                     ),
                 },
@@ -578,7 +578,7 @@ class OffsetCHP(AbstractHeater):
                     gas_bus: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": GAS_COLOR,
+                            "energy_type": EnergyType.GAS,
                         }
                     )
                     for gas, gas_bus in gas_buses.items()
@@ -609,7 +609,7 @@ class OffsetCHP(AbstractHeater):
                     gas_mixer_bus: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": GAS_COLOR,
+                            "energy_type": EnergyType.GAS,
                         },
                         nominal_value=nominal_gas_mix_consumption,
                         max=self.normalised_max_load,
@@ -621,13 +621,13 @@ class OffsetCHP(AbstractHeater):
                     splitter_bus: Flow(
                         custom_properties={
                             "unit": "W",
-                            "energy_type": ELECTRICITY_COLOR,
+                            "energy_type": EnergyType.ELECTRICITY,
                         }
                     ),
                     self.heat_bus: Flow(
                         custom_properties={
                             "unit": "W",
-                            "energy_type": HEAT_COLOR,
+                            "energy_type": EnergyType.HEAT,
                         }
                     ),
                 },
@@ -651,7 +651,7 @@ class OffsetCHP(AbstractHeater):
                     gas_bus: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": GAS_COLOR,
+                            "energy_type": EnergyType.GAS,
                         }
                     )
                     for gas, gas_bus in gas_buses.items()
@@ -682,7 +682,7 @@ class OffsetCHP(AbstractHeater):
                     gas_mixer_bus: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": GAS_COLOR,
+                            "energy_type": EnergyType.GAS,
                         },
                         nominal_value=nominal_gas_mix_consumption,
                         max=self.normalised_max_load,
@@ -694,13 +694,13 @@ class OffsetCHP(AbstractHeater):
                     electricity_carrier.distribution: Flow(
                         custom_properties={
                             "unit": "W",
-                            "energy_type": ELECTRICITY_COLOR,
+                            "energy_type": EnergyType.ELECTRICITY,
                         }
                     ),
                     self.heat_bus: Flow(
                         custom_properties={
                             "unit": "W",
-                            "energy_type": HEAT_COLOR,
+                            "energy_type": EnergyType.HEAT,
                         }
                     ),
                 },

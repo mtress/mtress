@@ -18,7 +18,7 @@ from ..carriers._abstract_carrier import AbstractCarrier
 from ..carriers import ElectricityCarrier, HeatCarrier, GasCarrier
 from ._abstract_technology import AbstractTechnology
 
-from .._constants import ELECTRICITY_COLOR, GAS_COLOR, HEAT_COLOR
+from .._constants import EnergyType
 
 
 class SlackNode(AbstractTechnology):
@@ -87,14 +87,14 @@ class SlackNode(AbstractTechnology):
                 slack_source[node] = Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": ELECTRICITY_COLOR,
+                        "energy_type": EnergyType.ELECTRICITY,
                     },
                     variable_costs=v,
                 )
                 slack_sink[node] = Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": ELECTRICITY_COLOR,
+                        "energy_type": EnergyType.ELECTRICITY,
                     },
                     variable_costs=v,
                 )
@@ -104,14 +104,14 @@ class SlackNode(AbstractTechnology):
                     slack_source[h_node] = Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": HEAT_COLOR,
+                            "energy_type": EnergyType.HEAT,
                         },
                         variable_costs=v,
                     )
                     slack_sink[h_node] = Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": HEAT_COLOR,
+                            "energy_type": EnergyType.HEAT,
                         },
                         variable_costs=v,
                     )
@@ -123,7 +123,7 @@ class SlackNode(AbstractTechnology):
                     slack_source[gas_high] = Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": GAS_COLOR,
+                            "energy_type": EnergyType.GAS,
                         },
                         variable_costs=v,
                     )
@@ -132,7 +132,7 @@ class SlackNode(AbstractTechnology):
                     slack_sink[gas_low] = Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": GAS_COLOR,
+                            "energy_type": EnergyType.GAS,
                         },
                         variable_costs=v,
                     )

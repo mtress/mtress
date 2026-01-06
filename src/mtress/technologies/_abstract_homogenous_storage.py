@@ -19,7 +19,7 @@ from oemof.solph.constraints import storage_level_constraint
 from .._abstract_component import AbstractComponent
 from .._oemof_storage_multiplexer import storage_multiplexer_constraint
 
-from .._constants import HEAT_COLOR
+from .._constants import EnergyType
 
 
 class Implementation(Enum):
@@ -101,7 +101,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                         outputs[level]: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "energy_type": HEAT_COLOR,
+                                "energy_type": EnergyType.HEAT,
                             }
                         )
                     },
@@ -116,7 +116,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                         inputs[level]: Flow(
                             custom_properties={
                                 "unit": "kg/h",
-                                "energy_type": HEAT_COLOR,
+                                "energy_type": EnergyType.HEAT,
                             }
                         )
                     },
@@ -131,7 +131,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                 bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     },
                     nominal_value=power_limit,
                 )
@@ -141,7 +141,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                 bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     },
                     nominal_value=power_limit,
                 )
@@ -159,7 +159,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                 self.multiplexer: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     }
                 )
             },
@@ -167,7 +167,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                 self.multiplexer: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     }
                 )
             },

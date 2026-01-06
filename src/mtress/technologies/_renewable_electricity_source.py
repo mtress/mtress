@@ -18,7 +18,7 @@ from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier
 from ._abstract_technology import AbstractTechnology
 
-from .._constants import ELECTRICITY_COLOR
+from .._constants import EnergyType
 
 
 class RenewableElectricitySource(AbstractTechnology):
@@ -61,7 +61,7 @@ class RenewableElectricitySource(AbstractTechnology):
             flow = Flow(
                 custom_properties={
                     "unit": "W",
-                    "energy_type": ELECTRICITY_COLOR,
+                    "energy_type": EnergyType.ELECTRICITY,
                 },
                 nominal_value=self.nominal_power,
                 variable_costs=self._solph_model.data.get_timeseries(
@@ -75,7 +75,7 @@ class RenewableElectricitySource(AbstractTechnology):
             flow = Flow(
                 custom_properties={
                     "unit": "W",
-                    "energy_type": ELECTRICITY_COLOR,
+                    "energy_type": EnergyType.ELECTRICITY,
                 },
                 nominal_value=self.nominal_power,
                 variable_costs=self._solph_model.data.get_timeseries(
@@ -93,13 +93,13 @@ class RenewableElectricitySource(AbstractTechnology):
                 electricity_carrier.feed_in: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": ELECTRICITY_COLOR,
+                        "energy_type": EnergyType.ELECTRICITY,
                     }
                 ),
                 electricity_carrier.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": ELECTRICITY_COLOR,
+                        "energy_type": EnergyType.ELECTRICITY,
                     }
                 ),
             },

@@ -13,7 +13,7 @@ from ..carriers import ElectricityCarrier, GasCarrier
 from ..physics import HYDROGEN
 from ._heater import AbstractHeater
 
-from .._constants import ELECTRICITY_COLOR, GAS_COLOR, HEAT_COLOR
+from .._constants import EnergyType
 
 LOGGER = logging.getLogger(__file__)
 
@@ -228,7 +228,7 @@ class Electrolyser(AbstractElectrolyser):
                 self.electrical_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": ELECTRICITY_COLOR,
+                        "energy_type": EnergyType.ELECTRICITY,
                     },
                     nominal_value=self.nominal_power,
                 ),
@@ -237,13 +237,13 @@ class Electrolyser(AbstractElectrolyser):
                 self.h2_bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "energy_type": GAS_COLOR,
+                        "energy_type": EnergyType.GAS,
                     }
                 ),
                 self.heat_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     }
                 ),
             },
@@ -371,7 +371,7 @@ class OffsetElectrolyser(AbstractElectrolyser):
                 self.electrical_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": ELECTRICITY_COLOR,
+                        "energy_type": EnergyType.ELECTRICITY,
                     },
                     nominal_value=self.nominal_power,
                     max=self.maximum_load,
@@ -383,13 +383,13 @@ class OffsetElectrolyser(AbstractElectrolyser):
                 self.h2_bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "energy_type": GAS_COLOR,
+                        "energy_type": EnergyType.GAS,
                     },
                 ),
                 self.heat_bus: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": HEAT_COLOR,
+                        "energy_type": EnergyType.HEAT,
                     },
                 ),
             },

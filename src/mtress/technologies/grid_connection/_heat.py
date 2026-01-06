@@ -10,7 +10,7 @@ from mtress._data_handler import TimeseriesSpecifier
 from mtress.carriers import HeatCarrier
 from ._abstract_grid_connection import AbstractGridConnection
 
-from ..._constants import HEAT_COLOR
+from ..._constants import EnergyType
 
 
 class HeatGridConnection(AbstractGridConnection, AbstactHeatExchanger):
@@ -92,7 +92,7 @@ class HeatGridInterconnection(AbstractGridConnection):
                     heat_carrier.level_nodes[temperature]: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": HEAT_COLOR,
+                            "energy_type": EnergyType.HEAT,
                         }
                     ),
                 },
@@ -100,7 +100,7 @@ class HeatGridInterconnection(AbstractGridConnection):
                     heat_carrier.level_nodes[temperature]: Flow(
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": HEAT_COLOR,
+                            "energy_type": EnergyType.HEAT,
                         }
                     ),
                 },
@@ -116,12 +116,12 @@ class HeatGridInterconnection(AbstractGridConnection):
             node1_t.inputs[node2_t] = Flow(
                 custom_properties={
                     "unit": "kg/h",
-                    "energy_type": HEAT_COLOR,
+                    "energy_type": EnergyType.HEAT,
                 }
             )
             node1_t.outputs[node2_t] = Flow(
                 custom_properties={
                     "unit": "kg/h",
-                    "energy_type": HEAT_COLOR,
+                    "energy_type": EnergyType.HEAT,
                 }
             )

@@ -11,7 +11,7 @@ from mtress.physics import Gas
 
 from ._abstract_grid_connection import AbstractGridConnection
 
-from ..._constants import GAS_COLOR
+from ..._constants import EnergyType
 
 LOGGER = logging.getLogger(__file__)
 
@@ -77,7 +77,7 @@ class GasGridConnection(AbstractGridConnection):
                 gas_carrier.inputs[self.gas_type][pressure_level_high]: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "energy_type": GAS_COLOR,
+                        "energy_type": EnergyType.GAS,
                     }
                 )
             },
@@ -90,7 +90,7 @@ class GasGridConnection(AbstractGridConnection):
                 gas_carrier.inputs[self.gas_type][pressure_level_low]: Flow(
                     custom_properties={
                         "unit": "kg/h",
-                        "energy_type": GAS_COLOR,
+                        "energy_type": EnergyType.GAS,
                     }
                 )
             },
@@ -111,7 +111,7 @@ class GasGridConnection(AbstractGridConnection):
                         variable_costs=self.working_rate,
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": GAS_COLOR,
+                            "energy_type": EnergyType.GAS,
                         },
                     )
                 },
@@ -126,7 +126,7 @@ class GasGridConnection(AbstractGridConnection):
                         variable_costs=-self.revenue,
                         custom_properties={
                             "unit": "kg/h",
-                            "energy_type": GAS_COLOR,
+                            "energy_type": EnergyType.GAS,
                         },
                     )
                 },
@@ -141,7 +141,7 @@ class GasGridConnection(AbstractGridConnection):
         self.b_grid_export.outputs[other.b_grid_import] = Flow(
             custom_properties={
                 "unit": "kg/h",
-                "energy_type": GAS_COLOR,
+                "energy_type": EnergyType.GAS,
             }
         )
         if self.grid_pressure < other.grid_pressure:

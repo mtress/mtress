@@ -11,7 +11,7 @@ from ..carriers import ElectricityCarrier
 from .._helpers._util import enable_templating
 from ._battery_storage import BatteryStorage, BatteryStorageTemplate
 
-from .._constants import ELECTRICITY_COLOR
+from .._constants import EnergyType
 
 from pandas import Series
 from numbers import Real
@@ -355,7 +355,7 @@ class GenericElectricVehicle(BatteryStorage):
                 electricity.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": ELECTRICITY_COLOR,
+                        "energy_type": EnergyType.ELECTRICITY,
                     },
                     nominal_value=self.nominal_capacity * self.charging_C_Rate,
                     max=self._solph_model.data.get_timeseries(
@@ -367,7 +367,7 @@ class GenericElectricVehicle(BatteryStorage):
                 electricity.distribution: Flow(
                     custom_properties={
                         "unit": "W",
-                        "energy_type": ELECTRICITY_COLOR,
+                        "energy_type": EnergyType.ELECTRICITY,
                     },
                     nominal_value=self.nominal_capacity
                     * self.discharging_C_Rate,
