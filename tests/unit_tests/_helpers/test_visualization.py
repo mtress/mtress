@@ -25,7 +25,7 @@ from mtress._helpers import get_energy_types
 
 def test_graph():
     nodes = []
-    colors = set()
+    colours = set()
     meta_model = MetaModel()
 
     house_1 = Location(name="house_1")
@@ -69,28 +69,28 @@ def test_graph():
     myresults = Results(solved_model)
     flows = myresults["flow"]
 
-    flow_colors = get_energy_types(solph_representation)
+    flow_colours = get_energy_types(solph_representation)
 
-    colors.add("orange")  # only electricity in the system
+    colours.add("orange")  # only electricity in the system
 
     graph_elements = generate_graph(
         nodes=solph_representation.nodes,
         flows=flows,
-        flow_colors=flow_colors,
+        flow_colours=flow_colours,
     )
 
     # check all nodes present
     graph_nodes = graph_elements["nodes"]
     assert set(nodes) == set(graph_nodes.keys())
 
-    # check graph colors okay
+    # check graph colours okay
     edges = graph_elements["edges"]
-    graph_colors = set()
+    graph_colours = set()
 
     for _, targets in edges.items():
         for _, edge_attributes in targets.items():
-            graph_colors.add(edge_attributes["color"])
-    assert colors == graph_colors
+            graph_colours.add(edge_attributes["colour"])
+    assert colours == graph_colours
 
     # check dict schema
     schema = {
@@ -128,14 +128,14 @@ def test_graph():
                 "additionalProperties": {
                     "type": "object",  # target
                     "additionalProperties": {
-                        "color": {
+                        "colour": {
                             "type": "string",
                         },
                         "flow": {
                             "type": "number",
                         },
                         "required": [
-                            "color",
+                            "colour",
                         ],
                     },
                 },
@@ -175,7 +175,7 @@ def test_graph():
                         "text-rotation": {"type": "string"},
                         "text-background-shape": {"type": "string"},
                         "text-background-opacity": {"type": "string"},
-                        "color": {"type": "string"},
+                        "colour": {"type": "string"},
                     },
                 },
             },

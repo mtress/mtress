@@ -10,11 +10,11 @@ def get_flow_units(solph_model):
 
 
 def get_energy_types(solph_model):
-    colors = {}
+    colours = {}
     flows = solph_model.model.flows
     for k, v in flows.items():
-        colors[k] = v.custom_properties.get("energy_type", "")
-    return colors
+        colours[k] = v.custom_properties.get("energy_type", "")
+    return colours
 
 
 def get_storage_content(results):

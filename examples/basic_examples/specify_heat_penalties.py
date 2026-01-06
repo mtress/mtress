@@ -52,11 +52,11 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 mr = Results(solved_model)
 flows = mr["flow"]
 units = get_flow_units(solph_representation)
-flow_colors = get_energy_types(solph_representation)
+flow_colours = get_energy_types(solph_representation)
 
 # Print the objective value.
 # Here it contains the cost of the operation including penalties.
 # print(mr["objective"])
 solph_representation.graph(
-    flow_results=flows, units=units, flow_colors=flow_colors
+    flow_results=flows, units=units, flow_colours=flow_colours
 )

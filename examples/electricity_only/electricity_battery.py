@@ -85,7 +85,7 @@ plt.ylabel("Power (W)")
 plt.show()
 
 units = get_flow_units(solph_representation)
-flow_colors = get_energy_types(solph_representation)
+flow_colours = get_energy_types(solph_representation)
 solph_representation.graph(
-    flow_results=flows, units=units, flow_colors=flow_colors
+    flow_results=flows, units=units, flow_colours=flow_colours
 )
