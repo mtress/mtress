@@ -72,6 +72,10 @@ def graph_graphviz(
     colour_scheme: dict,
     path: str = "model.png",
 ) -> None:
+    if colour_scheme is None:
+        # set to default
+        colour_scheme = COLOUR_SCHEME
+
     # get graphviz digraph
     f = flows is not None
     graph = generate_graph_graphviz(
@@ -90,6 +94,10 @@ def graph_cytoscape(
     flow_colours: dict,
     colour_scheme: dict,
 ):
+    if colour_scheme is None:
+        # set to default
+        colour_scheme = COLOUR_SCHEME
+
     # get cytoscape elements
     f = flows is not None
     elements = generate_graph_cytoscape(
@@ -145,26 +153,26 @@ def graph_cytoscape(
             # Class selectors
             # colouring
             {
-                "selector": "." + COLOUR_SCHEME[EnergyType.HEAT],
+                "selector": "." + colour_scheme[EnergyType.HEAT],
                 "style": {
-                    "line-colour": COLOUR_SCHEME[EnergyType.HEAT],
-                    "target-arrow-colour": COLOUR_SCHEME[EnergyType.HEAT],
+                    "line-colour": colour_scheme[EnergyType.HEAT],
+                    "target-arrow-colour": colour_scheme[EnergyType.HEAT],
                 },
             },
             {
-                "selector": "." + COLOUR_SCHEME[EnergyType.ELECTRICITY],
+                "selector": "." + colour_scheme[EnergyType.ELECTRICITY],
                 "style": {
-                    "line-colour": COLOUR_SCHEME[EnergyType.ELECTRICITY],
-                    "target-arrow-colour": COLOUR_SCHEME[
+                    "line-colour": colour_scheme[EnergyType.ELECTRICITY],
+                    "target-arrow-colour": colour_scheme[
                         EnergyType.ELECTRICITY
                     ],
                 },
             },
             {
-                "selector": "." + COLOUR_SCHEME[EnergyType.GAS],
+                "selector": "." + colour_scheme[EnergyType.GAS],
                 "style": {
-                    "line-colour": COLOUR_SCHEME[EnergyType.GAS],
-                    "target-arrow-colour": COLOUR_SCHEME[EnergyType.GAS],
+                    "line-colour": colour_scheme[EnergyType.GAS],
+                    "target-arrow-colour": colour_scheme[EnergyType.GAS],
                 },
             },
             {
@@ -643,10 +651,6 @@ def generate_graph(
     # determine colour of edges
     if flow_colours is None:
         flow_colours = {}
-
-    # set default colour scheme
-    if colour_scheme is None:
-        colour_scheme = COLOUR_SCHEME
 
     # data structures for storing nodes and edges
     graph_nodes = {}
