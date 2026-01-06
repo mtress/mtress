@@ -43,6 +43,7 @@ SHAPES_GRAPHVIZ = {
 }
 
 COLOR_SCHEME = {
+    0: "black",  # Undefined
     1: "orange",  # Electricity
     2: "maroon",  # Heat
     3: "steelblue",  # Gas
@@ -68,12 +69,13 @@ def graph_graphviz(
     flows,
     units: dict,
     flow_colors: dict,
+    color_scheme: dict,
     path: str = "model.png",
 ) -> None:
     # get graphviz digraph
     f = flows is not None
     graph = generate_graph_graphviz(
-        generate_graph(nodes, flows, units, flow_colors),
+        generate_graph(nodes, flows, units, flow_colors, color_scheme),
         f,
     )
 
@@ -86,11 +88,12 @@ def graph_cytoscape(
     flows,
     units: dict,
     flow_colors: dict,
+    color_scheme: dict,
 ):
     # get cytoscape elements
     f = flows is not None
     elements = generate_graph_cytoscape(
-        generate_graph(nodes, flows, units, flow_colors),
+        generate_graph(nodes, flows, units, flow_colors, color_scheme),
         f,
     )
 
@@ -622,6 +625,7 @@ def generate_graph(
     flows,
     units: dict = None,
     flow_colors: dict = None,
+    color_scheme: dict = None,
 ) -> dict:
     """
     Function to generate a simple dict representation
@@ -637,6 +641,10 @@ def generate_graph(
     # determine color of edges
     if flow_colors is None:
         flow_colors = {}
+
+    # set default color scheme
+    if color_scheme is None:
+        color_scheme = COLOR_SCHEME
 
     # data structures for storing nodes and edges
     graph_nodes = {}
@@ -700,7 +708,9 @@ def generate_graph(
             )
             graph_edges.setdefault(source_id, {})
             graph_edges[source_id].setdefault(target_id, {})
-            flow_color = flow_colors.get((n, t), "black")
+            energy_type = flow_colors.get((n, t), 0)
+            flow_color = color_scheme.get(energy_type)
+            print(energy_type, flow_color)
             graph_edges[source_id][target_id]["color"] = flow_color
             if flows is not None:
                 flow = flows[(n, t)]  # .mean()  # .sum()

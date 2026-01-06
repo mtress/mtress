@@ -101,6 +101,7 @@ class SolphModel:
         flow_results: dict = None,
         units: dict = None,
         flow_colors: dict = None,
+        color_scheme: dict = None,
         path: str = "model.png",
     ):
         graph_graphviz(
@@ -108,6 +109,7 @@ class SolphModel:
             flows=flow_results,
             units=units,
             flow_colors=flow_colors,
+            color_scheme=color_scheme,
             path=path,
         )
 
@@ -116,12 +118,14 @@ class SolphModel:
         flow_results: dict = None,
         units: dict = None,
         flow_colors: dict = None,
+        color_scheme: dict = None,
     ):
         graph_cytoscape(
             nodes=self.nodes,
             flows=flow_results,
             units=units,
             flow_colors=flow_colors,
+            color_scheme=color_scheme,
         )
 
     def solve(self, **kwargs):
