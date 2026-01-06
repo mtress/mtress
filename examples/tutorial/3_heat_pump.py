@@ -10,7 +10,7 @@ from mtress import (
     technologies,
 )
 
-from mtress._helpers import get_flow_units
+from mtress._helpers import get_flow_units, get_energy_types
 
 os.chdir(os.path.dirname(__file__))
 
@@ -81,9 +81,11 @@ solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 myresults = Results(solved_model)
 flows = myresults["flow"]
 units = get_flow_units(solph_representation)
+flow_colours = get_energy_types(solph_representation)
 
 solph_representation.graph(
     flow_results=flows,
     units=units,
+    flow_colours=flow_colours,
     path="3_heat_pump_model.png",
 )

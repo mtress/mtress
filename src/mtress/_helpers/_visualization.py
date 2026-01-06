@@ -11,6 +11,8 @@ from oemof.solph.components import (
 from oemof.network.network.nodes import QualifiedLabel
 from oemof.network.network.nodes import Node
 
+from .._constants import EnergyType
+
 from copy import deepcopy
 import logging
 from dash import Dash, html, dcc, Input, Output, callback
@@ -40,11 +42,11 @@ SHAPES_GRAPHVIZ = {
     "storage": "cylinder",
 }
 
-
-COLORS = {
-    "ElectricityCarrier": "orange",
-    "GasCarrier": "steelblue",
-    "HeatCarrier": "maroon",
+COLOUR_SCHEME = {
+    EnergyType.UNDEFINED: "black",
+    EnergyType.ELECTRICITY: "orange",
+    EnergyType.HEAT: "maroon",
+    EnergyType.GAS: "steelblue",
 }
 
 RAINBOW = """darkslateblue cornflowerblue
@@ -66,18 +68,18 @@ def graph_graphviz(
     nodes,
     flows,
     units: dict,
-    flow_color: dict,
-    colorscheme: dict,
+    flow_colours: dict,
+    colour_scheme: dict,
     path: str = "model.png",
 ) -> None:
-    if colorscheme is None:
+    if colour_scheme is None:
         # set to default
-        colorscheme = COLORS
+        colour_scheme = COLOUR_SCHEME
 
     # get graphviz digraph
     f = flows is not None
     graph = generate_graph_graphviz(
-        generate_graph(nodes, flows, units, flow_color, colorscheme),
+        generate_graph(nodes, flows, units, flow_colours, colour_scheme),
         f,
     )
 
@@ -89,17 +91,17 @@ def graph_cytoscape(
     nodes,
     flows,
     units: dict,
-    flow_color: dict,
-    colorscheme: dict,
+    flow_colours: dict,
+    colour_scheme: dict,
 ):
-    if colorscheme is None:
+    if colour_scheme is None:
         # set to default
-        colorscheme = COLORS
+        colour_scheme = COLOUR_SCHEME
 
     # get cytoscape elements
     f = flows is not None
     elements = generate_graph_cytoscape(
-        generate_graph(nodes, flows, units, flow_color, colorscheme),
+        generate_graph(nodes, flows, units, flow_colours, colour_scheme),
         f,
     )
 
@@ -149,26 +151,28 @@ def graph_cytoscape(
                 },
             },
             # Class selectors
-            # coloring
+            # colouring
             {
-                "selector": "." + colorscheme["HeatCarrier"],
+                "selector": "." + colour_scheme[EnergyType.HEAT],
                 "style": {
-                    "line-color": colorscheme["HeatCarrier"],
-                    "target-arrow-color": colorscheme["HeatCarrier"],
+                    "line-color": colour_scheme[EnergyType.HEAT],
+                    "target-arrow-color": colour_scheme[EnergyType.HEAT],
                 },
             },
             {
-                "selector": "." + colorscheme["ElectricityCarrier"],
+                "selector": "." + colour_scheme[EnergyType.ELECTRICITY],
                 "style": {
-                    "line-color": colorscheme["ElectricityCarrier"],
-                    "target-arrow-color": colorscheme["ElectricityCarrier"],
+                    "line-color": colour_scheme[EnergyType.ELECTRICITY],
+                    "target-arrow-color": colour_scheme[
+                        EnergyType.ELECTRICITY
+                    ],
                 },
             },
             {
-                "selector": "." + colorscheme["GasCarrier"],
+                "selector": "." + colour_scheme[EnergyType.GAS],
                 "style": {
-                    "line-color": colorscheme["GasCarrier"],
-                    "target-arrow-color": colorscheme["GasCarrier"],
+                    "line-color": colour_scheme[EnergyType.GAS],
+                    "target-arrow-color": colour_scheme[EnergyType.GAS],
                 },
             },
             {
@@ -626,83 +630,12 @@ def graph_cytoscape(
     app.run(debug=False)
 
 
-def get_flow_color(node, flow_color: dict, colorscheme: dict) -> None:
-    """
-    Function to determine the color of a graphs edges.
-    The graph is supposed to be a MTRESS energy system.
-    The determined color is dependent on the Energy Carrier
-    a node is connected to.
-    The algorithm recursivley determines edge colors for neighbouring
-    nodes until dead ends are reached.
-
-    :param node: the node of whichs colors should be determined
-    :param flow_color: a dictionary of already determined colors for edges
-    :param colorscheme: a dictionary which assigns a color
-        per MTRESS energy carrier
-    """
-
-    def rec(n, c):  # node, color
-        # recursively iterate nodes until all edges covered
-        # or node type in [Source, Sink, Converter]
-        if type(n) in [Source, Sink, Converter, OffsetConverter]:
-            return
-        n_id = tuple(n.label)
-        for o in n.inputs:
-            o_id = tuple(o.label)
-            flow_color.setdefault(o_id, {})
-            if n_id not in flow_color[o_id]:
-                flow_color[o_id][n_id] = c
-                rec(o, c)
-        for t in n.outputs:
-            t_id = tuple(t.label)
-            flow_color.setdefault(n_id, {})
-            if t_id not in flow_color[n_id]:
-                flow_color[n_id][t_id] = c
-                rec(t, c)
-        return
-
-    # tuple with >= 2 entries or str expected
-    color = colorscheme.get(node.label[-2], None)
-    if color is None:  # component not a carrier
-        node_id = tuple(node.label)
-        input_nodes = [tuple(o.label) for o in node.inputs]
-        output_nodes = [tuple(t.label) for t in node.outputs]
-
-        # determine if node only connected to ONE carrier
-        connected_nodes = input_nodes + output_nodes
-        connected_comp = set([c_n[:-1] for c_n in connected_nodes])
-        own_comp = set()
-        own_comp.add(node_id[:-1])
-        external_comp = connected_comp - own_comp
-        if len(external_comp) == 1:
-            # only connected to ONE component
-            external_comp = external_comp.pop()
-            if external_comp[-1] in colorscheme:
-                # component IS carrier -> get color
-                color = colorscheme[external_comp[-1]]
-
-    if color is not None:  # component is a carrier
-        node_id = tuple(node.label)
-        for origin in node.inputs:
-            origin_id = tuple(origin.label)
-            flow_color.setdefault(origin_id, {})
-            if node_id not in flow_color[origin_id]:
-                flow_color[origin_id][node_id] = color
-            rec(origin, color)
-        for target in node.outputs:
-            target_id = tuple(target.label)
-            flow_color.setdefault(node_id, {})
-            if target_id not in flow_color[node_id]:
-                flow_color[node_id][target_id] = color
-                rec(target, color)
-
-
 def generate_graph(
     nodes,
     flows,
     units: dict = None,
-    flow_color: dict = None,
-    colorscheme: dict = None,
+    flow_colours: dict = None,
+    colour_scheme: dict = None,
 ) -> dict:
     """
     Function to generate a simple dict representation
@@ -710,20 +643,17 @@ def generate_graph(
 
     :param nodes: the oemof.solph.EnergySystem.nodes
     :param flows: [OPTIONAL] the resulting flows of the solved energy system
-    :param flow_color: a dictionary of already determined colors for edges
-    :param colorscheme: a dictionary which assigns a color
+    :param flow_colour: a dictionary of already determined colours for edges
+    :param colour_scheme: a dictionary which assigns a colour
         per MTRESS energy carrier
     """
-    if colorscheme is None:
-        # set to default
-        colorscheme = COLORS
+    # set default color scheme
+    if colour_scheme is None:
+        colour_scheme = COLOUR_SCHEME
 
-    # determine color of edges
-    if flow_color is None:
-        flow_color = {}
-
-    for n in nodes:
-        get_flow_color(n, flow_color, colorscheme)
+    # determine colour of edges
+    if flow_colours is None:
+        flow_colours = {}
 
     # data structures for storing nodes and edges
     graph_nodes = {}
@@ -774,9 +704,6 @@ def generate_graph(
 
         # get edges
         for t in n.outputs:
-            edge_color = flow_color.get(tuple(n.label), {}).get(
-                tuple(t.label), "black"
-            )
             # reverse labels if class QualifiedLabel
             source_id = (
                 "-".join(list(reversed(list(n.label))))
@@ -790,7 +717,10 @@ def generate_graph(
             )
             graph_edges.setdefault(source_id, {})
             graph_edges[source_id].setdefault(target_id, {})
-            graph_edges[source_id][target_id]["color"] = edge_color
+            energy_type = flow_colours.get((n, t), 0)
+            flow_colour = colour_scheme.get(energy_type)
+            print(energy_type, flow_colour)
+            graph_edges[source_id][target_id]["colour"] = flow_colour
             if flows is not None:
                 flow = flows[(n, t)]  # .mean()  # .sum()
                 graph_edges[source_id][target_id]["flow"] = flow
@@ -838,7 +768,7 @@ def generate_graph_graphviz(
                     "graph",
                     label=nodes[comp]["label"],
                     style="dashed",  # border of component
-                    color="black",
+                    colour="black",
                 )
                 # 3. determine NODES of COMPONENTS
                 # (children of COMPONENTS)
@@ -872,9 +802,9 @@ def generate_graph_graphviz(
         # one source can have multiple targets
         for target, edge_attributes in targets.items():
             # draw edge for every target
-            color = edge_attributes["color"]
-            if color == "rainbow":
-                color = RAINBOW_GRAPHVIZ
+            colour = edge_attributes["colour"]
+            if colour == "rainbow":
+                colour = RAINBOW_GRAPHVIZ
             if flows:
                 flow = edge_attributes["flow"].mean()
                 unit = edge_attributes.get("unit", "")
@@ -883,7 +813,7 @@ def generate_graph_graphviz(
                         source,
                         target,
                         label=f"{round(flow, 3)} {unit}",
-                        color=color,
+                        color=colour,
                     )
                 else:
                     graph.edge(
@@ -897,7 +827,7 @@ def generate_graph_graphviz(
                     source,
                     target,
                     label="",
-                    color=color,
+                    color=colour,
                 )
 
     return graph
@@ -939,7 +869,7 @@ def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
                     "source": source,
                     "target": t,
                 },
-                "classes": edge_attr["color"],
+                "classes": edge_attr["colour"],
             }
             cytoscape_edges.append(deepcopy(e))
 

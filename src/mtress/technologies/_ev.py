@@ -10,6 +10,9 @@ from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier
 from .._helpers._util import enable_templating
 from ._battery_storage import BatteryStorage, BatteryStorageTemplate
+
+from .._constants import EnergyType
+
 from pandas import Series
 from numbers import Real
 
@@ -350,7 +353,10 @@ class GenericElectricVehicle(BatteryStorage):
             node_type=GenericStorage,
             inputs={
                 electricity.distribution: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
                     nominal_value=self.nominal_capacity * self.charging_C_Rate,
                     max=self._solph_model.data.get_timeseries(
                         self.plugged_in_profile, kind=TimeseriesType.INTERVAL
@@ -359,7 +365,10 @@ class GenericElectricVehicle(BatteryStorage):
             },
             outputs={
                 electricity.distribution: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
                     nominal_value=self.nominal_capacity
                     * self.discharging_C_Rate,
                     max=self._solph_model.data.get_timeseries(

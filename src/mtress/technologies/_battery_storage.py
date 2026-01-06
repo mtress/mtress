@@ -10,6 +10,8 @@ from ._abstract_technology import AbstractTechnology
 from .._data_handler import TimeseriesSpecifier
 from .._helpers._util import enable_templating
 
+from .._constants import EnergyType
+
 
 @dataclass(frozen=True)
 class BatteryStorageTemplate:
@@ -128,13 +130,19 @@ class BatteryStorage(AbstractTechnology):
             node_type=GenericStorage,
             inputs={
                 electricity.distribution: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
                     nominal_value=self.nominal_capacity * self.charging_C_Rate,
                 )
             },
             outputs={
                 electricity.distribution: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
                     nominal_value=self.nominal_capacity
                     * self.discharging_C_Rate,
                 )

@@ -11,6 +11,8 @@ from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import HeatCarrier
 from ._abstract_technology import AbstractTechnology
 
+from .._constants import EnergyType
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,7 +135,10 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Source,
             outputs={
                 _bus_source: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
                     nominal_value=self.nominal_power,
                     variable_costs=self._solph_model.data.get_timeseries(
                         self.working_rate,
@@ -152,7 +157,13 @@ class AbstactHeatExchanger(AbstractTechnology):
             label="source_utilisation",
             node_type=Source,
             outputs={
-                self._bus_utilisation: Flow(nominal_value=1)
+                self._bus_utilisation: Flow(
+                    nominal_value=1,
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
+                )
             },
         )
 
@@ -208,18 +219,32 @@ class AbstactHeatExchanger(AbstractTechnology):
                     node_type=Converter,
                     inputs={
                         _bus_source: Flow(
-                            custom_attributes={"unit": "W"},
+                            custom_properties={
+                                "unit": "W",
+                                "energy_type": EnergyType.HEAT,
+                            },
                             nominal_value=self.nominal_power,
                             max=gains,
                         ),
                         heat_bus_cold_source: Flow(
-                            custom_attributes={"unit": "kg/h"}
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            }
                         ),
-                        self._bus_utilisation: Flow(),
+                        self._bus_utilisation: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            }
+                        ),
                     },
                     outputs={
                         heat_bus_warm_source: Flow(
-                            custom_attributes={"unit": "kg/h"}
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            }
                         )
                     },
                     conversion_factors={
@@ -243,7 +268,10 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Sink,
             inputs={
                 _bus_sink: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
                     variable_costs=-(
                         self._solph_model.data.get_timeseries(
                             self.revenue,
@@ -296,15 +324,24 @@ class AbstactHeatExchanger(AbstractTechnology):
                 node_type=Converter,
                 inputs={
                     heat_bus_warm_sink: Flow(
-                        custom_attributes={"unit": "kg/h"}
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        }
                     ),
                 },
                 outputs={
                     heat_bus_cold_sink: Flow(
-                        custom_attributes={"unit": "kg/h"}
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        }
                     ),
                     _bus_sink: Flow(
-                        custom_attributes={"unit": "W"},
+                        custom_properties={
+                            "unit": "W",
+                            "energy_type": EnergyType.HEAT,
+                        },
                         max=internal_sequence,
                         nominal_value=self.nominal_power,
                     ),

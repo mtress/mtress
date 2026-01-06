@@ -9,6 +9,8 @@ from ..carriers import ElectricityCarrier, GasCarrier, HeatCarrier
 from ..physics import Gas
 from ._abstract_technology import AbstractTechnology
 
+from .._constants import EnergyType
+
 LOGGER = logging.getLogger(__file__)
 
 
@@ -56,11 +58,26 @@ class AbstractHeater(AbstractTechnology):
                 label=f"heat_{temp_in:.0f}_{temp_out:.0f}",
                 node_type=Converter,
                 inputs={
-                    bus_cold: Flow(custom_attributes={"unit": "kg/h"}),
-                    heat_bus: Flow(custom_attributes={"unit": "W"}),
+                    bus_cold: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
+                    heat_bus: Flow(
+                        custom_properties={
+                            "unit": "W",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
                 },
                 outputs={
-                    bus_warm: Flow(custom_attributes={"unit": "kg/h"}),
+                    bus_warm: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
                 },
                 conversion_factors={
                     bus_warm: 1,
@@ -115,10 +132,20 @@ class ResistiveHeater(AbstractHeater):
         self.create_solph_node(
             label="heater",
             node_type=Converter,
-            inputs={electrical_bus: Flow(custom_attributes={"unit": "kg/h"})},
+            inputs={
+                electrical_bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    }
+                )
+            },
             outputs={
                 self.heat_bus: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
                     nominal_value=self.thermal_power_limit,
                 )
             },
@@ -185,11 +212,19 @@ class GasBoiler(AbstractHeater):
             label="converter",
             node_type=Converter,
             inputs={
-                gas_bus: Flow(custom_attributes={"unit": "kg/h"}),
+                gas_bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.GAS,
+                    }
+                ),
             },
             outputs={
                 self.heat_bus: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
                     nominal_value=self.thermal_power_limit,
                 ),
             },

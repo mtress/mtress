@@ -11,6 +11,8 @@ from ..physics import (
 )
 from ._abstract_technology import AbstractTechnology
 
+from .._constants import EnergyType
+
 
 class GasCompressor(AbstractTechnology):
     """Ideal gas compressor."""
@@ -48,7 +50,10 @@ class GasCompressor(AbstractTechnology):
             node_type=Bus,
             inputs={
                 electricity_carrier.distribution: Flow(
-                    custom_attributes={"unit": "W"},
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
                     nominal_value=self.nominal_power,
                 )
             },
@@ -62,15 +67,24 @@ class GasCompressor(AbstractTechnology):
                     node_type=Converter,
                     inputs={
                         electrical_input: Flow(
-                            custom_attributes={"unit": "W"}
+                            custom_properties={
+                                "unit": "W",
+                                "energy_type": EnergyType.ELECTRICITY,
+                            }
                         ),
                         gas_carrier.outputs[self.gas_type][pressure_low]: Flow(
-                            custom_attributes={"unit": "kg/h"}
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.GAS,
+                            }
                         ),
                     },
                     outputs={
                         gas_carrier.outputs[self.gas_type][pressure]: Flow(
-                            custom_attributes={"unit": "kg/h"}
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.GAS,
+                            }
                         )
                     },
                     conversion_factors={

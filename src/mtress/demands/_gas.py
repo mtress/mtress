@@ -8,6 +8,8 @@ from ..carriers import GasCarrier
 from ..physics import Gas
 from ._abstract_demand import AbstractDemand
 
+from .._constants import EnergyType
+
 
 class GasDemand(AbstractDemand):
     """
@@ -60,7 +62,10 @@ class GasDemand(AbstractDemand):
             node_type=Bus,
             inputs={
                 gas_carrier.outputs[self.gas_type][pressure]: Flow(
-                    custom_attributes={"unit": "kg/h"}
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.GAS,
+                    }
                 )
             },
         )
@@ -70,7 +75,10 @@ class GasDemand(AbstractDemand):
             node_type=Sink,
             inputs={
                 gas_bus: Flow(
-                    custom_attributes={"unit": "kg/h"},
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.GAS,
+                    },
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL

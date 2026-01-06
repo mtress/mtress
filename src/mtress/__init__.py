@@ -11,6 +11,7 @@ from ._location import Location
 from ._meta_model import Connection, MetaModel
 from ._solph_model import SolphModel
 
+
 __version__ = "3.0.0a5"
 
 __all__ = [
