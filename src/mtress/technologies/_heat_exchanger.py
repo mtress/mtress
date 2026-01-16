@@ -12,6 +12,8 @@ from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import HeatCarrier
 from ._abstract_technology import AbstractTechnology
 
+from .._constants import EnergyType
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,6 +136,11 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Source,
             outputs={
                 _bus_source: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
+                    nominal_value=self.nominal_power,
                     variable_costs=self._solph_model.data.get_timeseries(
                         self.working_rate,
                         kind=TimeseriesType.INTERVAL,
@@ -152,7 +159,11 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Source,
             outputs={
                 self._bus_utilisation: Flow(
-                    nominal_capacity=self.nominal_power,
+                    nominal_value=self.nominal_power,
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
                 )
             },
         )
@@ -209,13 +220,34 @@ class AbstactHeatExchanger(AbstractTechnology):
                     node_type=Converter,
                     inputs={
                         _bus_source: Flow(
-                            nominal_capacity=self.nominal_power,
+                            custom_properties={
+                                "unit": "W",
+                                "energy_type": EnergyType.HEAT,
+                            },
+                            nominal_value=self.nominal_power,
                             max=gains,
                         ),
-                        heat_bus_cold_source: Flow(),
-                        self._bus_utilisation: Flow(),
+                        heat_bus_cold_source: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            }
+                        ),
+                        self._bus_utilisation: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            }
+                        ),
                     },
-                    outputs={heat_bus_warm_source: Flow()},
+                    outputs={
+                        heat_bus_warm_source: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            }
+                        )
+                    },
                     conversion_factors={
                         _bus_source: heat_factor,
                         self._bus_utilisation: heat_factor * inverted_gains,
@@ -258,12 +290,16 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Sink,
             inputs={
                 _bus_sink: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
                     variable_costs=-(
                         self._solph_model.data.get_timeseries(
                             self.revenue,
                             kind=TimeseriesType.INTERVAL,
                         )
-                    )
+                    ),
                 )
             },
         )
@@ -309,13 +345,27 @@ class AbstactHeatExchanger(AbstractTechnology):
                 label=f"sink_{warm_level}",
                 node_type=Converter,
                 inputs={
-                    heat_bus_warm_sink: Flow(),
+                    heat_bus_warm_sink: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
                 },
                 outputs={
-                    heat_bus_cold_sink: Flow(),
+                    heat_bus_cold_sink: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
                     _bus_sink: Flow(
+                        custom_properties={
+                            "unit": "W",
+                            "energy_type": EnergyType.HEAT,
+                        },
                         max=internal_sequence,
-                        nominal_capacity=self.nominal_power,
+                        nominal_value=self.nominal_power,
                     ),
                 },
                 conversion_factors={
@@ -358,6 +408,7 @@ class HeatSource(AbstactHeatExchanger):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
         self._build_core()
 
     def establish_interconnections(self) -> None:
@@ -400,6 +451,7 @@ class HeatSink(AbstactHeatExchanger):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
 
         self._build_core()
 
@@ -438,6 +490,7 @@ class HeatExchanger(AbstactHeatExchanger):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
         self._build_core()
 
     def establish_interconnections(self) -> None:

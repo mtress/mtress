@@ -1,10 +1,8 @@
 import math
 import pytest
+from oemof.solph import Results
 
 from mtress.technologies import HeatPump, COPReference
-
-from oemof.solph.processing import meta_results
-
 from mtress import (
     Location,
     MetaModel,
@@ -108,7 +106,7 @@ def test_heat_pump_heating_example():
     solph_representation.build_solph_model()
 
     solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-    mr = meta_results(solved_model)
+    mr = Results(solved_model)
 
     pyomo_objective = 640.7893695
 

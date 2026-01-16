@@ -9,9 +9,7 @@ Lastly, after the model is build and solved,
 """
 
 import os
-
-from oemof.solph.processing import results
-
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
@@ -20,7 +18,8 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
+
+from mtress._helpers import get_flow_units, get_energy_types
 
 os.chdir(os.path.dirname(__file__))
 
@@ -89,45 +88,37 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": False})
-myresults = results(solved_model)
-flows = get_flows(myresults)
+myresults = Results(solved_model)
+flows = myresults["flow"]
+units = get_flow_units(solph_representation)
+flow_colours = get_energy_types(solph_representation)
 
-# indicate usage of SlackNode with a rainbow-colored scheme
-flow_color = {
-    ("house_1", "SlackNode", "missing_energy"): {
-        (
-            "house_1",
-            "ElectricityCarrier",
-            "distribution",
-        ): "rainbow",
-        ("house_1", "HeatCarrier", "T_5"): "rainbow",
-        ("house_1", "HeatCarrier", "T_10"): "rainbow",
-        ("house_1", "HeatCarrier", "T_20"): "rainbow",
-        ("house_1", "HeatCarrier", "T_30"): "rainbow",
-        ("house_1", "HeatCarrier", "T_40"): "rainbow",
-    },
-    ("house_1", "ElectricityCarrier", "distribution"): {
-        ("house_1", "SlackNode", "excess_energy"): "rainbow"
-    },
-    ("house_1", "HeatCarrier", "T_5"): {
-        ("house_1", "SlackNode", "excess_energy"): "rainbow"
-    },
-    ("house_1", "HeatCarrier", "T_10"): {
-        ("house_1", "SlackNode", "excess_energy"): "rainbow"
-    },
-    ("house_1", "HeatCarrier", "T_20"): {
-        ("house_1", "SlackNode", "excess_energy"): "rainbow"
-    },
-    ("house_1", "HeatCarrier", "T_30"): {
-        ("house_1", "SlackNode", "excess_energy"): "rainbow"
-    },
-    ("house_1", "HeatCarrier", "T_40"): {
-        ("house_1", "SlackNode", "excess_energy"): "rainbow"
-    },
+# custom colour scheme
+colour_scheme = {
+    0: "black",  # Undefined
+    1: "orange",  # Electricity
+    2: "maroon",  # Heat
+    3: "steelblue",  # Gas
+    4: "rainbow",  # Slack
 }
+
+# indicate usage of SlackNode with a rainbow-coloured scheme
+# (overwrite default flow colours)
+slack_node_missing = solph_representation.energy_system._nodes[
+    ("missing_energy", "SlackNode", "house_1")
+]
+slack_node_excess = solph_representation.energy_system._nodes[
+    ("excess_energy", "SlackNode", "house_1")
+]
+for x in slack_node_missing.outputs.keys():
+    flow_colours[(slack_node_missing, x)] = 4  # rainbow
+for x in slack_node_excess.inputs.keys():
+    flow_colours[(x, slack_node_excess)] = 4  # rainbow
 
 solph_representation.graph(
     flow_results=flows,
-    flow_color=flow_color,
+    units=units,
+    flow_colours=flow_colours,
+    colour_scheme=colour_scheme,
     path="4_slack_model.png",
 )

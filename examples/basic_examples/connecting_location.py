@@ -3,10 +3,8 @@ Basic working 'electricity' example.
 """
 
 import os
-
 import pandas as pd
-from oemof.solph.processing import results
-
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
@@ -15,7 +13,7 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
+from mtress._helpers import get_flow_units, get_energy_types
 from mtress.physics import HYDROGEN
 from mtress.technologies import PEM_ELECTROLYSER
 
@@ -94,11 +92,14 @@ house_1.connect(
 solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-myresults = results(solved_model)
-flows = get_flows(myresults)
-
-solph_representation.graph(flow_results=flows)
-
-solved_model.write(
-    "connecting_location.lp", io_options={"symbolic_solver_labels": True}
+myresults = Results(solved_model)
+flows = myresults["flow"]
+units = get_flow_units(solph_representation)
+flow_colours = get_energy_types(solph_representation)
+solph_representation.graph(
+    flow_results=flows, units=units, flow_colours=flow_colours
 )
+
+# solved_model.write(
+#     "connecting_location.lp", io_options={"symbolic_solver_labels": True}
+# )

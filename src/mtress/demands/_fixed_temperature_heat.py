@@ -7,6 +7,8 @@ from .._data_handler import TimeseriesType
 from ..carriers import HeatCarrier
 from ._abstract_demand import AbstractDemand
 
+from .._constants import EnergyType
+
 
 class AbstractFixedTemperature(AbstractDemand):
     """
@@ -81,6 +83,8 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         carrier = self.location.get_carrier(HeatCarrier)
 
         if self.flow_temperature not in carrier.levels:
@@ -97,10 +101,25 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             label="output",
             node_type=Bus,
         )
-        outputs[output] = Flow()
+        outputs[output] = Flow(
+            custom_properties={
+                "unit": "W",
+                "energy_type": EnergyType.HEAT,
+            }
+        )
 
-        inputs[carrier.level_nodes[self.flow_temperature]] = Flow()
-        outputs[carrier.level_nodes[self.return_temperature]] = Flow()
+        inputs[carrier.level_nodes[self.flow_temperature]] = Flow(
+            custom_properties={
+                "unit": "kg/h",
+                "energy_type": EnergyType.HEAT,
+            }
+        )
+        outputs[carrier.level_nodes[self.return_temperature]] = Flow(
+            custom_properties={
+                "unit": "kg/h",
+                "energy_type": EnergyType.HEAT,
+            }
+        )
 
         conversion_factors = {
             carrier.level_nodes[self.flow_temperature]: 1,
@@ -122,6 +141,10 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             node_type=Sink,
             inputs={
                 output: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL
@@ -159,6 +182,8 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         carrier = self.location.get_carrier(HeatCarrier)
 
         inputs = {}
@@ -174,10 +199,25 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             node_type=Bus,
         )
 
-        inputs[input] = Flow()
+        inputs[input] = Flow(
+            custom_properties={
+                "unit": "W",
+                "energy_type": EnergyType.HEAT,
+            }
+        )
 
-        outputs[carrier.level_nodes[self.return_temperature]] = Flow()
-        inputs[carrier.level_nodes[minimum_t]] = Flow()
+        outputs[carrier.level_nodes[self.return_temperature]] = Flow(
+            custom_properties={
+                "unit": "kg/h",
+                "energy_type": EnergyType.HEAT,
+            }
+        )
+        inputs[carrier.level_nodes[minimum_t]] = Flow(
+            custom_properties={
+                "unit": "kg/h",
+                "energy_type": EnergyType.HEAT,
+            }
+        )
 
         conversion_factors = {
             carrier.level_nodes[self.return_temperature]: 1,
@@ -199,6 +239,10 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             node_type=Source,
             outputs={
                 input: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL

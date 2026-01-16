@@ -4,8 +4,7 @@ CHP implementation for heat and power generation.
 
 import logging
 import os
-
-from oemof.solph.processing import results
+from oemof.solph import Results
 
 from mtress import (
     Location,
@@ -15,10 +14,10 @@ from mtress import (
     demands,
     technologies,
 )
+from mtress._helpers import get_flow_units, get_energy_types
 from mtress.physics import NATURAL_GAS
 from mtress.technologies import NATURALGAS_CHP
 
-from mtress._helpers import get_flows
 
 LOGGER = logging.getLogger(__file__)
 
@@ -30,10 +29,8 @@ house_1 = Location(name="house_1")
 
 energy_system.add_location(house_1)
 
-
 house_1.add(carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=50e-6))
-
 house_1.add(
     carriers.GasCarrier(
         gases={
@@ -43,7 +40,6 @@ house_1.add(
 )
 
 house_1.add(carriers.HeatCarrier(temperature_levels=[20, 80]))
-
 house_1.add(
     technologies.CHP(
         name="Gas_CHP",
@@ -53,7 +49,6 @@ house_1.add(
         input_pressure=1,
     )
 )
-
 house_1.add(
     technologies.GasGridConnection(
         gas_type=NATURAL_GAS,
@@ -71,14 +66,12 @@ house_1.add(
         time_series=[1000],
     )
 )
-
 house_1.add(
     demands.Electricity(
         name="electricity_demand",
         time_series=[1000],
     )
 )
-
 solph_representation = SolphModel(
     energy_system,
     timeindex={
@@ -92,9 +85,14 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-myresults = results(solved_model)
-flows = get_flows(myresults)
+myresults = Results(solved_model)
+flows = myresults["flow"]
+units = get_flow_units(solph_representation)
+flow_colours = get_energy_types(solph_representation)
+solph_representation.graph(
+    flow_results=flows,
+    units=units,
+    flow_colours=flow_colours,
+)
 
 solved_model.write("chp.lp", io_options={"symbolic_solver_labels": True})
-
-solph_representation.graph(flow_results=flows)

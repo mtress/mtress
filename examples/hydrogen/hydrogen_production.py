@@ -1,9 +1,7 @@
 """Example to illustrate hydrogen production to meet hydrogen demand."""
 
 import os
-
-from oemof.solph.processing import results
-
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
@@ -12,7 +10,7 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
+from mtress._helpers import get_flow_units, get_energy_types
 from mtress.physics import HYDROGEN
 from mtress.technologies import ALKALINE_ELECTROLYSER
 
@@ -25,7 +23,6 @@ energy_system.add_location(house_1)
 
 house_1.add(carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=0.35))
-
 house_1.add(
     technologies.RenewableElectricitySource(
         "pv0",
@@ -34,16 +31,13 @@ house_1.add(
         fixed=False,
     )
 )
-
 house_1.add(
     demands.Electricity(
         name="electricity demand",
         time_series=[9e4, 3e4, 5e4, 3.4e4],
     )
 )
-
 house_1.add(carriers.GasCarrier(gases={HYDROGEN: [30, 70, 250]}))
-
 house_1.add(
     demands.GasDemand(
         name="H2_demand",
@@ -52,7 +46,6 @@ house_1.add(
         pressure=250,
     )
 )
-
 house_1.add(
     technologies.GasGridConnection(
         name="low_pressure",
@@ -132,12 +125,10 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-myresults = results(solved_model)
-flows = get_flows(myresults)
-
-# solved_model.write(
-#     "hydrogen_production.lp", io_options={"symbolic_solver_labels": True}
+myresults = Results(solved_model)
+flows = myresults["flow"]
+units = get_flow_units(solph_representation)
+flow_colours = get_energy_types(solph_representation)
+# solph_representation.graph_interactive(
+#     flow_results=flows, units=units, flow_colours=flow_colours
 # )
-
-# runs into graphviz errors from time to time
-# solph_representation.graph(flow_results=flows)

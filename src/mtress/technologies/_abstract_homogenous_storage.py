@@ -19,6 +19,8 @@ from oemof.solph.constraints import storage_level_constraint
 from .._abstract_component import AbstractComponent
 from .._oemof_storage_multiplexer import storage_multiplexer_constraint
 
+from .._constants import EnergyType
+
 
 class Implementation(Enum):
     """
@@ -95,7 +97,14 @@ class AbstractHomogenousStorage(AbstractComponent):
                 in_bus = self.create_solph_node(
                     label=f"in_{level:d}",
                     node_type=Bus,
-                    inputs={outputs[level]: Flow()},
+                    inputs={
+                        outputs[level]: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            }
+                        )
+                    },
                 )
                 self.storage_multiplexer_inputs[in_bus] = storage_level
 
@@ -103,7 +112,14 @@ class AbstractHomogenousStorage(AbstractComponent):
                 out_bus = self.create_solph_node(
                     label=f"out_{level:d}",
                     node_type=Bus,
-                    outputs={inputs[level]: Flow()},
+                    outputs={
+                        inputs[level]: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            }
+                        )
+                    },
                 )
 
                 self.storage_multiplexer_outputs[out_bus] = storage_level
@@ -112,11 +128,23 @@ class AbstractHomogenousStorage(AbstractComponent):
             label="multiplexer",
             node_type=Bus,
             inputs={
-                bus: Flow(nominal_value=power_limit)
+                bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.HEAT,
+                    },
+                    nominal_value=power_limit,
+                )
                 for bus in self.storage_multiplexer_inputs
             },
             outputs={
-                bus: Flow(nominal_value=power_limit)
+                bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.HEAT,
+                    },
+                    nominal_value=power_limit,
+                )
                 for bus in self.storage_multiplexer_outputs
             },
         )
@@ -127,8 +155,22 @@ class AbstractHomogenousStorage(AbstractComponent):
         self.storage = self.create_solph_node(
             label="storage",
             node_type=GenericStorage,
-            inputs={self.multiplexer: Flow()},
-            outputs={self.multiplexer: Flow()},
+            inputs={
+                self.multiplexer: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                )
+            },
+            outputs={
+                self.multiplexer: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                )
+            },
             **solph_storage_arguments,
         )
 
@@ -136,7 +178,7 @@ class AbstractHomogenousStorage(AbstractComponent):
         """Add constraints."""
         contraint_args = {
             "model": self._solph_model.model,
-            "name": self.create_label("level_constraint"),
+            "name": f"{self.node.label}_level_constraint",
             "storage_component": self.storage,
             "multiplexer_bus": self.multiplexer,
             "input_levels": self.storage_multiplexer_inputs,

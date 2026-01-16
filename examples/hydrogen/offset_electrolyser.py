@@ -2,10 +2,8 @@
 
 import logging
 import os
-
 import pandas as pd
-from oemof.solph.processing import results
-
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
@@ -14,10 +12,9 @@ from mtress import (
     demands,
     technologies,
 )
+from mtress._helpers import get_flow_units, get_energy_types
 from mtress.physics import HYDROGEN
 from mtress.technologies import PEM_ELECTROLYSER
-
-from mtress._helpers import get_flows
 
 LOGGER = logging.getLogger(__file__)
 
@@ -29,10 +26,8 @@ house_1 = Location(name="house_1")
 
 energy_system.add_location(house_1)
 
-
 house_1.add(carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=70e-6))
-
 house_1.add(
     carriers.GasCarrier(
         gases={
@@ -89,9 +84,12 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-myresults = results(solved_model)
-flows = get_flows(myresults)
+myresults = Results(solved_model)
+flows = myresults["flow"]
+units = get_flow_units(solph_representation)
+flow_colours = get_energy_types(solph_representation)
+solph_representation.graph(
+    flow_results=flows, units=units, flow_colours=flow_colours
+)
 
 solved_model.write("offset.lp", io_options={"symbolic_solver_labels": True})
-
-solph_representation.graph(flow_results=flows)

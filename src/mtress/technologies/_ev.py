@@ -1,13 +1,18 @@
 """This module covers Electric Vehicles"""
 
+from oemof.tools.debugging import ExperimentalFeatureWarning
 from oemof.solph import Flow
 from oemof.solph.components import GenericStorage
 from dataclasses import dataclass
+import warnings
 
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier
 from .._helpers._util import enable_templating
 from ._battery_storage import BatteryStorage, BatteryStorageTemplate
+
+from .._constants import EnergyType
+
 from pandas import Series
 from numbers import Real
 
@@ -38,7 +43,7 @@ GenericSegmentB_EV = ElectricVehicleTemplate(
     charging_efficiency=0.95,  # 90% round trip?
     discharging_efficiency=0.95,  # 90% round trip?
     loss_rate=0,  # ?
-    consumption_per_distance=0.174*1e3,  # 17.4 kWh/100km = 0.174 kWh/km
+    consumption_per_distance=0.174 * 1e3,  # 17.4 kWh/100km = 0.174 kWh/km
 )
 
 # Nissan Leaf
@@ -50,14 +55,14 @@ GenericSegmentC_EV = ElectricVehicleTemplate(
     charging_efficiency=0.96,  # 90% round trip? used 96% for tests
     discharging_efficiency=0.95,  # 90% round trip?
     loss_rate=0,  # ?
-    consumption_per_distance=.178*1e3,  # 17.8 kWh/100km = 0.178 kWh/km
+    consumption_per_distance=0.178 * 1e3,  # 17.8 kWh/100km = 0.178 kWh/km
 )
 
 
 class GenericElectricVehicle(BatteryStorage):
     """
     Generic Electric Vehicle Component
-    
+
     :param name: Name of the component
     :param nominal_capacity: Nominal capacity of the battery (in Wh)
     :param charging_C_Rate: Charging C-rate, default to 1
@@ -74,9 +79,9 @@ class GenericElectricVehicle(BatteryStorage):
         hour that are independent of storage content and independent of
         nominal storage capacity.
     :param one_sense_per_time_step: boolean, default to False, determines
-        whether the model allows for charging and discharging within the 
-        same time interval (=False) or not (=True). 
-    :param shared_limit: boolean, default to True, limits the (average) 
+        whether the model allows for charging and discharging within the
+        same time interval (=False) or not (=True).
+    :param shared_limit: boolean, default to True, limits the (average)
         charging and discharging power during a time interval to a given limit,
         defined as the average between the respective power limits. Please note
         this constraint is only introduced if charging and discharging can take
@@ -100,6 +105,10 @@ class GenericElectricVehicle(BatteryStorage):
         **kwargs,
     ):
         """Initialize Electric Vehicle instance."""
+        warnings.warn(
+            message="The EV class is untested and might jeild wrong resulds.",
+            category=ExperimentalFeatureWarning,
+        )
 
         # call super class constructor
         BatteryStorage.__init__(self, **kwargs)
@@ -107,21 +116,18 @@ class GenericElectricVehicle(BatteryStorage):
         # check the inputs for compliance
         self.plugged_in_profile, self.static_discharge_profile = (
             self._validate_inputs(
-                plugged_in_profile, 
+                plugged_in_profile,
                 static_discharge_profile,
-                tolerance=tolerance
-                )
+                tolerance=tolerance,
+            )
         )
-        
+
         # combine the discharge profile with the losses
         self._combine_discharge_profile_losses(tolerance=tolerance)
 
     def _validate_inputs(
-            self, 
-            plugged_in_profile, 
-            static_discharge_profile,
-            tolerance=1e-3
-            ):
+        self, plugged_in_profile, static_discharge_profile, tolerance=1e-3
+    ):
 
         # things to keep in mind:
         # 1) mutually-exclusive charging and discharging:
@@ -141,7 +147,7 @@ class GenericElectricVehicle(BatteryStorage):
             static_discharge_profile
         ) in [int, float]:
             # all are numeric
-            
+
             # status values have to be binary
             if plugged_in_profile not in [0, 1]:
                 raise ValueError(
@@ -152,8 +158,10 @@ class GenericElectricVehicle(BatteryStorage):
             # why? because otherwise the SOC will only decrease, as charging is
             # ruled out by the presence of a constant discharging profile
 
-            if (plugged_in_profile != 1 or 
-                abs(static_discharge_profile) > tolerance):
+            if (
+                plugged_in_profile != 1
+                or abs(static_discharge_profile) > tolerance
+            ):
                 raise ValueError(
                     "This combination is not accepted, as it leads to "
                     + "infeasibility."
@@ -253,9 +261,9 @@ class GenericElectricVehicle(BatteryStorage):
             raise TypeError("Unsupported inputs.")
         # return the profiles
         return plugged_in_profile, static_discharge_profile
-    
+
     def _combine_discharge_profile_losses(self, tolerance: float = 1e-3):
-        
+
         # the ev is mobile if it is not always connected or does not discharge
         ev_is_mobile = not (
             # connected all the time
@@ -268,11 +276,11 @@ class GenericElectricVehicle(BatteryStorage):
                 and all(self.plugged_in_profile)
             )
             # it never discharges
-            or ( 
+            or (
                 isinstance(self.static_discharge_profile, Real)
                 and abs(self.static_discharge_profile) <= tolerance
             )
-            or ( 
+            or (
                 type(self.static_discharge_profile) in [Series, list, tuple]
                 and not any(self.static_discharge_profile)
             )
@@ -332,10 +340,11 @@ class GenericElectricVehicle(BatteryStorage):
                         / self.discharging_efficiency
                         + self.fixed_losses_absolute
                     )
-        # stationary? no need to do anything else 
+        # stationary? no need to do anything else
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
 
         electricity = self.location.get_carrier(ElectricityCarrier)
 
@@ -344,6 +353,10 @@ class GenericElectricVehicle(BatteryStorage):
             node_type=GenericStorage,
             inputs={
                 electricity.distribution: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
                     nominal_value=self.nominal_capacity * self.charging_C_Rate,
                     max=self._solph_model.data.get_timeseries(
                         self.plugged_in_profile, kind=TimeseriesType.INTERVAL
@@ -352,6 +365,10 @@ class GenericElectricVehicle(BatteryStorage):
             },
             outputs={
                 electricity.distribution: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
                     nominal_value=self.nominal_capacity
                     * self.discharging_C_Rate,
                     max=self._solph_model.data.get_timeseries(
@@ -370,10 +387,11 @@ class GenericElectricVehicle(BatteryStorage):
             ),
         )
 
+
 class ElectricVehicle(GenericElectricVehicle):
     """
     Electric Vehicle Component
-    
+
     :param name: Name of the component
     :param nominal_capacity: Nominal capacity of the battery (in Wh)
     :param charging_C_Rate: Charging C-rate, default to 1
@@ -398,9 +416,9 @@ class ElectricVehicle(GenericElectricVehicle):
         profile. The units selected have to be consistent with those used
         with the consumption_per_distance parameter.
     :param one_sense_per_time_step: boolean, default to False, determines
-        whether the model allows for charging and discharging within the 
-        same time interval (=False) or not (=True). 
-    :param shared_limit: boolean, default to True, limits the (average) 
+        whether the model allows for charging and discharging within the
+        same time interval (=False) or not (=True).
+    :param shared_limit: boolean, default to True, limits the (average)
         charging and discharging power during a time interval to a given limit,
         defined as the average between the respective power limits. Please note
         this constraint is only introduced if charging and discharging can take
@@ -414,13 +432,13 @@ class ElectricVehicle(GenericElectricVehicle):
         to the grid). Value errors will be raised if these values are in
         contradiction with the respective plugged-in status.
     """
-    
+
     @enable_templating(ElectricVehicleTemplate)
     def __init__(
         self,
         consumption_per_distance: float,
         distance_travelled: TimeseriesSpecifier = 0.0,
-        **kwargs
+        **kwargs,
     ):
         """Initialize Electric Vehicle instance."""
 
@@ -442,15 +460,16 @@ class ElectricVehicle(GenericElectricVehicle):
             )
         else:
             raise TypeError("The inputs were not correctly specified.")
-        
+
         if "static_discharge_profile" in kwargs:
             raise ValueError("The static discharge profile is redundant.")
         # replace the static discharging profile
         kwargs["static_discharge_profile"] = static_discharge_profile
         # create a connection status profile if it is not defined
-        if ("plugged_in_profile" not in kwargs and
-            type(kwargs["static_discharge_profile"]) in [list, tuple, Series]):
-            
+        if "plugged_in_profile" not in kwargs and type(
+            kwargs["static_discharge_profile"]
+        ) in [list, tuple, Series]:
+
             # the default connection status profile was selected but a varying
             # static discharge profile was selected: create a new plugged-in
             # connection status profile to solve the conflict
@@ -459,13 +478,15 @@ class ElectricVehicle(GenericElectricVehicle):
                 kwargs["plugged_in_profile"] = [
                     0 if sdp > 0 else 1
                     for sdp in kwargs["static_discharge_profile"]
-                    ]
+                ]
             else:
                 # Series
-                kwargs["plugged_in_profile"] = Series(data=[
-                    0 if sdp > 0 else 1
-                    for sdp in kwargs["static_discharge_profile"]
-                    ])
-        
+                kwargs["plugged_in_profile"] = Series(
+                    data=[
+                        0 if sdp > 0 else 1
+                        for sdp in kwargs["static_discharge_profile"]
+                    ]
+                )
+
         # call super class constructor
         GenericElectricVehicle.__init__(self, **kwargs)

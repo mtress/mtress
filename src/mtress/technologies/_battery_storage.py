@@ -10,6 +10,8 @@ from ._abstract_technology import AbstractTechnology
 from .._data_handler import TimeseriesSpecifier
 from .._helpers._util import enable_templating
 
+from .._constants import EnergyType
+
 
 @dataclass(frozen=True)
 class BatteryStorageTemplate:
@@ -57,7 +59,7 @@ GenericBatteryModelII = BatteryStorageTemplate(
 class BatteryStorage(AbstractTechnology):
     """
     Battery Storage Component
-    
+
     :param name: Name of the component
     :param nominal_capacity: Nominal capacity of the battery (in Wh)
     :param charging_C_Rate: Charging C-rate, default to 1
@@ -74,9 +76,9 @@ class BatteryStorage(AbstractTechnology):
         hour that are independent of storage content and independent of
         nominal storage capacity.
     :param one_sense_per_time_step: boolean, default to False, determines
-        whether the model allows for charging and discharging within the 
-        same time interval (=False) or not (=True). 
-    :param shared_limit: boolean, default to True, limits the (average) 
+        whether the model allows for charging and discharging within the
+        same time interval (=False) or not (=True).
+    :param shared_limit: boolean, default to True, limits the (average)
         charging and discharging power during a time interval to a given limit,
         defined as the average between the respective power limits. Please note
         this constraint is only introduced if charging and discharging can take
@@ -97,7 +99,7 @@ class BatteryStorage(AbstractTechnology):
         min_soc: float = 0.1,
         fixed_losses_absolute: TimeseriesSpecifier = 0.0,
         one_sense_per_time_step: bool = False,
-        shared_limit: bool = True
+        shared_limit: bool = True,
     ):
         """
         Initialize Battery Storage.
@@ -119,6 +121,8 @@ class BatteryStorage(AbstractTechnology):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         electricity = self.location.get_carrier(ElectricityCarrier)
 
         self.thatbus = self.create_solph_node(
@@ -126,13 +130,21 @@ class BatteryStorage(AbstractTechnology):
             node_type=GenericStorage,
             inputs={
                 electricity.distribution: Flow(
-                    nominal_value=self.nominal_capacity * self.charging_C_Rate
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
+                    nominal_value=self.nominal_capacity * self.charging_C_Rate,
                 )
             },
             outputs={
                 electricity.distribution: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
                     nominal_value=self.nominal_capacity
-                    * self.discharging_C_Rate
+                    * self.discharging_C_Rate,
                 )
             },
             nominal_storage_capacity=self.nominal_capacity,
@@ -143,49 +155,50 @@ class BatteryStorage(AbstractTechnology):
             outflow_conversion_factor=self.discharging_efficiency,
             fixed_losses_absolute=self.fixed_losses_absolute,
         )
-        
+
     def add_constraints(self):
         """Add constraints to the model."""
         electricity = self.location.get_carrier(ElectricityCarrier)
-        
+
         if self.one_sense_per_time_step:
             # charging and discharging cannot happen during the same time step
             # >> use special ordered sets of type 1
             model = self._solph_model.model
+
             def rule_sos1_constraint(m, t):
                 return [
                     m.flow[electricity.distribution, self.thatbus, t],
-                    m.flow[self.thatbus, electricity.distribution, t] 
-                    ]
+                    m.flow[self.thatbus, electricity.distribution, t],
+                ]
+
             setattr(
                 model,
-                str(self.create_label(f"{self.name}_sos1_constraint")),
+                f"{self.node.label}_sos1_constraint",
                 pyo.SOSConstraint(
-                    model.TIMESTEPS, 
-                    rule=rule_sos1_constraint, 
-                    sos=1
-                    )
+                    model.TIMESTEPS, rule=rule_sos1_constraint, sos=1
+                ),
             )
         else:
             # charging and discharging can happen during the same time step
-            # >> apply a shared limit to reflect time dedicated to one or the 
+            # >> apply a shared limit to reflect time dedicated to one or the
             # other (charging and discharging are mutually-exclusive, but both
             # can take place during the same time step)
             if self.shared_limit:
                 model = self._solph_model.model
+
                 def rule_shared_limit(m, t):
                     return (
                         # charging
-                        m.flow[electricity.distribution, self.thatbus, t] 
+                        m.flow[electricity.distribution, self.thatbus, t]
                         +
                         # discharging
-                        m.flow[self.thatbus, electricity.distribution, t] 
+                        m.flow[self.thatbus, electricity.distribution, t]
                     ) <= (
-                        self.discharging_C_Rate+self.charging_C_Rate
-                        )*self.nominal_capacity/2
-                
+                        self.discharging_C_Rate + self.charging_C_Rate
+                    ) * self.nominal_capacity / 2
+
                 setattr(
                     model,
-                    str(self.create_label(f"{self.name}_shared_limit")),
+                    f"{self.node.label}_shared_limit",
                     pyo.Constraint(model.TIMESTEPS, rule=rule_shared_limit),
                 )

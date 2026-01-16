@@ -22,8 +22,7 @@ created and the solver output is written to an .lp file.
 """
 
 import os
-
-from oemof.solph.processing import results
+from oemof.solph import Results
 
 from mtress import (
     Location,
@@ -33,7 +32,7 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
+from mtress._helpers import get_flow_units, get_energy_types
 
 os.chdir(os.path.dirname(__file__))
 
@@ -104,13 +103,15 @@ solph_representation = SolphModel(
 )
 
 solph_representation.build_solph_model()
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-myresults = results(solved_model)
-flows = get_flows(myresults)
+myresults = Results(solved_model)
+flows = myresults["flow"]
+units = get_flow_units(solph_representation)
+flow_colours = get_energy_types(solph_representation)
+solph_representation.graph(
+    flow_results=flows, units=units, flow_colours=flow_colours
+)
 
 solved_model.write(
     "electricity_heat.lp", io_options={"symbolic_solver_labels": True}
 )
-
-solph_representation.graph(flow_results=flows)

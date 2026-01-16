@@ -18,6 +18,8 @@ from ..carriers import ElectricityCarrier, HeatCarrier
 from ..physics import calc_cop
 from ._abstract_technology import AbstractTechnology
 
+from .._constants import EnergyType
+
 
 @dataclass
 class COPReference:
@@ -113,6 +115,8 @@ class HeatPump(AbstractTechnology):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         # Add electrical connection
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
@@ -121,7 +125,11 @@ class HeatPump(AbstractTechnology):
             node_type=Bus,
             inputs={
                 electricity_carrier.distribution: Flow(
-                    nominal_value=self.electrical_power_limit
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
+                    nominal_value=self.electrical_power_limit,
                 )
             },
         )
@@ -135,7 +143,13 @@ class HeatPump(AbstractTechnology):
             label="heat_budget_source",
             node_type=Source,
             outputs={
-                heat_budget_bus: Flow(nominal_value=self.thermal_power_limit)
+                heat_budget_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
+                    nominal_value=self.thermal_power_limit,
+                )
             },
         )
 
@@ -217,11 +231,26 @@ class HeatPump(AbstractTechnology):
             )
             self.q_in[int(temp_heigh)] = q_side
             inputs = {
-                heat_bus_warm: Flow(),
+                heat_bus_warm: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
             }
             outputs = {
-                q_side: Flow(),
-                heat_bus_cold: Flow(),
+                q_side: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
+                heat_bus_cold: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
             }
         else:
             q_side = self.create_solph_node(
@@ -229,8 +258,28 @@ class HeatPump(AbstractTechnology):
                 node_type=Bus,
             )
             self.q_out[int(temp_heigh)] = q_side
-            inputs = {q_side: Flow(), heat_bus_cold: Flow()}
-            outputs = {heat_bus_warm: Flow()}
+            inputs = {
+                q_side: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
+                heat_bus_cold: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
+            }
+            outputs = {
+                heat_bus_warm: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                )
+            }
 
         self.create_solph_node(
             label=f"HE_{side}_{temp_heigh:.0f}",
@@ -262,12 +311,32 @@ class HeatPump(AbstractTechnology):
             label=f"cop_{temp_primary_in:.0f}_{temp_secondary_out:.0f}",
             node_type=Converter,
             inputs={
-                q_in: Flow(),
-                self.electricity_bus: Flow(),
-                self.heat_budget_bus: Flow(),
+                q_in: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
+                self.electricity_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    }
+                ),
+                self.heat_budget_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
             },
             outputs={
-                q_out: Flow(),
+                q_out: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
             },
             conversion_factors={
                 self.electricity_bus: 1 / cop,

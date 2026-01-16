@@ -20,9 +20,7 @@ support this way of modelling.
 """
 
 import os
-
 from oemof import solph
-
 from mtress import (
     Location,
     MetaModel,
@@ -31,7 +29,7 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
+from mtress._helpers import get_flow_units, get_energy_types
 
 os.chdir(os.path.dirname(__file__))
 meta_model = MetaModel()
@@ -59,7 +57,7 @@ solph_representation = SolphModel(
 )
 
 carrier_node = solph_representation.energy_system.node[
-    ("house_1", "ElectricityCarrier", "distribution")
+    ("distribution", "ElectricityCarrier", "house_1")
 ]
 
 solph_representation.energy_system.add(
@@ -77,28 +75,23 @@ solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
 
-myresults = solph.processing.results(solved_model)
-flows = get_flows(myresults)
+myresults = solph.Results(solved_model)
+flows = myresults["flow"]
 
-print(
-    flows[
-        ("house_1", "ElectricityGridConnection", "source_import"),
-        ("house_1", "ElectricityGridConnection", "grid_import"),
-    ]
+label1 = ("source_import", "ElectricityGridConnection", "house_1")
+label2 = ("grid_import", "ElectricityGridConnection", "house_1")
+print(flows[(str(label1), str(label2))])
+
+label1 = ("distribution", "ElectricityCarrier", "house_1")
+label2 = "vanilla_solph_storage"
+print(flows[(str(label1), str(label2))])
+
+label1 = ("input", "electricity demand", "house_1")
+label2 = ("sink", "electricity demand", "house_1")
+print(flows[(str(label1), str(label2))])
+
+units = get_flow_units(solph_representation)
+flow_colours = get_energy_types(solph_representation)
+solph_representation.graph(
+    flow_results=flows, units=units, flow_colours=flow_colours
 )
-
-print(
-    flows[
-        ("house_1", "ElectricityCarrier", "distribution"),
-        ("vanilla_solph_storage"),
-    ]
-)
-
-print(
-    flows[
-        ("house_1", "electricity demand", "input"),
-        ("house_1", "electricity demand", "sink"),
-    ]
-)
-
-solph_representation.graph(flow_results=flows)

@@ -20,6 +20,8 @@ from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR
 
 from ._abstract_heat_storage import AbstractHeatStorage
 
+from ..._constants import EnergyType
+
 
 class LayeredHeatStorage(AbstractHeatStorage):
     """
@@ -83,6 +85,8 @@ class LayeredHeatStorage(AbstractHeatStorage):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         # Create storage components according to the temperature levels defined
         # by the heat carrier object
 
@@ -106,8 +110,24 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 bus = self.create_solph_node(
                     label=f"b_{temperature:.0f}",
                     node_type=Bus,
-                    inputs={level_node: Flow(nominal_value=self.power_limit)},
-                    outputs={level_node: Flow(nominal_value=self.power_limit)}
+                    inputs={
+                        level_node: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            },
+                            nominal_value=self.power_limit,
+                        )
+                    },
+                    outputs={
+                        level_node: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            },
+                            nominal_value=self.power_limit,
+                        )
+                    }
                     | gain_flow,
                 )
 
@@ -116,17 +136,38 @@ class LayeredHeatStorage(AbstractHeatStorage):
                 storage = self.create_solph_node(
                     label=f"{temperature:.0f}",
                     node_type=GenericStorage,
-                    inputs={bus: Flow()},
-                    outputs={bus: Flow()},
+                    inputs={
+                        bus: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            }
+                        )
+                    },
+                    outputs={
+                        bus: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            }
+                        )
+                    },
                     nominal_storage_capacity=self.volume * H2O_DENSITY,
                     balanced=self.balanced,
                     initial_storage_level=initial_storage_level,
                 )
 
                 self.storage_components[temperature] = storage
-                
+
                 if self.u_value is not None:
-                    gain_flow = {bus: Flow()}
+                    gain_flow = {
+                        bus: Flow(
+                            custom_properties={
+                                "unit": "kg/h",
+                                "energy_type": EnergyType.HEAT,
+                            }
+                        )
+                    }
 
     def add_constraints(self):
         """Add constraints to the model."""
@@ -136,7 +177,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
         shared_limit(
             model=model,
             quantity=model.GenericStorageBlock.storage_content,
-            limit_name=str(self.create_label("storage_limit")),
+            limit_name=f"{self.node.label}_storage_limit",
             components=self.storage_components.values(),
             weights=len(self.storage_components) * [1],
             upper_limit=self.volume * H2O_DENSITY,
@@ -183,6 +224,6 @@ class LayeredHeatStorage(AbstractHeatStorage):
 
                 setattr(
                     model,
-                    str(self.create_label(f"losses_{upper_temperature}")),
+                    f"{self.node.label}_losses_{upper_temperature}",
                     po.Constraint(model.TIMESTEPS, rule=equate_variables_rule),
                 )

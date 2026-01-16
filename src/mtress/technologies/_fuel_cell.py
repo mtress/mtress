@@ -12,6 +12,8 @@ from ..carriers import ElectricityCarrier, GasCarrier
 from ..physics import HYDROGEN, Gas
 from ._heater import AbstractHeater
 
+from .._constants import EnergyType
+
 LOGGER = logging.getLogger(__file__)
 
 
@@ -110,6 +112,7 @@ class AbstractFuelCell(AbstractHeater):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         super().build_core()
+
         # Gas connection as an input to Fuel Cell
         self.gas_carrier = self.location.get_carrier(GasCarrier)
 
@@ -252,11 +255,27 @@ class FuelCell(AbstractFuelCell):
             label="fuel_cell",
             node_type=Converter,
             inputs={
-                self.gas_bus: Flow(nominal_value=self.nominal_gas_consumption),
+                self.gas_bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.GAS,
+                    },
+                    nominal_value=self.nominal_gas_consumption,
+                ),
             },
             outputs={
-                self.electricity_bus: Flow(),
-                self.heat_bus: Flow(),
+                self.electricity_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    }
+                ),
+                self.heat_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
             },
             conversion_factors={
                 self.gas_bus: 1,
@@ -384,7 +403,6 @@ class OffsetFuelCell(AbstractFuelCell):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-
         super().build_core()
 
         min_load_electrical_output = (
@@ -418,6 +436,10 @@ class OffsetFuelCell(AbstractFuelCell):
             node_type=OffsetConverter,
             inputs={
                 self.gas_bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.GAS,
+                    },
                     nominal_value=self.nominal_gas_consumption,
                     max=self.maximum_load,
                     min=self.minimum_load,
@@ -425,8 +447,18 @@ class OffsetFuelCell(AbstractFuelCell):
                 ),
             },
             outputs={
-                self.electricity_bus: Flow(),
-                self.heat_bus: Flow(),
+                self.electricity_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    }
+                ),
+                self.heat_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
             },
             conversion_factors={
                 self.electricity_bus: slope_el,
