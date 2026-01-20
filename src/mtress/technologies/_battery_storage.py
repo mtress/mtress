@@ -163,7 +163,8 @@ class BatteryStorage(AbstractTechnology):
                             "unit": "W",
                             "energy_type": EnergyType.ELECTRICITY,
                         },
-                        nominal_value=self.nominal_capacity * self.charging_C_Rate,
+                        nominal_value=self.nominal_capacity
+                                      * self.charging_C_Rate,
                     )
                 },
                 outputs={
@@ -212,10 +213,13 @@ class BatteryStorage(AbstractTechnology):
             # >> apply a shared limit to reflect time dedicated to one or the
             # other (charging and discharging are mutually-exclusive, but both
             # can take place during the same time step)
-            if self.shared_limit and isinstance(self.nominal_capacity, Investment):
-                warnings.warn("Shared limits do not work with capacity investment. Shared limits will be disabled",
+            if (self.shared_limit
+                    and isinstance(self.nominal_capacity, Investment)):
+                warnings.warn("Shared limits do not work with capacity"
+                              " investment. Shared limits will be disabled",
                               Warning)
-            if self.shared_limit and not isinstance(self.nominal_capacity, Investment):
+            if (self.shared_limit
+                    and not isinstance(self.nominal_capacity, Investment)):
                 model = self._solph_model.model
 
                 def rule_shared_limit(m, t):
@@ -232,5 +236,6 @@ class BatteryStorage(AbstractTechnology):
                 setattr(
                     model,
                     f"{self.node.label}_shared_limit",
-                    pyo.Constraint(model.TIMESTEPS, rule=rule_shared_limit),
+                    pyo.Constraint(model.TIMESTEPS,
+                                   rule=rule_shared_limit),
                 )
