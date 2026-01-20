@@ -548,15 +548,15 @@ class OffsetCHP(AbstractHeater):
         # *********************************************************************
         if isinstance(self.nominal_power, Investment):
             if self.show_warning:
-                warnings.warn(f"Due to solph constraints the nominal "
-                              f"power is the inflow of gas.Thus, the given "
-                              f"value must be divided by "
-                              f"{self.nominal_electrical_efficiency
-                                 *gas_mix_LHV} to gain the electric nominal "
-                              f"power. The Investment costs must be "
-                              f" accordingly to retain the desired value. You "
-                              f"can disable this warning by setting the "
-                              f"show_warning flag to false.", Warning)
+                warnings.warn(
+                    f"Due to solph constraints the nominal power is "
+                    f"the inflow of gas. Thus, the given value must be divided"
+                    f" by "
+                    f"{self.nominal_electrical_efficiency *gas_mix_LHV}"
+                    f" to gain the electric nominalpower. The Investment costs"
+                    f" must be multiplied accordingly to retain the desired "
+                    f"value. You can disable this warning by setting the "
+                    f"show_warning flag to false.", Warning)
 
             if self.allow_electricity_feed_in:
                 splitter_bus = self.create_solph_node(

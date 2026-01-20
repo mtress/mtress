@@ -159,6 +159,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Source,
             outputs={
                 self._bus_utilisation: Flow(
+                    nominal_capacity=self.nominal_power,
                     custom_properties={
                         "unit": "W",
                         "energy_type": EnergyType.HEAT,

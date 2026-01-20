@@ -438,15 +438,15 @@ class OffsetFuelCell(AbstractFuelCell):
         )
         if isinstance(self.nominal_power, Investment):
             if self.show_warning:
-                warnings.warn(f"Due to solph constraints the nominal "
-                              f"power is the inflow of gas. Thus, the given "
-                              f"value must be divided by "
-                              f"{self.full_load_electrical_efficiency
-                                 *self.gas_type.LHV} to gain the electric "
-                              f"nominalpower. The Investment costs must be "
-                              f"multiplied accordingly to retain the desired "
-                              f"value. You can disable this warning by setting"
-                              f" the show_warning flag to false.", Warning)
+                warnings.warn(
+                    f"Due to solph constraints the nominal power is "
+                    f"the inflow of gas. Thus, the given value must be divided"
+                    f" by "
+                    f"{self.full_load_electrical_efficiency*self.gas_type.LHV}"
+                    f" to gain the electric nominalpower. The Investment costs"
+                    f" must be multiplied accordingly to retain the desired "
+                    f"value. You can disable this warning by setting the "
+                    f"show_warning flag to false.", Warning)
             self.create_solph_node(
                 label="fuel_cell",
                 node_type=OffsetConverter,
