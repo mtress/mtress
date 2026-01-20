@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 import numpy as np
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Converter, Sink, Source
 from pyomo import environ as po
 
@@ -47,7 +47,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         reservoir_temperature: TimeseriesSpecifier,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        nominal_power: float | None = None,
+        nominal_power: Investment | float | None = None,
         minimum_delta: float = 1.0,
         conductivity_gain_factor: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
@@ -159,7 +159,6 @@ class AbstactHeatExchanger(AbstractTechnology):
             node_type=Source,
             outputs={
                 self._bus_utilisation: Flow(
-                    nominal_value=self.nominal_power,
                     custom_properties={
                         "unit": "W",
                         "energy_type": EnergyType.HEAT,
@@ -258,7 +257,7 @@ class AbstactHeatExchanger(AbstractTechnology):
 
     def _source_constraints(self):
         model = self._solph_model.model
-        name = str(self.identifier) + "_power_limit"
+        name = str(self.node) + "_power_limit"
 
         def _equate_flow_groups_rule(m):
             for ts in m.TIMESTEPS:
@@ -384,7 +383,7 @@ class HeatSource(AbstactHeatExchanger):
         reservoir_temperature: TimeseriesSpecifier,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        nominal_power: float | None = None,
+        nominal_power: Investment | float | None = None,
         minimum_delta: float = 1.0,
         conductivity_gain_factor: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
@@ -427,7 +426,7 @@ class HeatSink(AbstactHeatExchanger):
         reservoir_temperature: TimeseriesSpecifier,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
-        nominal_power: float | None = None,
+        nominal_power: Investment | float | None = None,
         minimum_delta: float = 1.0,
         conductivity_gain_factor: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
@@ -465,7 +464,7 @@ class HeatExchanger(AbstactHeatExchanger):
         self,
         name: str,
         reservoir_temperature: TimeseriesSpecifier,
-        nominal_power: float,
+        nominal_power: Investment | float,
         minimum_working_temperature: float = 0,
         maximum_working_temperature: float = 0,
         minimum_delta: float = 1.0,

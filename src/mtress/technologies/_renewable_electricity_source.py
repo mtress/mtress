@@ -11,7 +11,7 @@ SPDX-FileCopyrightText: Sunke Schlüters
 SPDX-License-Identifier: MIT
 """
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Source
 
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
@@ -27,7 +27,7 @@ class RenewableElectricitySource(AbstractTechnology):
     def __init__(
         self,
         name: str,
-        nominal_power: float,
+        nominal_power: Investment | float,
         specific_generation: TimeseriesSpecifier,
         working_rate: TimeseriesSpecifier = 0,
         fixed: bool = True,
