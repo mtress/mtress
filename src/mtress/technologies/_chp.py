@@ -511,7 +511,7 @@ class OffsetCHP(AbstractHeater):
         # self.heat_bus
 
         # *********************************************************************
-        # *********************************************************************y
+        # *********************************************************************
 
         gas_mix_LHV = sum(
             gas.LHV * mass_fraction
@@ -522,7 +522,8 @@ class OffsetCHP(AbstractHeater):
         nominal_fuel_input = 1 / (self.nominal_electrical_efficiency *
                                   gas_mix_LHV)
 
-        # thermal efficiency with conversion from electricity to gas in kg to heat in W.
+        # thermal efficiency with conversion from electricity to gas in kg to
+        # heat in W.
         nominal_heat_output = ((self.nominal_thermal_efficiency * gas_mix_LHV)
                                * nominal_fuel_input)
 
