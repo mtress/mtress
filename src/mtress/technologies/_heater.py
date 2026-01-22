@@ -135,7 +135,7 @@ class ResistiveHeater(AbstractHeater):
             inputs={
                 electrical_bus: Flow(
                     custom_properties={
-                        "unit": "kg/h",
+                        "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     }
                 )
