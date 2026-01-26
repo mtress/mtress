@@ -192,16 +192,16 @@ class CHP(AbstractHeater):
 
     @enable_templating(CHPTemplate)
     def __init__(
-            self,
-            name: str,
-            gas_type: dict[Gas, float],
-            maximum_temperature: float,
-            minimum_temperature: float,
-            nominal_power: float | Investment,
-            input_pressure: float,
-            nominal_electrical_efficiency: float,
-            nominal_thermal_efficiency: float,
-            allow_electricity_feed_in: bool = True,
+        self,
+        name: str,
+        gas_type: dict[Gas, float],
+        maximum_temperature: float,
+        minimum_temperature: float,
+        nominal_power: float | Investment,
+        input_pressure: float,
+        nominal_electrical_efficiency: float,
+        nominal_thermal_efficiency: float,
+        allow_electricity_feed_in: bool = True,
     ):
         """
         Initialize CHP component.

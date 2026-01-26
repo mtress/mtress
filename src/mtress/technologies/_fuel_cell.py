@@ -89,16 +89,15 @@ class AbstractFuelCell(AbstractHeater):
     """
 
     def __init__(
-            self,
-            name: str,
-            nominal_power: float | Investment,
-            full_load_electrical_efficiency: float,
-            full_load_thermal_efficiency: float,
-            maximum_temperature: float,
-            minimum_temperature: float,
-            gas_input_pressure: float,
-            gas_type: Gas = HYDROGEN,
-            show_warning: bool = True,
+        self,
+        name: str,
+        nominal_power: float | Investment,
+        full_load_electrical_efficiency: float,
+        full_load_thermal_efficiency: float,
+        maximum_temperature: float,
+        minimum_temperature: float,
+        gas_input_pressure: float,
+        gas_type: Gas = HYDROGEN,
     ):
         super().__init__(
             name=name,
@@ -110,7 +109,6 @@ class AbstractFuelCell(AbstractHeater):
         self.full_load_thermal_efficiency = full_load_thermal_efficiency
         self.gas_input_pressure = gas_input_pressure
         self.gas_type = gas_type
-        self.show_warning = show_warning
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -207,15 +205,15 @@ class FuelCell(AbstractFuelCell):
 
     @enable_templating(FuelCellTemplate)
     def __init__(
-            self,
-            name: str,
-            nominal_power: float | Investment,
-            full_load_electrical_efficiency: float,
-            full_load_thermal_efficiency: float,
-            maximum_temperature: float,
-            minimum_temperature: float,
-            gas_input_pressure: float,
-            gas_type: Gas = HYDROGEN,
+        self,
+        name: str,
+        nominal_power: float | Investment,
+        full_load_electrical_efficiency: float,
+        full_load_thermal_efficiency: float,
+        maximum_temperature: float,
+        minimum_temperature: float,
+        gas_input_pressure: float,
+        gas_type: Gas = HYDROGEN,
     ):
         """
         Initialize Fuel Cell (FC)

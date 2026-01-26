@@ -150,20 +150,24 @@ class BatteryStorage(AbstractTechnology):
         self.battery_node = self.create_solph_node(
             label="Battery_Storage",
             node_type=GenericStorage,
-            inputs={electricity.distribution: Flow(
+            inputs={
+                electricity.distribution: Flow(
                     nominal_capacity=inflow_capacity,
                     custom_properties={
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
-            )},
-            outputs={electricity.distribution: Flow(
+                ),
+            },
+            outputs={
+                electricity.distribution: Flow(
                     nominal_capacity=outflow_capacity,
                     custom_properties={
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
-            )},
+                ),
+            },
             nominal_storage_capacity=self.nominal_capacity,
             loss_rate=self.loss_rate,
             min_storage_level=self.min_soc,
@@ -197,27 +201,28 @@ class BatteryStorage(AbstractTechnology):
                     model.TIMESTEPS, rule=rule_sos1_constraint, sos=1
                 ),
             )
-        elif self.shared_limit:
+        else:
             # charging and discharging can happen during the same time step
             # >> apply a shared limit to reflect time dedicated to one or the
             # other (charging and discharging are mutually-exclusive, but both
             # can take place during the same time step)
-            model = self._solph_model.model
+            if self.shared_limit:
+                model = self._solph_model.model
 
-            def rule_shared_limit(m, t):
-                return (
-                    # charging
-                    m.flow[electricity.distribution, self.battery_node, t]
-                    +
-                    # discharging
-                    m.flow[self.battery_node, electricity.distribution, t]
-                ) <= (
-                    self.discharging_C_Rate + self.charging_C_Rate
-                ) * self.nominal_capacity / 2
+                def rule_shared_limit(m, t):
+                    return (
+                        # charging
+                        m.flow[electricity.distribution, self.battery_node, t]
+                        +
+                        # discharging
+                        m.flow[self.battery_node, electricity.distribution, t]
+                    ) <= (
+                        self.discharging_C_Rate + self.charging_C_Rate
+                    ) * self.nominal_capacity / 2
 
-            setattr(
-                model,
-                f"{self.node.label}_shared_limit",
-                pyo.Constraint(model.TIMESTEPS,
-                                rule=rule_shared_limit),
-            )
+                setattr(
+                    model,
+                    f"{self.node.label}_shared_limit",
+                    pyo.Constraint(model.TIMESTEPS,
+                                    rule=rule_shared_limit),
+                )
