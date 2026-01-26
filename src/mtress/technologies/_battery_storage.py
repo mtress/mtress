@@ -1,10 +1,9 @@
 """This module provides Battery Storage"""
 
-from oemof.solph import Flow, Bus, Investment
+from oemof.solph import Flow, Investment
 from oemof.solph.components import GenericStorage
 from dataclasses import dataclass
 import pyomo.environ as pyo
-import warnings
 
 from ..carriers import ElectricityCarrier
 from ._abstract_technology import AbstractTechnology
@@ -108,6 +107,17 @@ class BatteryStorage(AbstractTechnology):
 
         super().__init__(name=name)
 
+        if (shared_limit and isinstance(nominal_capacity, Investment)):
+            raise NotImplementedError(
+                "The 'shared_limit' is only implemented for fixed capacities."
+            )
+        if one_sense_per_time_step and shared_limit:
+            # FIXME: It is a sign of a bad API that this is actually possible.
+            raise AttributeError(
+                "The arguments 'one_sense_per_time_step' and 'shared_limit' "
+                + "are mutually exclusive."
+            )
+
         self.nominal_capacity = nominal_capacity
         self.charging_efficiency = charging_efficiency
         self.discharging_efficiency = discharging_efficiency
@@ -127,64 +137,43 @@ class BatteryStorage(AbstractTechnology):
         electricity = self.location.get_carrier(ElectricityCarrier)
 
         if isinstance(self.nominal_capacity, Investment):
-            self.thatbus = self.create_solph_node(
-                label="Battery_Storage",
-                node_type=GenericStorage,
-                inputs={electricity.distribution: Flow(
-                        nominal_capacity=Investment(),
-                        custom_properties={
-                            "unit": "W",
-                            "energy_type": EnergyType.ELECTRICITY,
-                        },)},
-                outputs={electricity.distribution: Flow(
-                        nominal_capacity=Investment(),
-                        custom_properties={
-                            "unit": "W",
-                            "energy_type": EnergyType.ELECTRICITY,
-                        },)},
-                nominal_storage_capacity=self.nominal_capacity,
-                loss_rate=self.loss_rate,
-                min_storage_level=self.min_soc,
-                initial_storage_level=self.initial_soc,
-                inflow_conversion_factor=self.charging_efficiency,
-                outflow_conversion_factor=self.discharging_efficiency,
-                fixed_losses_absolute=self.fixed_losses_absolute,
-                invest_relation_input_capacity=self.charging_C_Rate,
-                invest_relation_output_capacity=self.discharging_C_Rate,
-            )
-
+            inflow_capacity = Investment()
+            outflow_capacity = Investment()
+            invest_relation_input_capacity=self.charging_C_Rate,
+            invest_relation_output_capacity=self.discharging_C_Rate,
         else:
-            self.thatbus = self.create_solph_node(
-                label="Battery_Storage",
-                node_type=GenericStorage,
-                inputs={
-                    electricity.distribution: Flow(
-                        custom_properties={
-                            "unit": "W",
-                            "energy_type": EnergyType.ELECTRICITY,
-                        },
-                        nominal_value=self.nominal_capacity
-                                      * self.charging_C_Rate,
-                    )
-                },
-                outputs={
-                    electricity.distribution: Flow(
-                        custom_properties={
-                            "unit": "W",
-                            "energy_type": EnergyType.ELECTRICITY,
-                        },
-                        nominal_value=self.nominal_capacity
-                        * self.discharging_C_Rate,
-                    )
-                },
-                nominal_storage_capacity=self.nominal_capacity,
-                loss_rate=self.loss_rate,
-                min_storage_level=self.min_soc,
-                initial_storage_level=self.initial_soc,
-                inflow_conversion_factor=self.charging_efficiency,
-                outflow_conversion_factor=self.discharging_efficiency,
-                fixed_losses_absolute=self.fixed_losses_absolute,
-            )
+            inflow_capacity = self.nominal_capacity * self.charging_C_Rate
+            outflow_capacity = self.nominal_capacity * self.discharging_C_Rate
+            invest_relation_input_capacity=None,
+            invest_relation_output_capacity=None,
+
+        self.battery_node = self.create_solph_node(
+            label="Battery_Storage",
+            node_type=GenericStorage,
+            inputs={electricity.distribution: Flow(
+                    nominal_capacity=inflow_capacity,
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
+            )},
+            outputs={electricity.distribution: Flow(
+                    nominal_capacity=outflow_capacity,
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
+            )},
+            nominal_storage_capacity=self.nominal_capacity,
+            loss_rate=self.loss_rate,
+            min_storage_level=self.min_soc,
+            initial_storage_level=self.initial_soc,
+            inflow_conversion_factor=self.charging_efficiency,
+            outflow_conversion_factor=self.discharging_efficiency,
+            fixed_losses_absolute=self.fixed_losses_absolute,
+            invest_relation_input_capacity=invest_relation_input_capacity,
+            invest_relation_output_capacity=invest_relation_output_capacity,
+        )
 
     def add_constraints(self):
         """Add constraints to the model."""
@@ -197,8 +186,8 @@ class BatteryStorage(AbstractTechnology):
 
             def rule_sos1_constraint(m, t):
                 return [
-                    m.flow[electricity.distribution, self.thatbus, t],
-                    m.flow[self.thatbus, electricity.distribution, t],
+                    m.flow[electricity.distribution, self.battery_node, t],
+                    m.flow[self.battery_node, electricity.distribution, t],
                 ]
 
             setattr(
@@ -208,34 +197,27 @@ class BatteryStorage(AbstractTechnology):
                     model.TIMESTEPS, rule=rule_sos1_constraint, sos=1
                 ),
             )
-        else:
+        elif self.shared_limit:
             # charging and discharging can happen during the same time step
             # >> apply a shared limit to reflect time dedicated to one or the
             # other (charging and discharging are mutually-exclusive, but both
             # can take place during the same time step)
-            if (self.shared_limit
-                    and isinstance(self.nominal_capacity, Investment)):
-                warnings.warn("Shared limits do not work with capacity"
-                              " investment. Shared limits will be disabled",
-                              Warning)
-            if (self.shared_limit
-                    and not isinstance(self.nominal_capacity, Investment)):
-                model = self._solph_model.model
+            model = self._solph_model.model
 
-                def rule_shared_limit(m, t):
-                    return (
-                        # charging
-                        m.flow[electricity.distribution, self.thatbus, t]
-                        +
-                        # discharging
-                        m.flow[self.thatbus, electricity.distribution, t]
-                    ) <= (
-                        self.discharging_C_Rate + self.charging_C_Rate
-                    ) * self.nominal_capacity / 2
+            def rule_shared_limit(m, t):
+                return (
+                    # charging
+                    m.flow[electricity.distribution, self.battery_node, t]
+                    +
+                    # discharging
+                    m.flow[self.battery_node, electricity.distribution, t]
+                ) <= (
+                    self.discharging_C_Rate + self.charging_C_Rate
+                ) * self.nominal_capacity / 2
 
-                setattr(
-                    model,
-                    f"{self.node.label}_shared_limit",
-                    pyo.Constraint(model.TIMESTEPS,
-                                   rule=rule_shared_limit),
-                )
+            setattr(
+                model,
+                f"{self.node.label}_shared_limit",
+                pyo.Constraint(model.TIMESTEPS,
+                                rule=rule_shared_limit),
+            )
