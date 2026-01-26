@@ -134,9 +134,11 @@ class AbstractFuelCell(AbstractHeater):
                     self.full_load_electrical_efficiency * self.gas_type.LHV)
 
         # thermal efficiency with conversion from gas in kg to heat in W.
-        self.full_load_heat_output = ((self.full_load_thermal_efficiency *
-                                       self.gas_type.LHV) *
-                                      self.full_load_fuel_input)
+        self.full_load_heat_output = (
+            self.full_load_thermal_efficiency
+            * self.gas_type.LHV
+            * self.full_load_fuel_input
+        )
 
         # electricity bus connection
         self.electricity_bus = self.electricity_carrier.distribution
