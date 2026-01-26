@@ -22,7 +22,7 @@ authors = [
     {name = "Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)", email = "patrik.schoenfeldt@dlr.de"},
 ]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
