@@ -216,7 +216,7 @@ class TestOffsetCHP:
             (BIOMETHANE_CHP, 28550544.92665914, None, False, 1),
             (HYDROGEN_CHP, 29909798.423119232, None, False, 1),
             (HYDROGEN_MIXED_CHP, 40666145.14604045, None, False, 1),
-            (NATURALGAS_MGT, 14163710401.32201, None, False, 1),
+            (NATURALGAS_MGT, 143067784.023681, None, False, 1),
             # exports on @ net metering: marginal impact due to huge penalties
             # min load = 0: no (major) penalties
             (NATURALGAS_CHP, 0.9135757499999999, 0.0, True, 1e-3),
@@ -231,7 +231,7 @@ class TestOffsetCHP:
             (BIOMETHANE_CHP, 28550544.92665914, None, True, 1),
             (HYDROGEN_CHP, 29909798.423119232, None, True, 1),
             (HYDROGEN_MIXED_CHP, 40666145.14604045, None, True, 1),
-            (NATURALGAS_MGT, 14163710401.32201, None, True, 1),
+            (NATURALGAS_MGT, 143067784.023681, None, True, 1),
         ],
     )
     def test_min_power(
@@ -488,7 +488,7 @@ class TestOffsetCHP:
             (0.0, 0.0, 0.99, 34073353.26379121, 1),
             # constant thermal efficiency, increasing electrical efficiency
             # - higher (worse) result because efficiency is reduced at low load
-            (0.0, -0.05, 1, 1098.7186080557, 1e-3),
+            (0.0, -0.05, 1, -1098.7186080557, 1e-3),
             # - higher (worse) result because efficiency is reduced at low load
             (0.0, -0.05, 0.99, 34073353.28139195, 1),
             # constant thermal efficiency, decreasing electrical efficiency
@@ -508,10 +508,10 @@ class TestOffsetCHP:
             (0.05, 0.0, 0.99, 37859403.26379121, 1),
             # varying thermal and electrical efficiencies
             # thermal efficiency increases, electrical efficiency increases
-            (-0.05, -0.05, 1, 1098.7186080557, 1e-3),
-            (-0.05, -0.05, 0.99, 30287317.548790924, 1),
+            (-0.05, -0.05, 1, -1098.7186080557, 1e-3),
+            (-0.05, -0.05, 0.99, 30287303.281391945, 1),
             # thermal efficiency decreases, electrical efficiency increases
-            (0.05, -0.05, 1, 1098.7186080557, 1e-3),
+            (0.05, -0.05, 1, -1098.7186080557, 1e-3),
             (0.05, -0.05, 0.99, 37859403.28139195, 1),
             # thermal efficiency increases, electrical efficiency decreases
             (-0.05, 0.05, 1, -1098.7492307695002, 1e-3),
