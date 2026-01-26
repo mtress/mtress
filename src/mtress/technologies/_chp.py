@@ -437,21 +437,20 @@ class OffsetCHP(AbstractHeater):
 
     @enable_templating(CHPTemplate)
     def __init__(
-            self,
-            name: str,
-            gas_type: dict[Gas, float],
-            maximum_temperature: float,
-            minimum_temperature: float,
-            nominal_power: Investment | float,
-            input_pressure: float,
-            nominal_electrical_efficiency: float,
-            nominal_thermal_efficiency: float,
-            min_load_electrical_efficiency: float,
-            min_load_thermal_efficiency: float,
-            normalised_min_load: float,
-            normalised_max_load: float = 1,
-            allow_electricity_feed_in: bool = True,
-            show_warning: bool = True,
+        self,
+        name: str,
+        gas_type: dict[Gas, float],
+        maximum_temperature: float,
+        minimum_temperature: float,
+        nominal_power: Investment | float,
+        input_pressure: float,
+        nominal_electrical_efficiency: float,
+        nominal_thermal_efficiency: float,
+        min_load_electrical_efficiency: float,
+        min_load_thermal_efficiency: float,
+        normalised_min_load: float,
+        normalised_max_load: float = 1,
+        allow_electricity_feed_in: bool = True,
     ):
         """ """
         super().__init__(
@@ -470,7 +469,6 @@ class OffsetCHP(AbstractHeater):
         self.normalised_min_load = normalised_min_load
         self.normalised_max_load = normalised_max_load
         self.allow_electricity_feed_in = allow_electricity_feed_in
-        self.show_warning = show_warning
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
@@ -496,7 +494,7 @@ class OffsetCHP(AbstractHeater):
 
         # Add gas connections
         gas_buses = {}  # gas bus for each gas type
-        for gas, mass_fraction in mass_fractions.items():
+        for gas, _ in mass_fractions.items():
             # gas bus
             gas_carrier = self.location.get_carrier(GasCarrier)
             _, pressure_level = gas_carrier.get_surrounding_levels(
@@ -564,7 +562,7 @@ class OffsetCHP(AbstractHeater):
                             "energy_type": EnergyType.GAS,
                         }
                     )
-                    for gas, gas_bus in gas_buses.items()
+                    for _, gas_bus in gas_buses.items()
                 },
             )
 

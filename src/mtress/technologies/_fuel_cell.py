@@ -342,20 +342,19 @@ class OffsetFuelCell(AbstractFuelCell):
 
     @enable_templating(FuelCellTemplate)
     def __init__(
-            self,
-            name: str,
-            nominal_power: float,
-            full_load_electrical_efficiency: float,
-            min_load_electrical_efficiency: float,
-            full_load_thermal_efficiency: float,
-            min_load_thermal_efficiency: float,
-            minimum_load: float,
-            maximum_temperature: float,
-            minimum_temperature: float,
-            gas_input_pressure: float,
-            gas_type: Gas = HYDROGEN,
-            maximum_load: float = 1,
-            show_warning: bool = True,
+        self,
+        name: str,
+        nominal_power: float,
+        full_load_electrical_efficiency: float,
+        min_load_electrical_efficiency: float,
+        full_load_thermal_efficiency: float,
+        min_load_thermal_efficiency: float,
+        minimum_load: float,
+        maximum_temperature: float,
+        minimum_temperature: float,
+        gas_input_pressure: float,
+        gas_type: Gas = HYDROGEN,
+        maximum_load: float = 1,
     ):
         """
         Initialize Fuel Cell (FC)
@@ -391,7 +390,6 @@ class OffsetFuelCell(AbstractFuelCell):
             minimum_temperature=minimum_temperature,
             gas_input_pressure=gas_input_pressure,
             gas_type=gas_type,
-            show_warning=show_warning
         )
 
         self.min_load_electrical_efficiency = min_load_electrical_efficiency
