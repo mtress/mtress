@@ -2,9 +2,10 @@
 
 import logging
 from dataclasses import dataclass
+import warnings
 
 from oemof import solph
-from oemof.solph import Flow
+from oemof.solph import Flow, Investment
 from oemof.solph.components import Converter, OffsetConverter
 
 from .._helpers._util import enable_templating
@@ -90,7 +91,7 @@ class AbstractFuelCell(AbstractHeater):
     def __init__(
         self,
         name: str,
-        nominal_power: float,
+        nominal_power: float | Investment,
         full_load_electrical_efficiency: float,
         full_load_thermal_efficiency: float,
         maximum_temperature: float,
@@ -122,12 +123,6 @@ class AbstractFuelCell(AbstractHeater):
 
         self.gas_bus = self.gas_carrier.inputs[self.gas_type][self.pressure]
 
-        # Convert nominal power capacity of FC in W to nominal gas consumption
-        # capacity in kg
-        self.nominal_gas_consumption = self.nominal_power / (
-            self.full_load_electrical_efficiency * self.gas_type.LHV
-        )
-
         # Electrical connection for FC electrical output
         self.electricity_carrier = self.location.get_carrier(
             ElectricityCarrier
@@ -135,13 +130,14 @@ class AbstractFuelCell(AbstractHeater):
 
         # Electrical efficiency with conversion from gas in kg
         # to electricity in W
-        self.full_load_electrical_output = (
-            self.full_load_electrical_efficiency * self.gas_type.LHV
-        )
+        self.full_load_fuel_input = 1 / (
+                    self.full_load_electrical_efficiency * self.gas_type.LHV)
 
         # thermal efficiency with conversion from gas in kg to heat in W.
         self.full_load_heat_output = (
-            self.full_load_thermal_efficiency * self.gas_type.LHV
+            self.full_load_thermal_efficiency
+            * self.gas_type.LHV
+            * self.full_load_fuel_input
         )
 
         # electricity bus connection
@@ -213,7 +209,7 @@ class FuelCell(AbstractFuelCell):
     def __init__(
         self,
         name: str,
-        nominal_power: float,
+        nominal_power: float | Investment,
         full_load_electrical_efficiency: float,
         full_load_thermal_efficiency: float,
         maximum_temperature: float,
@@ -260,7 +256,6 @@ class FuelCell(AbstractFuelCell):
                         "unit": "kg/h",
                         "energy_type": EnergyType.GAS,
                     },
-                    nominal_value=self.nominal_gas_consumption,
                 ),
             },
             outputs={
@@ -268,7 +263,8 @@ class FuelCell(AbstractFuelCell):
                     custom_properties={
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
-                    }
+                    },
+                    nominal_value=self.nominal_power
                 ),
                 self.heat_bus: Flow(
                     custom_properties={
@@ -278,8 +274,8 @@ class FuelCell(AbstractFuelCell):
                 ),
             },
             conversion_factors={
-                self.gas_bus: 1,
-                self.electricity_bus: self.full_load_electrical_output,
+                self.gas_bus: self.full_load_fuel_input,
+                self.electricity_bus: 1,
                 self.heat_bus: self.full_load_heat_output,
             },
         )
@@ -405,20 +401,19 @@ class OffsetFuelCell(AbstractFuelCell):
         """Build core structure of oemof.solph representation."""
         super().build_core()
 
-        min_load_electrical_output = (
-            self.min_load_electrical_efficiency * self.gas_type.LHV
-        )
-        min_load_heat_output = (
-            self.min_load_thermal_efficiency * self.gas_type.LHV
-        )
+        min_load_fuel_input = 1 / (
+                    self.min_load_electrical_efficiency * self.gas_type.LHV)
+
+        min_load_heat_output = ((self.min_load_thermal_efficiency *
+                                self.gas_type.LHV) * min_load_fuel_input)
 
         # offset mode
-        slope_el, offset_el = (
+        slope_gas, offset_gas = (
             solph.components.slope_offset_from_nonconvex_input(
                 self.maximum_load,
                 self.minimum_load,
-                self.full_load_electrical_output,
-                min_load_electrical_output,
+                self.full_load_fuel_input,
+                min_load_fuel_input,
             )
         )
 
@@ -430,7 +425,6 @@ class OffsetFuelCell(AbstractFuelCell):
                 min_load_heat_output,
             )
         )
-
         self.create_solph_node(
             label="fuel_cell",
             node_type=OffsetConverter,
@@ -440,10 +434,6 @@ class OffsetFuelCell(AbstractFuelCell):
                         "unit": "kg/h",
                         "energy_type": EnergyType.GAS,
                     },
-                    nominal_value=self.nominal_gas_consumption,
-                    max=self.maximum_load,
-                    min=self.minimum_load,
-                    nonconvex=solph.NonConvex(),
                 ),
             },
             outputs={
@@ -451,7 +441,11 @@ class OffsetFuelCell(AbstractFuelCell):
                     custom_properties={
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
-                    }
+                    },
+                    nominal_value=self.nominal_power,
+                    max=self.maximum_load,
+                    min=self.minimum_load,
+                    nonconvex=solph.NonConvex()
                 ),
                 self.heat_bus: Flow(
                     custom_properties={
@@ -461,11 +455,11 @@ class OffsetFuelCell(AbstractFuelCell):
                 ),
             },
             conversion_factors={
-                self.electricity_bus: slope_el,
+                self.gas_bus: slope_gas,
                 self.heat_bus: slope_ht,
             },
             normed_offsets={
-                self.electricity_bus: offset_el,
+                self.gas_bus: offset_gas,
                 self.heat_bus: offset_ht,
             },
         )

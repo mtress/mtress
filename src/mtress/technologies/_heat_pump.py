@@ -11,7 +11,7 @@ SPDX-License-Identifier: MIT
 
 from dataclasses import dataclass
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Converter, Source
 
 from ..carriers import ElectricityCarrier, HeatCarrier
@@ -64,8 +64,8 @@ class HeatPump(AbstractTechnology):
         self,
         name: str,
         ref_cop: COPReference = None,
-        thermal_power_limit: float = None,
-        electrical_power_limit: float = None,
+        thermal_power_limit: Investment | float = None,
+        electrical_power_limit: Investment | float = None,
         max_temp_primary: float = None,
         min_temp_primary: float = None,
         min_delta_temp_primary: float = 5.0,

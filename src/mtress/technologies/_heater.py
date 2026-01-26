@@ -2,7 +2,7 @@
 
 import logging
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Converter
 
 from ..carriers import ElectricityCarrier, GasCarrier, HeatCarrier
@@ -98,7 +98,7 @@ class ResistiveHeater(AbstractHeater):
         name: str,
         maximum_temperature: float,
         minimum_temperature: float = 0,
-        thermal_power_limit: float = None,
+        thermal_power_limit: Investment | float = None,
         efficiency: float = 1,
     ):
         """
@@ -135,7 +135,7 @@ class ResistiveHeater(AbstractHeater):
             inputs={
                 electrical_bus: Flow(
                     custom_properties={
-                        "unit": "kg/h",
+                        "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     }
                 )
@@ -167,7 +167,7 @@ class GasBoiler(AbstractHeater):
         gas_type: Gas,
         maximum_temperature: float,
         minimum_temperature: float,
-        thermal_power_limit: float,
+        thermal_power_limit: float | Investment,
         efficiency: float,
         input_pressure: float,
     ):

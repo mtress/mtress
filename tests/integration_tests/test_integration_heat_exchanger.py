@@ -92,6 +92,7 @@ def _heat_source_test_template(
     )
 
     solph_representation.build_solph_model()
+
     solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 
     myresults = Results(solved_model)

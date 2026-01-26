@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from oemof import solph
-from oemof.solph import Flow
+from oemof.solph import Flow, Investment
 from oemof.solph.components import Converter, OffsetConverter
 
 from .._helpers._util import enable_templating
@@ -101,7 +101,7 @@ class AbstractElectrolyser(AbstractHeater):
     def __init__(
         self,
         name: str,
-        nominal_power: float,
+        nominal_power: Investment | float,
         full_load_hydrogen_efficiency: float,
         full_load_thermal_efficiency: float,
         maximum_temperature: float,
@@ -185,7 +185,7 @@ class Electrolyser(AbstractElectrolyser):
     def __init__(
         self,
         name: str,
-        nominal_power: float,
+        nominal_power: Investment | float,
         full_load_hydrogen_efficiency: float,
         full_load_thermal_efficiency: float,
         maximum_temperature: float,
@@ -293,7 +293,7 @@ class OffsetElectrolyser(AbstractElectrolyser):
     def __init__(
         self,
         name: str,
-        nominal_power: float,
+        nominal_power: Investment | float,
         full_load_hydrogen_efficiency: float,
         full_load_thermal_efficiency: float,
         maximum_temperature: float,

@@ -2,8 +2,9 @@
 
 import logging
 from dataclasses import dataclass
+import warnings
 
-from oemof.solph import Flow, Bus, NonConvex
+from oemof.solph import Flow, Bus, NonConvex, Investment
 from oemof.solph.components import (
     Converter,
     OffsetConverter,
@@ -196,7 +197,7 @@ class CHP(AbstractHeater):
         gas_type: dict[Gas, float],
         maximum_temperature: float,
         minimum_temperature: float,
-        nominal_power: float,
+        nominal_power: float | Investment,
         input_pressure: float,
         nominal_electrical_efficiency: float,
         nominal_thermal_efficiency: float,
@@ -283,11 +284,6 @@ class CHP(AbstractHeater):
             for gas, mass_fraction in mass_fractions.items()
         )
 
-        # nominal gas mix consumption
-        nominal_gas_mix_consumption = self.nominal_power / (
-            self.nominal_electrical_efficiency * gas_mix_LHV
-        )
-
         # Electrical efficiency with conversion from gas in kg
         # to electricity in W
         gas_to_elec_cf = self.nominal_electrical_efficiency * gas_mix_LHV
@@ -344,7 +340,6 @@ class CHP(AbstractHeater):
                             "unit": "kg/h",
                             "energy_type": EnergyType.GAS,
                         },
-                        nominal_value=nominal_gas_mix_consumption,
                     )
                 },
                 outputs={
@@ -358,7 +353,8 @@ class CHP(AbstractHeater):
                         custom_properties={
                             "unit": "W",
                             "energy_type": EnergyType.ELECTRICITY,
-                        }
+                        },
+                        nominal_value=self.nominal_power,
                     ),
                 },
                 conversion_factors={
@@ -389,7 +385,6 @@ class CHP(AbstractHeater):
                             "unit": "kg/h",
                             "energy_type": EnergyType.GAS,
                         },
-                        nominal_value=nominal_gas_mix_consumption,
                     )
                 },
                 outputs={
@@ -403,7 +398,8 @@ class CHP(AbstractHeater):
                         custom_properties={
                             "unit": "W",
                             "energy_type": EnergyType.ELECTRICITY,
-                        }
+                        },
+                        nominal_value=self.nominal_power,
                     ),
                 },
                 conversion_factors={
@@ -446,7 +442,7 @@ class OffsetCHP(AbstractHeater):
         gas_type: dict[Gas, float],
         maximum_temperature: float,
         minimum_temperature: float,
-        nominal_power: float,
+        nominal_power: Investment | float,
         input_pressure: float,
         nominal_electrical_efficiency: float,
         nominal_thermal_efficiency: float,
@@ -498,7 +494,7 @@ class OffsetCHP(AbstractHeater):
 
         # Add gas connections
         gas_buses = {}  # gas bus for each gas type
-        for gas, mass_fraction in mass_fractions.items():
+        for gas, _ in mass_fractions.items():
             # gas bus
             gas_carrier = self.location.get_carrier(GasCarrier)
             _, pressure_level = gas_carrier.get_surrounding_levels(
@@ -520,37 +516,22 @@ class OffsetCHP(AbstractHeater):
             for gas, mass_fraction in mass_fractions.items()
         )
 
-        # nominal gas mix consumption
-        nominal_gas_mix_consumption = self.nominal_power / (
-            self.nominal_electrical_efficiency * gas_mix_LHV
-        )
+        # Gas input with conversion from electricity to gas in kg
+        nominal_fuel_input = 1 / (self.nominal_electrical_efficiency *
+                                  gas_mix_LHV)
 
-        # nominal_fuel_consumption = (
-        #     self.nominal_power/self.nominal_electrical_efficiency
-        #     )
-        # min_load_fuel_consumption = (
-        #     self.normalised_min_load*nominal_fuel_consumption
-        #     )
+        # thermal efficiency with conversion from electricity to gas in kg to
+        # heat in W.
+        nominal_heat_output = ((self.nominal_thermal_efficiency * gas_mix_LHV)
+                               * nominal_fuel_input)
 
-        # Electrical efficiency with conversion from gas in kg
-        # to electricity in W
-        nominal_electrical_output = (
-            self.nominal_electrical_efficiency * gas_mix_LHV
-        )
+        min_load_fuel_input = 1 / (self.min_load_electrical_efficiency *
+                                   gas_mix_LHV)
 
-        # thermal efficiency with conversion from gas in kg to heat in W.
-        nominal_heat_output = self.nominal_thermal_efficiency * gas_mix_LHV
-
-        min_load_electrical_output = (
-            self.min_load_electrical_efficiency * gas_mix_LHV
-        )
-        min_load_heat_output = self.min_load_thermal_efficiency * gas_mix_LHV
-
-        # *********************************************************************
-        # *********************************************************************
+        min_load_heat_output = ((self.min_load_thermal_efficiency *
+                                 gas_mix_LHV) * nominal_fuel_input)
 
         if self.allow_electricity_feed_in:
-
             splitter_bus = self.create_solph_node(
                 label="splitter",
                 node_type=Bus,
@@ -581,18 +562,18 @@ class OffsetCHP(AbstractHeater):
                             "energy_type": EnergyType.GAS,
                         }
                     )
-                    for gas, gas_bus in gas_buses.items()
+                    for _, gas_bus in gas_buses.items()
                 },
             )
 
             # final node: gas mix goes in, heat and electricity come out
 
             # offset mode
-            slope_el, offset_el = slope_offset_from_nonconvex_input(
+            slope_fl, offset_fl = slope_offset_from_nonconvex_input(
                 self.normalised_max_load,
                 self.normalised_min_load,
-                nominal_electrical_output,
-                min_load_electrical_output,
+                nominal_fuel_input,
+                min_load_fuel_input,
             )
 
             slope_ht, offset_ht = slope_offset_from_nonconvex_input(
@@ -611,18 +592,20 @@ class OffsetCHP(AbstractHeater):
                             "unit": "kg/h",
                             "energy_type": EnergyType.GAS,
                         },
-                        nominal_value=nominal_gas_mix_consumption,
-                        max=self.normalised_max_load,
-                        min=self.normalised_min_load,
-                        nonconvex=NonConvex(),
                     ),
                 },
+
                 outputs={
                     splitter_bus: Flow(
                         custom_properties={
                             "unit": "W",
                             "energy_type": EnergyType.ELECTRICITY,
-                        }
+                        },
+                        nominal_value=self.nominal_power,
+                        max=self.normalised_max_load,
+                        min=self.normalised_min_load,
+                        nonconvex=NonConvex(),
+
                     ),
                     self.heat_bus: Flow(
                         custom_properties={
@@ -632,11 +615,11 @@ class OffsetCHP(AbstractHeater):
                     ),
                 },
                 conversion_factors={
-                    splitter_bus: slope_el,
+                    gas_mixer_bus: slope_fl,
                     self.heat_bus: slope_ht,
                 },
                 normed_offsets={
-                    splitter_bus: offset_el,
+                    gas_mixer_bus: offset_fl,
                     self.heat_bus: offset_ht,
                 },
             )
@@ -661,11 +644,11 @@ class OffsetCHP(AbstractHeater):
             # final node: gas mix goes in, heat and electricity come out
 
             # offset mode
-            slope_el, offset_el = slope_offset_from_nonconvex_input(
+            slope_fl, offset_fl = slope_offset_from_nonconvex_input(
                 self.normalised_max_load,
                 self.normalised_min_load,
-                nominal_electrical_output,
-                min_load_electrical_output,
+                nominal_fuel_input,
+                min_load_fuel_input,
             )
 
             slope_ht, offset_ht = slope_offset_from_nonconvex_input(
@@ -684,10 +667,6 @@ class OffsetCHP(AbstractHeater):
                             "unit": "kg/h",
                             "energy_type": EnergyType.GAS,
                         },
-                        nominal_value=nominal_gas_mix_consumption,
-                        max=self.normalised_max_load,
-                        min=self.normalised_min_load,
-                        nonconvex=NonConvex(),
                     ),
                 },
                 outputs={
@@ -695,7 +674,11 @@ class OffsetCHP(AbstractHeater):
                         custom_properties={
                             "unit": "W",
                             "energy_type": EnergyType.ELECTRICITY,
-                        }
+                        },
+                        nominal_value=self.nominal_power,
+                        max=self.normalised_max_load,
+                        min=self.normalised_min_load,
+                        nonconvex=NonConvex(),
                     ),
                     self.heat_bus: Flow(
                         custom_properties={
@@ -705,11 +688,11 @@ class OffsetCHP(AbstractHeater):
                     ),
                 },
                 conversion_factors={
-                    electricity_carrier.distribution: slope_el,
+                    gas_mixer_bus: slope_fl,
                     self.heat_bus: slope_ht,
                 },
                 normed_offsets={
-                    electricity_carrier.distribution: offset_el,
+                    gas_mixer_bus: offset_fl,
                     self.heat_bus: offset_ht,
                 },
             )

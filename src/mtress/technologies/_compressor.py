@@ -1,6 +1,6 @@
 """This module provides hydrogen compressors."""
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Converter
 
 from ..carriers import ElectricityCarrier, GasCarrier
@@ -20,7 +20,7 @@ class GasCompressor(AbstractTechnology):
     def __init__(
         self,
         name: str,
-        nominal_power: float,
+        nominal_power: Investment | float,
         gas_type: Gas,
         isothermal_efficiency: float = 0.85,
     ):
