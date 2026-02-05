@@ -32,46 +32,55 @@ class Electricity(AbstractDemand):
         energy flow.
     """
 
-    def __init__(self, name: str, time_series: TimeseriesSpecifier):
+    def __init__(
+        self,
+        label,
+        *,
+        time_series: TimeseriesSpecifier,
+        parent_node=None,
+        custom_properties=None,
+    ):
         """Initialize electricity energy carrier and add components."""
-        super().__init__(name=name)
+        super().__init__(
+            label,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
+        )
         self._time_series = time_series
-        self.input = None
 
-    def build_core(self):
-        """Build core structure of oemof.solph representation."""
-        super().build_core()
+        self._build_core()
 
-        electricity_carrier = self.location.get_carrier(ElectricityCarrier)
+    def _build_core(self):
 
-        bus = self.create_solph_node(
-            label="input",
-            node_type=Bus,
-            inputs={
-                electricity_carrier.distribution: Flow(
-                    custom_properties={
-                        "unit": "W",
-                        "energy_type": EnergyType.ELECTRICITY,
-                    }
-                )
-            },
+        self._input_node = self.subnode(
+            Bus,
+            local_name="input",
         )
 
-        self.create_solph_node(
-            label="sink",
-            node_type=Sink,
+        self.subnode(
+            Sink,
+            local_name="sink",
             inputs={
-                bus: Flow(
+                self._input_node: Flow(
                     custom_properties={
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
                     nominal_value=1,
-                    fix=self._solph_model.data.get_timeseries(
-                        self._time_series, kind=TimeseriesType.INTERVAL
-                    ),
+                    fix=self._time_series,
                 )
             },
         )
+        self.inbound_interfaces[EnergyType.ELECTRICITY] = [self._input_node]
 
-        # TODO: categorize out flow
+
+    def establish_interconnections(self):
+        if self.parent:
+            electricity_carrier = self.parent.get_carrier(ElectricityCarrier)
+
+            self._input_node.inputs[electricity_carrier.distribution] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.ELECTRICITY,
+                }
+            )

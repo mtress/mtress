@@ -1,9 +1,9 @@
 """Abstract demand class to ensure a unified interface."""
 
-from .._abstract_component import AbstractComponent
+from .._subnetwork import SubNetwork
 
 
-class AbstractDemand(AbstractComponent):
+class AbstractDemand(SubNetwork):
     """
     Abstract demand class to ensure a unified interface.
     """
