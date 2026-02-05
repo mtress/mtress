@@ -13,6 +13,7 @@ SPDX-License-Identifier: MIT
 from oemof.solph import Bus
 
 from ._abstract_carrier import AbstractLayeredCarrier
+from .._constants import EnergyType
 
 
 class HeatCarrier(AbstractLayeredCarrier):
@@ -44,30 +45,34 @@ class HeatCarrier(AbstractLayeredCarrier):
 
     def __init__(
         self,
-        temperature_levels: list[float],
+        label=None,
+        *,
+        parent_node=None,
+        custom_properties=None,
         specific_heat_capacity=1.161,
     ):
         """
         Initialize heat energy carrier and add components.
 
-        :param temperature_levels: list of temperatures (in °C)
         :param specific_heat_capacity: heat capacity (in Wh/kg/K)
         """
         super().__init__(
-            levels=sorted(temperature_levels),
+            label,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
         )
         self.specific_heat_capacity = specific_heat_capacity
 
         # Properties for solph interfaces
         self.level_nodes = {}
 
-    def build_core(self):
-        """Build core structure of oemof.solph representation."""
-        super().build_core()
+        self._build_core()
 
-        for temperature in self._levels:
-            self.level_nodes[temperature] = self.create_solph_node(
-                label=f"T_{temperature:.0f}",
-                node_type=Bus,
-                custom_properties={"temperature": temperature},
-            )
+    def _build_core(self):
+        """Build core structure of oemof.solph representation."""
+
+        self.inbound_interfaces[EnergyType.HEAT] = self.subnodes
+        self.outbound_interfaces[EnergyType.HEAT] = self.subnodes
+
+    def establish_interconnections(self):
+        pass

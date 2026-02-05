@@ -8,7 +8,13 @@ from .._subnetwork import SubNetwork
 class AbstractCarrier(SubNetwork):
     """Abstract carrier class to ensure a unified interface."""
 
-    def __init__(self, label=None, *, parent_node=None, custom_properties=None,):
+    def __init__(
+        self,
+        label=None,
+        *,
+        parent_node=None,
+        custom_properties=None,
+    ):
         """Initialize carrier."""
         if label is None:
             label = self.__class__.__name__
@@ -27,14 +33,24 @@ class AbstractLayeredCarrier(AbstractCarrier):
     carriers, i.e. heat with multiple temperature levels.
     """
 
-    def __init__(self, *, levels, **kwargs):
+    def __init__(
+        self,
+        label=None,
+        *,
+        parent_node=None,
+        custom_properties=None,
+    ):
         """Initialize carrier.
 
         :param levels: Sorted (ascending) quality levels
         """
-        super().__init__(**kwargs)
+        super().__init__(
+            label,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
+        )
 
-        self._levels = levels
+        self._levels = []
 
     def get_surrounding_levels(self, level):
         return self._get_surrounding_levels(level, self._levels)

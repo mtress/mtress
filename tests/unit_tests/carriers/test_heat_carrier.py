@@ -6,24 +6,26 @@ Tests for the MTRESS heat carrier.
 import math
 
 import pytest
-import pandas as pd
-
-from mtress import MetaModel
-from mtress import SolphModel
+from oemof.network import Node
+from mtress._constants import EnergyType
 from mtress.carriers import HeatCarrier
 
 
-def test_heat_carrier_initialisation():
-    with pytest.raises(TypeError):
-        # temperatures need to be defined
-        HeatCarrier()
+def test_basic_initialisation():
+    parent_node = Node("parent")
+    hc = HeatCarrier(parent_node=parent_node)
+    assert hc.label == "HeatCarrier"
+    assert hc.parent == parent_node
 
-    # temperature levels will be sorted internally
-    temperatures = [10, 80, 35, -10, 75]
-    heat_carrier = HeatCarrier(
-        temperature_levels=temperatures,
-    )
-    assert heat_carrier.levels == sorted(temperatures)
+    assert len(hc._inbound_interfaces[EnergyType.HEAT]) == 0
+    assert len(hc._outbound_interfaces[EnergyType.HEAT]) == 0
+
+
+def test_temperatures():
+    temperatures = [-10, 10, 35, 75, 80]
+    heat_carrier = HeatCarrier()
+    heat_carrier._levels = temperatures
+    assert heat_carrier.levels == temperatures
 
     assert heat_carrier.get_surrounding_levels(15) == (10, 35)
 
@@ -59,30 +61,3 @@ def test_heat_carrier_initialisation():
     # wrong order, matching existing levels
     with pytest.raises(ValueError):
         heat_carrier.get_levels_between(35, 10)
-
-
-def test_heat_carrier_build():
-    solph_model = SolphModel(
-        meta_model=MetaModel(),
-        timeindex=pd.date_range("2025-01-01", periods=3, freq="h"),
-    )
-
-    temperature_levels = [10, 20]
-
-    hc = HeatCarrier(
-        temperature_levels=temperature_levels
-    )  # two levels -> two nodes
-    hc.register_solph_model(solph_model=solph_model)
-    hc.build_core()
-    solph_model.energy_system.add(hc.node)
-
-    # model has one node for the HeatCarrier containing two subnodes
-    assert len(solph_model.energy_system.node) == 3
-
-    for temperature_level in temperature_levels:
-        assert (
-            solph_model.energy_system.node[
-                (f"T_{temperature_level}", "HeatCarrier")
-            ].custom_properties["temperature"]
-            == temperature_level
-        )
