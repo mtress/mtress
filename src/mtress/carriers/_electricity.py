@@ -56,8 +56,8 @@ class ElectricityCarrier(AbstractCarrier):
             local_name="feed_in",
         )
 
-        self._inbound_interfaces[EnergyType.ELECTRICITY] = self.subnodes
-        self._outbound_interfaces[EnergyType.ELECTRICITY] = self.subnodes
+        self.inbound_interfaces[EnergyType.ELECTRICITY] = self.subnodes
+        self.outbound_interfaces[EnergyType.ELECTRICITY] = self.subnodes
 
     def establish_interconnections(self):
         pass

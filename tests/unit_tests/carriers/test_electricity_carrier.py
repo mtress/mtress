@@ -9,5 +9,5 @@ def test_basic_initialisation():
     assert ec.label == "ElectricityCarrier"
     assert ec.parent == parent_node
 
-    assert len(ec._inbound_interfaces) == 2
-    assert len(ec._outbound_interfaces) == 2
+    assert len(ec.inbound_interfaces) == 2
+    assert len(ec.outbound_interfaces) == 2
