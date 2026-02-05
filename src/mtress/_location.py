@@ -2,19 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, Set
-
 from ._abstract_component import AbstractComponent
-from ._interfaces import NamedElement
+from ._subnetwork import SubNetwork
 from .carriers._abstract_carrier import AbstractCarrier
-from .technologies.grid_connection._abstract_grid_connection import (
-    AbstractGridConnection,
-)
-
-from oemof.network import Node
 
 
-class Location(NamedElement):
+class Location(SubNetwork):
     """
     Location in a MTRESS meta model.
 
@@ -38,38 +31,13 @@ class Location(NamedElement):
     Further procedure is described in the carrier and demand classes.
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, label) -> None:
         """
         Create location instance.
 
         :param name: User friendly name of the location
         """
-        super().__init__(name)
-
-        self._carriers: Dict[type, AbstractCarrier] = {}
-        self._components: Set[AbstractComponent] = set()
-        self._grid_connections: Dict[type, AbstractGridConnection] = {}
-
-    def add(self, component: AbstractComponent):
-        """Add a component to the location."""
-        component.register_location(self)
-
-        match component:
-            case AbstractCarrier():
-                self._carriers[type(component)] = component
-            case AbstractGridConnection():
-                self._grid_connections[type(component)] = component
-            case _:
-                self._components.add(component)
-
-    def connect(
-        self,
-        connection: type,
-        destination: Location,
-    ):
-        self._grid_connections[connection].connect(
-            destination._grid_connections[connection]
-        )
+        super().__init__(label)
 
     def get_carrier(self, carrier: type) -> AbstractCarrier:
         """
@@ -77,7 +45,10 @@ class Location(NamedElement):
 
         :param carrier: Carrier type to obtain
         """
-        return self._carriers[carrier]
+        for sn in self.subnodes:
+            if isinstance(sn, carrier):
+                return sn
+        return self.subnode(carrier, local_name=carrier.__name__)
 
     def get_technology(self, technology: type) -> AbstractComponent:
         """
@@ -85,22 +56,13 @@ class Location(NamedElement):
 
         :param technology: Technology type
         """
-        return [obj for obj in self._components if isinstance(obj, technology)]
+        return [sn for sn in self.subnodes if isinstance(sn, technology)]
 
-    @property
-    def components(self) -> Iterable[AbstractComponent]:
-        """Iterate over all components."""
-        for carrier in self._carriers.values():
-            yield carrier
-
-        for grid_connection in self._grid_connections.values():
-            yield grid_connection
-
-        for component in self._components:
-            yield component
-
-    def build_core(self):
-        self._node = Node(label=self.name)
-
-        for component in self.components:
-            component.build_core()
+    def establish_interconnections(self):
+        for sn in self.subnodes:
+            try:
+                sn.establish_interconnections()
+            except AttributeError:
+                raise TypeError(
+                    "Only SubNetworks are allowed to be children of Location."
+                )

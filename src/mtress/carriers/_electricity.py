@@ -2,6 +2,7 @@
 
 from oemof.solph import Bus
 
+from .._constants import EnergyType
 from ._abstract_carrier import AbstractCarrier
 
 
@@ -31,23 +32,32 @@ class ElectricityCarrier(AbstractCarrier):
 
     def __init__(
         self,
+        label=None,
+        *,
+        parent_node=None,
+        custom_properties=None,
     ):
         """Initialize electricity carrier."""
-        super().__init__()
-
-        # Properties for connection oemof.solph busses
-        self.distribution = None
-        self.feed_in = None
-
-    def build_core(self):
-        super().build_core()
-
-        self.distribution = self.create_solph_node(
-            label="distribution",
-            node_type=Bus,
+        super().__init__(
+            label,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
         )
 
-        self.feed_in = self.create_solph_node(
-            label="feed_in",
-            node_type=Bus,
+        self._build_core()
+
+    def _build_core(self):
+        self.distribution = self.subnode(
+            Bus,
+            local_name="distribution",
         )
+        self.feed_in = self.subnode(
+            Bus,
+            local_name="feed_in",
+        )
+
+        self._inbound_interfaces[EnergyType.ELECTRICITY] = self.subnodes
+        self._outbound_interfaces[EnergyType.ELECTRICITY] = self.subnodes
+
+    def establish_interconnections(self):
+        pass

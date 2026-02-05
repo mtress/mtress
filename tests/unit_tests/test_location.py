@@ -10,25 +10,19 @@ from mtress import Location, carriers, demands
 
 def test_basic_initialisation():
     name = "house_1"
-    house_1 = Location(name=name)
+    house_1 = Location(label=name)
 
-    assert house_1.name == "house_1"
-    assert isinstance(house_1.components, Iterable)
+    assert house_1.label == "house_1"
 
 
-def test_add_carrier():
+def test_get_carrier():
     name = "house_1"
-    house_1 = Location(name=name)
+    house_1 = Location(label=name)
 
-    carrier1 = carriers.ElectricityCarrier()
-    carrier2 = carriers.ElectricityCarrier()
+    carrier = house_1.get_carrier(carriers.ElectricityCarrier)
 
-    house_1.add(carrier1)
-    assert house_1.get_carrier(carriers.ElectricityCarrier) == carrier1
-
-    # carrier2 replaces carrier1
-    house_1.add(carrier2)
-    assert house_1.get_carrier(carriers.ElectricityCarrier) == carrier2
+    assert carrier.label == ("ElectricityCarrier", "house_1")
+    assert isinstance(carrier, carriers.ElectricityCarrier)
 
 
 def test_add_component():

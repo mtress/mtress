@@ -2,15 +2,21 @@
 
 import numpy as np
 
-from .._abstract_component import AbstractComponent
+from .._subnetwork import SubNetwork
 
 
-class AbstractCarrier(AbstractComponent):
+class AbstractCarrier(SubNetwork):
     """Abstract carrier class to ensure a unified interface."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, label=None, *, parent_node=None, custom_properties=None,):
         """Initialize carrier."""
-        super().__init__(name=self.__class__.__name__, **kwargs)
+        if label is None:
+            label = self.__class__.__name__
+        super().__init__(
+            label,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
+        )
 
 
 class AbstractLayeredCarrier(AbstractCarrier):
