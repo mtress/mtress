@@ -17,8 +17,8 @@ def test_basic_initialisation():
     assert hc.label == "HeatCarrier"
     assert hc.parent == parent_node
 
-    assert len(hc._inbound_interfaces[EnergyType.HEAT]) == 0
-    assert len(hc._outbound_interfaces[EnergyType.HEAT]) == 0
+    assert len(hc.inbound_interfaces[EnergyType.HEAT]) == 0
+    assert len(hc.outbound_interfaces[EnergyType.HEAT]) == 0
 
 
 def test_temperatures():
