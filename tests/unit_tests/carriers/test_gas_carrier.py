@@ -13,8 +13,8 @@ from mtress.physics import HYDROGEN, NATURAL_GAS
 
 def test_basic_initialisation():
     parent_node = Node("parent")
-    gc = GasCarrier(parent_node=parent_node)
-    assert gc.label == "GasCarrier"
+    gc = GasCarrier(location=parent_node)
+    assert gc.label == ("GasCarrier", "parent")
     assert gc.parent == parent_node
 
     assert len(gc.inbound_interfaces[EnergyType.GAS]) == 0

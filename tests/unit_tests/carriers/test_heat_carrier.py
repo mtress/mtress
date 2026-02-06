@@ -13,15 +13,15 @@ from mtress.carriers import HeatCarrier
 
 def test_basic_initialisation():
     parent_node = Node("parent")
-    hc = HeatCarrier(parent_node=parent_node)
-    assert hc.label == "HeatCarrier"
+    hc = HeatCarrier(location=parent_node)
+    assert hc.label == ("HeatCarrier", "parent")
     assert hc.parent == parent_node
 
     assert len(hc.inbound_interfaces[EnergyType.HEAT]) == 0
     assert len(hc.outbound_interfaces[EnergyType.HEAT]) == 0
 
 
-def test_temperatures():
+def test_temperature_levels():
     temperatures = [-10, 10, 35, 75, 80]
     heat_carrier = HeatCarrier()
     heat_carrier._levels = temperatures

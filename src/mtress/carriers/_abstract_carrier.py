@@ -40,9 +40,8 @@ class AbstractLayeredCarrier(AbstractCarrier):
 
     def __init__(
         self,
-        label=None,
         *,
-        parent_node=None,
+        location=None,
         custom_properties=None,
     ):
         """Initialize carrier.
@@ -50,8 +49,7 @@ class AbstractLayeredCarrier(AbstractCarrier):
         :param levels: Sorted (ascending) quality levels
         """
         super().__init__(
-            label,
-            location=parent_node,
+            location=location,
             custom_properties=custom_properties,
         )
 
