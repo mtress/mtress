@@ -24,7 +24,7 @@ class ElectricityGridConnection(AbstractGridConnection):
         demand_rate: Optional[float] = 0,
         grid_import_limit: Optional[float] = None,
         grid_export_limit: Optional[float] = None,
-        parent_node=None,
+        location=None,
         custom_properties=None,
     ) -> None:
         """
@@ -34,7 +34,7 @@ class ElectricityGridConnection(AbstractGridConnection):
         :grid_import_limit: limits the grid's imports (in W)
         """
         super().__init__(
-            parent_node=parent_node,
+            location=location,
             custom_properties=custom_properties,
         )
 

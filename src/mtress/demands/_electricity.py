@@ -37,13 +37,13 @@ class Electricity(AbstractDemand):
         label,
         *,
         time_series: TimeseriesSpecifier,
-        parent_node=None,
+        location=None,
         custom_properties=None,
     ):
         """Initialize electricity energy carrier and add components."""
         super().__init__(
             label,
-            parent_node=parent_node,
+            parent_node=location,
             custom_properties=custom_properties,
         )
         self._time_series = time_series

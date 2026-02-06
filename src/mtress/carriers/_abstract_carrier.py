@@ -12,20 +12,20 @@ class AbstractCarrier(SubNetwork):
     def __init__(
         self,
         *,
-        parent_node=None,
+        location=None,
         custom_properties=None,
     ):
         """Initialize carrier."""
 
         label = self.__class__.__name__
-        if parent_node:
-            if isinstance(parent_node.label, QualifiedLabel):
-                label = QualifiedLabel([label, *parent_node.label])
+        if location:
+            if isinstance(location.label, QualifiedLabel):
+                label = QualifiedLabel([label, *location.label])
             else:
-                label = QualifiedLabel([label, parent_node.label])
+                label = QualifiedLabel([label, location.label])
         super().__init__(
             label,
-            parent_node=parent_node,
+            parent_node=location,
             custom_properties=custom_properties,
         )
 
@@ -51,7 +51,7 @@ class AbstractLayeredCarrier(AbstractCarrier):
         """
         super().__init__(
             label,
-            parent_node=parent_node,
+            location=parent_node,
             custom_properties=custom_properties,
         )
 
