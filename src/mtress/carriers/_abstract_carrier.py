@@ -1,6 +1,7 @@
 """Abstract carrier class to ensure a unified interface."""
 
 import numpy as np
+from oemof.network.network.nodes import QualifiedLabel
 
 from .._subnetwork import SubNetwork
 
@@ -10,17 +11,21 @@ class AbstractCarrier(SubNetwork):
 
     def __init__(
         self,
-        label=None,
         *,
-        parent_node=None,
+        location=None,
         custom_properties=None,
     ):
         """Initialize carrier."""
-        if label is None:
-            label = self.__class__.__name__
+
+        label = self.__class__.__name__
+        if location:
+            if isinstance(location.label, QualifiedLabel):
+                label = QualifiedLabel([label, *location.label])
+            else:
+                label = QualifiedLabel([label, location.label])
         super().__init__(
             label,
-            parent_node=parent_node,
+            parent_node=location,
             custom_properties=custom_properties,
         )
 
@@ -46,7 +51,7 @@ class AbstractLayeredCarrier(AbstractCarrier):
         """
         super().__init__(
             label,
-            parent_node=parent_node,
+            location=parent_node,
             custom_properties=custom_properties,
         )
 

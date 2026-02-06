@@ -32,15 +32,13 @@ class ElectricityCarrier(AbstractCarrier):
 
     def __init__(
         self,
-        label=None,
         *,
-        parent_node=None,
+        location=None,
         custom_properties=None,
     ):
         """Initialize electricity carrier."""
         super().__init__(
-            label,
-            parent_node=parent_node,
+            location=location,
             custom_properties=custom_properties,
         )
 

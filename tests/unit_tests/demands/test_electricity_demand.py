@@ -5,7 +5,7 @@ from mtress import demands
 def test_basic_initialisation():
 
     parent_node = Node("parent")
-    ed = demands.Electricity("demand1", parent_node=parent_node, time_series=[1, 2, 3])
+    ed = demands.Electricity("demand1", location=parent_node, time_series=[1, 2, 3])
     assert ed.label == "demand1"
     assert ed.parent == parent_node
     assert ed._time_series == [1, 2, 3]
