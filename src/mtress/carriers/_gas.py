@@ -19,54 +19,38 @@ class GasCarrier(AbstractLayeredCarrier):
     pressure: in bar
     """
 
-    def __init__(self, *, gases, **kwargs):
+    def __init__(
+        self,
+        label=None,
+        *,
+        parent_node=None,
+        custom_properties=None,
+    ):
         """Initialize carrier."""
-        super().__init__(levels=gases, **kwargs)
+        super().__init__(
+            label,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
+        )
 
         self.distribution = {}
 
+        self._build_core()
+
     def get_surrounding_levels(self, gas, pressure_level):
         """Get the next bigger and smaller level for the specified gas."""
-        return AbstractLayeredCarrier._get_surrounding_levels(
-            pressure_level, self._levels[gas]
-        )
+        return self._get_surrounding_levels(pressure_level, self._levels[gas])
 
     @property
     def pressure_levels(self):
         """Return input_pressure level of gas carrier"""
         return self._levels
 
-    def build_core(self):
+    def _build_core(self):
         """Build core structure of oemof.solph representation."""
-        super().build_core()
 
-        for gas, pressures in self.levels.items():
-            pressure_low = None
-            self.distribution[gas] = {}
-            for pressure in sorted(pressures):
-                # Check if this is the first bus for this gas
-                if not self.distribution[gas]:
-                    bus = self.create_solph_node(
-                        label=f"{gas.name}_{pressure}",
-                        node_type=Bus,
-                    )
-                else:
-                    bus = self.create_solph_node(
-                        label=f"{gas.name}_{pressure}",
-                        node_type=Bus,
-                        outputs={
-                            self.distribution[gas][pressure_low]: Flow(
-                                custom_properties={
-                                    "unit": "kg/h",
-                                    "energy_type": EnergyType.GAS,
-                                }
-                            )
-                        },
-                    )
-                self.distribution[gas][pressure] = bus
-
-                # prepare for the next iteration of the loop
-                pressure_low = pressure
+        self.inbound_interfaces[EnergyType.GAS] = self.subnodes
+        self.outbound_interfaces[EnergyType.GAS] = self.subnodes
 
     @property
     def inputs(self):
@@ -75,3 +59,6 @@ class GasCarrier(AbstractLayeredCarrier):
     @property
     def outputs(self):
         return self.distribution
+
+    def establish_interconnections(self):
+        pass
