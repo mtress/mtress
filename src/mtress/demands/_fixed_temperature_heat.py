@@ -3,7 +3,7 @@
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Converter, Sink, Source
 
-from .._data_handler import TimeseriesType
+from .._data_handler import TimeseriesType, TimeseriesSpecifier
 from ..carriers import HeatCarrier
 from ._abstract_demand import AbstractDemand
 
@@ -36,10 +36,13 @@ class AbstractFixedTemperature(AbstractDemand):
 
     def __init__(
         self,
-        name: str,
+        label,
+        *,
         flow_temperature: float,
         return_temperature: float,
-        time_series,
+        time_series: TimeseriesSpecifier,
+        location=None,
+        custom_properties=None,
     ):
         """
         Initialize space heater.
@@ -47,7 +50,11 @@ class AbstractFixedTemperature(AbstractDemand):
         :param flow_temperature: Flow temperature
         :param return_temperature: Return temperature
         """
-        super().__init__(name=name)
+        super().__init__(
+            label,
+            location=location,
+            custom_properties=custom_properties,
+        )
 
         self.flow_temperature = flow_temperature
         self.return_temperature = return_temperature
@@ -58,10 +65,13 @@ class AbstractFixedTemperature(AbstractDemand):
 class FixedTemperatureHeating(AbstractFixedTemperature):
     def __init__(
         self,
-        name: str,
+        label,
+        *,
         min_flow_temperature: float,
         return_temperature: float,
-        time_series,
+        time_series: TimeseriesSpecifier,
+        location=None,
+        custom_properties=None,
     ):
         """
         Heating demand with a fixed return temperature.
@@ -72,96 +82,126 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         :param time_series: demand time series (in W)
         """
         super().__init__(
-            name=name,
+            label,
             flow_temperature=min_flow_temperature,
             return_temperature=return_temperature,
             time_series=time_series,
+            location=location,
+            custom_properties=custom_properties,
         )
 
         if not min_flow_temperature > return_temperature:
             raise ValueError("Flow must be higher than return temperature")
 
-    def build_core(self):
-        """Build core structure of oemof.solph representation."""
-        super().build_core()
+        self._build_core()
 
-        carrier = self.location.get_carrier(HeatCarrier)
-
-        if self.flow_temperature not in carrier.levels:
-            raise ValueError("Flow temperature must be a temperature level")
-
-        if self.return_temperature not in carrier.levels:
-            raise ValueError("Return temperature must be a temperature level")
-
-        inputs = {}
-        outputs = {}
-        conversion_factors = {}
-
-        output = self.create_solph_node(
-            label="output",
-            node_type=Bus,
+    def _build_core(self):
+        self._input_node = self.subnode(
+            Bus,
+            local_name="input",
         )
-        outputs[output] = Flow(
-            custom_properties={
-                "unit": "W",
-                "energy_type": EnergyType.HEAT,
-            }
+        self._output_node = self.subnode(
+            Bus,
+            local_name="output",
         )
 
-        inputs[carrier.level_nodes[self.flow_temperature]] = Flow(
-            custom_properties={
-                "unit": "kg/h",
-                "energy_type": EnergyType.HEAT,
-            }
-        )
-        outputs[carrier.level_nodes[self.return_temperature]] = Flow(
-            custom_properties={
-                "unit": "kg/h",
-                "energy_type": EnergyType.HEAT,
-            }
+        self._sink = self.subnode(
+            Sink,
+            local_name="sink",
+            inputs={},
         )
 
-        conversion_factors = {
-            carrier.level_nodes[self.flow_temperature]: 1,
-            output: (self.flow_temperature - self.return_temperature)
-            * carrier.specific_heat_capacity,
-            carrier.level_nodes[self.return_temperature]: 1,
-        }
+        self.inbound_interfaces[EnergyType.HEAT] = [self._input_node]
+        self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
 
-        self.create_solph_node(
-            label="heat_exchanger",
-            node_type=Converter,
-            inputs=inputs,
-            outputs=outputs,
-            conversion_factors=conversion_factors,
-        )
+    def establish_interconnections(self):
+        if self.parent:
+            heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
 
-        self.create_solph_node(
-            label="sink",
-            node_type=Sink,
-            inputs={
-                output: Flow(
-                    custom_properties={
-                        "unit": "W",
-                        "energy_type": EnergyType.HEAT,
-                    },
-                    nominal_value=1,
-                    fix=self._solph_model.data.get_timeseries(
-                        self._time_series, kind=TimeseriesType.INTERVAL
-                    ),
+            # TODO: register temp levels @ HeatCarrier
+            if self.flow_temperature not in heat_carrier.levels:
+                raise ValueError(
+                    "Flow temperature must be a temperature level"
                 )
-            },
-        )
+
+            if self.return_temperature not in heat_carrier.levels:
+                raise ValueError(
+                    "Return temperature must be a temperature level"
+                )
+
+            # connect interface nodes to heat carrier
+            self._input_node.inputs[
+                heat_carrier.level_nodes[self.flow_temperature]
+            ] = Flow(
+                custom_properties={
+                    "unit": "kg/h",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+            self._output_node.outputs[
+                heat_carrier.level_nodes[self.return_temperature]
+            ] = Flow(
+                custom_properties={
+                    "unit": "kg/h",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            # create converter and connect to sink and interface nodes
+            inputs = {}
+            outputs = {}
+            conversion_factors = {}
+
+            inputs[self._input_node] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            outputs[self._output_node] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            outputs[self._sink] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                },
+                nominal_value=1,
+                fix=self._time_series,
+            )
+
+            conversion_factors = {
+                self._input_node: 1,
+                self._output_node: 1,
+                self._sink: (self.flow_temperature - self.return_temperature)
+                * heat_carrier.specific_heat_capacity,
+            }
+
+            self.subnode(
+                Converter,
+                local_name="heat_exchanger",
+                inputs=inputs,
+                outputs=outputs,
+                conversion_factors=conversion_factors,
+            )
 
 
 class FixedTemperatureCooling(AbstractFixedTemperature):
     def __init__(
         self,
-        name: str,
+        label,
+        *,
         return_temperature: float,
         max_flow_temperature: float,
         time_series,
         flow_temperature: float = None,
+        location=None,
+        custom_properties=None,
     ):
         """
         Cooling demand with a fixed return temperature.
@@ -172,81 +212,105 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         :param time_series: demand time series (in W)
         """
         super().__init__(
-            name=name,
+            label,
             flow_temperature=flow_temperature,
             return_temperature=return_temperature,
             time_series=time_series,
+            location=location,
+            custom_properties=custom_properties,
         )
 
         self.max_flow_temperature = max_flow_temperature
 
-    def build_core(self):
-        """Build core structure of oemof.solph representation."""
-        super().build_core()
+        self._build_core()
 
-        carrier = self.location.get_carrier(HeatCarrier)
-
-        inputs = {}
-        outputs = {}
-        conversion_factors = {}
-
-        _, minimum_t = carrier.get_surrounding_levels(
-            self.max_flow_temperature
+    def _build_core(self):
+        self._input_node = self.subnode(
+            Bus,
+            local_name="input",
+        )
+        self._output_node = self.subnode(
+            Bus,
+            local_name="output",
         )
 
-        input = self.create_solph_node(
-            label="input",
-            node_type=Bus,
+        self._source = self.subnode(
+            Source,
+            local_name="source",
+            outputs={},
         )
 
-        inputs[input] = Flow(
-            custom_properties={
-                "unit": "W",
-                "energy_type": EnergyType.HEAT,
-            }
-        )
+        self.inbound_interfaces[EnergyType.HEAT] = [self._input_node]
+        self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
 
-        outputs[carrier.level_nodes[self.return_temperature]] = Flow(
-            custom_properties={
-                "unit": "kg/h",
-                "energy_type": EnergyType.HEAT,
-            }
-        )
-        inputs[carrier.level_nodes[minimum_t]] = Flow(
-            custom_properties={
-                "unit": "kg/h",
-                "energy_type": EnergyType.HEAT,
-            }
-        )
+    def establish_interconnections(self):
+        if self.parent:
+            heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
 
-        conversion_factors = {
-            carrier.level_nodes[self.return_temperature]: 1,
-            input: carrier.specific_heat_capacity
-            * (self.return_temperature - minimum_t),
-            carrier.level_nodes[minimum_t]: 1,
-        }
+            # TODO: register temp levels @ HeatCarrier
 
-        self.create_solph_node(
-            label="heat_exchanger",
-            node_type=Converter,
-            inputs=inputs,
-            outputs=outputs,
-            conversion_factors=conversion_factors,
-        )
+            # get min temp availabe for cooling
+            _, minimum_t = heat_carrier.get_surrounding_levels(
+                self.max_flow_temperature
+            )
 
-        self.create_solph_node(
-            label="source",
-            node_type=Source,
-            outputs={
-                input: Flow(
+            # connect interface nodes to heat carrier
+            self._input_node.inputs[
+                heat_carrier.level_nodes[self.flow_temperature]
+            ] = Flow(
+                custom_properties={
+                    "unit": "kg/h",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+            self._output_node.outputs[heat_carrier.level_nodes[minimum_t]] = (
+                Flow(
                     custom_properties={
-                        "unit": "W",
+                        "unit": "kg/h",
                         "energy_type": EnergyType.HEAT,
-                    },
-                    nominal_value=1,
-                    fix=self._solph_model.data.get_timeseries(
-                        self._time_series, kind=TimeseriesType.INTERVAL
-                    ),
+                    }
                 )
-            },
-        )
+            )
+
+            # create converter and connect to source and interface nodes
+            inputs = {}
+            outputs = {}
+            conversion_factors = {}
+
+            inputs[self._input_node] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            inputs[self._source] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                },
+                nominal_value=1,
+                fix=self._time_series,
+            )
+
+            outputs[self._output_node] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            conversion_factors = {
+                self._input_node: 1,
+                self._source: heat_carrier.specific_heat_capacity
+                * (self.return_temperature - minimum_t),
+                self._output_node: 1,
+            }
+
+            self.subnode(
+                Converter,
+                local_name="heat_exchanger",
+                inputs=inputs,
+                outputs=outputs,
+                conversion_factors=conversion_factors,
+            )
