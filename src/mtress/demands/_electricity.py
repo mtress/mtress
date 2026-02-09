@@ -43,7 +43,7 @@ class Electricity(AbstractDemand):
         """Initialize electricity energy carrier and add components."""
         super().__init__(
             label,
-            parent_node=location,
+            location=location,
             custom_properties=custom_properties,
         )
         self._time_series = time_series
@@ -72,7 +72,6 @@ class Electricity(AbstractDemand):
             },
         )
         self.inbound_interfaces[EnergyType.ELECTRICITY] = [self._input_node]
-
 
     def establish_interconnections(self):
         if self.parent:
