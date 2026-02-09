@@ -20,6 +20,3 @@ def test_basic_initialisation():
 
     assert len(gd.inbound_interfaces) == 1
     assert len(gd.outbound_interfaces) == 0
-
-
-test_basic_initialisation()
