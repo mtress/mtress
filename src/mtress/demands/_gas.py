@@ -36,53 +36,64 @@ class GasDemand(AbstractDemand):
 
     def __init__(
         self,
-        name: str,
+        label,
+        *,
         gas_type: Gas,
-        time_series: TimeseriesSpecifier,
         pressure: float,
+        time_series: TimeseriesSpecifier,
+        location=None,
+        custom_properties=None,
     ):
         """Initialize gas demand."""
-        super().__init__(name=name)
+        super().__init__(
+            label,
+            location=location,
+            custom_properties=custom_properties,
+        )
 
         self._time_series = time_series
         self.gas_type = gas_type
         self.pressure = pressure
 
-    def build_core(self):
+        self._build_core()
+
+    def _build_core(self):
         """Build core structure of oemof.solph representation."""
-        super().build_core()
 
-        gas_carrier = self.location.get_carrier(GasCarrier)
-        _, pressure = gas_carrier.get_surrounding_levels(
-            self.gas_type, self.pressure
+        self._input_node = self.subnode(
+            Bus,
+            local_name="input",
         )
 
-        gas_bus = self.create_solph_node(
-            label="input",
-            node_type=Bus,
+        self.subnode(
+            Sink,
+            local_name="sink",
             inputs={
-                gas_carrier.outputs[self.gas_type][pressure]: Flow(
-                    custom_properties={
-                        "unit": "kg/h",
-                        "energy_type": EnergyType.GAS,
-                    }
-                )
-            },
-        )
-
-        self.create_solph_node(
-            label="sink",
-            node_type=Sink,
-            inputs={
-                gas_bus: Flow(
+                self._input_node: Flow(
                     custom_properties={
                         "unit": "kg/h",
                         "energy_type": EnergyType.GAS,
                     },
                     nominal_value=1,
-                    fix=self._solph_model.data.get_timeseries(
-                        self._time_series, kind=TimeseriesType.INTERVAL
-                    ),
-                )
+                    fix=self._time_series,
+                ),
             },
         )
+
+        self.inbound_interfaces[EnergyType.GAS] = [self._input_node]
+
+    def establish_interconnections(self):
+        if self.parent:
+            gas_carrier = self.parent.get_carrier(GasCarrier)
+            _, pressure = gas_carrier.get_surrounding_levels(
+                self.gas_type, self.pressure
+            )
+
+            self._input_node.inputs[
+                gas_carrier.distribution[self.gas_type][pressure]
+            ] = Flow(
+                custom_properties={
+                    "unit": "kg/h",
+                    "energy_type": EnergyType.GAS,
+                }
+            )
