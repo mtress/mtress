@@ -83,7 +83,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         """
         super().__init__(
             label,
-            flow_temperature=min_flow_temperature,
+            flow_temperature=None,
             return_temperature=return_temperature,
             time_series=time_series,
             location=location,
@@ -92,6 +92,8 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
 
         if not min_flow_temperature > return_temperature:
             raise ValueError("Flow must be higher than return temperature")
+
+        self.min_flow_temperature = min_flow_temperature
 
         self._build_core()
 
@@ -103,6 +105,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         self._output_node = self.subnode(
             Bus,
             local_name="output",
+            custom_properties={"temperature": self.return_temperature},
         )
 
         self._sink = self.subnode(
@@ -119,24 +122,24 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
 
             # TODO: register temp levels @ HeatCarrier
-            if self.flow_temperature not in heat_carrier.levels:
-                raise ValueError(
-                    "Flow temperature must be a temperature level"
-                )
-
             if self.return_temperature not in heat_carrier.levels:
                 raise ValueError(
                     "Return temperature must be a temperature level"
                 )
 
+            # get max temp availabe for heating
+            maximum_t, _ = heat_carrier.get_surrounding_levels(
+                self.min_flow_temperature
+            )
+
             # connect interface nodes to heat carrier
-            self._input_node.inputs[
-                heat_carrier.level_nodes[self.flow_temperature]
-            ] = Flow(
-                custom_properties={
-                    "unit": "kg/h",
-                    "energy_type": EnergyType.HEAT,
-                }
+            self._input_node.inputs[heat_carrier.level_nodes[maximum_t]] = (
+                Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                )
             )
             self._output_node.outputs[
                 heat_carrier.level_nodes[self.return_temperature]
@@ -196,10 +199,9 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         self,
         label,
         *,
-        return_temperature: float,
         max_flow_temperature: float,
+        return_temperature: float,
         time_series,
-        flow_temperature: float = None,
         location=None,
         custom_properties=None,
     ):
@@ -213,12 +215,15 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         """
         super().__init__(
             label,
-            flow_temperature=flow_temperature,
+            flow_temperature=None,
             return_temperature=return_temperature,
             time_series=time_series,
             location=location,
             custom_properties=custom_properties,
         )
+
+        if not max_flow_temperature < return_temperature:
+            raise ValueError("Flow must be lower than return temperature")
 
         self.max_flow_temperature = max_flow_temperature
 
@@ -232,6 +237,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         self._output_node = self.subnode(
             Bus,
             local_name="output",
+            custom_properties={"temperature": self.return_temperature},
         )
 
         self._source = self.subnode(
@@ -248,6 +254,10 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
 
             # TODO: register temp levels @ HeatCarrier
+            if self.return_temperature not in heat_carrier.levels:
+                raise ValueError(
+                    "Return temperature must be a temperature level"
+                )
 
             # get min temp availabe for cooling
             _, minimum_t = heat_carrier.get_surrounding_levels(
@@ -255,21 +265,21 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             )
 
             # connect interface nodes to heat carrier
-            self._input_node.inputs[
-                heat_carrier.level_nodes[self.flow_temperature]
-            ] = Flow(
-                custom_properties={
-                    "unit": "kg/h",
-                    "energy_type": EnergyType.HEAT,
-                }
-            )
-            self._output_node.outputs[heat_carrier.level_nodes[minimum_t]] = (
+            self._input_node.inputs[heat_carrier.level_nodes[minimum_t]] = (
                 Flow(
                     custom_properties={
                         "unit": "kg/h",
                         "energy_type": EnergyType.HEAT,
                     }
                 )
+            )
+            self._output_node.outputs[
+                heat_carrier.level_nodes[self.return_temperature]
+            ] = Flow(
+                custom_properties={
+                    "unit": "kg/h",
+                    "energy_type": EnergyType.HEAT,
+                }
             )
 
             # create converter and connect to source and interface nodes
