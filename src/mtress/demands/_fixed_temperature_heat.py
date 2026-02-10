@@ -121,6 +121,50 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         self.inbound_interfaces[EnergyType.HEAT] = [self._input_node]
         self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
 
+        # create converter and connect to sink and interface nodes
+        inputs = {}
+        outputs = {}
+        conversion_factors = {}
+
+        inputs[self._input_node] = Flow(
+            custom_properties={
+                "unit": "W",
+                "energy_type": EnergyType.HEAT,
+            }
+        )
+
+        outputs[self._output_node] = Flow(
+            custom_properties={
+                "unit": "W",
+                "energy_type": EnergyType.HEAT,
+            }
+        )
+
+        outputs[self._sink] = Flow(
+            custom_properties={
+                "unit": "W",
+                "energy_type": EnergyType.HEAT,
+            },
+            nominal_value=1,
+            fix=self._time_series,
+        )
+
+        # set conversion factors with min_flow_temperature
+        conversion_factors = {
+            self._input_node: 1,
+            self._output_node: 1,
+            self._sink: (self.min_flow_temperature - self.return_temperature)
+            * self.specific_heat_capacity,
+        }
+
+        self._converter = self.subnode(
+            Converter,
+            local_name="heat_exchanger",
+            inputs=inputs,
+            outputs=outputs,
+            conversion_factors=conversion_factors,
+        )
+
     def establish_interconnections(self):
         if self.parent:
             heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
@@ -159,48 +203,13 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
                 }
             )
 
-            # create converter and connect to sink and interface nodes
-            inputs = {}
-            outputs = {}
-            conversion_factors = {}
-
-            inputs[self._input_node] = Flow(
-                custom_properties={
-                    "unit": "W",
-                    "energy_type": EnergyType.HEAT,
-                }
-            )
-
-            outputs[self._output_node] = Flow(
-                custom_properties={
-                    "unit": "W",
-                    "energy_type": EnergyType.HEAT,
-                }
-            )
-
-            outputs[self._sink] = Flow(
-                custom_properties={
-                    "unit": "W",
-                    "energy_type": EnergyType.HEAT,
-                },
-                nominal_value=1,
-                fix=self._time_series,
-            )
-
-            conversion_factors = {
+            # update conversion factors according to temp available in carrier
+            self._converter.conversion_factors = {
                 self._input_node: 1,
                 self._output_node: 1,
-                self._sink: (self.flow_temperature - self.return_temperature)
-                * heat_carrier.specific_heat_capacity,
+                self._sink: (maximum_t - self.return_temperature)
+                * self.specific_heat_capacity,
             }
-
-            self.subnode(
-                Converter,
-                local_name="heat_exchanger",
-                inputs=inputs,
-                outputs=outputs,
-                conversion_factors=conversion_factors,
-            )
 
 
 class FixedTemperatureCooling(AbstractFixedTemperature):
@@ -260,6 +269,50 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         self.inbound_interfaces[EnergyType.HEAT] = [self._input_node]
         self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
 
+        # create converter and connect to source and interface nodes
+        inputs = {}
+        outputs = {}
+        conversion_factors = {}
+
+        inputs[self._input_node] = Flow(
+            custom_properties={
+                "unit": "W",
+                "energy_type": EnergyType.HEAT,
+            }
+        )
+
+        inputs[self._source] = Flow(
+            custom_properties={
+                "unit": "W",
+                "energy_type": EnergyType.HEAT,
+            },
+            nominal_value=1,
+            fix=self._time_series,
+        )
+
+        outputs[self._output_node] = Flow(
+            custom_properties={
+                "unit": "W",
+                "energy_type": EnergyType.HEAT,
+            }
+        )
+
+        # set conversion factors with max_flow_temperature
+        conversion_factors = {
+            self._input_node: 1,
+            self._source: self.specific_heat_capacity
+            * (self.return_temperature - self.max_flow_temperature),
+            self._output_node: 1,
+        }
+
+        self._converter = self.subnode(
+            Converter,
+            local_name="heat_exchanger",
+            inputs=inputs,
+            outputs=outputs,
+            conversion_factors=conversion_factors,
+        )
+
     def establish_interconnections(self):
         if self.parent:
             heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
@@ -298,45 +351,10 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
                 }
             )
 
-            # create converter and connect to source and interface nodes
-            inputs = {}
-            outputs = {}
-            conversion_factors = {}
-
-            inputs[self._input_node] = Flow(
-                custom_properties={
-                    "unit": "W",
-                    "energy_type": EnergyType.HEAT,
-                }
-            )
-
-            inputs[self._source] = Flow(
-                custom_properties={
-                    "unit": "W",
-                    "energy_type": EnergyType.HEAT,
-                },
-                nominal_value=1,
-                fix=self._time_series,
-            )
-
-            outputs[self._output_node] = Flow(
-                custom_properties={
-                    "unit": "W",
-                    "energy_type": EnergyType.HEAT,
-                }
-            )
-
-            conversion_factors = {
+            # update conversion factors according to temp available in carrier
+            self._converter.conversion_factors = {
                 self._input_node: 1,
-                self._source: heat_carrier.specific_heat_capacity
+                self._source: self.specific_heat_capacity
                 * (self.return_temperature - minimum_t),
                 self._output_node: 1,
             }
-
-            self.subnode(
-                Converter,
-                local_name="heat_exchanger",
-                inputs=inputs,
-                outputs=outputs,
-                conversion_factors=conversion_factors,
-            )
