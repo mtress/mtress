@@ -41,6 +41,7 @@ class AbstractFixedTemperature(AbstractDemand):
         flow_temperature: float,
         return_temperature: float,
         time_series: TimeseriesSpecifier,
+        specific_heat_capacity: float = 1.161,
         location=None,
         custom_properties=None,
     ):
@@ -58,6 +59,7 @@ class AbstractFixedTemperature(AbstractDemand):
 
         self.flow_temperature = flow_temperature
         self.return_temperature = return_temperature
+        self.specific_heat_capacity = specific_heat_capacity
 
         self._time_series = time_series
 
@@ -70,6 +72,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         min_flow_temperature: float,
         return_temperature: float,
         time_series: TimeseriesSpecifier,
+        specific_heat_capacity: float = 1.161,
         location=None,
         custom_properties=None,
     ):
@@ -86,6 +89,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             flow_temperature=None,
             return_temperature=return_temperature,
             time_series=time_series,
+            specific_heat_capacity=specific_heat_capacity,
             location=location,
             custom_properties=custom_properties,
         )
@@ -126,6 +130,11 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
                 raise ValueError(
                     "Return temperature must be a temperature level"
                 )
+            if (
+                self.specific_heat_capacity
+                != heat_carrier.specific_heat_capacity
+            ):
+                raise ValueError("Specific heat capacities need to match")
 
             # get max temp availabe for heating
             maximum_t, _ = heat_carrier.get_surrounding_levels(
@@ -202,6 +211,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         max_flow_temperature: float,
         return_temperature: float,
         time_series,
+        specific_heat_capacity: float = 1.161,
         location=None,
         custom_properties=None,
     ):
@@ -218,6 +228,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             flow_temperature=None,
             return_temperature=return_temperature,
             time_series=time_series,
+            specific_heat_capacity=specific_heat_capacity,
             location=location,
             custom_properties=custom_properties,
         )
@@ -258,6 +269,11 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
                 raise ValueError(
                     "Return temperature must be a temperature level"
                 )
+            if (
+                self.specific_heat_capacity
+                != heat_carrier.specific_heat_capacity
+            ):
+                raise ValueError("Specific heat capacities need to match")
 
             # get min temp availabe for cooling
             _, minimum_t = heat_carrier.get_surrounding_levels(
