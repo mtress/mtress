@@ -214,8 +214,3 @@ def test_heat_source_7():
         results_30_25=[0, 10],  # sink limit uses 10/18 = 5/9 of capacity
         results_25_20=[10, 80 / 9],  # remaining 4/9 of 20 W
     )
-
-
-if __name__ == "__main__":
-
-    test_heat_source_1()
