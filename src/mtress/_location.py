@@ -6,6 +6,8 @@ from ._abstract_component import AbstractComponent
 from ._subnetwork import SubNetwork
 from .carriers._abstract_carrier import AbstractCarrier
 
+from ._constants import EnergyType
+
 
 class Location(SubNetwork):
     """
@@ -39,6 +41,17 @@ class Location(SubNetwork):
         """
         super().__init__(label)
 
+    def get_interfaces(self, et: EnergyType):
+        # collect all in- and outbound interfaces of given EnergyType
+        interfaces = []
+        for sn in self.subnodes:
+            i_i = sn.inbound_interfaces.get(et, [])
+            interfaces += i_i
+            o_i = sn.outbound_interfaces.get(et, [])
+            interfaces += o_i
+        for i in interfaces:
+            yield i
+
     def get_carrier(self, carrier: type) -> AbstractCarrier:
         """
         Return the energy carrier object.
@@ -48,7 +61,7 @@ class Location(SubNetwork):
         for sn in self.subnodes:
             if isinstance(sn, carrier):
                 return sn
-        return carrier(parent_node=self)
+        return carrier(location=self)
 
     def get_technology(self, technology: type) -> AbstractComponent:
         """
