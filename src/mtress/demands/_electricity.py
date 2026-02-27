@@ -7,6 +7,8 @@ from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier as ElectricityCarrier
 from ._abstract_demand import AbstractDemand
 
+from .._constants import EnergyType
+
 
 class Electricity(AbstractDemand):
     """
@@ -38,12 +40,21 @@ class Electricity(AbstractDemand):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
         bus = self.create_solph_node(
             label="input",
             node_type=Bus,
-            inputs={electricity_carrier.distribution: Flow()},
+            inputs={
+                electricity_carrier.distribution: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    }
+                )
+            },
         )
 
         self.create_solph_node(
@@ -51,6 +62,10 @@ class Electricity(AbstractDemand):
             node_type=Sink,
             inputs={
                 bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL

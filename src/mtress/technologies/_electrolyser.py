@@ -5,13 +5,15 @@ from dataclasses import dataclass
 from typing import Optional
 
 from oemof import solph
-from oemof.solph import Flow
+from oemof.solph import Flow, Investment
 from oemof.solph.components import Converter, OffsetConverter
 
 from .._helpers._util import enable_templating
 from ..carriers import ElectricityCarrier, GasCarrier
 from ..physics import HYDROGEN
 from ._heater import AbstractHeater
+
+from .._constants import EnergyType
 
 LOGGER = logging.getLogger(__file__)
 
@@ -99,7 +101,7 @@ class AbstractElectrolyser(AbstractHeater):
     def __init__(
         self,
         name: str,
-        nominal_power: float,
+        nominal_power: Investment | float,
         full_load_hydrogen_efficiency: float,
         full_load_thermal_efficiency: float,
         maximum_temperature: float,
@@ -121,6 +123,7 @@ class AbstractElectrolyser(AbstractHeater):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         super().build_core()
+
         # Electrical connection
         self.electricity_carrier = self.location.get_carrier(
             ElectricityCarrier
@@ -182,7 +185,7 @@ class Electrolyser(AbstractElectrolyser):
     def __init__(
         self,
         name: str,
-        nominal_power: float,
+        nominal_power: Investment | float,
         full_load_hydrogen_efficiency: float,
         full_load_thermal_efficiency: float,
         maximum_temperature: float,
@@ -217,15 +220,32 @@ class Electrolyser(AbstractElectrolyser):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         super().build_core()
+
         self.create_solph_node(
             label="electrolyser",
             node_type=Converter,
             inputs={
-                self.electrical_bus: Flow(nominal_value=self.nominal_power),
+                self.electrical_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
+                    nominal_value=self.nominal_power,
+                ),
             },
             outputs={
-                self.h2_bus: Flow(),
-                self.heat_bus: Flow(),
+                self.h2_bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.GAS,
+                    }
+                ),
+                self.heat_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
             },
             conversion_factors={
                 self.electrical_bus: 1,
@@ -273,7 +293,7 @@ class OffsetElectrolyser(AbstractElectrolyser):
     def __init__(
         self,
         name: str,
-        nominal_power: float,
+        nominal_power: Investment | float,
         full_load_hydrogen_efficiency: float,
         full_load_thermal_efficiency: float,
         maximum_temperature: float,
@@ -349,13 +369,30 @@ class OffsetElectrolyser(AbstractElectrolyser):
             node_type=OffsetConverter,
             inputs={
                 self.electrical_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
                     nominal_value=self.nominal_power,
                     max=self.maximum_load,
                     min=self.minimum_load,
                     nonconvex=solph.NonConvex(),
                 ),
             },
-            outputs={self.h2_bus: Flow(), self.heat_bus: Flow()},
+            outputs={
+                self.h2_bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.GAS,
+                    },
+                ),
+                self.heat_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
+                ),
+            },
             conversion_factors={
                 self.h2_bus: slope_h2,
                 self.heat_bus: slope_th,

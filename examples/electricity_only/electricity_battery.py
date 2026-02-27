@@ -4,19 +4,17 @@ storage content and of nominal storage capacity.
 """
 
 import os
-
 import matplotlib.pyplot as plt
-from oemof.solph.processing import results
-from oemof.solph.processing import meta_results
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
     SolphModel,
     carriers,
     technologies,
-    demands
+    demands,
 )
-from mtress._helpers import get_flows
+from mtress._helpers import get_flow_units, get_energy_types
 
 os.chdir(os.path.dirname(__file__))
 
@@ -32,8 +30,8 @@ house_1.add(
         # revenue=2,
         # grid_import_limit=1000,
         # grid_export_limit=1000,
-        )
     )
+)
 
 battery = technologies.BatteryStorage(
     name="Battery",
@@ -43,7 +41,7 @@ battery = technologies.BatteryStorage(
     charging_efficiency=1,
     initial_soc=0.1,
     loss_rate=0,
-    fixed_losses_absolute=[1e1, 1e1]
+    fixed_losses_absolute=[1e1, 1e1],
 )
 
 house_1.add(battery)
@@ -68,22 +66,26 @@ solph_representation = SolphModel(
 solph_representation.build_solph_model()
 
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-mr = meta_results(solved_model)
-myresults = results(solved_model)
-flows = get_flows(myresults)
+mr = Results(solved_model)
+flows = mr["flow"]
 
-charging_power = flows[
-    ("house_1", "ElectricityCarrier", "distribution"),
-    ("house_1", "Battery", "Battery_Storage"),
-]
+label1 = ("distribution", "ElectricityCarrier", "house_1")
+label2 = ("Battery_Storage", "Battery", "house_1")
+charging_power = flows[(str(label1), str(label2))]
+
+print(charging_power)
 
 plt.figure(figsize=(10, 5))
-plt.plot(charging_power.index[:-1], charging_power[:-1])
+plt.plot(charging_power.index, charging_power)
 plt.xticks(
-    charging_power.index[:-1],
-    [x.strftime("%H:00") for x in charging_power.index[:-1]],
+    charging_power.index,
+    [x.strftime("%H:00") for x in charging_power.index],
 )
 plt.ylabel("Power (W)")
 plt.show()
 
-solph_representation.graph(flow_results=flows)
+units = get_flow_units(solph_representation)
+flow_colours = get_energy_types(solph_representation)
+solph_representation.graph(
+    flow_results=flows, units=units, flow_colours=flow_colours
+)

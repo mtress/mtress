@@ -8,6 +8,8 @@ from ..carriers import GasCarrier
 from ..physics import Gas
 from ._abstract_demand import AbstractDemand
 
+from .._constants import EnergyType
+
 
 class GasDemand(AbstractDemand):
     """
@@ -48,6 +50,8 @@ class GasDemand(AbstractDemand):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         gas_carrier = self.location.get_carrier(GasCarrier)
         _, pressure = gas_carrier.get_surrounding_levels(
             self.gas_type, self.pressure
@@ -56,7 +60,14 @@ class GasDemand(AbstractDemand):
         gas_bus = self.create_solph_node(
             label="input",
             node_type=Bus,
-            inputs={gas_carrier.outputs[self.gas_type][pressure]: Flow()},
+            inputs={
+                gas_carrier.outputs[self.gas_type][pressure]: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.GAS,
+                    }
+                )
+            },
         )
 
         self.create_solph_node(
@@ -64,6 +75,10 @@ class GasDemand(AbstractDemand):
             node_type=Sink,
             inputs={
                 gas_bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.GAS,
+                    },
                     nominal_value=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL

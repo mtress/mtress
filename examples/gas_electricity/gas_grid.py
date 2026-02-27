@@ -5,9 +5,7 @@ CHP implementation for heat and power generation.
 
 import logging
 import os
-
-from oemof.solph.processing import results
-
+from oemof.solph import Results
 from mtress import (
     Location,
     MetaModel,
@@ -16,10 +14,10 @@ from mtress import (
     demands,
     technologies,
 )
+from mtress._helpers import get_flow_units, get_energy_types
 from mtress.physics import HYDROGEN
 from mtress.technologies import HYDROGEN_CHP
 
-from mtress._helpers import get_flows
 
 LOGGER = logging.getLogger(__file__)
 
@@ -33,7 +31,6 @@ house_2 = Location(name="house_2")
 energy_system.add_location(house_1)
 energy_system.add_location(house_2)
 
-
 house_1.add(carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=350))
 
@@ -46,7 +43,6 @@ house_1.add(
         revenue=-5,
     )
 )
-
 house_1.add(
     carriers.GasCarrier(
         gases={
@@ -54,16 +50,13 @@ house_1.add(
         }
     )
 )
-
 house_1.add(
     demands.Electricity(
         name="electricity_demand",
         time_series=1e3,
     )
 )
-
 house_1.add(carriers.HeatCarrier(temperature_levels=[20, 80]))
-
 house_1.add(
     demands.FixedTemperatureHeating(
         name="heat_demand",
@@ -72,8 +65,6 @@ house_1.add(
         return_temperature=20,
     )
 )
-
-
 house_1.add(
     technologies.CHP(
         name="H2_CHP",
@@ -82,9 +73,7 @@ house_1.add(
         input_pressure=30,
     )
 )
-
 house_1.add(technologies.SlackNode())
-
 house_2.add(
     carriers.GasCarrier(
         gases={
@@ -92,7 +81,6 @@ house_2.add(
         }
     )
 )
-
 house_2.add(
     technologies.GasGridConnection(
         name="H2_Grid",
@@ -102,7 +90,6 @@ house_2.add(
         revenue=2,
     )
 )
-
 house_2.add(
     demands.GasDemand(
         name="H2_demand", gas_type=HYDROGEN, time_series=1, pressure=30
@@ -122,11 +109,13 @@ solph_representation = SolphModel(
 house_1.connect(connection=technologies.GasGridConnection, destination=house_2)
 
 solph_representation.build_solph_model()
-
 solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-myresults = results(solved_model)
-flows = get_flows(myresults)
+myresults = Results(solved_model)
+flows = myresults["flow"]
+units = get_flow_units(solph_representation)
+flow_colours = get_energy_types(solph_representation)
+# solph_representation.graph_interactive(
+#     flow_results=flows, units=units, flow_colours=flow_colours
+# )
 
 solved_model.write("gas_grid.lp", io_options={"symbolic_solver_labels": True})
-
-# solph_representation.graph(flow_results=flows)

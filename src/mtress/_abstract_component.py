@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Callable
 
 from ._interfaces import NamedElement
 from ._solph_model import SolphModel
+from oemof.network import Node
 
 if TYPE_CHECKING:
     from ._location import Location
@@ -43,33 +44,27 @@ class AbstractComponent(NamedElement):
 
         self._solph_model = solph_model
 
-    def create_solph_node(self, label: str, node_type: Callable, **kwargs):
-        """Create a solph node and add it to the solph model."""
-        _full_label = tuple(self.create_label(label))
+    def create_solph_node(self, label: str, node_type: Node, **kwargs):
+        """Create a solph subnode and add it to the solph model."""
+        _subnode = self._node.subnode(node_type, local_name=label, **kwargs)
 
-        if label in self._solph_nodes:
-            raise KeyError(
-                f"Solph component named {_full_label} already exists"
+        self._solph_nodes.append(_subnode)
+
+        return _subnode
+
+    def build_core(self):
+        if self._location:
+            self._node = self._location.node.subnode(
+                Node,
+                local_name=self.name,
             )
-
-        _node = node_type(label=_full_label, **kwargs)
-
-        # Store a reference to the MTRESS component
-        setattr(_node, "mtress_component", self)
-        setattr(_node, "short_label", label)
-
-        self._solph_nodes.append(_node)
-        self._solph_model.energy_system.add(_node)
-
-        return _node
+        else:
+            self._node = Node(label=self.name)
 
     @property
     def solph_nodes(self) -> list:
         """Iterate over solph nodes."""
         return self._solph_nodes
-
-    def build_core(self) -> None:
-        """Build the core structure of the component."""
 
     def establish_interconnections(self) -> None:
         """Build interconnections with other nodes."""

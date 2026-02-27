@@ -72,8 +72,9 @@ class SolphModel:
 
     def _build_solph_energy_system(self):
         """Build the `oemof.solph` representation of the energy system."""
-        for component in self._meta_model.components:
-            component.build_core()
+        for location in self._meta_model._locations:
+            location.build_core()
+            self.energy_system.add(location.node)
 
         for component in self._meta_model.components:
             component.establish_interconnections()
@@ -83,6 +84,7 @@ class SolphModel:
                 connection.carrier, connection.destination
             )
 
+    @property
     def nodes(self):
         # access oemof.network.nodes
         return self.energy_system.nodes
@@ -97,51 +99,43 @@ class SolphModel:
     def graph(
         self,
         flow_results: dict = None,
-        flow_color: dict = None,
-        colorscheme: dict = None,
+        units: dict = None,
+        flow_colours: dict = None,
+        colour_scheme: dict = None,
         path: str = "model.png",
     ):
         graph_graphviz(
-            nodes=self.nodes(),
+            nodes=self.nodes,
             flows=flow_results,
-            flow_color=flow_color,
-            colorscheme=colorscheme,
+            units=units,
+            flow_colours=flow_colours,
+            colour_scheme=colour_scheme,
             path=path,
         )
 
     def graph_interactive(
         self,
         flow_results: dict = None,
-        flow_color: dict = None,
-        colorscheme: dict = None,
+        units: dict = None,
+        flow_colours: dict = None,
+        colour_scheme: dict = None,
     ):
         graph_cytoscape(
-            nodes=self.nodes(),
+            nodes=self.nodes,
             flows=flow_results,
-            flow_color=flow_color,
-            colorscheme=colorscheme,
+            units=units,
+            flow_colours=flow_colours,
+            colour_scheme=colour_scheme,
         )
 
-    def solve(
-        self,
-        solver: str = "cbc",
-        solve_kwargs: dict = None,
-        cmdline_options: dict = None,
-    ):
-        """Solve generated energy system model."""
+    def solve(self, **kwargs):
+        """Solve energy system model (wraps `oemof.solph.Model.solve`)."""
 
         if self.model is None:
             LOGGER.info("Building solph model.")
             self.build_solph_model()
         else:
             LOGGER.info("Using solph model built before.")
-
-        kwargs = {"solver": solver}
-        if solve_kwargs is not None:
-            kwargs["solve_kwargs"] = solve_kwargs
-
-        if cmdline_options is not None:
-            kwargs["cmdline_options"] = cmdline_options
 
         LOGGER.info("Solving the optimisation model.")
         self.model.solve(**kwargs)

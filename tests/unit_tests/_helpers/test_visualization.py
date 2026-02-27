@@ -5,7 +5,7 @@ Tests for the MTRESS visualization helper module.
 
 import jsonschema
 
-from oemof.solph.processing import results
+from oemof.solph import Results
 
 from mtress import (
     Location,
@@ -15,16 +15,17 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
+
 from mtress._helpers._visualization import (
     generate_graph,
     generate_graph_cytoscape,
 )
+from mtress._helpers import get_energy_types
 
 
 def test_graph():
     nodes = []
-    colors = set()
+    colours = set()
     meta_model = MetaModel()
 
     house_1 = Location(name="house_1")
@@ -65,46 +66,31 @@ def test_graph():
     solph_representation.build_solph_model()
 
     solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-    myresults = results(solved_model)
-    flows = get_flows(myresults)
+    myresults = Results(solved_model)
+    flows = myresults["flow"]
 
-    colorscheme = {
-        "ElectricityCarrier": "orange",
-        "GasCarrier": "steelblue",
-        "HeatCarrier": "maroon",
-    }
-    colors.add("orange")  # only electricity in the system
+    flow_colours = get_energy_types(solph_representation)
 
-    flow_color = {
-        ("house_1", "demand1", "input"): {
-            ("house_1", "demand1", "sink"): "red"
-        },
-        ("house_1", "ElectricityGridConnection", "source_import"): {
-            ("house_1", "ElectricityGridConnection", "grid_import"): "blue"
-        },
-    }
-    colors.add("red")
-    colors.add("blue")
+    colours.add("orange")  # only electricity in the system
 
     graph_elements = generate_graph(
-        nodes=solph_representation.nodes(),
+        nodes=solph_representation.nodes,
         flows=flows,
-        flow_color=flow_color,
-        colorscheme=colorscheme,
+        flow_colours=flow_colours,
     )
 
     # check all nodes present
-    nodes = graph_elements["nodes"]
-    assert set(nodes) == set(nodes.keys())
+    graph_nodes = graph_elements["nodes"]
+    assert set(nodes) == set(graph_nodes.keys())
 
-    # check graph colors okay
+    # check graph colours okay
     edges = graph_elements["edges"]
-    graph_colors = set()
+    graph_colours = set()
 
-    for source, targets in edges.items():
-        for target, edge_attributes in targets.items():
-            graph_colors.add(edge_attributes["color"])
-    assert colors == graph_colors
+    for _, targets in edges.items():
+        for _, edge_attributes in targets.items():
+            graph_colours.add(edge_attributes["colour"])
+    assert colours == graph_colours
 
     # check dict schema
     schema = {
@@ -142,14 +128,14 @@ def test_graph():
                 "additionalProperties": {
                     "type": "object",  # target
                     "additionalProperties": {
-                        "color": {
+                        "colour": {
                             "type": "string",
                         },
                         "flow": {
                             "type": "number",
                         },
                         "required": [
-                            "color",
+                            "colour",
                         ],
                     },
                 },
@@ -189,7 +175,7 @@ def test_graph():
                         "text-rotation": {"type": "string"},
                         "text-background-shape": {"type": "string"},
                         "text-background-opacity": {"type": "string"},
-                        "color": {"type": "string"},
+                        "colour": {"type": "string"},
                     },
                 },
             },

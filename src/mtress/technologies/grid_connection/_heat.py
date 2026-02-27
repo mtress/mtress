@@ -10,6 +10,8 @@ from mtress._data_handler import TimeseriesSpecifier
 from mtress.carriers import HeatCarrier
 from ._abstract_grid_connection import AbstractGridConnection
 
+from ..._constants import EnergyType
+
 
 class HeatGridConnection(AbstractGridConnection, AbstactHeatExchanger):
 
@@ -41,6 +43,7 @@ class HeatGridConnection(AbstractGridConnection, AbstactHeatExchanger):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
         super()._build_core()
 
     def establish_interconnections(self) -> None:
@@ -73,6 +76,7 @@ class HeatGridInterconnection(AbstractGridConnection):
         self.level_nodes = {}
 
     def build_core(self):
+        super().build_core()
 
         heat_carrier = self.location.get_carrier(HeatCarrier)
 
@@ -85,10 +89,20 @@ class HeatGridInterconnection(AbstractGridConnection):
                 label=f"T_{temperature}",
                 node_type=Bus,
                 inputs={
-                    heat_carrier.level_nodes[temperature]: Flow(),
+                    heat_carrier.level_nodes[temperature]: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
                 },
                 outputs={
-                    heat_carrier.level_nodes[temperature]: Flow(),
+                    heat_carrier.level_nodes[temperature]: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
                 },
             )
 
@@ -99,5 +113,15 @@ class HeatGridInterconnection(AbstractGridConnection):
         for node1_t, node2_t in zip(
             self.level_nodes.values(), other.level_nodes.values()
         ):
-            node1_t.inputs[node2_t] = Flow()
-            node1_t.outputs[node2_t] = Flow()
+            node1_t.inputs[node2_t] = Flow(
+                custom_properties={
+                    "unit": "kg/h",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+            node1_t.outputs[node2_t] = Flow(
+                custom_properties={
+                    "unit": "kg/h",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )

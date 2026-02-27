@@ -3,6 +3,7 @@
 from oemof.solph import Bus, Flow
 
 from ._abstract_carrier import AbstractLayeredCarrier
+from .._constants import EnergyType
 
 
 class GasCarrier(AbstractLayeredCarrier):
@@ -37,6 +38,8 @@ class GasCarrier(AbstractLayeredCarrier):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
+
         for gas, pressures in self.levels.items():
             pressure_low = None
             self.distribution[gas] = {}
@@ -51,7 +54,14 @@ class GasCarrier(AbstractLayeredCarrier):
                     bus = self.create_solph_node(
                         label=f"{gas.name}_{pressure}",
                         node_type=Bus,
-                        outputs={self.distribution[gas][pressure_low]: Flow()},
+                        outputs={
+                            self.distribution[gas][pressure_low]: Flow(
+                                custom_properties={
+                                    "unit": "kg/h",
+                                    "energy_type": EnergyType.GAS,
+                                }
+                            )
+                        },
                     )
                 self.distribution[gas][pressure] = bus
 

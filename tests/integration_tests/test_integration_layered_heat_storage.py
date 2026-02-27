@@ -5,7 +5,7 @@ Tests for MTRESS LayeredHeatStorage
 import os
 
 import pytest
-from oemof.solph.processing import results
+from oemof.solph import Results
 
 from mtress import (
     Location,
@@ -15,7 +15,6 @@ from mtress import (
     demands,
     technologies,
 )
-from mtress._helpers import get_flows
 
 n_days = 30
 
@@ -93,7 +92,6 @@ def test_layered_heat_storage():
     )
 
     solph_representation.build_solph_model()
-
     solved_model = solph_representation.solve(solve_kwargs={"tee": False})
 
     return solph_representation, solved_model
@@ -110,8 +108,8 @@ if __name__ == "__main__":
 
     solph_representation, solved_model = test_layered_heat_storage()
 
-    myresults = results(solved_model)
-    flows = get_flows(myresults)
+    myresults = Results(solved_model)
+    flows = myresults["flow"]
 
     total_content = np.zeros(n_days * 24 + 1)
     index = None

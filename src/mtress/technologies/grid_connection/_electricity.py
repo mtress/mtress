@@ -12,6 +12,8 @@ from mtress.carriers import ElectricityCarrier
 
 from ._abstract_grid_connection import AbstractGridConnection
 
+from ..._constants import EnergyType
+
 
 class ElectricityGridConnection(AbstractGridConnection):
     def __init__(
@@ -40,18 +42,34 @@ class ElectricityGridConnection(AbstractGridConnection):
         self.grid_import = None
 
     def build_core(self):
+        super().build_core()
+
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
         self.grid_import = b_grid_import = self.create_solph_node(
             label="grid_import",
             node_type=Bus,
-            outputs={electricity_carrier.distribution: Flow()},
+            outputs={
+                electricity_carrier.distribution: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    }
+                )
+            },
         )
 
         self.grid_export = b_grid_export = self.create_solph_node(
             label="grid_export",
             node_type=Bus,
-            inputs={electricity_carrier.feed_in: Flow()},
+            inputs={
+                electricity_carrier.feed_in: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    }
+                )
+            },
         )
         if self.revenue is not None:
             self.create_solph_node(
@@ -59,6 +77,10 @@ class ElectricityGridConnection(AbstractGridConnection):
                 node_type=Sink,
                 inputs={
                     b_grid_export: Flow(
+                        custom_properties={
+                            "unit": "W",
+                            "energy_type": EnergyType.ELECTRICITY,
+                        },
                         nominal_value=self.grid_export_limit,
                         variable_costs=-self._solph_model.data.get_timeseries(
                             self.revenue, kind=TimeseriesType.INTERVAL
@@ -80,6 +102,10 @@ class ElectricityGridConnection(AbstractGridConnection):
                 node_type=Source,
                 outputs={
                     b_grid_import: Flow(
+                        custom_properties={
+                            "unit": "W",
+                            "energy_type": EnergyType.ELECTRICITY,
+                        },
                         nominal_value=maximum_load,
                         variable_costs=self._solph_model.data.get_timeseries(
                             self.working_rate, kind=TimeseriesType.INTERVAL
@@ -94,4 +120,9 @@ class ElectricityGridConnection(AbstractGridConnection):
     ):
         # TODO create the actual flows between the location in
         # establish interconnections
-        self.grid_export.outputs[other.grid_import] = Flow()
+        self.grid_export.outputs[other.grid_import] = Flow(
+            custom_properties={
+                "unit": "W",
+                "energy_type": EnergyType.ELECTRICITY,
+            }
+        )

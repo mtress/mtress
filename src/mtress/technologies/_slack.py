@@ -18,6 +18,8 @@ from ..carriers._abstract_carrier import AbstractCarrier
 from ..carriers import ElectricityCarrier, HeatCarrier, GasCarrier
 from ._abstract_technology import AbstractTechnology
 
+from .._constants import EnergyType
+
 
 class SlackNode(AbstractTechnology):
     """
@@ -48,6 +50,8 @@ class SlackNode(AbstractTechnology):
 
     def build_core(self):
         """Build oemof solph core structure."""
+        super().build_core()
+
         # get all carriers
         carriers = self.location._carriers
 
@@ -80,22 +84,58 @@ class SlackNode(AbstractTechnology):
                     ElectricityCarrier
                 )
                 node = electricity_carrier.distribution
-                slack_source[node] = Flow(variable_costs=v)
-                slack_sink[node] = Flow(variable_costs=v)
+                slack_source[node] = Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
+                    variable_costs=v,
+                )
+                slack_sink[node] = Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    },
+                    variable_costs=v,
+                )
             elif k == HeatCarrier:
                 heat_carrier = self.location.get_carrier(HeatCarrier)
                 for h_node in heat_carrier.level_nodes.values():
-                    slack_source[h_node] = Flow(variable_costs=v)
-                    slack_sink[h_node] = Flow(variable_costs=v)
+                    slack_source[h_node] = Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        },
+                        variable_costs=v,
+                    )
+                    slack_sink[h_node] = Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        },
+                        variable_costs=v,
+                    )
             elif k == GasCarrier:
                 gas_carrier = self.location.get_carrier(GasCarrier)
                 for gas in gas_carrier.distribution.values():
                     gas_nodes = list(gas.values())  # always sorted
                     gas_high = gas_nodes[-1]
-                    slack_source[gas_high] = Flow(variable_costs=v)
+                    slack_source[gas_high] = Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.GAS,
+                        },
+                        variable_costs=v,
+                    )
 
                     gas_low = gas_nodes[0]
-                    slack_sink[gas_low] = Flow(variable_costs=v)
+                    slack_sink[gas_low] = Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.GAS,
+                        },
+                        variable_costs=v,
+                    )
             # match any other carrier
             # NOTE: will connect sink and source to all nodes
             else:

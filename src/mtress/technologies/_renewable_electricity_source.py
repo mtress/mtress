@@ -11,12 +11,14 @@ SPDX-FileCopyrightText: Sunke Schlüters
 SPDX-License-Identifier: MIT
 """
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Source
 
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier
 from ._abstract_technology import AbstractTechnology
+
+from .._constants import EnergyType
 
 
 class RenewableElectricitySource(AbstractTechnology):
@@ -25,7 +27,7 @@ class RenewableElectricitySource(AbstractTechnology):
     def __init__(
         self,
         name: str,
-        nominal_power: float,
+        nominal_power: Investment | float,
         specific_generation: TimeseriesSpecifier,
         working_rate: TimeseriesSpecifier = 0,
         fixed: bool = True,
@@ -51,10 +53,16 @@ class RenewableElectricitySource(AbstractTechnology):
 
     def build_core(self):
         """Build oemof solph core structure."""
+        super().build_core()
+
         electricity_carrier = self.location.get_carrier(ElectricityCarrier)
 
         if self.fixed:
             flow = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.ELECTRICITY,
+                },
                 nominal_value=self.nominal_power,
                 variable_costs=self._solph_model.data.get_timeseries(
                     self.working_rate, kind=TimeseriesType.INTERVAL
@@ -65,6 +73,10 @@ class RenewableElectricitySource(AbstractTechnology):
             )
         else:
             flow = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.ELECTRICITY,
+                },
                 nominal_value=self.nominal_power,
                 variable_costs=self._solph_model.data.get_timeseries(
                     self.working_rate, kind=TimeseriesType.INTERVAL
@@ -78,8 +90,18 @@ class RenewableElectricitySource(AbstractTechnology):
             label="connection",
             node_type=Bus,
             outputs={
-                electricity_carrier.feed_in: Flow(),
-                electricity_carrier.distribution: Flow(),
+                electricity_carrier.feed_in: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    }
+                ),
+                electricity_carrier.distribution: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    }
+                ),
             },
         )
 

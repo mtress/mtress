@@ -2,12 +2,14 @@
 
 import logging
 
-from oemof.solph import Bus, Flow
+from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Converter
 
 from ..carriers import ElectricityCarrier, GasCarrier, HeatCarrier
 from ..physics import Gas
 from ._abstract_technology import AbstractTechnology
+
+from .._constants import EnergyType
 
 LOGGER = logging.getLogger(__file__)
 
@@ -32,6 +34,7 @@ class AbstractHeater(AbstractTechnology):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
+        super().build_core()
 
         self.heat_bus = heat_bus = self.create_solph_node(
             label="heat",
@@ -55,11 +58,26 @@ class AbstractHeater(AbstractTechnology):
                 label=f"heat_{temp_in:.0f}_{temp_out:.0f}",
                 node_type=Converter,
                 inputs={
-                    bus_cold: Flow(),
-                    heat_bus: Flow(),
+                    bus_cold: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
+                    heat_bus: Flow(
+                        custom_properties={
+                            "unit": "W",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
                 },
                 outputs={
-                    bus_warm: Flow(),
+                    bus_warm: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
                 },
                 conversion_factors={
                     bus_warm: 1,
@@ -80,7 +98,7 @@ class ResistiveHeater(AbstractHeater):
         name: str,
         maximum_temperature: float,
         minimum_temperature: float = 0,
-        thermal_power_limit: float = None,
+        thermal_power_limit: Investment | float = None,
         efficiency: float = 1,
     ):
         """
@@ -105,7 +123,6 @@ class ResistiveHeater(AbstractHeater):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-
         super().build_core()
 
         # Add electrical connection
@@ -115,9 +132,22 @@ class ResistiveHeater(AbstractHeater):
         self.create_solph_node(
             label="heater",
             node_type=Converter,
-            inputs={electrical_bus: Flow()},
+            inputs={
+                electrical_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.ELECTRICITY,
+                    }
+                )
+            },
             outputs={
-                self.heat_bus: Flow(nominal_value=self.thermal_power_limit)
+                self.heat_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
+                    nominal_value=self.thermal_power_limit,
+                )
             },
             conversion_factors={
                 electrical_bus: 1,
@@ -137,7 +167,7 @@ class GasBoiler(AbstractHeater):
         gas_type: Gas,
         maximum_temperature: float,
         minimum_temperature: float,
-        thermal_power_limit: float,
+        thermal_power_limit: float | Investment,
         efficiency: float,
         input_pressure: float,
     ):
@@ -170,7 +200,6 @@ class GasBoiler(AbstractHeater):
 
     def build_core(self):
         """Build core structure of oemof.solph representation."""
-
         super().build_core()
 
         gas_carrier = self.location.get_carrier(GasCarrier)
@@ -183,10 +212,21 @@ class GasBoiler(AbstractHeater):
             label="converter",
             node_type=Converter,
             inputs={
-                gas_bus: Flow(),
+                gas_bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.GAS,
+                    }
+                ),
             },
             outputs={
-                self.heat_bus: Flow(nominal_value=self.thermal_power_limit),
+                self.heat_bus: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
+                    nominal_value=self.thermal_power_limit,
+                ),
             },
             conversion_factors={
                 self.heat_bus: self.efficiency * self.gas_type.LHV,

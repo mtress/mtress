@@ -22,7 +22,7 @@ authors = [
     {name = "Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)", email = "patrik.schoenfeldt@dlr.de"},
 ]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
@@ -39,8 +39,9 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
     "graphviz",
-    "oemof.solph>=0.5.4",
-    "oemof.thermal>=0.0.6.dev1",
+    "oemof.network>=0.5.2a1",
+    "oemof.solph>=0.6.2a2",
+    "oemof.thermal>=0.0.9a1",
     "pandas>=1.3.4",
     "PyYAML>=6.0",
     "numpy>=2.2.0",
