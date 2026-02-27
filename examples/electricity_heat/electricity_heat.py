@@ -137,15 +137,15 @@ solved_model.write(
 solph_representation.graph(flow_results=flows)
 
 
-Qc = flows[
-    ("heat_budget_source", "HeatPump", "house_1"),
-    ("heat_budget", "HeatPump", "house_1"),
-]
-Pel = flows[
-    ("distribution", "ElectricityCarrier", "house_1"),
-    ("electricity", "HeatPump", "house_1"),
-]
+label1 = ("heat_budget_source", "HeatPump", "house_1")
+label2 = ("heat_budget", "HeatPump", "house_1")
+
+Qc = flows[(str(label1), str(label2))]
+
+label3 = ("distribution", "ElectricityCarrier", "house_1")
+label4 = ("electricity", "HeatPump", "house_1")
+
+Pel = flows[(str(label3), str(label4))]
 
 COP = Qc / Pel
-house_1
 print(COP)
