@@ -3,7 +3,7 @@
 ## CBC & Graphviz
 ### CBC solver
 For MTRESS to run we need a solver. The default solver is CBC. Of course other solvers can be used as well. Since in it's core, MTRESS is based on `pyomo`, a list of supported solvers can be found here: [supported solvers](https://pyomo.readthedocs.io/en/stable/api/pyomo.solvers.plugins.solvers.html).
-For simlicity we can download CBC here: [CBC releases](https://github.com/coin-or/Cbc/releases)
+For simplicity we can download CBC here: [CBC releases](https://github.com/coin-or/Cbc/releases)
 
 ### Visualization with Graphviz
 To understand how MTRESS works and builds an energy system, it can be very helpful to inspect the energy system. For this purpopse we rely on Graphviz, which can be downloaded here: [Graphviz download](https://graphviz.org/download/)
