@@ -46,8 +46,6 @@ data: pd.DataFrame = data[
 # extract data for simple usage
 elec_demand = data["electricity demand (W)"]
 heat_demand = data["heat demand (W)"]
-data["PV (W/Wp)"] *= 3
-pv_data = data["PV (W/Wp)"]
 
 # plot data
 data.plot()
@@ -83,8 +81,8 @@ def base_model_factory() -> tuple[MetaModel, Location]:
     loc.add(
         technologies.RenewableElectricitySource(
             name="pv",
-            nominal_power=2,  # double the size
-            specific_generation=pv_data,
+            nominal_power=6,  # installed capacity
+            specific_generation=data["PV (W/Wp)"],
         )
     )
 
@@ -312,15 +310,16 @@ loc.add(
 loc.add(
     technologies.LayeredHeatStorage(
         name="heat_storage",
-        diameter=0.3,
-        volume=1.2,
+        diameter=0.5,
+        volume=2,
         power_limit=7500,
         ambient_temperature=10,
         min_temperature=10,
         max_temperature=50,
-        # u_value=0.01,
+        u_value=0.1,
     )
 )
+
 
 # %%[REPEAT:solve]
 solph_representation, results = get_results(energy_system)
@@ -331,6 +330,8 @@ flows = results["flow"]
 # get storage content and losses
 storage_content = results["storage_content"]
 storage_losses = results["storage_losses"]
+
+storage_content[storage_content < 0] = 0
 
 # %%[REPEAT:plot_system]
 # for plotting of the system, get units and energy types
