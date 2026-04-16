@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from ._abstract_component import AbstractComponent
+from ._constants import EnergyType
 from ._subnetwork import SubNetwork
 from .carriers._abstract_carrier import AbstractCarrier
-
-from ._constants import EnergyType
 
 
 class Location(SubNetwork):
@@ -73,6 +72,7 @@ class Location(SubNetwork):
 
     def establish_interconnections(self):
         for sn in self.subnodes:
+            sn: SubNetwork
             try:
                 sn.establish_interconnections()
             except AttributeError:
