@@ -12,8 +12,8 @@ SPDX-License-Identifier: MIT
 """
 from oemof.solph import Bus
 
-from ._abstract_carrier import AbstractLayeredCarrier
 from .._constants import EnergyType
+from ._abstract_carrier import AbstractLayeredCarrier
 
 
 class HeatCarrier(AbstractLayeredCarrier):
@@ -73,4 +73,20 @@ class HeatCarrier(AbstractLayeredCarrier):
         self.outbound_interfaces[EnergyType.HEAT] = self.subnodes
 
     def establish_interconnections(self):
-        pass
+        # collect fixed temparature levels
+        interfaces = self.parent.get_interfaces(EnergyType.HEAT)
+        temps = [
+            t
+            for i in interfaces
+            if (t := i.custom_properties.get("temperature")) is not None
+        ]
+
+        # add nodes and update levels
+        for t in temps:
+            t_bus = self.subnode(
+                Bus,
+                local_name=f"T_{t}",
+                custom_properties={"temperature": t},
+            )
+            self.level_nodes[t] = t_bus
+            self._levels.append(t)
