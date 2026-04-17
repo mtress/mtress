@@ -107,5 +107,5 @@ class MetaModel:
     def components(self) -> Iterable[AbstractComponent]:
         """Iterate over all components of all locations."""
         for location in self.locations:
-            for component in location.components:
+            for component in location.subnodes:
                 yield component
