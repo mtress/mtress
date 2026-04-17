@@ -1,13 +1,13 @@
 """Room heating technologies."""
 
 from oemof.solph import Bus, Flow
+from oemof.solph._plumbing import _FakeSequence
 from oemof.solph.components import Converter, Sink, Source
 
-from .._data_handler import TimeseriesType, TimeseriesSpecifier
+from .._constants import EnergyType
+from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import HeatCarrier
 from ._abstract_demand import AbstractDemand
-
-from .._constants import EnergyType
 
 
 class AbstractFixedTemperature(AbstractDemand):
@@ -145,7 +145,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
                 "unit": "W",
                 "energy_type": EnergyType.HEAT,
             },
-            nominal_value=1,
+            nominal_capacity=1,
             fix=self._time_series,
         )
 
@@ -204,12 +204,15 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             )
 
             # update conversion factors according to temp available in carrier
-            self._converter.conversion_factors = {
-                self._input_node: 1,
-                self._output_node: 1,
-                self._sink: (maximum_t - self.return_temperature)
-                * self.specific_heat_capacity,
+            cf_new = {
+                self._input_node: _FakeSequence(1),
+                self._output_node: _FakeSequence(1),
+                self._sink: _FakeSequence(
+                    (maximum_t - self.return_temperature)
+                    * self.specific_heat_capacity
+                ),
             }
+            self._converter.conversion_factors = cf_new
 
 
 class FixedTemperatureCooling(AbstractFixedTemperature):
@@ -286,7 +289,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
                 "unit": "W",
                 "energy_type": EnergyType.HEAT,
             },
-            nominal_value=1,
+            nominal_capacity=1,
             fix=self._time_series,
         )
 
@@ -352,9 +355,12 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             )
 
             # update conversion factors according to temp available in carrier
-            self._converter.conversion_factors = {
-                self._input_node: 1,
-                self._source: self.specific_heat_capacity
-                * (self.return_temperature - minimum_t),
-                self._output_node: 1,
+            cf_new = {
+                self._input_node: _FakeSequence(1),
+                self._source: _FakeSequence(
+                    self.specific_heat_capacity
+                    * (self.return_temperature - minimum_t)
+                ),
+                self._output_node: _FakeSequence(1),
             }
+            self._converter.conversion_factors = cf_new
