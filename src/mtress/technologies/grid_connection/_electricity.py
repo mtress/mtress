@@ -10,9 +10,8 @@ from oemof.solph.components import Sink, Source
 from mtress._data_handler import TimeseriesSpecifier
 from mtress.carriers import ElectricityCarrier
 
-from ._abstract_grid_connection import AbstractGridConnection
-
 from ..._constants import EnergyType
+from ._abstract_grid_connection import AbstractGridConnection
 
 
 class ElectricityGridConnection(AbstractGridConnection):
@@ -70,7 +69,7 @@ class ElectricityGridConnection(AbstractGridConnection):
                             "unit": "W",
                             "energy_type": EnergyType.ELECTRICITY,
                         },
-                        nominal_value=self.grid_export_limit,
+                        nominal_capacity=self.grid_export_limit,
                         variable_costs=-self.revenue,
                     )
                 },
