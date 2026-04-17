@@ -64,17 +64,12 @@ class SolphModel:
         )
         self.model: Model = None
 
-        # Store a reference to the solph model
-        for component in self._meta_model.components:
-            component.register_solph_model(self)
-
         self._build_solph_energy_system()
 
     def _build_solph_energy_system(self):
         """Build the `oemof.solph` representation of the energy system."""
         for location in self._meta_model._locations:
-            location.build_core()
-            self.energy_system.add(location.node)
+            self.energy_system.add(location)
 
         for component in self._meta_model.components:
             component.establish_interconnections()
@@ -94,7 +89,7 @@ class SolphModel:
         self.model = Model(self.energy_system)
 
         for component in self._meta_model.components:
-            component.add_constraints()
+            component.add_constraints(model=self.model)
 
     def graph(
         self,
