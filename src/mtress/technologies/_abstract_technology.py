@@ -10,13 +10,13 @@ class AbstractTechnology(SubNetwork):
 
     def __init__(
         self,
+        label,
         *,
         location=None,
         custom_properties=None,
     ):
         """Initialize technology."""
 
-        label = self.__class__.__name__
         if location:
             if isinstance(location.label, QualifiedLabel):
                 label = QualifiedLabel([label, *location.label])
