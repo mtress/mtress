@@ -14,11 +14,10 @@ SPDX-License-Identifier: MIT
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Source
 
+from .._constants import EnergyType
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier
 from ._abstract_technology import AbstractTechnology
-
-from .._constants import EnergyType
 
 
 class RenewableElectricitySource(AbstractTechnology):
@@ -26,11 +25,14 @@ class RenewableElectricitySource(AbstractTechnology):
 
     def __init__(
         self,
-        name: str,
+        label,
+        *,
         nominal_power: Investment | float,
         specific_generation: TimeseriesSpecifier,
         working_rate: TimeseriesSpecifier = 0,
         fixed: bool = True,
+        location=None,
+        custom_properties=None,
     ):
         """
         Initialize generic electricity source.
@@ -44,32 +46,35 @@ class RenewableElectricitySource(AbstractTechnology):
             defined by nominal_power and specific_generation or bounded
             by these values.
         """
-        super().__init__(name=name)
+        super().__init__(
+            label,
+            location=location,
+            custom_properties=custom_properties,
+        )
 
-        self.nominal_power = nominal_power
-        self.specific_generation = specific_generation
-        self.working_rate = working_rate
-        self.fixed = fixed
+        self._nominal_power = nominal_power
+        self._specific_generation = specific_generation
+        self._working_rate = working_rate
+        self._fixed = fixed
 
-    def build_core(self):
-        """Build oemof solph core structure."""
-        super().build_core()
+        self._build_core()
 
-        electricity_carrier = self.location.get_carrier(ElectricityCarrier)
+    def _build_core(self):
+        # TODO!
+        self._output_node = self.subnode(
+            Bus,
+            local_name="output",
+        )
 
-        if self.fixed:
+        if self._fixed:
             flow = Flow(
                 custom_properties={
                     "unit": "W",
                     "energy_type": EnergyType.ELECTRICITY,
                 },
-                nominal_value=self.nominal_power,
-                variable_costs=self._solph_model.data.get_timeseries(
-                    self.working_rate, kind=TimeseriesType.INTERVAL
-                ),
-                fix=self._solph_model.data.get_timeseries(
-                    self.specific_generation, kind=TimeseriesType.INTERVAL
-                ),
+                nominal_capacity=self._nominal_power,
+                variable_costs=self._working_rate,
+                fix=self._specific_generation,
             )
         else:
             flow = Flow(
@@ -77,36 +82,31 @@ class RenewableElectricitySource(AbstractTechnology):
                     "unit": "W",
                     "energy_type": EnergyType.ELECTRICITY,
                 },
-                nominal_value=self.nominal_power,
-                variable_costs=self._solph_model.data.get_timeseries(
-                    self.working_rate, kind=TimeseriesType.INTERVAL
-                ),
-                max=self._solph_model.data.get_timeseries(
-                    self.specific_generation, kind=TimeseriesType.INTERVAL
-                ),
+                nominal_capacity=self._nominal_power,
+                variable_costs=self._working_rate,
+                max=self._specific_generation,
             )
 
-        local_bus = self.create_solph_node(
-            label="connection",
-            node_type=Bus,
-            outputs={
-                electricity_carrier.feed_in: Flow(
-                    custom_properties={
-                        "unit": "W",
-                        "energy_type": EnergyType.ELECTRICITY,
-                    }
-                ),
-                electricity_carrier.distribution: Flow(
-                    custom_properties={
-                        "unit": "W",
-                        "energy_type": EnergyType.ELECTRICITY,
-                    }
-                ),
-            },
+        self.subnode(
+            Source,
+            local_name="source",
+            outputs={self._output_node: flow},
         )
+        self.outbound_interfaces[EnergyType.ELECTRICITY] = [self._output_node]
 
-        self.create_solph_node(
-            label="source",
-            node_type=Source,
-            outputs={local_bus: flow},
-        )
+    def establish_interconnections(self):
+        if self.parent:
+            electricity_carrier = self.parent.get_carrier(ElectricityCarrier)
+
+            self._output_node.outputs[electricity_carrier.distribution] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.ELECTRICITY,
+                }
+            )
+            self._output_node.outputs[electricity_carrier.feed_in] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.ELECTRICITY,
+                }
+            )
