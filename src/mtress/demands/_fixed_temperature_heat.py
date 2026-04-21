@@ -63,6 +63,20 @@ class AbstractFixedTemperature(AbstractDemand):
 
         self._time_series = time_series
 
+        # core components of any fixed temp demand
+        self._input_node = self.subnode(
+            Bus,
+            local_name="input",
+        )
+        self._output_node = self.subnode(
+            Bus,
+            local_name="output",
+            custom_properties={"temperature": self.return_temperature},
+        )
+
+        self.inbound_interfaces[EnergyType.HEAT] = [self._input_node]
+        self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
+
 
 class FixedTemperatureHeating(AbstractFixedTemperature):
     def __init__(
@@ -102,24 +116,11 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         self._build_core()
 
     def _build_core(self):
-        self._input_node = self.subnode(
-            Bus,
-            local_name="input",
-        )
-        self._output_node = self.subnode(
-            Bus,
-            local_name="output",
-            custom_properties={"temperature": self.return_temperature},
-        )
-
         self._sink = self.subnode(
             Sink,
             local_name="sink",
             inputs={},
         )
-
-        self.inbound_interfaces[EnergyType.HEAT] = [self._input_node]
-        self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
 
         # create converter and connect to sink and interface nodes
         inputs = {}
@@ -169,7 +170,6 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         if self.parent:
             heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
 
-            # TODO: register temp levels @ HeatCarrier
             if self.return_temperature not in heat_carrier.levels:
                 raise ValueError(
                     "Return temperature must be a temperature level"
@@ -253,24 +253,11 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         self._build_core()
 
     def _build_core(self):
-        self._input_node = self.subnode(
-            Bus,
-            local_name="input",
-        )
-        self._output_node = self.subnode(
-            Bus,
-            local_name="output",
-            custom_properties={"temperature": self.return_temperature},
-        )
-
         self._source = self.subnode(
             Source,
             local_name="source",
             outputs={},
         )
-
-        self.inbound_interfaces[EnergyType.HEAT] = [self._input_node]
-        self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
 
         # create converter and connect to source and interface nodes
         inputs = {}
@@ -320,7 +307,6 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         if self.parent:
             heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
 
-            # TODO: register temp levels @ HeatCarrier
             if self.return_temperature not in heat_carrier.levels:
                 raise ValueError(
                     "Return temperature must be a temperature level"
