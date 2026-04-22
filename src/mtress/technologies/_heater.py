@@ -246,6 +246,43 @@ class ResistiveHeater(AbstractHeater):
                     },
                 )
 
+        else:
+            # min to max converter
+            self.subnode(
+                Converter,
+                local_name=f"heat_{self._minimum_temperature:.0f}_{self._maximum_temperature:.0f}",
+                inputs={
+                    self._in_min_temp: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
+                    self._heat_bus: Flow(
+                        custom_properties={
+                            "unit": "W",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
+                },
+                outputs={
+                    self._out_max_temp: Flow(
+                        custom_properties={
+                            "unit": "kg/h",
+                            "energy_type": EnergyType.HEAT,
+                        }
+                    ),
+                },
+                conversion_factors={
+                    self._out_max_temp: 1,
+                    self._in_min_temp: 1,
+                    self._heat_bus: (
+                        self._maximum_temperature - self._minimum_temperature
+                    )
+                    * self._specific_heat_capacity,
+                },
+            )
+
 
 class GasBoiler(AbstractHeater):
     """
