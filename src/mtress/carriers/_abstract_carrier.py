@@ -73,7 +73,7 @@ class AbstractLayeredCarrier(AbstractCarrier):
     @property
     def levels(self):
         """Return levels of carrier."""
-        return self._levels
+        return sorted(self._levels)
 
     def get_levels_between(self, minimum, maximum):
         """Returns the levels existing in a closed interval."""
