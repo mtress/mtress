@@ -1,28 +1,26 @@
 """Visulisation of energy system."""
 
+import logging
+from copy import deepcopy
+
+import dash_cytoscape as cyto
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from dash import Dash, Input, Output, callback, dcc, html
+from dash.exceptions import PreventUpdate
+from graphviz import Digraph
+from oemof.network.network.nodes import Node, QualifiedLabel
 from oemof.solph import Bus
 from oemof.solph.components import (
     Converter,
     GenericStorage,
+    OffsetConverter,
     Sink,
     Source,
-    OffsetConverter,
 )
-from oemof.network.network.nodes import QualifiedLabel
-from oemof.network.network.nodes import Node
 
 from .._constants import EnergyType
-
-from copy import deepcopy
-import logging
-from dash import Dash, html, dcc, Input, Output, callback
-from dash.exceptions import PreventUpdate
-import plotly.graph_objects as go
-import plotly.express as px
-import dash_cytoscape as cyto
-import pandas as pd
-
-from graphviz import Digraph
 
 # Define shapes for the component types
 SHAPES = {
@@ -67,8 +65,6 @@ SINK_SHAPE = "0.75, 1, 1, -1, -1, -1, -0.75, 1"
 def graph_graphviz(
     nodes,
     flows,
-    units: dict,
-    flow_colours: dict,
     colour_scheme: dict,
     path: str = "model.png",
 ) -> None:
@@ -79,7 +75,7 @@ def graph_graphviz(
     # get graphviz digraph
     f = flows is not None
     graph = generate_graph_graphviz(
-        generate_graph(nodes, flows, units, flow_colours, colour_scheme),
+        generate_graph(nodes, flows, colour_scheme),
         f,
     )
 
@@ -90,8 +86,6 @@ def graph_graphviz(
 def graph_cytoscape(
     nodes,
     flows,
-    units: dict,
-    flow_colours: dict,
     colour_scheme: dict,
 ):
     if colour_scheme is None:
@@ -101,7 +95,7 @@ def graph_cytoscape(
     # get cytoscape elements
     f = flows is not None
     elements = generate_graph_cytoscape(
-        generate_graph(nodes, flows, units, flow_colours, colour_scheme),
+        generate_graph(nodes, flows, colour_scheme),
         f,
     )
 
@@ -630,11 +624,12 @@ def graph_cytoscape(
     app.run(debug=False)
 
 
+from .._subnetwork import SubNetwork
+
+
 def generate_graph(
     nodes,
     flows,
-    units: dict = None,
-    flow_colours: dict = None,
     colour_scheme: dict = None,
 ) -> dict:
     """
@@ -651,81 +646,79 @@ def generate_graph(
     if colour_scheme is None:
         colour_scheme = COLOUR_SCHEME
 
-    # determine colour of edges
-    if flow_colours is None:
-        flow_colours = {}
-
     # data structures for storing nodes and edges
     graph_nodes = {}
-    graph_nodes_tracker = set()
     graph_edges = {}
 
     for n in nodes:
+        n: Node
         # get nodes
-        if type(n.label) == QualifiedLabel and type(n) != Node:
-            # oemof.network node
-            # reverse label
-            identifier = list(reversed(list(n.label)))
-
-            current_label, current_id = None, None
-            is_parent = False
-            # go up the hierarchy and build parent - child relationship
-            while identifier:  # do until list is empty
-                child_id = current_id
-                if current_id in graph_nodes_tracker:
-                    is_parent = True
-                current_id = "-".join(identifier)
-                current_label = identifier.pop()  # take element out of list
-                parent_id = "-".join(identifier)
-                graph_nodes.setdefault(
-                    current_id,
-                    {
-                        "label": current_label,
-                        "children": set() if is_parent else None,
-                        "parent": parent_id if parent_id != "" else None,
-                        "shape": SHAPES.get(type(n), "rectangle"),
-                    },
-                )
-                if is_parent:
-                    graph_nodes[current_id]["children"].add(child_id)
-                graph_nodes_tracker.add(current_id)
-        elif type(n.label) == str and type(n) != Node:
-            # manually added oemof node (floaty boy) or location
+        if type(n.label) == str:
             identifier = n.label
-            graph_nodes.setdefault(
-                identifier,
-                {
-                    "label": identifier,
-                    "children": set(),  # always allow children
-                    "parent": None,
-                    "shape": SHAPES.get(type(n), "rectangle"),
-                },
+            local_name = n.label
+        elif type(n.label) == QualifiedLabel:
+            identifier = "-".join(n.label)
+            local_name = n.label[0]
+
+        is_parent = len(n.subnodes) > 0
+
+        children = set(
+            [
+                (
+                    "-".join(sn.label)
+                    if type(sn.label) == QualifiedLabel
+                    else sn.label
+                )
+                for sn in n.subnodes
+            ]
+        )
+        if len(children) == 0:
+            children = None
+
+        parent = (
+            (
+                "-".join(n.parent.label)
+                if type(n.parent.label) == QualifiedLabel
+                else n.parent.label
             )
+            if n.parent
+            else None
+        )
+
+        graph_nodes.setdefault(
+            identifier,
+            {
+                "label": local_name,
+                "children": children,
+                "parent": parent,
+                "shape": SHAPES.get(type(n), "rectangle"),
+            },
+        )
 
         # get edges
         for t in n.outputs:
+            flow_properties = n.outputs[t].custom_properties
             # reverse labels if class QualifiedLabel
             source_id = (
-                "-".join(list(reversed(list(n.label))))
+                "-".join(n.label)
                 if type(n.label) == QualifiedLabel
                 else n.label
             )
             target_id = (
-                "-".join(list(reversed(list(t.label))))
+                "-".join(t.label)
                 if type(t.label) == QualifiedLabel
                 else t.label
             )
             graph_edges.setdefault(source_id, {})
             graph_edges[source_id].setdefault(target_id, {})
-            energy_type = flow_colours.get((n, t), 0)
+            energy_type = flow_properties.get("energy_type", 0)
             flow_colour = colour_scheme.get(energy_type)
             graph_edges[source_id][target_id]["colour"] = flow_colour
             if flows is not None:
                 flow = flows[(n, t)]  # .mean()  # .sum()
                 graph_edges[source_id][target_id]["flow"] = flow
-                if units is not None:
-                    unit = units[(n, t)]
-                    graph_edges[source_id][target_id]["unit"] = unit
+                unit = flow_properties.get("unit", "0")
+                graph_edges[source_id][target_id]["unit"] = unit
 
     graph_elements = {
         "nodes": graph_nodes,

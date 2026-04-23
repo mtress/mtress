@@ -94,16 +94,12 @@ class SolphModel:
     def graph(
         self,
         flow_results: dict = None,
-        units: dict = None,
-        flow_colours: dict = None,
         colour_scheme: dict = None,
         path: str = "model.png",
     ):
         graph_graphviz(
             nodes=self.nodes,
             flows=flow_results,
-            units=units,
-            flow_colours=flow_colours,
             colour_scheme=colour_scheme,
             path=path,
         )
@@ -111,15 +107,11 @@ class SolphModel:
     def graph_interactive(
         self,
         flow_results: dict = None,
-        units: dict = None,
-        flow_colours: dict = None,
         colour_scheme: dict = None,
     ):
         graph_cytoscape(
             nodes=self.nodes,
             flows=flow_results,
-            units=units,
-            flow_colours=flow_colours,
             colour_scheme=colour_scheme,
         )
 
