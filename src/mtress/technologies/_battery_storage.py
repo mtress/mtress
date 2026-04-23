@@ -1,16 +1,16 @@
 """This module provides Battery Storage"""
 
-from oemof.solph import Flow, Investment
-from oemof.solph.components import GenericStorage
 from dataclasses import dataclass
-import pyomo.environ as pyo
 
-from ..carriers import ElectricityCarrier
-from ._abstract_technology import AbstractTechnology
-from .._data_handler import TimeseriesSpecifier
-from .._helpers._util import enable_templating
+import pyomo.environ as pyo
+from oemof.solph import Bus, Flow, Investment
+from oemof.solph.components import GenericStorage
 
 from .._constants import EnergyType
+from .._data_handler import TimeseriesSpecifier
+from .._helpers._util import enable_templating
+from ..carriers import ElectricityCarrier
+from ._abstract_technology import AbstractTechnology
 
 
 @dataclass(frozen=True)
@@ -60,7 +60,7 @@ class BatteryStorage(AbstractTechnology):
     """
     Battery Storage Component
 
-    :param name: Name of the component
+    :param label: Label of the component
     :param nominal_capacity: Nominal capacity of the battery (in Wh)
     :param charging_C_Rate: Charging C-rate, default to 1
     :param discharging_C_Rate: Discharging C-rate, default to 1
@@ -88,7 +88,8 @@ class BatteryStorage(AbstractTechnology):
     @enable_templating(BatteryStorageTemplate)
     def __init__(
         self,
-        name: str,
+        label,
+        *,
         nominal_capacity: float | Investment,
         charging_C_Rate: float = 1,
         discharging_C_Rate: float = 1,
@@ -100,14 +101,20 @@ class BatteryStorage(AbstractTechnology):
         fixed_losses_absolute: TimeseriesSpecifier = 0.0,
         one_sense_per_time_step: bool = False,
         shared_limit: bool = True,
+        location=None,
+        custom_properties=None,
     ):
         """
         Initialize Battery Storage.
         """
 
-        super().__init__(name=name)
+        super().__init__(
+            label,
+            location=location,
+            custom_properties=custom_properties,
+        )
 
-        if (shared_limit and isinstance(nominal_capacity, Investment)):
+        if shared_limit and isinstance(nominal_capacity, Investment):
             raise NotImplementedError(
                 "The 'shared_limit' is only implemented for fixed capacities."
             )
@@ -130,28 +137,32 @@ class BatteryStorage(AbstractTechnology):
         self.one_sense_per_time_step = one_sense_per_time_step
         self.shared_limit = shared_limit
 
-    def build_core(self):
-        """Build core structure of oemof.solph representation."""
-        super().build_core()
+        self._build_core()
 
-        electricity = self.location.get_carrier(ElectricityCarrier)
+    def _build_core(self):
+        self._bus = self.subnode(
+            Bus,
+            local_name="i/o",
+        )
+        self.inbound_interfaces[EnergyType.ELECTRICITY] = [self._bus]
+        self.outbound_interfaces[EnergyType.ELECTRICITY] = [self._bus]
 
         if isinstance(self.nominal_capacity, Investment):
             inflow_capacity = Investment()
             outflow_capacity = Investment()
-            invest_relation_input_capacity=self.charging_C_Rate,
-            invest_relation_output_capacity=self.discharging_C_Rate,
+            invest_relation_input_capacity = (self.charging_C_Rate,)
+            invest_relation_output_capacity = (self.discharging_C_Rate,)
         else:
             inflow_capacity = self.nominal_capacity * self.charging_C_Rate
             outflow_capacity = self.nominal_capacity * self.discharging_C_Rate
-            invest_relation_input_capacity=None,
-            invest_relation_output_capacity=None,
+            invest_relation_input_capacity = (None,)
+            invest_relation_output_capacity = (None,)
 
-        self.battery_node = self.create_solph_node(
-            label="Battery_Storage",
-            node_type=GenericStorage,
+        self._battery_node = self.subnode(
+            GenericStorage,
+            local_name="battery_storage",
             inputs={
-                electricity.distribution: Flow(
+                self._bus: Flow(
                     nominal_capacity=inflow_capacity,
                     custom_properties={
                         "unit": "W",
@@ -160,7 +171,7 @@ class BatteryStorage(AbstractTechnology):
                 ),
             },
             outputs={
-                electricity.distribution: Flow(
+                self._bus: Flow(
                     nominal_capacity=outflow_capacity,
                     custom_properties={
                         "unit": "W",
@@ -168,7 +179,7 @@ class BatteryStorage(AbstractTechnology):
                     },
                 ),
             },
-            nominal_storage_capacity=self.nominal_capacity,
+            nominal_capacity=self.nominal_capacity,
             loss_rate=self.loss_rate,
             min_storage_level=self.min_soc,
             initial_storage_level=self.initial_soc,
@@ -179,24 +190,21 @@ class BatteryStorage(AbstractTechnology):
             invest_relation_output_capacity=invest_relation_output_capacity,
         )
 
-    def add_constraints(self):
+    def add_constraints(self, model):
         """Add constraints to the model."""
-        electricity = self.location.get_carrier(ElectricityCarrier)
-
         if self.one_sense_per_time_step:
             # charging and discharging cannot happen during the same time step
             # >> use special ordered sets of type 1
-            model = self._solph_model.model
 
             def rule_sos1_constraint(m, t):
                 return [
-                    m.flow[electricity.distribution, self.battery_node, t],
-                    m.flow[self.battery_node, electricity.distribution, t],
+                    m.flow[self._bus, self._battery_node, t],
+                    m.flow[self._battery_node, self._bus, t],
                 ]
 
             setattr(
                 model,
-                f"{self.node.label}_sos1_constraint",
+                f"{self.label}_sos1_constraint",
                 pyo.SOSConstraint(
                     model.TIMESTEPS, rule=rule_sos1_constraint, sos=1
                 ),
@@ -207,22 +215,46 @@ class BatteryStorage(AbstractTechnology):
             # other (charging and discharging are mutually-exclusive, but both
             # can take place during the same time step)
             if self.shared_limit:
-                model = self._solph_model.model
 
                 def rule_shared_limit(m, t):
                     return (
                         # charging
-                        m.flow[electricity.distribution, self.battery_node, t]
+                        m.flow[
+                            self._bus,
+                            self._battery_node,
+                            t,
+                        ]
                         +
                         # discharging
-                        m.flow[self.battery_node, electricity.distribution, t]
+                        m.flow[
+                            self._battery_node,
+                            self._bus,
+                            t,
+                        ]
                     ) <= (
                         self.discharging_C_Rate + self.charging_C_Rate
                     ) * self.nominal_capacity / 2
 
                 setattr(
                     model,
-                    f"{self.node.label}_shared_limit",
-                    pyo.Constraint(model.TIMESTEPS,
-                                    rule=rule_shared_limit),
+                    f"{self.label}_shared_limit",
+                    pyo.Constraint(model.TIMESTEPS, rule=rule_shared_limit),
                 )
+
+    def establish_interconnections(self):
+        if self.parent:
+            electricity_carrier = self.parent.get_carrier(ElectricityCarrier)
+
+            # connect electricity
+            self._bus.inputs[electricity_carrier.distribution] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.ELECTRICITY,
+                }
+            )
+            self._bus.outputs[electricity_carrier.distribution] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.ELECTRICITY,
+                }
+            )
