@@ -64,8 +64,8 @@ SINK_SHAPE = "0.75, 1, 1, -1, -1, -1, -0.75, 1"
 
 def graph_graphviz(
     nodes,
-    flows,
-    colour_scheme: dict,
+    flows=None,
+    colour_scheme: dict = None,
     path: str = "model.png",
 ) -> None:
     if colour_scheme is None:
@@ -85,8 +85,8 @@ def graph_graphviz(
 
 def graph_cytoscape(
     nodes,
-    flows,
-    colour_scheme: dict,
+    flows=None,
+    colour_scheme: dict = None,
 ):
     if colour_scheme is None:
         # set to default
@@ -741,6 +741,11 @@ def generate_graph_graphviz(
     nodes = graph_elements["nodes"]
     edges = graph_elements["edges"]
     graph = Digraph(name="MTRESS model")
+
+    # TODO: generalize
+    # determine max depth and iterate depth levels
+    # for each level: define default border: solid, dashed, dotted,...
+    # only on lowest level draw actual shape
 
     # --- NODES
     # 1. determine LOCATIONS or floaty boys
