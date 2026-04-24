@@ -64,18 +64,13 @@ class AbstractFixedTemperature(AbstractDemand):
         self._time_series = time_series
 
     def _build_core(self):
-        # core components of any fixed temp demand
-        self._input_node = self.subnode(
-            Bus,
-            local_name="input",
-        )
+        # core component of any fixed temp demand
         self._output_node = self.subnode(
             Bus,
-            local_name="output",
+            local_name=f"output_{self.return_temperature}",
             custom_properties={"temperature": self.return_temperature},
         )
 
-        self.inbound_interfaces[EnergyType.HEAT] = [self._input_node]
         self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
 
 
@@ -125,50 +120,6 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             inputs={},
         )
 
-        # create converter and connect to sink and interface nodes
-        inputs = {}
-        outputs = {}
-        conversion_factors = {}
-
-        inputs[self._input_node] = Flow(
-            custom_properties={
-                "unit": "W",
-                "energy_type": EnergyType.HEAT,
-            }
-        )
-
-        outputs[self._output_node] = Flow(
-            custom_properties={
-                "unit": "W",
-                "energy_type": EnergyType.HEAT,
-            }
-        )
-
-        outputs[self._sink] = Flow(
-            custom_properties={
-                "unit": "W",
-                "energy_type": EnergyType.HEAT,
-            },
-            nominal_capacity=1,
-            fix=self._time_series,
-        )
-
-        # set conversion factors with min_flow_temperature
-        conversion_factors = {
-            self._input_node: 1,
-            self._output_node: 1,
-            self._sink: (self.min_flow_temperature - self.return_temperature)
-            * self.specific_heat_capacity,
-        }
-
-        self._converter = self.subnode(
-            Converter,
-            local_name="heat_exchanger",
-            inputs=inputs,
-            outputs=outputs,
-            conversion_factors=conversion_factors,
-        )
-
     def establish_interconnections(self):
         if self.parent:
             heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
@@ -186,6 +137,13 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             # get max temp availabe for heating
             maximum_t, _ = heat_carrier.get_surrounding_levels(
                 self.min_flow_temperature
+            )
+
+            # input with maximum_t
+            self._input_node = self.subnode(
+                Bus,
+                local_name=f"input_{maximum_t}",
+                custom_properties={"temperature": maximum_t},
             )
 
             # connect interface nodes to heat carrier
@@ -206,16 +164,101 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
                 }
             )
 
-            # update conversion factors according to temp available in carrier
-            cf_new = {
-                self._input_node: _FakeSequence(1),
-                self._output_node: _FakeSequence(1),
-                self._sink: _FakeSequence(
-                    (maximum_t - self.return_temperature)
-                    * self.specific_heat_capacity
-                ),
+            # create converter and connect to sink and interface nodes
+            inputs = {}
+            outputs = {}
+            conversion_factors = {}
+
+            inputs[self._input_node] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            outputs[self._output_node] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            outputs[self._sink] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                },
+                nominal_capacity=1,
+                fix=self._time_series,
+            )
+
+            # set conversion factors with maximum_t
+            conversion_factors = {
+                self._input_node: 1,
+                self._output_node: 1,
+                self._sink: (maximum_t - self.return_temperature)
+                * self.specific_heat_capacity,
             }
-            self._converter.conversion_factors = cf_new
+
+            self._converter = self.subnode(
+                Converter,
+                local_name="heat_exchanger",
+                inputs=inputs,
+                outputs=outputs,
+                conversion_factors=conversion_factors,
+            )
+        else:
+            # input with min_flow_temperature
+            self._input_node = self.subnode(
+                Bus,
+                local_name=f"input_{self.min_flow_temperature}",
+                custom_properties={"temperature": self.min_flow_temperature},
+            )
+            # create converter and connect to sink and interface nodes
+            inputs = {}
+            outputs = {}
+            conversion_factors = {}
+
+            inputs[self._input_node] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            outputs[self._output_node] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            outputs[self._sink] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                },
+                nominal_capacity=1,
+                fix=self._time_series,
+            )
+
+            # set conversion factors with min_flow_temperature
+            conversion_factors = {
+                self._input_node: 1,
+                self._output_node: 1,
+                self._sink: (
+                    self.min_flow_temperature - self.return_temperature
+                )
+                * self.specific_heat_capacity,
+            }
+
+            self._converter = self.subnode(
+                Converter,
+                local_name="heat_exchanger",
+                inputs=inputs,
+                outputs=outputs,
+                conversion_factors=conversion_factors,
+            )
 
 
 class FixedTemperatureCooling(AbstractFixedTemperature):
@@ -264,50 +307,6 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             outputs={},
         )
 
-        # create converter and connect to source and interface nodes
-        inputs = {}
-        outputs = {}
-        conversion_factors = {}
-
-        inputs[self._input_node] = Flow(
-            custom_properties={
-                "unit": "W",
-                "energy_type": EnergyType.HEAT,
-            }
-        )
-
-        inputs[self._source] = Flow(
-            custom_properties={
-                "unit": "W",
-                "energy_type": EnergyType.HEAT,
-            },
-            nominal_capacity=1,
-            fix=self._time_series,
-        )
-
-        outputs[self._output_node] = Flow(
-            custom_properties={
-                "unit": "W",
-                "energy_type": EnergyType.HEAT,
-            }
-        )
-
-        # set conversion factors with max_flow_temperature
-        conversion_factors = {
-            self._input_node: 1,
-            self._source: self.specific_heat_capacity
-            * (self.return_temperature - self.max_flow_temperature),
-            self._output_node: 1,
-        }
-
-        self._converter = self.subnode(
-            Converter,
-            local_name="heat_exchanger",
-            inputs=inputs,
-            outputs=outputs,
-            conversion_factors=conversion_factors,
-        )
-
     def establish_interconnections(self):
         if self.parent:
             heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
@@ -325,6 +324,13 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             # get min temp availabe for cooling
             _, minimum_t = heat_carrier.get_surrounding_levels(
                 self.max_flow_temperature
+            )
+
+            # input with minimum_t
+            self._input_node = self.subnode(
+                Bus,
+                local_name=f"input_{minimum_t}",
+                custom_properties={"temperature": minimum_t},
             )
 
             # connect interface nodes to heat carrier
@@ -345,13 +351,96 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
                 }
             )
 
-            # update conversion factors according to temp available in carrier
-            cf_new = {
-                self._input_node: _FakeSequence(1),
-                self._source: _FakeSequence(
-                    self.specific_heat_capacity
-                    * (self.return_temperature - minimum_t)
-                ),
-                self._output_node: _FakeSequence(1),
+            # create converter and connect to source and interface nodes
+            inputs = {}
+            outputs = {}
+            conversion_factors = {}
+
+            inputs[self._input_node] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            inputs[self._source] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                },
+                nominal_capacity=1,
+                fix=self._time_series,
+            )
+
+            outputs[self._output_node] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            # set conversion factors with max_flow_temperature
+            conversion_factors = {
+                self._input_node: 1,
+                self._source: self.specific_heat_capacity
+                * (self.return_temperature - minimum_t),
+                self._output_node: 1,
             }
-            self._converter.conversion_factors = cf_new
+
+            self._converter = self.subnode(
+                Converter,
+                local_name="heat_exchanger",
+                inputs=inputs,
+                outputs=outputs,
+                conversion_factors=conversion_factors,
+            )
+        else:
+            # input with max_flow_temperature
+            self._input_node = self.subnode(
+                Bus,
+                local_name=f"input_{self.max_flow_temperature}",
+                custom_properties={"temperature": self.max_flow_temperature},
+            )
+            # create converter and connect to source and interface nodes
+            inputs = {}
+            outputs = {}
+            conversion_factors = {}
+
+            inputs[self._input_node] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            inputs[self._source] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                },
+                nominal_capacity=1,
+                fix=self._time_series,
+            )
+
+            outputs[self._output_node] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.HEAT,
+                }
+            )
+
+            # set conversion factors with max_flow_temperature
+            conversion_factors = {
+                self._input_node: 1,
+                self._source: self.specific_heat_capacity
+                * (self.return_temperature - self.max_flow_temperature),
+                self._output_node: 1,
+            }
+
+            self._converter = self.subnode(
+                Converter,
+                local_name="heat_exchanger",
+                inputs=inputs,
+                outputs=outputs,
+                conversion_factors=conversion_factors,
+            )
