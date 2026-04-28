@@ -3,12 +3,11 @@
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Sink
 
+from .._constants import EnergyType
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import GasCarrier
 from ..physics import Gas
 from ._abstract_demand import AbstractDemand
-
-from .._constants import EnergyType
 
 
 class GasDemand(AbstractDemand):
@@ -74,7 +73,7 @@ class GasDemand(AbstractDemand):
                         "unit": "kg/h",
                         "energy_type": EnergyType.GAS,
                     },
-                    nominal_value=1,
+                    nominal_capacity=1,
                     fix=self._time_series,
                 ),
             },
