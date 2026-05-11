@@ -68,7 +68,7 @@ class GasStorage(AbstractHomogenousStorage, AbstractTechnology):
 
         gas_carrier = self.location.get_carrier(GasCarrier)
         solph_storage_arguments = {
-            "nominal_storage_capacity": self._storage_content(
+            "nominal_capacity": self._storage_content(
                 max(gas_carrier.pressure_levels[self.gas_type])
             ),
             "loss_rate": 0,

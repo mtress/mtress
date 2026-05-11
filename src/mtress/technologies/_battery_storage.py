@@ -168,7 +168,7 @@ class BatteryStorage(AbstractTechnology):
                     },
                 ),
             },
-            nominal_storage_capacity=self.nominal_capacity,
+            nominal_capacity=self.nominal_capacity,
             loss_rate=self.loss_rate,
             min_storage_level=self.min_soc,
             initial_storage_level=self.initial_soc,

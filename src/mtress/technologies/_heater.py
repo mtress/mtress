@@ -146,7 +146,7 @@ class ResistiveHeater(AbstractHeater):
                         "unit": "W",
                         "energy_type": EnergyType.HEAT,
                     },
-                    nominal_value=self.thermal_power_limit,
+                    nominal_capacity=self.thermal_power_limit,
                 )
             },
             conversion_factors={
@@ -225,7 +225,7 @@ class GasBoiler(AbstractHeater):
                         "unit": "W",
                         "energy_type": EnergyType.HEAT,
                     },
-                    nominal_value=self.thermal_power_limit,
+                    nominal_capacity=self.thermal_power_limit,
                 ),
             },
             conversion_factors={

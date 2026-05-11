@@ -129,7 +129,7 @@ class HeatPump(AbstractTechnology):
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
-                    nominal_value=self.electrical_power_limit,
+                    nominal_capacity=self.electrical_power_limit,
                 )
             },
         )
@@ -148,7 +148,7 @@ class HeatPump(AbstractTechnology):
                         "unit": "W",
                         "energy_type": EnergyType.HEAT,
                     },
-                    nominal_value=self.thermal_power_limit,
+                    nominal_capacity=self.thermal_power_limit,
                 )
             },
         )

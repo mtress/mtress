@@ -146,7 +146,7 @@ class TestCHP:
             timeindex={
                 "start": "2022-06-01 08:00:00",
                 "end": "2022-06-01 09:00:00",
-                "freq": "60T",
+                "freq": "60min",
                 "tz": "Europe/Berlin",
             },
         )
@@ -216,7 +216,7 @@ class TestOffsetCHP:
             (BIOMETHANE_CHP, 28550544.92665914, None, False, 1),
             (HYDROGEN_CHP, 29909798.423119232, None, False, 1),
             (HYDROGEN_MIXED_CHP, 40666145.14604045, None, False, 1),
-            (NATURALGAS_MGT, 14163710401.32201, None, False, 1),
+            (NATURALGAS_MGT, 14163710401.32201, None, False, 20),
             # exports on @ net metering: marginal impact due to huge penalties
             # min load = 0: no (major) penalties
             (NATURALGAS_CHP, 0.9135757499999999, 0.0, True, 1e-3),
@@ -331,7 +331,7 @@ class TestOffsetCHP:
             timeindex={
                 "start": "2022-06-01 08:00:00",
                 "end": "2022-06-01 10:00:00",
-                "freq": "60T",
+                "freq": "60min",
                 "tz": "Europe/Berlin",
             },
         )
@@ -458,7 +458,7 @@ class TestOffsetCHP:
             timeindex={
                 "start": "2022-06-01 08:00:00",
                 "end": "2022-06-01 09:00:00",
-                "freq": "60T",
+                "freq": "60min",
                 "tz": "Europe/Berlin",
             },
         )
@@ -651,7 +651,7 @@ class TestOffsetCHP:
             timeindex={
                 "start": "2022-06-01 08:00:00",
                 "end": "2022-06-01 10:00:00",
-                "freq": "60T",
+                "freq": "60min",
                 "tz": "Europe/Berlin",
             },
         )

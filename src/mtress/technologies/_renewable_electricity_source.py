@@ -63,7 +63,7 @@ class RenewableElectricitySource(AbstractTechnology):
                     "unit": "W",
                     "energy_type": EnergyType.ELECTRICITY,
                 },
-                nominal_value=self.nominal_power,
+                nominal_capacity=self.nominal_power,
                 variable_costs=self._solph_model.data.get_timeseries(
                     self.working_rate, kind=TimeseriesType.INTERVAL
                 ),
@@ -77,11 +77,11 @@ class RenewableElectricitySource(AbstractTechnology):
                     "unit": "W",
                     "energy_type": EnergyType.ELECTRICITY,
                 },
-                nominal_value=self.nominal_power,
+                nominal_capacity=self.nominal_power,
                 variable_costs=self._solph_model.data.get_timeseries(
                     self.working_rate, kind=TimeseriesType.INTERVAL
                 ),
-                max=self._solph_model.data.get_timeseries(
+                maximum=self._solph_model.data.get_timeseries(
                     self.specific_generation, kind=TimeseriesType.INTERVAL
                 ),
             )
