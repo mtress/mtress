@@ -133,7 +133,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                         "unit": "kg/h",
                         "energy_type": EnergyType.HEAT,
                     },
-                    nominal_value=power_limit,
+                    nominal_capacity=power_limit,
                 )
                 for bus in self.storage_multiplexer_inputs
             },
@@ -143,7 +143,7 @@ class AbstractHomogenousStorage(AbstractComponent):
                         "unit": "kg/h",
                         "energy_type": EnergyType.HEAT,
                     },
-                    nominal_value=power_limit,
+                    nominal_capacity=power_limit,
                 )
                 for bus in self.storage_multiplexer_outputs
             },

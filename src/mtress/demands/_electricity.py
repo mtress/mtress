@@ -66,7 +66,7 @@ class Electricity(AbstractDemand):
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
-                    nominal_value=1,
+                    nominal_capacity=1,
                     fix=self._solph_model.data.get_timeseries(
                         self._time_series, kind=TimeseriesType.INTERVAL
                     ),

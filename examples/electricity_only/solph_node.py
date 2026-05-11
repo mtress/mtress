@@ -65,7 +65,7 @@ solph_representation.energy_system.add(
         label="vanilla_solph_storage",
         inputs={carrier_node: solph.Flow()},
         outputs={carrier_node: solph.Flow()},
-        nominal_storage_capacity=0.75,
+        nominal_capacity=0.75,
     )
 )
 

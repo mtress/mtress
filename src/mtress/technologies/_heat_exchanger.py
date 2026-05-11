@@ -140,7 +140,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                         "unit": "W",
                         "energy_type": EnergyType.HEAT,
                     },
-                    nominal_value=self.nominal_power,
+                    nominal_capacity=self.nominal_power,
                     variable_costs=self._solph_model.data.get_timeseries(
                         self.working_rate,
                         kind=TimeseriesType.INTERVAL,
@@ -224,8 +224,8 @@ class AbstactHeatExchanger(AbstractTechnology):
                                 "unit": "W",
                                 "energy_type": EnergyType.HEAT,
                             },
-                            nominal_value=self.nominal_power,
-                            max=gains,
+                            nominal_capacity=self.nominal_power,
+                            maximum=gains,
                         ),
                         heat_bus_cold_source: Flow(
                             custom_properties={
@@ -364,8 +364,8 @@ class AbstactHeatExchanger(AbstractTechnology):
                             "unit": "W",
                             "energy_type": EnergyType.HEAT,
                         },
-                        max=internal_sequence,
-                        nominal_value=self.nominal_power,
+                        maximum=internal_sequence,
+                        nominal_capacity=self.nominal_power,
                     ),
                 },
                 conversion_factors={

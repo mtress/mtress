@@ -354,7 +354,7 @@ class CHP(AbstractHeater):
                             "unit": "W",
                             "energy_type": EnergyType.ELECTRICITY,
                         },
-                        nominal_value=self.nominal_power,
+                        nominal_capacity=self.nominal_power,
                     ),
                 },
                 conversion_factors={
@@ -399,7 +399,7 @@ class CHP(AbstractHeater):
                             "unit": "W",
                             "energy_type": EnergyType.ELECTRICITY,
                         },
-                        nominal_value=self.nominal_power,
+                        nominal_capacity=self.nominal_power,
                     ),
                 },
                 conversion_factors={
@@ -601,9 +601,9 @@ class OffsetCHP(AbstractHeater):
                             "unit": "W",
                             "energy_type": EnergyType.ELECTRICITY,
                         },
-                        nominal_value=self.nominal_power,
-                        max=self.normalised_max_load,
-                        min=self.normalised_min_load,
+                        nominal_capacity=self.nominal_power,
+                        maximum=self.normalised_max_load,
+                        minimum=self.normalised_min_load,
                         nonconvex=NonConvex(),
 
                     ),
@@ -675,9 +675,9 @@ class OffsetCHP(AbstractHeater):
                             "unit": "W",
                             "energy_type": EnergyType.ELECTRICITY,
                         },
-                        nominal_value=self.nominal_power,
-                        max=self.normalised_max_load,
-                        min=self.normalised_min_load,
+                        nominal_capacity=self.nominal_power,
+                        maximum=self.normalised_max_load,
+                        minimum=self.normalised_min_load,
                         nonconvex=NonConvex(),
                     ),
                     self.heat_bus: Flow(

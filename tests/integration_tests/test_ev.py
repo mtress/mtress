@@ -105,7 +105,7 @@ class TestGenericElectricVehicle:
         time_index = {
             "start": "2022-06-01 08:00:00",
             "end": "2022-06-01 10:00:00",
-            "freq": "60T",
+            "freq": "60min",
             "tz": "Europe/Berlin",
         }
 
@@ -204,7 +204,7 @@ class TestGenericElectricVehicle:
         time_index = {
             "start": "2022-06-01 08:00:00",
             "end": "2022-06-01 10:00:00",
-            "freq": "60T",
+            "freq": "60min",
             "tz": "Europe/Berlin",
         }
 
@@ -330,7 +330,7 @@ class TestGenericElectricVehicle:
         time_index = {
             "start": "2022-06-01 08:00:00",
             "end": "2022-06-01 11:00:00",
-            "freq": "60T",
+            "freq": "60min",
             "tz": "Europe/Berlin",
         }
 
@@ -588,7 +588,7 @@ class TestGenericElectricVehicle:
         time_index = {
             "start": "2022-06-01 08:00:00",
             "end": "2022-06-01 11:00:00",
-            "freq": "60T",
+            "freq": "60min",
             "tz": "Europe/Berlin",
         }
 
@@ -1069,7 +1069,7 @@ class TestElectricVehicle:
         time_index = {
             "start": "2022-06-01 08:00:00",
             "end": "2022-06-01 11:00:00",
-            "freq": "60T",
+            "freq": "60min",
             "tz": "Europe/Berlin",
         }
 
@@ -1189,7 +1189,7 @@ class TestElectricVehicle:
         time_index = {
             "start": "2022-06-01 08:00:00",
             "end": "2022-06-01 11:00:00",
-            "freq": "60T",
+            "freq": "60min",
             "tz": "Europe/Berlin",
         }
 
