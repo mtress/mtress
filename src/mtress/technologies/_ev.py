@@ -357,7 +357,8 @@ class GenericElectricVehicle(BatteryStorage):
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
-                    nominal_capacity=self.nominal_capacity * self.charging_C_Rate,
+                    nominal_capacity=self.nominal_capacity
+                    * self.charging_C_Rate,
                     maximum=self._solph_model.data.get_timeseries(
                         self.plugged_in_profile, kind=TimeseriesType.INTERVAL
                     ),
