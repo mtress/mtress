@@ -10,7 +10,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    carriers,
+    _carriers,
     demands,
     technologies,
 )
@@ -31,7 +31,7 @@ house_2 = Location(name="house_2")
 energy_system.add_location(house_1)
 energy_system.add_location(house_2)
 
-house_1.add(carriers.ElectricityCarrier())
+house_1.add(_carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=350))
 
 house_1.add(
@@ -44,7 +44,7 @@ house_1.add(
     )
 )
 house_1.add(
-    carriers.GasCarrier(
+    _carriers.GasCarrier(
         gases={
             HYDROGEN: [30, 40, 50],
         }
@@ -56,7 +56,7 @@ house_1.add(
         time_series=1e3,
     )
 )
-house_1.add(carriers.HeatCarrier(temperature_levels=[20, 80]))
+house_1.add(_carriers.HeatCarrier(temperature_levels=[20, 80]))
 house_1.add(
     demands.FixedTemperatureHeating(
         name="heat_demand",
@@ -75,7 +75,7 @@ house_1.add(
 )
 house_1.add(technologies.SlackNode())
 house_2.add(
-    carriers.GasCarrier(
+    _carriers.GasCarrier(
         gases={
             HYDROGEN: [30, 40, 50],
         }

@@ -7,7 +7,7 @@ from oemof.solph import Bus, Flow
 from ...technologies._heat_exchanger import AbstactHeatExchanger
 
 from mtress._data_handler import TimeseriesSpecifier
-from mtress.carriers import HeatCarrier
+from mtress._carriers import HeatCarrier
 from ._abstract_grid_connection import AbstractGridConnection
 
 from ..._constants import EnergyType

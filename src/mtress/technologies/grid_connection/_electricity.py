@@ -8,7 +8,7 @@ from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Sink, Source
 
 from mtress._data_handler import TimeseriesSpecifier
-from mtress.carriers import ElectricityCarrier
+from mtress._carriers import ElectricityCarrier
 
 from ..._constants import EnergyType
 from ._abstract_grid_connection import AbstractGridConnection

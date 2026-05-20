@@ -10,7 +10,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    carriers,
+    _carriers,
     technologies,
 )
 
@@ -32,7 +32,7 @@ def _heat_source_test_template(
     energy_system.add_location(house_1)
 
     house_1.add(
-        carriers.HeatCarrier(
+        _carriers.HeatCarrier(
             temperature_levels=temperature_levels,
         )
     )

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import warnings
 
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
-from ..carriers import ElectricityCarrier
+from .._carriers import ElectricityCarrier
 from .._helpers._util import enable_templating
 from ._battery_storage import BatteryStorage, BatteryStorageTemplate
 

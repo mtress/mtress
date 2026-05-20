@@ -10,7 +10,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    carriers,
+    _carriers,
     technologies,
     demands,
 )
@@ -23,7 +23,7 @@ energy_system = MetaModel()
 house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
-house_1.add(carriers.ElectricityCarrier())
+house_1.add(_carriers.ElectricityCarrier())
 house_1.add(
     technologies.ElectricityGridConnection(
         working_rate=1,

@@ -1,7 +1,7 @@
 from oemof.network import Node
 
 from mtress._constants import EnergyType
-from mtress.carriers import ElectricityCarrier
+from mtress._carriers import ElectricityCarrier
 
 
 def test_basic_initialisation():

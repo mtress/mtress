@@ -9,7 +9,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    carriers,
+    _carriers,
     demands,
     technologies,
 )
@@ -45,11 +45,11 @@ class TestFuelCell:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(technologies.ElectricityGridConnection(working_rate=50e-6))
 
         house_1.add(
-            carriers.GasCarrier(
+            _carriers.GasCarrier(
                 gases={
                     HYDROGEN: [template.gas_input_pressure],
                 }
@@ -57,7 +57,7 @@ class TestFuelCell:
         )
 
         house_1.add(
-            carriers.HeatCarrier(
+            _carriers.HeatCarrier(
                 temperature_levels=[20, template.maximum_temperature]
             )
         )
@@ -153,11 +153,11 @@ class TestOffsetFuelCell:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(technologies.ElectricityGridConnection(working_rate=50e-6))
 
         house_1.add(
-            carriers.GasCarrier(
+            _carriers.GasCarrier(
                 gases={
                     HYDROGEN: [template.gas_input_pressure],
                 }
@@ -165,7 +165,7 @@ class TestOffsetFuelCell:
         )
 
         house_1.add(
-            carriers.HeatCarrier(
+            _carriers.HeatCarrier(
                 temperature_levels=[
                     template.minimum_temperature,
                     template.maximum_temperature,
@@ -248,7 +248,7 @@ class TestOffsetFuelCell:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
                 working_rate=50e-6, revenue=50e-6
@@ -256,7 +256,7 @@ class TestOffsetFuelCell:
         )
 
         house_1.add(
-            carriers.GasCarrier(
+            _carriers.GasCarrier(
                 gases={
                     HYDROGEN: [template.gas_input_pressure],
                 }
@@ -264,7 +264,7 @@ class TestOffsetFuelCell:
         )
 
         house_1.add(
-            carriers.HeatCarrier(
+            _carriers.HeatCarrier(
                 temperature_levels=[
                     template.minimum_temperature,
                     template.maximum_temperature,
@@ -279,7 +279,7 @@ class TestOffsetFuelCell:
         house_1.add(
             SlackNode(
                 {
-                    carriers.HeatCarrier: 0.0,
+                    _carriers.HeatCarrier: 0.0,
                     # carriers.GasCarrier: 1e9,
                     # carriers.ElectricityCarrier: 1e9
                 }

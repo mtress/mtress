@@ -9,7 +9,7 @@ from oemof.solph.components import GenericStorage
 from .._constants import EnergyType
 from .._data_handler import TimeseriesSpecifier
 from .._helpers._util import enable_templating
-from ..carriers import ElectricityCarrier
+from .._carriers import ElectricityCarrier
 from ._abstract_technology import AbstractTechnology
 
 

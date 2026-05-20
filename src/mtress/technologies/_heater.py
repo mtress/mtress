@@ -5,7 +5,7 @@ from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Converter
 
 from .._constants import EnergyType
-from ..carriers import ElectricityCarrier, GasCarrier, HeatCarrier
+from .._carriers import ElectricityCarrier, GasCarrier, HeatCarrier
 from ..physics import Gas
 from ._abstract_technology import AbstractTechnology
 

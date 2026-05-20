@@ -3,7 +3,7 @@
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Converter
 
-from ..carriers import ElectricityCarrier, GasCarrier
+from .._carriers import ElectricityCarrier, GasCarrier
 from ..physics import (
     IDEAL_GAS_CONSTANT,
     Gas,

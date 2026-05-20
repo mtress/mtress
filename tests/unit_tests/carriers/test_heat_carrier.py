@@ -8,7 +8,7 @@ import math
 import pytest
 from oemof.network import Node
 from mtress._constants import EnergyType
-from mtress.carriers import HeatCarrier
+from mtress._carriers import HeatCarrier
 
 
 def test_basic_initialisation():

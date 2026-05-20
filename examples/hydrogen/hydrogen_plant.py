@@ -7,7 +7,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    carriers,
+    _carriers,
     demands,
     technologies,
 )
@@ -25,12 +25,12 @@ house_1 = Location(name="house_1")
 
 energy_system.add_location(house_1)
 
-house_1.add(carriers.ElectricityCarrier())
+house_1.add(_carriers.ElectricityCarrier())
 house_1.add(
     technologies.ElectricityGridConnection(working_rate=70e-3, revenue=0)
 )
 house_1.add(
-    carriers.GasCarrier(
+    _carriers.GasCarrier(
         gases={
             HYDROGEN: [5, 30, 40, 70],
         }
@@ -73,7 +73,7 @@ house_1.add(
         power_limit=10,
     )
 )
-house_1.add(carriers.HeatCarrier(temperature_levels=[20, 40]))
+house_1.add(_carriers.HeatCarrier(temperature_levels=[20, 40]))
 house_1.add(
     technologies.Electrolyser(
         name="PEM_Ely",

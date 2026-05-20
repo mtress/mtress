@@ -14,7 +14,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    carriers,
+    _carriers,
     demands,
     technologies,
 )
@@ -114,7 +114,7 @@ class TestGenericElectricVehicle:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(working_rate=prices)
         )
@@ -224,7 +224,7 @@ class TestGenericElectricVehicle:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(working_rate=prices)
         )
@@ -339,7 +339,7 @@ class TestGenericElectricVehicle:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(working_rate=prices)
         )
@@ -597,7 +597,7 @@ class TestGenericElectricVehicle:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(working_rate=prices)
         )
@@ -753,7 +753,7 @@ class TestGenericElectricVehicle:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(technologies.ElectricityGridConnection(working_rate=50e-6))
 
         with pytest.raises(ValueError):
@@ -1078,7 +1078,7 @@ class TestElectricVehicle:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(working_rate=prices)
         )
@@ -1198,7 +1198,7 @@ class TestElectricVehicle:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(working_rate=prices)
         )
@@ -1238,7 +1238,7 @@ class TestElectricVehicle:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
                 working_rate=[50e-6, 50e-6, 5]

@@ -6,7 +6,7 @@ from oemof.solph.components import Converter, Sink, Source
 
 from .._constants import EnergyType
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
-from ..carriers import HeatCarrier
+from .._carriers import HeatCarrier
 from ._abstract_demand import AbstractDemand
 
 

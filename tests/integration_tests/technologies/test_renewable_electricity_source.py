@@ -1,7 +1,7 @@
 from oemof.solph import Results
 from oemof.visio import ESGraphRenderer
 
-from mtress import Location, MetaModel, SolphModel, carriers, demands
+from mtress import Location, MetaModel, SolphModel, _carriers, demands
 from mtress.technologies import RenewableElectricitySource, grid_connection
 
 
@@ -13,7 +13,7 @@ def test_basic_initialisation():
 
     energy_system.add_location(loc)
 
-    ec = carriers.ElectricityCarrier(location=loc)
+    ec = _carriers.ElectricityCarrier(location=loc)
 
     res1 = RenewableElectricitySource(
         "pv1",
@@ -72,7 +72,7 @@ def test_export():
 
     energy_system.add_location(loc)
 
-    ec = carriers.ElectricityCarrier(location=loc)
+    ec = _carriers.ElectricityCarrier(location=loc)
 
     res1 = RenewableElectricitySource(
         "pv1",
@@ -130,7 +130,7 @@ def test_export_and_import():
 
     energy_system.add_location(loc)
 
-    ec = carriers.ElectricityCarrier(location=loc)
+    ec = _carriers.ElectricityCarrier(location=loc)
 
     res1 = RenewableElectricitySource(
         "pv1",

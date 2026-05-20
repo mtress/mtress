@@ -12,7 +12,7 @@ from oemof.solph.components import (
 )
 
 from .._helpers._util import enable_templating
-from ..carriers import ElectricityCarrier, GasCarrier
+from .._carriers import ElectricityCarrier, GasCarrier
 from ..physics import BIO_METHANE, BIOGAS, HYDROGEN, NATURAL_GAS, Gas
 from ._heater import AbstractHeater
 

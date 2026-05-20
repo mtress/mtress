@@ -9,7 +9,7 @@ from oemof.solph import Flow, Investment
 from oemof.solph.components import Converter, OffsetConverter
 
 from .._helpers._util import enable_templating
-from ..carriers import ElectricityCarrier, GasCarrier
+from .._carriers import ElectricityCarrier, GasCarrier
 from ..physics import HYDROGEN, Gas
 from ._heater import AbstractHeater
 

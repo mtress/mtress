@@ -9,7 +9,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    carriers,
+    _carriers,
     demands,
     technologies,
 )
@@ -39,7 +39,7 @@ def test_layered_heat_losses():
 
     house_1 = Location(name="house_1")
     house_1.add(
-        carriers.HeatCarrier(
+        _carriers.HeatCarrier(
             temperature_levels=[10, 20, 30],
         )
     )

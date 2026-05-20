@@ -11,7 +11,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    carriers,
+    _carriers,
     demands,
     technologies,
 )
@@ -31,7 +31,7 @@ def test_graph():
     house_1 = Location(name="house_1")
     meta_model.add_location(house_1)
 
-    carrier0 = carriers.ElectricityCarrier()
+    carrier0 = _carriers.ElectricityCarrier()
     nodes.append(("house_1", "ElectricityCarrier"))
     nodes.append(("house_1", "ElectricityCarrier", "distribution"))
     nodes.append(("house_1", "ElectricityCarrier", "feed_in"))

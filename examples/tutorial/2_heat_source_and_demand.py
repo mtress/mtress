@@ -4,7 +4,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    carriers,
+    _carriers,
     demands,
     technologies,
 )
@@ -19,7 +19,7 @@ house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
 # Add carriers
-house_1.add(carriers.HeatCarrier(temperature_levels=[5, 10, 20, 30, 40]))
+house_1.add(_carriers.HeatCarrier(temperature_levels=[5, 10, 20, 30, 40]))
 
 # Add technologies
 house_1.add(
@@ -56,7 +56,7 @@ house_2 = Location(name="house_2")
 energy_system.add_location(house_2)
 
 # Add carriers
-house_2.add(carriers.HeatCarrier(temperature_levels=[5, 10, 20, 30, 40]))
+house_2.add(_carriers.HeatCarrier(temperature_levels=[5, 10, 20, 30, 40]))
 
 # Add technologies
 house_2.add(

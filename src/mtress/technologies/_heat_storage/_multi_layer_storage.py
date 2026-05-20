@@ -15,7 +15,7 @@ from oemof.thermal import stratified_thermal_storage
 from pyomo import environ as po
 
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
-from mtress.carriers import HeatCarrier
+from mtress._carriers import HeatCarrier
 from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR
 
 from ._abstract_heat_storage import AbstractHeatStorage

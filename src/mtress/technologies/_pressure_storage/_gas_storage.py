@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 
 from typing import Callable
 
-from mtress.carriers import GasCarrier
+from mtress._carriers import GasCarrier
 
 from ...physics import Gas
 from .._abstract_homogenous_storage import (

@@ -5,7 +5,7 @@ from __future__ import annotations
 from ._abstract_component import AbstractComponent
 from ._constants import EnergyType
 from ._subnetwork import SubNetwork
-from .carriers._abstract_carrier import AbstractCarrier
+from ._carriers._abstract_carrier import AbstractCarrier
 
 
 class Location(SubNetwork):

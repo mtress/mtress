@@ -9,7 +9,7 @@ from oemof.solph.components import Converter, Sink, Source
 from pyomo import environ as po
 
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
-from ..carriers import HeatCarrier
+from .._carriers import HeatCarrier
 from ._abstract_technology import AbstractTechnology
 
 from .._constants import EnergyType

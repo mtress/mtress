@@ -17,7 +17,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    carriers,
+    _carriers,
     demands,
     technologies,
 )
@@ -72,12 +72,12 @@ def test_minimal_initialisation_with_time_index_dict():
 
 def test_build_model_with_connected_electricity():
     house_1 = Location(name="house_1")
-    house_1.add(carriers.ElectricityCarrier())
+    house_1.add(_carriers.ElectricityCarrier())
     gc1 = ElectricityGridConnection()
     house_1.add(gc1)
 
     house_2 = Location(name="house_2")
-    house_2.add(carriers.ElectricityCarrier())
+    house_2.add(_carriers.ElectricityCarrier())
     gc2 = ElectricityGridConnection()
     house_2.add(gc2)
 

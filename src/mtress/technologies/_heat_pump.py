@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Converter, Source
 
-from ..carriers import ElectricityCarrier, HeatCarrier
+from .._carriers import ElectricityCarrier, HeatCarrier
 from ..physics import calc_cop
 from ._abstract_technology import AbstractTechnology
 

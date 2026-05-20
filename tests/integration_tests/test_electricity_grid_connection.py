@@ -6,7 +6,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    carriers,
+    _carriers,
     demands,
     technologies,
 )
@@ -51,7 +51,7 @@ class TestGridConnection:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
                 working_rate=10, grid_import_limit=grid_limit
@@ -110,7 +110,7 @@ class TestGridExport:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(carriers.ElectricityCarrier())
+        house_1.add(_carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
                 working_rate=10, revenue=10, grid_export_limit=export_limit

@@ -16,7 +16,7 @@ from oemof.solph.components import Source
 
 from .._constants import EnergyType
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
-from ..carriers import ElectricityCarrier
+from .._carriers import ElectricityCarrier
 from ._abstract_technology import AbstractTechnology
 
 
