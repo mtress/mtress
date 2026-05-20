@@ -1,7 +1,5 @@
 """Locations in a meta model."""
 
-from __future__ import annotations
-
 from ._abstract_component import AbstractComponent
 from ._constants import EnergyType
 from ._subnetwork import SubNetwork
@@ -32,13 +30,23 @@ class Location(SubNetwork):
     Further procedure is described in the carrier and demand classes.
     """
 
-    def __init__(self, label) -> None:
+    def __init__(
+        self,
+        label,
+        *,
+        parent_node=None,
+        custom_properties=None,
+    ) -> None:
         """
         Create location instance.
 
         :param name: User friendly name of the location
         """
-        super().__init__(label)
+        super().__init__(
+            label,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
+        )
 
     def get_interfaces(self, et: EnergyType):
         # collect all in- and outbound interfaces of given EnergyType
@@ -51,7 +59,10 @@ class Location(SubNetwork):
         for i in interfaces:
             yield i
 
-    def get_carrier(self, carrier: type) -> AbstractCarrier:
+    def get_carrier(
+        self,
+        carrier: AbstractCarrier,
+    ) -> AbstractCarrier:
         """
         Return the energy carrier object.
 
@@ -66,7 +77,10 @@ class Location(SubNetwork):
             local_name=carrier.__name__
         )
 
-    def get_technology(self, technology: type) -> AbstractComponent:
+    def get_technology(
+        self,
+        technology: AbstractComponent,
+    ) -> AbstractComponent:
         """
         Get components by technology.
 
