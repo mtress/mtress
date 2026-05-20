@@ -21,13 +21,15 @@ class GasCarrier(AbstractLayeredCarrier):
 
     def __init__(
         self,
+        label,
         *,
-        location=None,
+        parent_node=None,
         custom_properties=None,
     ):
         """Initialize carrier."""
         super().__init__(
-            location=location,
+            label,
+            parent_node=parent_node,
             custom_properties=custom_properties,
         )
 

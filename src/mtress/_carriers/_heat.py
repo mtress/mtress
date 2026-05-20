@@ -45,8 +45,9 @@ class HeatCarrier(AbstractLayeredCarrier):
 
     def __init__(
         self,
+        label,
         *,
-        location=None,
+        parent_node=None,
         custom_properties=None,
         specific_heat_capacity=1.161,
     ):
@@ -56,7 +57,8 @@ class HeatCarrier(AbstractLayeredCarrier):
         :param specific_heat_capacity: heat capacity (in Wh/kg/K)
         """
         super().__init__(
-            location=location,
+            label,
+            parent_node=parent_node,
             custom_properties=custom_properties,
         )
         self.specific_heat_capacity = specific_heat_capacity

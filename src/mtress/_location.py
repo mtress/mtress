@@ -60,7 +60,11 @@ class Location(SubNetwork):
         for sn in self.subnodes:
             if isinstance(sn, carrier):
                 return sn
-        return carrier(location=self)
+
+        return self.subnode(
+            carrier,
+            local_name=carrier.__name__
+        )
 
     def get_technology(self, technology: type) -> AbstractComponent:
         """
