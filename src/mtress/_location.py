@@ -1,9 +1,9 @@
 """Locations in a meta model."""
 
-from ._abstract_component import AbstractComponent
 from ._constants import EnergyType
 from ._subnetwork import SubNetwork
 from ._carriers._abstract_carrier import AbstractCarrier
+from .technologies._abstract_technology import AbstractTechnology
 
 
 class Location(SubNetwork):
@@ -61,7 +61,7 @@ class Location(SubNetwork):
 
     def get_carrier(
         self,
-        carrier: AbstractCarrier,
+        carrier,
     ) -> AbstractCarrier:
         """
         Return the energy carrier object.
@@ -79,8 +79,8 @@ class Location(SubNetwork):
 
     def get_technology(
         self,
-        technology: AbstractComponent,
-    ) -> AbstractComponent:
+        technology,
+    ) -> AbstractTechnology:
         """
         Get components by technology.
 
@@ -89,11 +89,4 @@ class Location(SubNetwork):
         return [sn for sn in self.subnodes if isinstance(sn, technology)]
 
     def establish_interconnections(self):
-        for sn in self.subnodes:
-            sn: SubNetwork
-            try:
-                sn.establish_interconnections()
-            except AttributeError:
-                raise TypeError(
-                    "Only SubNetworks are allowed to be children of Location."
-                )
+        pass

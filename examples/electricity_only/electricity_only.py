@@ -6,11 +6,10 @@ an electricity carrier which acts as a electricity source/supply from the
 official grid (working price of 35 ct/kWh) as well as a demand (consumer)
 with a demand time series.
 
-At first an energy system (here meta_model) is defined with a time series
-(index). Afterwards a location is defined and added to the energysystem.
+At first an energy system is defined with a time series (index).
+Afterwards a location is defined and added to the energy system.
 Then the electricity carrier and demand (time series) are added to the
-energysystem. Finally, the energy system is optimised/solved via
-meta_model.solve and the solver output is written to an .lp file.
+energy system.
 """
 
 import os
@@ -18,32 +17,12 @@ import os
 from oemof import solph
 from mtress import (
     Location,
-    MetaModel,
-    SolphModel,
-    _carriers,
+    EnergySystem,
     demands,
     technologies,
 )
-from mtress._helpers import get_flow_units, get_energy_types
 
-os.chdir(os.path.dirname(__file__))
-meta_model = MetaModel()
-
-house_1 = Location(name="house_1")
-meta_model.add_location(house_1)
-
-house_1.add(_carriers.ElectricityCarrier())
-house_1.add(technologies.ElectricityGridConnection(working_rate=35))
-
-house_1.add(
-    demands.Electricity(
-        name="electricity demand",
-        time_series=[0, 0.5],
-    )
-)
-
-solph_representation = SolphModel(
-    meta_model,
+energy_system = EnergySystem(
     timeindex={
         "start": "2021-07-10 00:00:00",
         "end": "2021-07-10 02:00:00",
@@ -51,20 +30,38 @@ solph_representation = SolphModel(
     },
 )
 
-solph_representation.build_solph_model()
+house_1 = Location(label="house_1")
+energy_system.add(house_1)
 
-solved_model = solph_representation.solve(solve_kwargs={"tee": True})
-myresults = solph.Results(solved_model)
+house_1.subnode(
+    technologies.ElectricityGridConnection,
+    "EGC",
+    working_rate=35,
+)
+
+house_1.subnode(
+    demands.Electricity,
+    "electricity demand",
+    time_series=[0, 0.5],
+)
+
+energy_system.establish_interconnections()
+
+model = solph.Model(energy_system)
+
+energy_system.add_constraints(model)
+
+model.write(
+    "electricity_only.lp", io_options={"symbolic_solver_labels": True}
+)
+
+myresults = model.solve(solve_kwargs={"tee": True})
+
 flows = myresults["flow"]
 
 label1 = ("input", "electricity demand", "house_1")
 label2 = ("sink", "electricity demand", "house_1")
-flow_electricity = flows[(str(label1), str(label2))]
+flow_electricity = flows[(label1, label2)]
 
 print(flow_electricity)
 
-units = get_flow_units(solph_representation)
-flow_colours = get_energy_types(solph_representation)
-solph_representation.graph(
-    flow_results=flows, units=units, flow_colours=flow_colours
-)

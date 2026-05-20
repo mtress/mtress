@@ -8,19 +8,13 @@ class AbstractGridConnection(SubNetwork):
 
     def __init__(
         self,
+        label,
         *,
-        location=None,
+        parent_node=None,
         custom_properties=None,
     ):
-
-        label = self.__class__.__name__
-        if location:
-            if isinstance(location.label, QualifiedLabel):
-                label = QualifiedLabel([label, *location.label])
-            else:
-                label = QualifiedLabel([label, location.label])
         super().__init__(
             label=label,
-            parent_node=location,
+            parent_node=parent_node,
             custom_properties=custom_properties,
         )
