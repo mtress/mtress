@@ -7,6 +7,7 @@ from ._constants import EnergyType
 
 
 class SubNetwork(ABC, Node):
+    # TODO: documentation
     def __init__(
         self,
         label,
