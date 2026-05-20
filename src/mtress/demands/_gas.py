@@ -62,6 +62,10 @@ class GasDemand(AbstractDemand):
         self._input_node = self.subnode(
             Bus,
             local_name="input",
+            custom_properties={
+                "gas": self.gas_type,
+                "pressure": self.pressure,
+            },
         )
 
         self.subnode(
