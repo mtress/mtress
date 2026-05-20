@@ -2,8 +2,8 @@
 
 from oemof.solph import Bus, Flow
 
-from ._abstract_carrier import AbstractLayeredCarrier
 from .._constants import EnergyType
+from ._abstract_carrier import AbstractLayeredCarrier
 
 
 class GasCarrier(AbstractLayeredCarrier):
@@ -31,7 +31,10 @@ class GasCarrier(AbstractLayeredCarrier):
             custom_properties=custom_properties,
         )
 
-        self.distribution = {}
+        self._distribution = {}
+
+        # overwrite default list
+        self._levels = {}
 
         self._build_core()
 
@@ -50,13 +53,65 @@ class GasCarrier(AbstractLayeredCarrier):
         self.inbound_interfaces[EnergyType.GAS] = self.subnodes
         self.outbound_interfaces[EnergyType.GAS] = self.subnodes
 
-    @property
-    def inputs(self):
-        return self.distribution
+    # @property
+    # def inputs(self):
+    #     return self.distribution
+
+    # @property
+    # def outputs(self):
+    #     return self.distribution
 
     @property
-    def outputs(self):
-        return self.distribution
+    def distribution(self):
+        return self._distribution
 
     def establish_interconnections(self):
-        pass
+        # collect fixed gas types and pressures levels
+        interfaces = self.parent.get_interfaces(EnergyType.GAS)
+        gas_pressure = {}
+        for i in interfaces:
+            g = i.custom_properties.get("gas")
+            p = i.custom_properties.get("pressure")
+            if None not in (g, p):  # both need to be present
+                gas_pressure.setdefault(g, [])
+                gas_pressure[g].append(p)
+
+        for gas, pressures in gas_pressure.items():
+            p_low = None
+            self.distribution.setdefault(gas, {})
+            for p in sorted(pressures):
+                # check if first bus for gas type
+                if not self.distribution[gas]:
+                    g_bus = self.subnode(
+                        Bus,
+                        local_name=f"{gas.name}_{p}",
+                        custom_properties={
+                            "gas": gas,
+                            "pressure": p,
+                        },
+                    )
+                else:
+                    g_bus = self.subnode(
+                        Bus,
+                        local_name=f"{gas.name}_{p}",
+                        custom_properties={
+                            "gas": gas,
+                            "pressure": p,
+                        },
+                        outputs={
+                            self.distribution[gas][p_low]: Flow(
+                                custom_properties={
+                                    "unit": "kg/h",
+                                    "energy_type": EnergyType.GAS,
+                                }
+                            )
+                        },
+                    )
+                self.distribution[gas][p] = g_bus
+
+                # prepare next iteration
+                p_low = p
+
+                # update levels
+                self._levels.setdefault(gas, [])
+                self._levels[gas].append(p)
