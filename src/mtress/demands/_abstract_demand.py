@@ -14,18 +14,11 @@ class AbstractDemand(SubNetwork):
         self,
         label,
         *,
-        location=None,
+        parent_node=None,
         custom_properties=None,
     ):
-
-        if location:
-            if isinstance(location.label, QualifiedLabel):
-                label = QualifiedLabel([label, *location.label])
-            else:
-                label = QualifiedLabel([label, location.label])
-
         super().__init__(
             label,
-            parent_node=location,
+            parent_node=parent_node,
             custom_properties=custom_properties,
         )

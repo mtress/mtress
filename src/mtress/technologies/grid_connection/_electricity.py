@@ -18,12 +18,14 @@ class ElectricityGridConnection(AbstractGridConnection):
 
     def __init__(
         self,
+        label,
+        *,
         working_rate: Optional[TimeseriesSpecifier] = None,
         revenue: Optional[TimeseriesSpecifier] = None,
         demand_rate: Optional[float] = 0,
         grid_import_limit: Optional[float] = None,
         grid_export_limit: Optional[float] = None,
-        location=None,
+        parent_node=None,
         custom_properties=None,
     ) -> None:
         """
@@ -33,7 +35,8 @@ class ElectricityGridConnection(AbstractGridConnection):
         :grid_import_limit: limits the grid's imports (in W)
         """
         super().__init__(
-            location=location,
+            label=label,
+            parent_node=parent_node,
             custom_properties=custom_properties,
         )
 

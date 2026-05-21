@@ -1,7 +1,5 @@
 """Abstract technology class to ensure a unified interface."""
 
-from oemof.network.network.nodes import QualifiedLabel
-
 from .._subnetwork import SubNetwork
 
 
@@ -12,18 +10,12 @@ class AbstractTechnology(SubNetwork):
         self,
         label,
         *,
-        location=None,
+        parent_node=None,
         custom_properties=None,
     ):
         """Initialize technology."""
-
-        if location:
-            if isinstance(location.label, QualifiedLabel):
-                label = QualifiedLabel([label, *location.label])
-            else:
-                label = QualifiedLabel([label, location.label])
         super().__init__(
             label,
-            parent_node=location,
+            parent_node=parent_node,
             custom_properties=custom_properties,
         )
