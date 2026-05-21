@@ -59,6 +59,16 @@ class ElectricityGridConnection(AbstractGridConnection):
             Bus,
             local_name="grid_export",
         )
+
+        self.inbound_interfaces[EnergyType.ELECTRICITY] = [
+            self.grid_import,
+            self.grid_export,
+        ]
+        self.outbound_interfaces[EnergyType.ELECTRICITY] = [
+            self.grid_import,
+            self.grid_export,
+        ]
+
         if self.revenue is not None:
             self.subnode(
                 Sink,
@@ -116,12 +126,10 @@ class ElectricityGridConnection(AbstractGridConnection):
                 }
             )
 
-    def connect(
+    def _connect(
         self,
         other: ElectricityGridConnection,
     ):
-        # TODO create the actual flows between the location in
-        # establish interconnections
         self.grid_export.outputs[other.grid_import] = Flow(
             custom_properties={
                 "unit": "W",
