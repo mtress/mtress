@@ -10,6 +10,7 @@ SPDX-License-Identifier: MIT
 """
 
 from dataclasses import dataclass
+from collections.abc import Hashable
 
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Converter, Source
@@ -17,6 +18,7 @@ from oemof.solph.components import Converter, Source
 from .._carriers import ElectricityCarrier, HeatCarrier
 from ..physics import calc_cop
 from ._abstract_technology import AbstractTechnology
+from .._location import Location
 
 from .._constants import EnergyType
 
@@ -62,7 +64,7 @@ class HeatPump(AbstractTechnology):
 
     def __init__(
         self,
-        name: str,
+        label: Hashable,
         ref_cop: COPReference = None,
         thermal_power_limit: Investment | float = None,
         electrical_power_limit: Investment | float = None,
@@ -72,6 +74,8 @@ class HeatPump(AbstractTechnology):
         max_temp_secondary: float = None,
         min_temp_secondary: float = None,
         min_delta_temp_secondary: float = 5.0,
+        parent_node=None,
+        custom_properties=None,
     ):
         """
         Initialize heat pump component.
@@ -90,7 +94,11 @@ class HeatPump(AbstractTechnology):
             at the warm side.
         :param min_delta_temp_secondary: Minumum delta (°C) at the warm side.
         """
-        super().__init__(name=name)
+        super().__init__(
+            label,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
+        )
 
         if ref_cop is None:
             ref_cop = COPReference()
@@ -113,16 +121,17 @@ class HeatPump(AbstractTechnology):
         self.q_in = {}
         self.q_out = {}
 
-    def build_core(self):
+
+    def _build_core(self):
         """Build core structure of oemof.solph representation."""
-        super().build_core()
+        super()._build_core()
 
         # Add electrical connection
-        electricity_carrier = self.location.get_carrier(ElectricityCarrier)
+        electricity_carrier = self.parent.get_carrier(ElectricityCarrier)
 
-        self.electricity_bus = self.create_solph_node(
-            label="electricity",
-            node_type=Bus,
+        self.electricity_bus = self.subnode(
+            Bus,
+            local_name="electricity",
             inputs={
                 electricity_carrier.distribution: Flow(
                     custom_properties={
@@ -134,14 +143,14 @@ class HeatPump(AbstractTechnology):
             },
         )
 
-        self.heat_budget_bus = heat_budget_bus = self.create_solph_node(
-            label="heat_budget",
-            node_type=Bus,
+        self.heat_budget_bus = heat_budget_bus = self.subnode(
+            Bus,
+            local_name="heat_budget",
         )
 
-        self.create_solph_node(
+        self.subnode(
+            Source,
             label="heat_budget_source",
-            node_type=Source,
             outputs={
                 heat_budget_bus: Flow(
                     custom_properties={
@@ -154,52 +163,28 @@ class HeatPump(AbstractTechnology):
         )
 
     def establish_interconnections(self) -> None:
-        """Add connections to anergy sources."""
-        heat_carrier = self.location.get_carrier(HeatCarrier)
+        """Add connections to HeatCarrer."""
+        if isinstance(self.parent, Location):
+            heat_carrier = self.parent.get_carrier(HeatCarrier)
 
-        primary_out_levels = heat_carrier.get_levels_between(
-            self.min_temp_primary,
-            self.max_temp_primary - self.min_delta_temp_primary,
-        )
-        primary_in_levels = heat_carrier.get_levels_between(
-            primary_out_levels[0] + self.min_delta_temp_primary,
-            self.max_temp_primary,
-        )
-
-        secondary_in_levels = heat_carrier.get_levels_between(
-            self.min_temp_secondary,
-            self.max_temp_secondary - self.min_delta_temp_secondary,
-        )
-        secondary_out_levels = heat_carrier.get_levels_between(
-            secondary_in_levels[0] + self.min_delta_temp_secondary,
-            self.max_temp_secondary,
-        )
-
-        for (
-            temp_secondary_in,
-            temp_secondary_out,
-        ) in zip(
-            secondary_in_levels,
-            secondary_out_levels,
-        ):
-            self._create_he_node(
-                temp_heigh=temp_secondary_out,
-                temp_low=temp_secondary_in,
-                side="out",
+            primary_out_levels = heat_carrier.get_levels_between(
+                self.min_temp_primary,
+                self.max_temp_primary - self.min_delta_temp_primary,
+            )
+            primary_in_levels = heat_carrier.get_levels_between(
+                primary_out_levels[0] + self.min_delta_temp_primary,
+                self.max_temp_primary,
             )
 
-        for (
-            temp_primary_out,
-            temp_primary_in,
-        ) in zip(
-            primary_out_levels,
-            primary_in_levels,
-        ):
-            self._create_he_node(
-                temp_heigh=temp_primary_in,
-                temp_low=temp_primary_out,
-                side="in",
+            secondary_in_levels = heat_carrier.get_levels_between(
+                self.min_temp_secondary,
+                self.max_temp_secondary - self.min_delta_temp_secondary,
             )
+            secondary_out_levels = heat_carrier.get_levels_between(
+                secondary_in_levels[0] + self.min_delta_temp_secondary,
+                self.max_temp_secondary,
+            )
+
             for (
                 temp_secondary_in,
                 temp_secondary_out,
@@ -207,15 +192,40 @@ class HeatPump(AbstractTechnology):
                 secondary_in_levels,
                 secondary_out_levels,
             ):
-                self._create_converter_node(
-                    temp_primary_out,
-                    temp_primary_in,
-                    temp_secondary_in,
-                    temp_secondary_out,
+                self._create_he_node(
+                    temp_heigh=temp_secondary_out,
+                    temp_low=temp_secondary_in,
+                    side="out",
                 )
 
+            for (
+                temp_primary_out,
+                temp_primary_in,
+            ) in zip(
+                primary_out_levels,
+                primary_in_levels,
+            ):
+                self._create_he_node(
+                    temp_heigh=temp_primary_in,
+                    temp_low=temp_primary_out,
+                    side="in",
+                )
+                for (
+                    temp_secondary_in,
+                    temp_secondary_out,
+                ) in zip(
+                    secondary_in_levels,
+                    secondary_out_levels,
+                ):
+                    self._create_converter_node(
+                        temp_primary_out,
+                        temp_primary_in,
+                        temp_secondary_in,
+                        temp_secondary_out,
+                    )
+
     def _create_he_node(self, temp_heigh, temp_low, side):
-        heat_carrier = self.location.get_carrier(HeatCarrier)
+        heat_carrier = self.parent.get_carrier(HeatCarrier)
 
         heat_content = heat_carrier.specific_heat_capacity * (
             temp_heigh - temp_low
@@ -225,9 +235,9 @@ class HeatPump(AbstractTechnology):
         heat_bus_cold = heat_carrier.level_nodes[temp_low]
 
         if side == "in":
-            q_side = self.create_solph_node(
+            q_side = self.subnode(
+                Bus,
                 label=f"Qin_{temp_heigh:.0f}",
-                node_type=Bus,
             )
             self.q_in[int(temp_heigh)] = q_side
             inputs = {
@@ -253,9 +263,9 @@ class HeatPump(AbstractTechnology):
                 ),
             }
         else:
-            q_side = self.create_solph_node(
+            q_side = self.subnode(
+                Bus,
                 label=f"Qout_{temp_heigh:.0f}",
-                node_type=Bus,
             )
             self.q_out[int(temp_heigh)] = q_side
             inputs = {
@@ -281,9 +291,9 @@ class HeatPump(AbstractTechnology):
                 )
             }
 
-        self.create_solph_node(
-            label=f"HE_{side}_{temp_heigh:.0f}",
-            node_type=Converter,
+        self.subnode(
+            Converter,
+            local_name=f"HE_{side}_{temp_heigh:.0f}",
             inputs=inputs,
             outputs=outputs,
             conversion_factors={q_side: heat_content},
@@ -307,9 +317,9 @@ class HeatPump(AbstractTechnology):
             temp_secondary_out=temp_secondary_out,
         )
 
-        self.create_solph_node(
-            label=f"cop_{temp_primary_in:.0f}_{temp_secondary_out:.0f}",
-            node_type=Converter,
+        self.subnode(
+            Converter,
+            local_name=f"cop_{temp_primary_in:.0f}_{temp_secondary_out:.0f}",
             inputs={
                 q_in: Flow(
                     custom_properties={
