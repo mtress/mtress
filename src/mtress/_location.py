@@ -74,7 +74,7 @@ class Location(SubNetwork):
 
         return self.subnode(
             carrier,
-            local_name=carrier.__name__
+            local_name=carrier.__name__,
         )
 
     def get_technology(

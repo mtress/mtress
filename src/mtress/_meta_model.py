@@ -68,12 +68,10 @@ class MetaModel:
         ):
             self._connections.append(connection)
         else:
-            raise ValueError(
-                """
+            raise ValueError("""
                 At least one loacation to be connected is not known 
                 to the model.
-                """
-            )
+                """)
 
     def add_location(self, location: Location):
         """Add a new location to the meta model."""
