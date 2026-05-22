@@ -12,8 +12,6 @@ Then the electricity carrier and demand (time series) are added to the
 energy system.
 """
 
-import os
-
 from oemof import solph
 from mtress import (
     Location,
@@ -21,6 +19,10 @@ from mtress import (
     demands,
     technologies,
 )
+
+import os
+
+os.chdir(os.path.dirname(__file__))
 
 energy_system = EnergySystem(
     timeindex={
@@ -47,21 +49,22 @@ house_1.subnode(
 
 energy_system.establish_interconnections()
 
+energy_system.graph()
+
 model = solph.Model(energy_system)
 
 energy_system.add_constraints(model)
 
-model.write(
-    "electricity_only.lp", io_options={"symbolic_solver_labels": True}
-)
+model.write("electricity_only.lp", io_options={"symbolic_solver_labels": True})
 
 myresults = model.solve(solve_kwargs={"tee": True})
 
 flows = myresults["flow"]
 
-label1 = ("input", "electricity demand", "house_1")
-label2 = ("sink", "electricity demand", "house_1")
-flow_electricity = flows[(label1, label2)]
+energy_system.graph(flow_results=flows, path="model_results.png")
+
+label1 = str(("input", "electricity demand", "house_1"))
+label2 = str(("sink", "electricity demand", "house_1"))
+flow_electricity = flows[label1, label2]
 
 print(flow_electricity)
-
