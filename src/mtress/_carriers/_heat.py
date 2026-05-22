@@ -49,6 +49,7 @@ class HeatCarrier(AbstractLayeredCarrier):
         *,
         parent_node=None,
         custom_properties=None,
+        temperature_levels: list[int]=None,
         specific_heat_capacity=1.161,
     ):
         """
@@ -61,15 +62,20 @@ class HeatCarrier(AbstractLayeredCarrier):
             parent_node=parent_node,
             custom_properties=custom_properties,
         )
+        if temperature_levels is None:
+            temperature_levels = []
         self.specific_heat_capacity = specific_heat_capacity
 
         # Properties for solph interfaces
         self.level_nodes = {}
 
-        self._build_core()
+        self._build_core(temperature_levels)
 
-    def _build_core(self):
+    def _build_core(self, temperature_levels):
         """Build core structure of oemof.solph representation."""
+
+        for temperature in temperature_levels:
+            self.add_level(temperature)
 
         self.inbound_interfaces[EnergyType.HEAT] = self.subnodes
         self.outbound_interfaces[EnergyType.HEAT] = self.subnodes
@@ -85,10 +91,13 @@ class HeatCarrier(AbstractLayeredCarrier):
 
         # add nodes and update levels
         for t in temps:
-            t_bus = self.subnode(
-                Bus,
-                local_name=f"T_{t}",
-                custom_properties={"temperature": t},
-            )
-            self.level_nodes[t] = t_bus
-            self._levels.append(t)
+            _add_constant_temperture_node(t)
+
+    def add_level(self, t):
+        self._levels.append(t)
+        t_bus = self.subnode(
+            Bus,
+            local_name=f"T_{t}",
+            custom_properties={"temperature": t},
+        )
+        self.level_nodes[t] = t_bus
