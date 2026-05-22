@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 from typing import Optional
 
@@ -39,8 +37,9 @@ class GasGridConnection(AbstractGridConnection):
         working_rate: Optional[float] = None,
         demand_rate: Optional[float] = 0,
         revenue: Optional[float] = None,
-        **kwargs,
-    ):
+        location=None,
+        custom_properties=None,
+    ) -> None:
         """
         :gas_type: import a gas constant e.g. HYDROGEN
         :grid_pressure: in bar
@@ -49,7 +48,10 @@ class GasGridConnection(AbstractGridConnection):
         :revenue: in currency/Wh
         """
 
-        super().__init__()
+        super().__init__(
+            location=location,
+            custom_properties=custom_properties,
+        )
         self.gas_type = gas_type
         self.grid_pressure = grid_pressure
         self.working_rate = working_rate
@@ -145,12 +147,10 @@ class GasGridConnection(AbstractGridConnection):
             }
         )
         if self.grid_pressure < other.grid_pressure:
-            raise ValueError(
-                """
+            raise ValueError("""
                 Pressure level of the exporting GasGridConnection should 
                 be higher than or equal to importing GasGridConnection at 
                 another location (destination). Alternative is to use
                 compressor to raise the pressure level, which is not yet 
                 implemented.
-                """
-            )
+                """)

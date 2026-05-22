@@ -1,7 +1,5 @@
 """Electricity grid connection."""
 
-from __future__ import annotations
-
 from typing import Optional
 
 from oemof.solph import Bus, Flow, Investment
