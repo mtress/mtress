@@ -29,7 +29,7 @@ class AbstractHeater(AbstractTechnology):
         """
         super().__init__(
             label,
-            location=location,
+            parent_node=location,
             custom_properties=custom_properties,
         )
 

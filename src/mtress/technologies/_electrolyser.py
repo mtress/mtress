@@ -5,11 +5,11 @@ from dataclasses import dataclass
 from typing import Optional
 
 from oemof import solph
-from oemof.solph import Flow, Investment
+from oemof.solph import Flow, Investment, Bus
 from oemof.solph.components import Converter, OffsetConverter
 
 from .._helpers._util import enable_templating
-from .._carriers import ElectricityCarrier, GasCarrier
+from .._carriers import ElectricityCarrier, GasCarrier, HeatCarrier
 from ..physics import HYDROGEN
 from ._heater import AbstractHeater
 
@@ -100,18 +100,23 @@ class AbstractElectrolyser(AbstractHeater):
 
     def __init__(
         self,
-        name: str,
+        label,
+        *,
         nominal_power: Investment | float,
         full_load_hydrogen_efficiency: float,
         full_load_thermal_efficiency: float,
         maximum_temperature: float,
         minimum_temperature: float,
         hydrogen_output_pressure: float,
+        location=None,
+        custom_properties=None,
     ):
         super().__init__(
-            name=name,
+            label,
             maximum_temperature=maximum_temperature,
             minimum_temperature=minimum_temperature,
+            location=location,
+            custom_properties=custom_properties,
         )
         self.nominal_power = nominal_power
         self.full_load_hydrogen_efficiency = full_load_hydrogen_efficiency
@@ -121,23 +126,22 @@ class AbstractElectrolyser(AbstractHeater):
         self.hydrogen_output_pressure = hydrogen_output_pressure
 
     def build_core(self):
-        """Build core structure of oemof.solph representation."""
-        super().build_core()
+        super()._build_core()
 
-        # Electrical connection
-        self.electricity_carrier = self.location.get_carrier(
-            ElectricityCarrier
+        self._inbus = self.subnode(
+            Bus,
+            local_name="input",
         )
-        self.electrical_bus = self.electricity_carrier.distribution
+        self.inbound_interfaces[EnergyType.ELECTRICITY] = [self._inbus]
 
-        # Hydrogen connection
-        self.gas_carrier = self.location.get_carrier(GasCarrier)
-
-        self.pressure, _ = self.gas_carrier.get_surrounding_levels(
-            HYDROGEN, self.hydrogen_output_pressure
+        self._gas_bus = self.subnode(
+            Bus,
+            local_name="h2_output",
         )
 
-        self.h2_bus = self.gas_carrier.inputs[HYDROGEN][self.pressure]
+        self.outbound_interfaces[EnergyType.GAS] = [
+            self._gas_bus[self.hydrogen_output_pressure]
+        ]
 
         # H2 output in kg at max load
         self.full_load_h2_output = (
@@ -184,13 +188,16 @@ class Electrolyser(AbstractElectrolyser):
     @enable_templating(ElectrolyserTemplate)
     def __init__(
         self,
-        name: str,
+        label,
+        *,
         nominal_power: Investment | float,
         full_load_hydrogen_efficiency: float,
         full_load_thermal_efficiency: float,
         maximum_temperature: float,
         minimum_temperature: float,
         hydrogen_output_pressure: float,
+        location=None,
+        custom_properties=None,
     ):
         """
         Initialize Electrolyser
@@ -208,24 +215,28 @@ class Electrolyser(AbstractElectrolyser):
         :param hydrogen_output_pressure: output pressure (in bar)
         """
         super().__init__(
-            name=name,
+            label,
             nominal_power=nominal_power,
             full_load_hydrogen_efficiency=full_load_hydrogen_efficiency,
             full_load_thermal_efficiency=full_load_thermal_efficiency,
             maximum_temperature=maximum_temperature,
             minimum_temperature=minimum_temperature,
             hydrogen_output_pressure=hydrogen_output_pressure,
+            location=location,
+            custom_properties=custom_properties,
         )
 
-    def build_core(self):
+        self._build_core()
+
+    def _build_core(self):
         """Build core structure of oemof.solph representation."""
         super().build_core()
-
-        self.create_solph_node(
-            label="electrolyser",
-            node_type=Converter,
+        super()._build_core()
+        self._electrolyser_node = self.subnode(
+            Converter,
+            local_name="electrolyser",
             inputs={
-                self.electrical_bus: Flow(
+                self._inbus: Flow(
                     custom_properties={
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
@@ -234,13 +245,13 @@ class Electrolyser(AbstractElectrolyser):
                 ),
             },
             outputs={
-                self.h2_bus: Flow(
+                self._gas_bus: Flow(
                     custom_properties={
                         "unit": "kg/h",
                         "energy_type": EnergyType.GAS,
                     }
                 ),
-                self.heat_bus: Flow(
+                self._heat_bus: Flow(
                     custom_properties={
                         "unit": "W",
                         "energy_type": EnergyType.HEAT,
@@ -248,11 +259,37 @@ class Electrolyser(AbstractElectrolyser):
                 ),
             },
             conversion_factors={
-                self.electrical_bus: 1,
-                self.h2_bus: self.full_load_h2_output,
-                self.heat_bus: self.full_load_thermal_efficiency,
+                self._inbus: 1,
+                self._gas_bus: self.full_load_h2_output,
+                self._heat_bus: self.full_load_thermal_efficiency,
             },
         )
+
+    def establish_interconnections(self):
+        if self.parent:
+            # get carriers
+            gas_carrier: GasCarrier = self.parent.get_carrier(GasCarrier)
+            electricity_carrier: ElectricityCarrier = self.parent.get_carrier(
+                ElectricityCarrier
+            )
+            # connect electricity
+            self._inbus.inputs[electricity_carrier.distribution] = Flow(
+                custom_properties={
+                    "unit": "W",
+                    "energy_type": EnergyType.ELECTRICITY,
+                }
+            )
+            self.pressure, _ = gas_carrier.get_surrounding_levels(
+                HYDROGEN, self.hydrogen_output_pressure
+            )
+            self._gas_bus.outputs[gas_carrier.distribution[self.pressure]] = (
+                Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.GAS,
+                    }
+                )
+            )
 
 
 class OffsetElectrolyser(AbstractElectrolyser):
