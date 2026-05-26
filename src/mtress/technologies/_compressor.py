@@ -9,7 +9,7 @@ from ..physics import (
     Gas,
     calc_isothermal_compression_energy,
 )
-from ._abstract_technology import AbstractTechnology
+from .._base_mtress_nodes import AbstractTechnology
 
 from .._constants import EnergyType
 

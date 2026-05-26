@@ -10,7 +10,7 @@ from .._constants import EnergyType
 from .._data_handler import TimeseriesSpecifier
 from .._helpers._util import enable_templating
 from .._carriers import ElectricityCarrier
-from ._abstract_technology import AbstractTechnology
+from .._base_mtress_nodes import AbstractTechnology
 
 
 @dataclass(frozen=True)

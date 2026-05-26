@@ -7,8 +7,7 @@ from oemof.solph.components import Converter, Sink, Source
 from .._constants import EnergyType
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from .._carriers import HeatCarrier
-from ._abstract_demand import AbstractDemand
-
+from .._base_mtress_nodes import AbstractDemand
 
 class AbstractFixedTemperature(AbstractDemand):
     """
@@ -42,7 +41,7 @@ class AbstractFixedTemperature(AbstractDemand):
         return_temperature: float,
         time_series: TimeseriesSpecifier,
         specific_heat_capacity: float = 1.161,
-        location=None,
+        parent_node=None,
         custom_properties=None,
     ):
         """
@@ -53,7 +52,7 @@ class AbstractFixedTemperature(AbstractDemand):
         """
         super().__init__(
             label,
-            location=location,
+            parent_node=parent_node,
             custom_properties=custom_properties,
         )
 
@@ -75,6 +74,7 @@ class AbstractFixedTemperature(AbstractDemand):
 
 
 class FixedTemperatureHeating(AbstractFixedTemperature):
+
     def __init__(
         self,
         label,
@@ -83,7 +83,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         return_temperature: float,
         time_series: TimeseriesSpecifier,
         specific_heat_capacity: float = 1.161,
-        location=None,
+        parent_node=None,
         custom_properties=None,
     ):
         """
@@ -100,7 +100,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
             return_temperature=return_temperature,
             time_series=time_series,
             specific_heat_capacity=specific_heat_capacity,
-            location=location,
+            parent_node=parent_node,
             custom_properties=custom_properties,
         )
 
@@ -270,7 +270,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         return_temperature: float,
         time_series,
         specific_heat_capacity: float = 1.161,
-        location=None,
+        parent_node=None,
         custom_properties=None,
     ):
         """
@@ -287,7 +287,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             return_temperature=return_temperature,
             time_series=time_series,
             specific_heat_capacity=specific_heat_capacity,
-            location=location,
+            parent_node=parent_node,
             custom_properties=custom_properties,
         )
 

@@ -1,9 +1,9 @@
 """Locations in a meta model."""
 
 from ._constants import EnergyType
-from ._subnetwork import SubNetwork
-from ._carriers._abstract_carrier import AbstractCarrier
-from .technologies._abstract_technology import AbstractTechnology
+from ._base_mtress_nodes import SubNetwork
+from ._carriers._layered_carrier import AbstractCarrier
+from ._base_mtress_nodes import AbstractTechnology
 
 
 class Location(SubNetwork):

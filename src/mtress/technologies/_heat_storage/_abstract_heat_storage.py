@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 
 from mtress._data_handler import TimeseriesSpecifier
 
-from .._abstract_technology import AbstractTechnology
+from ..._base_mtress_nodes import AbstractTechnology
 
 
 class AbstractHeatStorage(AbstractTechnology):

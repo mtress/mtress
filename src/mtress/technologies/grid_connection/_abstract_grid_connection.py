@@ -1,6 +1,6 @@
 from oemof.network.network.nodes import QualifiedLabel
 
-from ..._subnetwork import SubNetwork
+from ..._base_mtress_nodes import SubNetwork
 
 from abc import abstractmethod
 

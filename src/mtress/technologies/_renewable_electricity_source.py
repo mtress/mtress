@@ -17,7 +17,7 @@ from oemof.solph.components import Source
 from .._constants import EnergyType
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from .._carriers import ElectricityCarrier
-from ._abstract_technology import AbstractTechnology
+from .._base_mtress_nodes import AbstractTechnology
 
 
 class RenewableElectricitySource(AbstractTechnology):

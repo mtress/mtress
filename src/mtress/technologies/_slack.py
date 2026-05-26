@@ -14,9 +14,9 @@ import numbers
 from oemof.solph import Flow
 from oemof.solph.components import Source, Sink
 
-from .._carriers._abstract_carrier import AbstractCarrier
+from .._carriers._layered_carrier import AbstractCarrier
 from .._carriers import ElectricityCarrier, HeatCarrier, GasCarrier
-from ._abstract_technology import AbstractTechnology
+from .._base_mtress_nodes import AbstractTechnology
 
 from .._constants import EnergyType
 

@@ -13,7 +13,7 @@ SPDX-License-Identifier: MIT
 from oemof.solph import Bus
 
 from .._constants import EnergyType
-from ._abstract_carrier import AbstractLayeredCarrier
+from ._layered_carrier import AbstractLayeredCarrier
 
 
 class HeatCarrier(AbstractLayeredCarrier):

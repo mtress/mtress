@@ -17,7 +17,7 @@ from .._abstract_homogenous_storage import (
     AbstractHomogenousStorage,
     Implementation,
 )
-from .._abstract_technology import AbstractTechnology
+from ..._base_mtress_nodes import AbstractTechnology
 
 
 class GasStorage(AbstractHomogenousStorage, AbstractTechnology):
