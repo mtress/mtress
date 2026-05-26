@@ -12,10 +12,7 @@ from mtress.physics import HYDROGEN, NATURAL_GAS
 
 
 def test_basic_initialisation():
-    parent_node = Node("parent")
-    gc = GasCarrier(location=parent_node)
-    assert gc.label == ("GasCarrier", "parent")
-    assert gc.parent == parent_node
+    gc = GasCarrier(label="label")
 
     assert len(gc.inbound_interfaces[EnergyType.GAS]) == 0
     assert len(gc.outbound_interfaces[EnergyType.GAS]) == 0
@@ -28,7 +25,7 @@ def test_gas_carrier_levels():
         NATURAL_GAS: [1, 6, 10, 7],
     }
 
-    gas_carier = GasCarrier()
+    gas_carier = GasCarrier(label="name")
     gas_carier._levels = pressures
 
     assert gas_carier.levels == pressures
