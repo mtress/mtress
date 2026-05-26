@@ -3,7 +3,7 @@
 from oemof.solph import Bus, Flow
 
 from .._constants import EnergyType
-from ._abstract_carrier import AbstractLayeredCarrier
+from ._layered_carrier import AbstractLayeredCarrier
 
 
 class GasCarrier(AbstractLayeredCarrier):

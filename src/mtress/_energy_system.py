@@ -6,13 +6,12 @@ SPDX-FileCopyrightText: Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)
 SPDX-License-Identifier: MIT
 """
 
-import logging
-from typing import Dict, Tuple
+from typing import Iterable
 
 import pandas as pd
 from oemof import solph
 
-from ._subnetwork import SubNetwork
+from ._base_mtress_nodes import SubNetwork
 
 from ._data_handler import DataHandler
 from ._helpers._visualization import graph_cytoscape, graph_graphviz

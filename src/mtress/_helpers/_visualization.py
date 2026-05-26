@@ -624,7 +624,7 @@ def graph_cytoscape(
     app.run(debug=False)
 
 
-from .._subnetwork import SubNetwork
+from .._base_mtress_nodes import SubNetwork
 
 
 def generate_graph(
