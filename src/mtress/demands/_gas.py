@@ -7,8 +7,7 @@ from .._constants import EnergyType
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from .._carriers import GasCarrier
 from ..physics import Gas
-from ._abstract_demand import AbstractDemand
-
+from .._base_mtress_nodes import AbstractDemand
 
 class GasDemand(AbstractDemand):
     """

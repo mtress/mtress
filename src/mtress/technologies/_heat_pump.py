@@ -17,7 +17,7 @@ from oemof.solph.components import Converter, Source
 
 from .._carriers import ElectricityCarrier, HeatCarrier
 from ..physics import calc_cop
-from ._abstract_technology import AbstractTechnology
+from .._base_mtress_nodes import AbstractTechnology
 from .._location import Location
 
 from .._constants import EnergyType

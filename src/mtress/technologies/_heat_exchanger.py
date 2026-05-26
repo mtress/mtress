@@ -10,7 +10,7 @@ from pyomo import environ as po
 
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from .._carriers import HeatCarrier
-from ._abstract_technology import AbstractTechnology
+from .._base_mtress_nodes import AbstractTechnology
 
 from .._constants import EnergyType
 

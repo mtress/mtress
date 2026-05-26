@@ -3,7 +3,7 @@
 from ._constants import EnergyType
 from ._base_mtress_nodes import SubNetwork
 from ._carriers._layered_carrier import AbstractCarrier
-from .technologies._abstract_technology import AbstractTechnology
+from ._base_mtress_nodes import AbstractTechnology
 
 
 class Location(SubNetwork):

@@ -7,7 +7,7 @@ from oemof.solph.components import Converter
 from .._constants import EnergyType
 from .._carriers import ElectricityCarrier, GasCarrier, HeatCarrier
 from ..physics import Gas
-from ._abstract_technology import AbstractTechnology
+from .._base_mtress_nodes import AbstractTechnology
 
 
 class AbstractHeater(AbstractTechnology):
