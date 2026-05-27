@@ -138,11 +138,10 @@ class AbstactHeatExchanger(AbstractTechnology):
         stays private.
         """
 
-        # self.reservoir_temperature = self._energy_system.data.get_timeseries(
-        #    self.reservoir_temperature,
-        #    kind=TimeseriesType.INTERVAL,
-        # )
-        return
+        self.reservoir_temperature = self._energy_system.data.get_timeseries(
+           self.reservoir_temperature,
+           kind=TimeseriesType.INTERVAL,
+        )
 
     def _normalised_gains(self, temperature):
         if self.conductivity_gain_factor is not None:

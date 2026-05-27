@@ -62,6 +62,12 @@ class TestHeatSource:
         assert np.allclose(src._normalised_gains(40), [0, 0.5, 1, 0])
         assert np.allclose(src._normalised_gains(-5), [0.1, 1, 1, 0.33])
 
+        assert len(src.inbound_interfaces) == 1
+        assert len(src.outbound_interfaces) == 1
+
+        assert len(src.inbound_interfaces[EnergyType.HEAT]) == 1
+        assert len(src.outbound_interfaces[EnergyType.HEAT]) == 1
+
     def test_minimum_delta_limit_check(self):
         with pytest.raises(ValueError, match="minimum_delta has to be > 1 °C"):
             _ = HeatSource(
