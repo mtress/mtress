@@ -1,5 +1,5 @@
 from mtress.technologies import SlackNode
-from mtress import MetaModel, Location, SolphModel, _carriers, demands
+from mtress import MetaModel, Location, SolphModel, carriers, demands
 from mtress import technologies
 from mtress.physics import HYDROGEN
 from oemof.solph import Results
@@ -33,7 +33,7 @@ class TestSlack:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(_carriers.ElectricityCarrier())
+        house_1.add(carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
                 working_rate=10, grid_import_limit=grid_limit
@@ -66,28 +66,28 @@ class TestSlack:
         [
             (
                 {
-                    _carriers.ElectricityCarrier: 1000,
-                    _carriers.HeatCarrier: 1e5,
-                    _carriers.GasCarrier: 1e7,
+                    carriers.ElectricityCarrier: 1000,
+                    carriers.HeatCarrier: 1e5,
+                    carriers.GasCarrier: 1e7,
                 },
                 30106359.1728,
             ),
             # different penalties for each carrier
             (
                 {
-                    _carriers.ElectricityCarrier: 2000,
-                    _carriers.HeatCarrier: 1e4,
-                    _carriers.GasCarrier: 0.5 * 1e7,
+                    carriers.ElectricityCarrier: 2000,
+                    carriers.HeatCarrier: 1e4,
+                    carriers.GasCarrier: 0.5 * 1e7,
                 },
                 15016335.91728,
             ),
             # same penalty for all
             (
                 {
-                    _carriers.ElectricityCarrier: 100000,
+                    carriers.ElectricityCarrier: 100000,
                     # = 1e5 as integer literal
-                    _carriers.HeatCarrier: 1e5,
-                    _carriers.GasCarrier: 1e5,
+                    carriers.HeatCarrier: 1e5,
+                    carriers.GasCarrier: 1e5,
                 },
                 703359.1728000001,
             ),
@@ -96,8 +96,8 @@ class TestSlack:
             # penalties for all but one carrier -> no alternative -> infeasible
             (
                 {
-                    _carriers.ElectricityCarrier: 2000,
-                    _carriers.HeatCarrier: 1e4,
+                    carriers.ElectricityCarrier: 2000,
+                    carriers.HeatCarrier: 1e4,
                     # carriers.GasCarrier: 0.5*1e7, # omit to trigger
                     # infeasibility
                 },
@@ -111,7 +111,7 @@ class TestSlack:
         location = Location(name="location")
         meta_model.add_location(location)
 
-        location.add(_carriers.ElectricityCarrier())
+        location.add(carriers.ElectricityCarrier())
         location.add(
             demands.Electricity(
                 name="electricity_demand", time_series=[0, 1, 2]
@@ -119,7 +119,7 @@ class TestSlack:
         )
 
         location.add(
-            _carriers.HeatCarrier(
+            carriers.HeatCarrier(
                 temperature_levels=[10, 20],
             )
         )
@@ -132,7 +132,7 @@ class TestSlack:
             )
         )
 
-        location.add(_carriers.GasCarrier(gases={HYDROGEN: [30]}))
+        location.add(carriers.GasCarrier(gases={HYDROGEN: [30]}))
         location.add(
             demands.GasDemand(
                 name="H2_demand",

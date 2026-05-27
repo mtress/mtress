@@ -8,7 +8,7 @@ from typing import Iterable
 import pytest
 
 from mtress import Connection, Location, MetaModel
-from mtress._carriers import ElectricityCarrier, HeatCarrier
+from mtress.carriers import ElectricityCarrier, HeatCarrier
 
 
 def test_minimal_initialisation():

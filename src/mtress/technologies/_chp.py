@@ -12,7 +12,7 @@ from oemof.solph.components import (
 )
 
 from .._helpers._util import enable_templating
-from .._carriers import ElectricityCarrier, GasCarrier
+from ..carriers import ElectricityCarrier, GasCarrier
 from ..physics import BIO_METHANE, BIOGAS, HYDROGEN, NATURAL_GAS, Gas
 from ._heater import AbstractHeater
 
@@ -517,19 +517,23 @@ class OffsetCHP(AbstractHeater):
         )
 
         # Gas input with conversion from electricity to gas in kg
-        nominal_fuel_input = 1 / (self.nominal_electrical_efficiency *
-                                  gas_mix_LHV)
+        nominal_fuel_input = 1 / (
+            self.nominal_electrical_efficiency * gas_mix_LHV
+        )
 
         # thermal efficiency with conversion from electricity to gas in kg to
         # heat in W.
-        nominal_heat_output = ((self.nominal_thermal_efficiency * gas_mix_LHV)
-                               * nominal_fuel_input)
+        nominal_heat_output = (
+            self.nominal_thermal_efficiency * gas_mix_LHV
+        ) * nominal_fuel_input
 
-        min_load_fuel_input = 1 / (self.min_load_electrical_efficiency *
-                                   gas_mix_LHV)
+        min_load_fuel_input = 1 / (
+            self.min_load_electrical_efficiency * gas_mix_LHV
+        )
 
-        min_load_heat_output = ((self.min_load_thermal_efficiency *
-                                 gas_mix_LHV) * nominal_fuel_input)
+        min_load_heat_output = (
+            self.min_load_thermal_efficiency * gas_mix_LHV
+        ) * nominal_fuel_input
 
         if self.allow_electricity_feed_in:
             splitter_bus = self.create_solph_node(
@@ -594,7 +598,6 @@ class OffsetCHP(AbstractHeater):
                         },
                     ),
                 },
-
                 outputs={
                     splitter_bus: Flow(
                         custom_properties={
@@ -605,7 +608,6 @@ class OffsetCHP(AbstractHeater):
                         max=self.normalised_max_load,
                         min=self.normalised_min_load,
                         nonconvex=NonConvex(),
-
                     ),
                     self.heat_bus: Flow(
                         custom_properties={

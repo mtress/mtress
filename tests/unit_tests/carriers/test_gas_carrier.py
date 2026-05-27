@@ -7,7 +7,7 @@ import pytest
 
 from oemof.network import Node
 from mtress._constants import EnergyType
-from mtress._carriers import GasCarrier
+from mtress.carriers import GasCarrier
 from mtress.physics import HYDROGEN, NATURAL_GAS
 
 

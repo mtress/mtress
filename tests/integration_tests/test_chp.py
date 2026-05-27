@@ -6,7 +6,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    _carriers,
+    carriers,
     demands,
     technologies,
 )
@@ -85,7 +85,7 @@ class TestCHP:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(_carriers.ElectricityCarrier())
+        house_1.add(carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
                 working_rate=50e-6,
@@ -94,7 +94,7 @@ class TestCHP:
         )
 
         house_1.add(
-            _carriers.GasCarrier(
+            carriers.GasCarrier(
                 gases={
                     gas: [template.input_pressure]
                     for gas, share in template.gas_type.items()
@@ -111,7 +111,7 @@ class TestCHP:
             )
 
         house_1.add(
-            _carriers.HeatCarrier(
+            carriers.HeatCarrier(
                 temperature_levels=[20, template.maximum_temperature],
                 # reference_temperature=10,
             )
@@ -263,7 +263,7 @@ class TestOffsetCHP:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(_carriers.ElectricityCarrier())
+        house_1.add(carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
                 working_rate=50e-6, revenue=50e-6 if allow_exports else None
@@ -271,7 +271,7 @@ class TestOffsetCHP:
         )
 
         house_1.add(
-            _carriers.GasCarrier(
+            carriers.GasCarrier(
                 gases={
                     gas: [template.input_pressure]
                     for gas, share in template.gas_type.items()
@@ -288,7 +288,7 @@ class TestOffsetCHP:
             )
 
         house_1.add(
-            _carriers.HeatCarrier(
+            carriers.HeatCarrier(
                 temperature_levels=[20, template.maximum_temperature],
                 # reference_temperature=10,
             )
@@ -383,7 +383,7 @@ class TestOffsetCHP:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(_carriers.ElectricityCarrier())
+        house_1.add(carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
                 working_rate=50e-6, revenue=50e-6
@@ -391,7 +391,7 @@ class TestOffsetCHP:
         )
 
         house_1.add(
-            _carriers.GasCarrier(
+            carriers.GasCarrier(
                 gases={
                     gas: [template.input_pressure]
                     for gas, share in template.gas_type.items()
@@ -400,7 +400,7 @@ class TestOffsetCHP:
         )
 
         house_1.add(
-            _carriers.HeatCarrier(
+            carriers.HeatCarrier(
                 temperature_levels=[
                     template.minimum_temperature,
                     template.maximum_temperature,
@@ -415,7 +415,7 @@ class TestOffsetCHP:
         house_1.add(
             SlackNode(
                 {
-                    _carriers.HeatCarrier: 0.0,
+                    carriers.HeatCarrier: 0.0,
                     # carriers.GasCarrier: 1e9,
                     # carriers.ElectricityCarrier: 1e9
                 }
@@ -575,7 +575,7 @@ class TestOffsetCHP:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(_carriers.ElectricityCarrier())
+        house_1.add(carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
                 working_rate=price_imp_elec,
@@ -584,7 +584,7 @@ class TestOffsetCHP:
         )
 
         house_1.add(
-            _carriers.GasCarrier(
+            carriers.GasCarrier(
                 gases={
                     gas_label: [template.input_pressure]
                     for gas_label, gas in template.gas_type.items()
@@ -601,7 +601,7 @@ class TestOffsetCHP:
             )
 
         house_1.add(
-            _carriers.HeatCarrier(
+            carriers.HeatCarrier(
                 temperature_levels=[
                     template.minimum_temperature,
                     template.maximum_temperature,

@@ -9,11 +9,10 @@ from oemof.solph.components import Converter, Sink, Source
 from pyomo import environ as po
 
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
-from .._carriers import HeatCarrier
+from ..carriers import HeatCarrier
 from .._base_mtress_nodes import AbstractTechnology
 
 from .._constants import EnergyType
-
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -10,14 +10,13 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    _carriers,
+    carriers,
     demands,
     technologies,
 )
 from mtress._helpers import get_flow_units, get_energy_types
 from mtress.physics import NATURAL_GAS
 from mtress.technologies import NATURALGAS_CHP
-
 
 LOGGER = logging.getLogger(__file__)
 
@@ -29,17 +28,17 @@ house_1 = Location(name="house_1")
 
 energy_system.add_location(house_1)
 
-house_1.add(_carriers.ElectricityCarrier())
+house_1.add(carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=50e-6))
 house_1.add(
-    _carriers.GasCarrier(
+    carriers.GasCarrier(
         gases={
             NATURAL_GAS: [10],
         }
     )
 )
 
-house_1.add(_carriers.HeatCarrier(temperature_levels=[20, 80]))
+house_1.add(carriers.HeatCarrier(temperature_levels=[20, 80]))
 house_1.add(
     technologies.CHP(
         name="Gas_CHP",

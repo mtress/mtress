@@ -1,6 +1,6 @@
 from oemof.solph import Results
 
-from mtress import Location, MetaModel, SolphModel, _carriers, demands
+from mtress import Location, MetaModel, SolphModel, carriers, demands
 from mtress.technologies import grid_connection
 
 
@@ -12,7 +12,7 @@ def test_basic_initialisation():
 
     energy_system.add_location(loc)
 
-    ec = _carriers.ElectricityCarrier(label="ec", parent_node=loc)
+    ec = carriers.ElectricityCarrier(label="ec", parent_node=loc)
 
     egc = grid_connection.ElectricityGridConnection(
         working_rate=0.3, location=loc
@@ -51,8 +51,8 @@ def test_connection():
     energy_system.add_location(loc1)
     energy_system.add_location(loc2)
 
-    ec1 = _carriers.ElectricityCarrier(location=loc1)
-    ec2 = _carriers.ElectricityCarrier(location=loc2)
+    ec1 = carriers.ElectricityCarrier(location=loc1)
+    ec2 = carriers.ElectricityCarrier(location=loc2)
 
     egc1 = grid_connection.ElectricityGridConnection(
         working_rate=0.3, location=loc1

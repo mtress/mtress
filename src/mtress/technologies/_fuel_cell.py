@@ -9,7 +9,7 @@ from oemof.solph import Flow, Investment
 from oemof.solph.components import Converter, OffsetConverter
 
 from .._helpers._util import enable_templating
-from .._carriers import ElectricityCarrier, GasCarrier
+from ..carriers import ElectricityCarrier, GasCarrier
 from ..physics import HYDROGEN, Gas
 from ._heater import AbstractHeater
 
@@ -131,7 +131,8 @@ class AbstractFuelCell(AbstractHeater):
         # Electrical efficiency with conversion from gas in kg
         # to electricity in W
         self.full_load_fuel_input = 1 / (
-                    self.full_load_electrical_efficiency * self.gas_type.LHV)
+            self.full_load_electrical_efficiency * self.gas_type.LHV
+        )
 
         # thermal efficiency with conversion from gas in kg to heat in W.
         self.full_load_heat_output = (
@@ -264,7 +265,7 @@ class FuelCell(AbstractFuelCell):
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
-                    nominal_value=self.nominal_power
+                    nominal_value=self.nominal_power,
                 ),
                 self.heat_bus: Flow(
                     custom_properties={
@@ -402,10 +403,12 @@ class OffsetFuelCell(AbstractFuelCell):
         super().build_core()
 
         min_load_fuel_input = 1 / (
-                    self.min_load_electrical_efficiency * self.gas_type.LHV)
+            self.min_load_electrical_efficiency * self.gas_type.LHV
+        )
 
-        min_load_heat_output = ((self.min_load_thermal_efficiency *
-                                self.gas_type.LHV) * min_load_fuel_input)
+        min_load_heat_output = (
+            self.min_load_thermal_efficiency * self.gas_type.LHV
+        ) * min_load_fuel_input
 
         # offset mode
         slope_gas, offset_gas = (
@@ -445,7 +448,7 @@ class OffsetFuelCell(AbstractFuelCell):
                     nominal_value=self.nominal_power,
                     max=self.maximum_load,
                     min=self.minimum_load,
-                    nonconvex=solph.NonConvex()
+                    nonconvex=solph.NonConvex(),
                 ),
                 self.heat_bus: Flow(
                     custom_properties={

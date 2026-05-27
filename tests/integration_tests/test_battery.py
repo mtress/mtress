@@ -7,7 +7,6 @@ from mtress.technologies._battery_storage import BatteryStorageTemplate
 from mtress.technologies import RenewableElectricitySource
 from pandas import Series
 
-
 # from mtress.physics import HYDROGEN
 import math
 import pytest
@@ -17,7 +16,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    _carriers,
+    carriers,
     demands,
     technologies,
 )
@@ -56,7 +55,7 @@ class TestBatteryStorage:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(_carriers.ElectricityCarrier())
+        house_1.add(carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
                 working_rate=[50e-6, 50e-6, 5]
@@ -143,7 +142,7 @@ class TestBatteryStorage:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(_carriers.ElectricityCarrier())
+        house_1.add(carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(
                 working_rate=[50e-6, 50e-6, 5]
@@ -269,7 +268,7 @@ class TestBatteryStorage:
         house_1 = Location(name="house_1")
         energy_system.add_location(house_1)
 
-        house_1.add(_carriers.ElectricityCarrier())
+        house_1.add(carriers.ElectricityCarrier())
         house_1.add(
             technologies.ElectricityGridConnection(working_rate=[1, 1, 1])
         )

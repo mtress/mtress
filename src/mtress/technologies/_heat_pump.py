@@ -15,7 +15,7 @@ from collections.abc import Hashable
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Converter, Source
 
-from .._carriers import ElectricityCarrier, HeatCarrier
+from ..carriers import ElectricityCarrier, HeatCarrier
 from ..physics import calc_cop
 from .._base_mtress_nodes import AbstractTechnology
 from .._location import Location
@@ -120,7 +120,6 @@ class HeatPump(AbstractTechnology):
 
         self.q_in = {}
         self.q_out = {}
-
 
     def _build_core(self):
         """Build core structure of oemof.solph representation."""

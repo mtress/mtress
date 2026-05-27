@@ -1,7 +1,7 @@
 from oemof.solph import Results
 from oemof.visio import ESGraphRenderer
 
-from mtress import Location, MetaModel, SolphModel, _carriers, demands
+from mtress import Location, MetaModel, SolphModel, carriers, demands
 from mtress._helpers._visualization import graph_graphviz
 from mtress.technologies import ResistiveHeater, grid_connection
 
@@ -13,8 +13,8 @@ def test_basic_initialisation():
 
     energy_system.add_location(loc)
 
-    ec = _carriers.ElectricityCarrier(location=loc)
-    hc = _carriers.HeatCarrier(location=loc)
+    ec = carriers.ElectricityCarrier(location=loc)
+    hc = carriers.HeatCarrier(location=loc)
 
     rh1 = ResistiveHeater(
         "electric_heater",

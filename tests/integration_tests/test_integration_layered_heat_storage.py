@@ -2,6 +2,7 @@
 """
 Tests for MTRESS LayeredHeatStorage
 """
+
 import os
 
 import pytest
@@ -11,7 +12,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    _carriers,
+    carriers,
     demands,
     technologies,
 )
@@ -24,7 +25,7 @@ def test_layered_heat_storage():
 
     house_1 = Location(name="house_1")
     house_1.add(
-        _carriers.HeatCarrier(
+        carriers.HeatCarrier(
             temperature_levels=[10, 20, 30],
         )
     )

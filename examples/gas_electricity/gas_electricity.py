@@ -10,7 +10,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    _carriers,
+    carriers,
     demands,
     technologies,
 )
@@ -28,7 +28,7 @@ house_1 = Location(name="house_1")
 
 energy_system.add_location(house_1)
 
-house_1.add(_carriers.ElectricityCarrier())
+house_1.add(carriers.ElectricityCarrier())
 house_1.add(technologies.ElectricityGridConnection(working_rate=0.35))
 house_1.add(
     technologies.GasGridConnection(
@@ -49,7 +49,7 @@ house_1.add(
     )
 )
 house_1.add(
-    _carriers.GasCarrier(
+    carriers.GasCarrier(
         gases={
             HYDROGEN: [30, 40],
             NATURAL_GAS: [10, 20, 30],
@@ -62,7 +62,7 @@ house_1.add(
         time_series="FILE:../input_file.csv:electricity",
     )
 )
-house_1.add(_carriers.HeatCarrier(temperature_levels=[20, 80]))
+house_1.add(carriers.HeatCarrier(temperature_levels=[20, 80]))
 
 
 # Choose default CHP template (HYDROGEN_MIXED_CHP) and change gas

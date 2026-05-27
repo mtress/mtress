@@ -1,6 +1,6 @@
 from oemof.solph import Results
 
-from mtress import Location, MetaModel, SolphModel, _carriers, demands
+from mtress import Location, MetaModel, SolphModel, carriers, demands
 
 
 def test_basic_initialisation():
@@ -11,7 +11,7 @@ def test_basic_initialisation():
 
     energy_system.add_location(loc)
 
-    hc = _carriers.HeatCarrier(location=loc)
+    hc = carriers.HeatCarrier(location=loc)
 
     hd = demands.FixedTemperatureHeating(
         "heating_demand",

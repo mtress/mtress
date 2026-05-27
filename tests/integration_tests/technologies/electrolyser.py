@@ -1,7 +1,7 @@
 from oemof.solph import Results
 from mtress.technologies._electrolyser import ElectrolyserTemplate
 from mtress import Location, MetaModel, SolphModel, demands
-from mtress import _carriers
+from mtress import carriers
 from mtress._helpers._visualization import graph_graphviz
 from mtress.technologies import ResistiveHeater, grid_connection, Electrolyser
 from mtress.physics import HYDROGEN
@@ -15,13 +15,11 @@ def test_basic_initialisation():
 
     energy_system.add_location(loc)
 
-    ec = _carriers.ElectricityCarrier(parent_node=loc, label="c")
-    hc = _carriers.HeatCarrier(parent_node=loc, label="ce")
+    ec = carriers.ElectricityCarrier(parent_node=loc, label="c")
+    hc = carriers.HeatCarrier(parent_node=loc, label="ce")
 
     rh1 = Electrolyser(
-        "electrolyser",
-        nominal_power=100e3,
-        template= PEM_ELECTROLYSER
+        "electrolyser", nominal_power=100e3, template=PEM_ELECTROLYSER
     )
 
     electricity = grid_connection.ElectricityGridConnection(working_rate=0)

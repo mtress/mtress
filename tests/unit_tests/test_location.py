@@ -5,7 +5,7 @@ Tests for the MTRESS class Location
 
 from typing import Iterable
 
-from mtress import Location, _carriers, demands
+from mtress import Location, carriers, demands
 
 
 def test_basic_initialisation():
@@ -19,18 +19,18 @@ def test_get_carrier():
     name = "house_1"
     house_1 = Location(label=name)
 
-    carrier = house_1.get_carrier(_carriers.ElectricityCarrier)
+    carrier = house_1.get_carrier(carriers.ElectricityCarrier)
 
     assert carrier.label == ("ElectricityCarrier", "house_1")
-    assert isinstance(carrier, _carriers.ElectricityCarrier)
+    assert isinstance(carrier, carriers.ElectricityCarrier)
 
 
 def test_add_component():
     name = "house_1"
     house_1 = Location(name=name)
 
-    carrier0 = _carriers.ElectricityCarrier()
-    carrier1 = _carriers.ElectricityCarrier()
+    carrier0 = carriers.ElectricityCarrier()
+    carrier1 = carriers.ElectricityCarrier()
     demand1 = demands.Electricity(name="demand1", time_series=[0, 1, 2])
     demand2 = demands.Electricity(name="demand2", time_series=[1, 2, 3])
 
@@ -40,8 +40,8 @@ def test_add_component():
     house_1.add(demand2)
 
     # carriers are not returned by get_technology
-    assert carrier0 not in house_1.get_technology(_carriers.ElectricityCarrier)
-    assert carrier1 not in house_1.get_technology(_carriers.ElectricityCarrier)
+    assert carrier0 not in house_1.get_technology(carriers.ElectricityCarrier)
+    assert carrier1 not in house_1.get_technology(carriers.ElectricityCarrier)
 
     # demands are returned by get_technology
     assert demand1 in house_1.get_technology(demands.Electricity)

@@ -11,7 +11,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    _carriers,
+    carriers,
     demands,
     technologies,
 )
@@ -24,7 +24,7 @@ energy_system = MetaModel()
 house_1 = Location(name="house_1")
 energy_system.add_location(house_1)
 
-house_1.add(_carriers.HeatCarrier(temperature_levels=[10, 20, 30, 40, 55]))
+house_1.add(carriers.HeatCarrier(temperature_levels=[10, 20, 30, 40, 55]))
 house_1.add(
     demands.FixedTemperatureHeating(
         name="space_heating",

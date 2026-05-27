@@ -2,7 +2,7 @@
 
 from ._constants import EnergyType
 from ._base_mtress_nodes import SubNetwork
-from ._carriers._layered_carrier import AbstractCarrier
+from .carriers._layered_carrier import AbstractCarrier
 from ._base_mtress_nodes import AbstractTechnology
 
 

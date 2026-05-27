@@ -5,7 +5,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    _carriers,
+    carriers,
     demands,
     technologies,
 )
@@ -64,7 +64,7 @@ class TestHeatGrid:
         house_1.add(technologies.SlackNode(penalty=100))
 
         house_1.add(
-            _carriers.HeatCarrier(
+            carriers.HeatCarrier(
                 temperature_levels=[10, 20, 30, 55],
             )
         )
@@ -125,7 +125,7 @@ class TestHeatGrid:
 
         house_1.add(technologies.SlackNode(penalty=100))
         house_1.add(
-            _carriers.HeatCarrier(
+            carriers.HeatCarrier(
                 temperature_levels=[10, 20, 30, 55],
             )
         )
@@ -147,7 +147,7 @@ class TestHeatGrid:
         house_2 = Location(name="house_2")
         energy_system.add_location(house_2)
         house_2.add(
-            _carriers.HeatCarrier(
+            carriers.HeatCarrier(
                 temperature_levels=[10, 20, 30, 55],
             )
         )
@@ -214,13 +214,13 @@ class TestHeatGrid:
 
         house_1.add(technologies.SlackNode(penalty=1000))
         house_1.add(
-            _carriers.HeatCarrier(
+            carriers.HeatCarrier(
                 temperature_levels=[10, 20, 30, 55],
             )
         )
-        house_1.add(_carriers.ElectricityCarrier())
+        house_1.add(carriers.ElectricityCarrier())
         house_1.add(
-            _carriers.GasCarrier(
+            carriers.GasCarrier(
                 gases={
                     HYDROGEN: [30, 70],
                 }
@@ -287,7 +287,7 @@ if __name__ == "__main__":
         Location,
         MetaModel,
         SolphModel,
-        _carriers,
+        carriers,
         demands,
         technologies,
     )
@@ -304,14 +304,14 @@ if __name__ == "__main__":
     house_1.add(technologies.SlackNode(penalty=1000))
 
     house_1.add(
-        _carriers.HeatCarrier(
+        carriers.HeatCarrier(
             temperature_levels=[10, 20, 30, 55],
         )
     )
-    house_1.add(_carriers.ElectricityCarrier())
+    house_1.add(carriers.ElectricityCarrier())
 
     house_1.add(
-        _carriers.GasCarrier(
+        carriers.GasCarrier(
             gases={
                 HYDROGEN: [30, 70],
             }

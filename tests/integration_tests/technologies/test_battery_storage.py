@@ -1,6 +1,6 @@
 from oemof.solph import Results
 
-from mtress import Location, MetaModel, SolphModel, _carriers
+from mtress import Location, MetaModel, SolphModel, carriers
 from mtress._helpers._visualization import graph_graphviz
 from mtress.technologies import BatteryStorage, grid_connection
 
@@ -12,7 +12,7 @@ def test_basic_initialisation():
 
     energy_system.add_location(loc)
 
-    ec = _carriers.ElectricityCarrier(location=loc)
+    ec = carriers.ElectricityCarrier(location=loc)
 
     bs = BatteryStorage(
         "battery",

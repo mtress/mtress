@@ -7,7 +7,7 @@ from mtress import (
     Location,
     MetaModel,
     SolphModel,
-    _carriers,
+    carriers,
     demands,
     technologies,
 )
@@ -54,11 +54,11 @@ def test_heat_pump_heating_example():
     energy_system.add_location(house_1)
 
     # Add carrier
-    house_1.add(_carriers.ElectricityCarrier())
+    house_1.add(carriers.ElectricityCarrier())
     house_1.add(technologies.ElectricityGridConnection(working_rate=35))
 
     house_1.add(
-        _carriers.HeatCarrier(
+        carriers.HeatCarrier(
             temperature_levels=[10, 15, 20, 30, 40, 55],
         )
     )
