@@ -1,14 +1,26 @@
 # Model Template for Renewable Energy Supply Systems (MTRESS)
 
 ## Introduction
-The DLR Institute of Networked Energy Systems has developed the MTRESS tool that can be 
-used to optimise energy supply systems for new and existing projects at any location. 
-MTRESS facilitates the creation of energy system optimisation models for individual 
-residential and commercial buildings, as well as for neighbourhoods and entire industrial
-properties.  It enables users to include a wide range of influencing factors and energy
-options in the simulation and minimises the planning effort.
 
-This is a generic model for community-based open source [oemof.solph](https://github.com/oemof/oemof-solph/) tool.
+MTRESS facilitates the creation of energy system optimisation models for
+individual residential and commercial buildings, as well as for neighbourhoods
+and entire industrial properties. It enables users to include a wide range of
+influencing factors and energy options in the simulation and minimises the
+planning effort.
+
+Technically, MTRESS is a specialised version of
+[oemof.solph](https://github.com/oemof/oemof-solph/). In contrast to solph,
+MTRESS focuses a component specific parametrisation that is based on data sheet
+values rather than abstract mathematical properties. Doing so, allows MTRESS
+to allow two things: Energy can have a quality (e.g. pressure of gas) and
+components can auto-connect based on the type of energy and its quality.
+MTRESS classes, in particular the implemented technologies can typically
+be used in any solph model. For features like automatic connection to work,
+however, the specialised `mtress.EnergySystem` has to be used instead of the
+original `solph.EnergySystem`:
+Calling `EnergySystem.establish_interconnections()` before you create the
+model to be optimised will do the magic.
+
 MTRESS offers a variety of possible technology combinations for energy supply systems.
 It includes pre-built technologies that are commonly considered in energy systems, such as:
  - Photovoltaic or wind power (as generic RenewableEnergySource)
