@@ -10,6 +10,7 @@ SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
+
 from oemof.solph import Bus
 
 from .._constants import EnergyType
@@ -49,7 +50,7 @@ class HeatCarrier(AbstractLayeredCarrier):
         *,
         parent_node=None,
         custom_properties=None,
-        temperature_levels: list[int]=None,
+        temperature_levels: list[int] = None,
         specific_heat_capacity=1.161,
     ):
         """
@@ -91,7 +92,7 @@ class HeatCarrier(AbstractLayeredCarrier):
 
         # add nodes and update levels
         for t in temps:
-            _add_constant_temperture_node(t)
+            self.add_level(t)
 
     def add_level(self, t):
         self._levels.append(t)
