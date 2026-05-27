@@ -89,7 +89,7 @@ house_1.add(
 
 house_1.add(
     technologies.HeatSink(
-        name="Heat_Sink",
+        label="Heat_Sink",
         reservoir_temperature=20,
         minimum_working_temperature=20,
         maximum_working_temperature=40,

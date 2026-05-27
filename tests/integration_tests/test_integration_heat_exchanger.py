@@ -52,7 +52,7 @@ def _heat_source_test_template(
 
     house_1.add(
         technologies.HeatSink(
-            name="HeatSink_20_10",
+            label="HeatSink_20_10",
             reservoir_temperature=[0, 0],
             maximum_working_temperature=20,
             minimum_working_temperature=10,
@@ -63,7 +63,7 @@ def _heat_source_test_template(
 
     house_1.add(
         technologies.HeatSink(
-            name="HeatSink_25_20",
+            label="HeatSink_25_20",
             reservoir_temperature=[0, 0],
             maximum_working_temperature=25,
             minimum_working_temperature=20,
@@ -74,7 +74,7 @@ def _heat_source_test_template(
 
     house_1.add(
         technologies.HeatSink(
-            name="HeatSink_30_25",
+            label="HeatSink_30_25",
             reservoir_temperature=[0, 0],
             maximum_working_temperature=30,
             minimum_working_temperature=25,

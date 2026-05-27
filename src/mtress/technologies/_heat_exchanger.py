@@ -1,6 +1,5 @@
 """This module provides a class representing an air heat exchanger."""
 
-import logging
 from typing import Optional
 import numpy as np
 
@@ -9,12 +8,10 @@ from oemof.solph.components import Converter, Sink, Source
 from pyomo import environ as po
 
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
-from ..carriers import HeatCarrier
 from .._base_mtress_nodes import AbstractTechnology
+from .._location import Location
 
 from .._constants import EnergyType
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AbstactHeatExchanger(AbstractTechnology):
@@ -42,16 +39,18 @@ class AbstactHeatExchanger(AbstractTechnology):
 
     def __init__(
         self,
-        name: str,
+        label,
         reservoir_temperature: TimeseriesSpecifier,
-        minimum_working_temperature: float = 0,
-        maximum_working_temperature: float = 0,
-        nominal_power: Investment | float | None = None,
-        minimum_delta: float = 1.0,
-        conductivity_gain_factor: float | None = None,
-        non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
-        working_rate: Optional[TimeseriesSpecifier] = 0,
-        revenue: Optional[TimeseriesSpecifier] = 0,
+        nominal_power: Investment | float,
+        minimum_working_temperature: float,
+        maximum_working_temperature: float,
+        minimum_delta: float,
+        conductivity_gain_factor: float | None,
+        non_thermal_gains: TimeseriesSpecifier,
+        working_rate: TimeseriesSpecifier,
+        revenue: TimeseriesSpecifier,
+        parent_node,
+        custom_properties,
     ):
         """
         Initialize heat exchanger to draw or expel energy from a source
@@ -74,7 +73,11 @@ class AbstactHeatExchanger(AbstractTechnology):
         non_thermal_gains, its temperatre needs to be above (strictly greater)
         the target temperature.
         """
-        super().__init__(name=name)
+        super().__init__(
+            label=label,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
+        )
 
         self.reservoir_temperature = reservoir_temperature
         self.minimum_working_temperature = minimum_working_temperature
@@ -98,13 +101,48 @@ class AbstactHeatExchanger(AbstractTechnology):
                 " makes sense when conductivity is also set."
             )
 
+        self._build_core()
+
     def _build_core(self):
-        self.reservoir_temperature = self._solph_model.data.get_timeseries(
-            self.reservoir_temperature,
-            kind=TimeseriesType.INTERVAL,
+        self.node_t_max = self.subnode(
+            Bus,
+            local_name=f"T_max",
+            custom_properties={
+                "temperature_max": self.maximum_working_temperature,
+            },
         )
 
-        self.heat_carrier = self.location.get_carrier(HeatCarrier)
+        self.node_t_min = self.subnode(
+            Bus,
+            local_name=f"T_min",
+            custom_properties={
+                "temperature_min": self.minimum_working_temperature,
+            },
+        )
+
+        self.inbound_interfaces[EnergyType.HEAT] = []
+        self.outbound_interfaces[EnergyType.HEAT] = []
+
+    def _build_core_sink(self):
+        self.inbound_interfaces[EnergyType.HEAT].append(self.node_t_max)
+        self.outbound_interfaces[EnergyType.HEAT].append(self.node_t_min)
+
+    def _build_core_source(self):
+        self.inbound_interfaces[EnergyType.HEAT].append(self.node_t_min)
+        self.outbound_interfaces[EnergyType.HEAT].append(self.node_t_max)
+
+    def _establish_interconnections(self):
+        """Shared establish interconnection code for all HeatExchangers.
+
+        This does not implement establish_interconnections, so that the class
+        stays private.
+        """
+
+        # self.reservoir_temperature = self._energy_system.data.get_timeseries(
+        #    self.reservoir_temperature,
+        #    kind=TimeseriesType.INTERVAL,
+        # )
+        return
 
     def _normalised_gains(self, temperature):
         if self.conductivity_gain_factor is not None:
@@ -379,38 +417,41 @@ class HeatSource(AbstactHeatExchanger):
 
     def __init__(
         self,
-        name: str,
+        label,
         reservoir_temperature: TimeseriesSpecifier,
+        nominal_power: Investment | float,
         minimum_working_temperature: float = 0,
-        maximum_working_temperature: float = 0,
-        nominal_power: Investment | float | None = None,
+        maximum_working_temperature: float = 100,
         minimum_delta: float = 1.0,
         conductivity_gain_factor: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
         working_rate: Optional[TimeseriesSpecifier] = 0,
+        parent_node=None,
+        custom_properties=None,
     ):
 
         super().__init__(
-            name=name,
+            label=label,
             reservoir_temperature=reservoir_temperature,
+            nominal_power=nominal_power,
             minimum_working_temperature=minimum_working_temperature,
             maximum_working_temperature=maximum_working_temperature,
-            nominal_power=nominal_power,
             minimum_delta=minimum_delta,
             conductivity_gain_factor=conductivity_gain_factor,
             non_thermal_gains=non_thermal_gains,
             working_rate=working_rate,
+            revenue=None,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
         )
 
         # Solph model interfaces
         self._bus_source = None
 
-    def build_core(self):
-        """Build core structure of oemof.solph representation."""
-        super().build_core()
-        self._build_core()
+        self._build_core_source()
 
     def establish_interconnections(self) -> None:
+        self._establish_interconnections()
         self._define_source()
 
     def add_constraints(self) -> None:
@@ -422,39 +463,41 @@ class HeatSink(AbstactHeatExchanger):
 
     def __init__(
         self,
-        name: str,
+        label: str,
         reservoir_temperature: TimeseriesSpecifier,
+        nominal_power: Investment | float,
         minimum_working_temperature: float = 0,
-        maximum_working_temperature: float = 0,
-        nominal_power: Investment | float | None = None,
+        maximum_working_temperature: float = 100,
         minimum_delta: float = 1.0,
         conductivity_gain_factor: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
-        revenue: float = 0,
+        revenue: Optional[TimeseriesSpecifier] = 0,
+        parent_node=None,
+        custom_properties=None,
     ):
 
         super().__init__(
-            name=name,
+            label=label,
             reservoir_temperature=reservoir_temperature,
+            nominal_power=nominal_power,
             minimum_working_temperature=minimum_working_temperature,
             maximum_working_temperature=maximum_working_temperature,
-            nominal_power=nominal_power,
             minimum_delta=minimum_delta,
             conductivity_gain_factor=conductivity_gain_factor,
             non_thermal_gains=non_thermal_gains,
+            working_rate=None,
             revenue=revenue,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
         )
 
         # Solph model interfaces
         self._bus_sink = None
 
-    def build_core(self):
-        """Build core structure of oemof.solph representation."""
-        super().build_core()
-
-        self._build_core()
+        self._build_core_sink()
 
     def establish_interconnections(self) -> None:
+        self._establish_interconnections()
         self._define_sink()
 
 
@@ -462,37 +505,44 @@ class HeatExchanger(AbstactHeatExchanger):
 
     def __init__(
         self,
-        name: str,
+        label,
         reservoir_temperature: TimeseriesSpecifier,
         nominal_power: Investment | float,
         minimum_working_temperature: float = 0,
-        maximum_working_temperature: float = 0,
+        maximum_working_temperature: float = 100,
         minimum_delta: float = 1.0,
         conductivity_gain_factor: float | None = None,
         non_thermal_gains: Optional[TimeseriesSpecifier] = 0,
+        working_rate: Optional[TimeseriesSpecifier] = 0,
+        revenue: Optional[TimeseriesSpecifier] = 0,
+        parent_node=None,
+        custom_properties=None,
     ):
 
         super().__init__(
-            name=name,
+            label=label,
             reservoir_temperature=reservoir_temperature,
+            nominal_power=nominal_power,
             minimum_working_temperature=minimum_working_temperature,
             maximum_working_temperature=maximum_working_temperature,
-            nominal_power=nominal_power,
             conductivity_gain_factor=conductivity_gain_factor,
             non_thermal_gains=non_thermal_gains,
             minimum_delta=minimum_delta,
+            working_rate=working_rate,
+            revenue=revenue,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
         )
 
         # Solph model interfaces
         self._bus_source = None
         self._bus_sink = None
 
-    def build_core(self):
-        """Build core structure of oemof.solph representation."""
-        super().build_core()
-        self._build_core()
+        self._build_core_sink()
+        self._build_core_source()
 
     def establish_interconnections(self) -> None:
+        self._establish_interconnections()
         self._define_source()
         self._define_sink()
 

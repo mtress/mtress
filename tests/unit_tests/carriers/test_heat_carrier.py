@@ -6,7 +6,6 @@ Tests for the MTRESS heat carrier.
 import math
 
 import pytest
-from oemof.network import Node
 from mtress._constants import EnergyType
 from mtress.carriers import HeatCarrier
 

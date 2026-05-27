@@ -35,7 +35,7 @@ house_1.add(carriers.HeatCarrier(temperature_levels=[5, 10, 20, 30, 40]))
 # Add technologies
 house_1.add(
     technologies.HeatSink(
-        name="air_HE",
+        label="air_HE",
         reservoir_temperature=15,
         maximum_working_temperature=40,
         minimum_working_temperature=5,
