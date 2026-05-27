@@ -45,6 +45,15 @@ class DataHandler:
 
             case pd.Series() as series:
                 if isinstance(series.index, pd.DatetimeIndex):
+                    tz_source = getattr(series.index, "tz")
+                    tz_target = getattr(target_index, "tz")
+                    if (tz_source is None) != (tz_target is None):
+                        raise ValueError(
+                            "To guarantee data consistency,"
+                            + " mixing timezone-aware and timezone-unaware"
+                            + " data is not allowed. You have"
+                            + f" {tz_target} and {tz_source}."
+                        )
                     matching_index = target_index.isin(series.index)
                     if not matching_index.all():
                         np.array(matching_index)
