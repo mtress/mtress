@@ -27,6 +27,8 @@ class TestHeatSource:
         assert np.array_equal(src._normalised_gains(40), [0, 0, 1, 0])
         assert np.array_equal(src._normalised_gains(-5), [1, 1, 1, 0])
 
+        assert len(src.subnodes) == 7
+
         assert len(src.inbound_interfaces) == 1
         assert len(src.outbound_interfaces) == 1
 
