@@ -7,6 +7,7 @@ from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Converter, Sink, Source
 from pyomo import environ as po
 
+from .._energy_system import EnergySystem as mtress_EnergySystem
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from .._base_mtress_nodes import AbstractTechnology
 from .._location import Location
@@ -101,6 +102,8 @@ class AbstactHeatExchanger(AbstractTechnology):
                 " makes sense when conductivity is also set."
             )
 
+        self.specific_heat_capacity = 1.161
+
         self._build_core()
 
     def _build_core(self):
@@ -108,7 +111,8 @@ class AbstactHeatExchanger(AbstractTechnology):
             Bus,
             local_name=f"T_max",
             custom_properties={
-                "temperature_max": self.maximum_working_temperature,
+                "temperature": self.maximum_working_temperature,
+                "preliminary": "max",
             },
         )
 
@@ -116,7 +120,8 @@ class AbstactHeatExchanger(AbstractTechnology):
             Bus,
             local_name=f"T_min",
             custom_properties={
-                "temperature_min": self.minimum_working_temperature,
+                "temperature": self.minimum_working_temperature,
+                "preliminiary": "min",
             },
         )
 
@@ -128,8 +133,99 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.outbound_interfaces[EnergyType.HEAT].append(self.node_t_min)
 
     def _build_core_source(self):
+
+        self._bus_source = self.subnode(
+            Bus,
+            local_name="heat_source",
+        )
+
+        self._heat_reservoir = self.subnode(
+            Source,
+            local_name="source_reservoir",
+            outputs={
+                self._bus_source: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
+                    nominal_value=self.nominal_power,
+                )
+            },
+        )
+
+        self._bus_utilisation = self.subnode(
+            Bus,
+            local_name="utilisation",
+        )
+
+        self._source_utilisation = self.subnode(
+            Source,
+            local_name="source_utilisation",
+            outputs={
+                self._bus_utilisation: Flow(
+                    nominal_capacity=self.nominal_power,
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
+                )
+            },
+        )
+
+        converter = self._add_source_converter(
+            self.node_t_min,
+            self.node_t_max,
+        )
+        self._update_source_gains(converter)
+
         self.inbound_interfaces[EnergyType.HEAT].append(self.node_t_min)
         self.outbound_interfaces[EnergyType.HEAT].append(self.node_t_max)
+
+    def _add_source_converter(self, cold_bus: Bus, warm_bus: Bus) -> Converter:
+        return self.subnode(
+            Converter,
+            local_name=f"source_{warm_bus.custom_properties['temperature']}",
+            inputs={
+                self._bus_source: Flow(
+                    custom_properties={
+                        "unit": "W",
+                        "energy_type": EnergyType.HEAT,
+                    },
+                    nominal_value=self.nominal_power,
+                ),
+                cold_bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
+                self._bus_utilisation: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                ),
+            },
+            outputs={
+                warm_bus: Flow(
+                    custom_properties={
+                        "unit": "kg/h",
+                        "energy_type": EnergyType.HEAT,
+                    }
+                )
+            },
+        )
+
+    def _update_source_gains(self, converter: Converter) -> None:
+        # [(_bus_source, converter)].max=gains,
+
+        # conversion_factors={
+        #    self._bus_source: heat_factor,
+        #    self._bus_utilisation: heat_factor * inverted_gains,
+        #    heat_bus_cold_source: 1,
+        #    heat_bus_warm_source: 1,
+        # }
+        pass
 
     def _establish_interconnections(self):
         """Shared establish interconnection code for all HeatExchangers.
@@ -138,11 +234,10 @@ class AbstactHeatExchanger(AbstractTechnology):
         stays private.
         """
 
-        # self.reservoir_temperature = self._energy_system.data.get_timeseries(
-        #    self.reservoir_temperature,
-        #    kind=TimeseriesType.INTERVAL,
-        # )
-        return
+        self.reservoir_temperature = self._energy_system.data.get_timeseries(
+            self.reservoir_temperature,
+            kind=TimeseriesType.INTERVAL,
+        )
 
     def _normalised_gains(self, temperature):
         if self.conductivity_gain_factor is not None:
@@ -163,49 +258,15 @@ class AbstactHeatExchanger(AbstractTechnology):
             ]
 
     def _define_source(self):
-        self._bus_source = _bus_source = self.create_solph_node(
-            label="heat_source",
-            node_type=Bus,
-        )
-
-        self._heat_reservoir = self.create_solph_node(
-            label="source_reservoir",
-            node_type=Source,
-            outputs={
-                _bus_source: Flow(
-                    custom_properties={
-                        "unit": "W",
-                        "energy_type": EnergyType.HEAT,
-                    },
-                    nominal_value=self.nominal_power,
-                    variable_costs=self._solph_model.data.get_timeseries(
-                        self.working_rate,
-                        kind=TimeseriesType.INTERVAL,
-                    ),
+        if isinstance(self._energy_system, mtress_EnergySystem):
+            self._heat_reservoir.outputs[self._bus_source].variable_costs = (
+                self._energy_system.data.get_timeseries(
+                    self.working_rate,
+                    kind=TimeseriesType.INTERVAL,
                 )
-            },
-        )
+            )
 
-        self._bus_utilisation = self.create_solph_node(
-            label="utilisation",
-            node_type=Bus,
-        )
-
-        self._source_utilisation = self.create_solph_node(
-            label="source_utilisation",
-            node_type=Source,
-            outputs={
-                self._bus_utilisation: Flow(
-                    nominal_capacity=self.nominal_power,
-                    custom_properties={
-                        "unit": "W",
-                        "energy_type": EnergyType.HEAT,
-                    },
-                )
-            },
-        )
-
-        if self.autoconnect:
+        if isinstance(self._parent, Location):
             highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
                 self.maximum_working_temperature,
             )
@@ -245,53 +306,22 @@ class AbstactHeatExchanger(AbstractTechnology):
                 ]
 
                 gains = self._normalised_gains(warm_temperature)
-                heat_factor = self.heat_carrier.specific_heat_capacity * (
+                heat_factor = self.specific_heat_capacity * (
                     warm_temperature - cold_temperature
                 )
                 inverted_gains = np.array(
                     [1 / g if g > 0 else 1 for g in gains]
                 )
 
-                self.create_solph_node(
-                    label=f"source_{warm_temperature}",
-                    node_type=Converter,
-                    inputs={
-                        _bus_source: Flow(
-                            custom_properties={
-                                "unit": "W",
-                                "energy_type": EnergyType.HEAT,
-                            },
-                            nominal_value=self.nominal_power,
-                            max=gains,
-                        ),
-                        heat_bus_cold_source: Flow(
-                            custom_properties={
-                                "unit": "kg/h",
-                                "energy_type": EnergyType.HEAT,
-                            }
-                        ),
-                        self._bus_utilisation: Flow(
-                            custom_properties={
-                                "unit": "kg/h",
-                                "energy_type": EnergyType.HEAT,
-                            }
-                        ),
-                    },
-                    outputs={
-                        heat_bus_warm_source: Flow(
-                            custom_properties={
-                                "unit": "kg/h",
-                                "energy_type": EnergyType.HEAT,
-                            }
-                        )
-                    },
-                    conversion_factors={
-                        _bus_source: heat_factor,
-                        self._bus_utilisation: heat_factor * inverted_gains,
-                        heat_bus_cold_source: 1,
-                        heat_bus_warm_source: 1,
-                    },
-                )
+                # conversion_factors={
+                #    self._bus_source: heat_factor,
+                #    self._bus_utilisation: heat_factor * inverted_gains,
+                #    heat_bus_cold_source: 1,
+                #    heat_bus_warm_source: 1,
+                # },
+
+    def _sink_constraints(self):
+        pass
 
     def _source_constraints(self):
         model = self._solph_model.model
@@ -500,6 +530,9 @@ class HeatSink(AbstactHeatExchanger):
         self._establish_interconnections()
         self._define_sink()
 
+    def add_constraints(self, model):
+        self._sink_constraints()
+
 
 class HeatExchanger(AbstactHeatExchanger):
 
@@ -543,9 +576,10 @@ class HeatExchanger(AbstactHeatExchanger):
 
     def establish_interconnections(self) -> None:
         self._establish_interconnections()
-        self._define_source()
         self._define_sink()
+        self._define_source()
 
     def add_constraints(self) -> None:
         """Add constraints to the model."""
+        self._sink_constraints()
         self._source_constraints()
