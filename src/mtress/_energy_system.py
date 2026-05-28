@@ -55,12 +55,12 @@ class EnergySystem(solph.EnergySystem):
 
     def establish_interconnections(self):
         """Autoconnect all applicable Nodes (of type SubNetwork)."""
-        for sn in list(self._mtress_nodes):
+        for sn in self._mtress_nodes:
             sn.establish_interconnections()
 
     def add_constraints(self, model: solph.Model):
         """Add constraints coded into every SubNetwork."""
-        for sn in list(self._mtress_nodes):
+        for sn in self._mtress_nodes:
             sn.add_constraints(model)
 
     @property

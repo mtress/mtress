@@ -148,7 +148,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                         "unit": "W",
                         "energy_type": EnergyType.HEAT,
                     },
-                    nominal_value=self.nominal_power,
+                    nominal_capacity=self.nominal_power,
                 )
             },
         )
@@ -191,7 +191,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                         "unit": "W",
                         "energy_type": EnergyType.HEAT,
                     },
-                    nominal_value=self.nominal_power,
+                    nominal_capacity=self.nominal_power,
                 ),
                 cold_bus: Flow(
                     custom_properties={
@@ -217,14 +217,28 @@ class AbstactHeatExchanger(AbstractTechnology):
         )
 
     def _update_source_gains(self, converter: Converter) -> None:
-        # [(_bus_source, converter)].max=gains,
 
-        # conversion_factors={
-        #    self._bus_source: heat_factor,
-        #    self._bus_utilisation: heat_factor * inverted_gains,
-        #    heat_bus_cold_source: 1,
-        #    heat_bus_warm_source: 1,
-        # }
+        [warm_bus] = converter.outputs.keys()
+        warm_temperature = warm_bus.custom_properties["temperature"]
+
+        input_nodes = set(converter.inputs.keys())
+        [cold_bus] = input_nodes - {self._bus_source, self._bus_utilisation}
+        cold_temperature = cold_bus.custom_properties["temperature"]
+
+        gains = self._normalised_gains(warm_temperature)
+        heat_factor = self.specific_heat_capacity * (
+            warm_temperature - cold_temperature
+        )
+        inverted_gains = np.array(
+            [1 / g if g > 0 else 1 for g in gains]
+        )
+
+        converter.conversion_factors[self._bus_source] = heat_factor
+        converter.conversion_factors[self._bus_utilisation] = (
+            heat_factor * inverted_gains
+        )
+        converter.inputs[self._bus_source].max = gains
+
         pass
 
     def _establish_interconnections(self):
@@ -304,21 +318,6 @@ class AbstactHeatExchanger(AbstractTechnology):
                 heat_bus_cold_source = self.heat_carrier.level_nodes[
                     cold_temperature
                 ]
-
-                gains = self._normalised_gains(warm_temperature)
-                heat_factor = self.specific_heat_capacity * (
-                    warm_temperature - cold_temperature
-                )
-                inverted_gains = np.array(
-                    [1 / g if g > 0 else 1 for g in gains]
-                )
-
-                # conversion_factors={
-                #    self._bus_source: heat_factor,
-                #    self._bus_utilisation: heat_factor * inverted_gains,
-                #    heat_bus_cold_source: 1,
-                #    heat_bus_warm_source: 1,
-                # },
 
     def _sink_constraints(self):
         pass
@@ -432,7 +431,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                             "energy_type": EnergyType.HEAT,
                         },
                         max=internal_sequence,
-                        nominal_value=self.nominal_power,
+                        nominal_capacity=self.nominal_power,
                     ),
                 },
                 conversion_factors={
