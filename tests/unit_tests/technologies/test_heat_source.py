@@ -3,6 +3,8 @@
 import numpy as np
 import pytest
 
+from oemof import solph
+
 from mtress.technologies import HeatSource
 from mtress import EnergyType
 
@@ -14,7 +16,7 @@ class TestHeatSource:
     nominal_power = 10000
     conductivity_gain_factor = 200 / nominal_power
 
-    def test_minimal_initialisation(self):
+    def test_binary_source(self):
         src = HeatSource(
             label=self.label,
             reservoir_temperature=self.reservoir_temperature,
@@ -24,8 +26,6 @@ class TestHeatSource:
             src.reservoir_temperature,
             self.reservoir_temperature,
         )
-        assert np.array_equal(src._normalised_gains(40), [0, 0, 1, 0])
-        assert np.array_equal(src._normalised_gains(-5), [1, 1, 1, 0])
 
         assert len(src.subnodes) == 7
 
@@ -35,7 +35,53 @@ class TestHeatSource:
         assert len(src.inbound_interfaces[EnergyType.HEAT]) == 1
         assert len(src.outbound_interfaces[EnergyType.HEAT]) == 1
 
-    def test_conductivity_initialisation(self):
+        converters = [
+            subnode for subnode in src.subnodes if isinstance(
+                subnode, solph.components.Converter
+            )
+        ]
+        assert len(converters) == 1
+
+        [converter] = converters
+        assert converter.inputs[src._bus_source].max == [0, 0, 0, 0]
+        assert converter.conversion_factors[src._bus_source] == pytest.approx(
+            116.1
+        )
+        np.testing.assert_allclose(
+            converter.conversion_factors[src._bus_utilisation],
+            np.full(4, 116.1),
+        )
+
+        [outlet] = src.outbound_interfaces[EnergyType.HEAT]
+        assert outlet.custom_properties["temperature"] == 100
+
+        # set outlet temperature to lower value and update converter
+        outlet.custom_properties["temperature"] = 40
+        src._update_source_gains(converter)
+        assert converter.inputs[src._bus_source].max == [0, 0, 1, 0]
+        assert converter.conversion_factors[src._bus_source] == pytest.approx(
+            0.4 * 116.1
+        )
+        np.testing.assert_allclose(
+            converter.conversion_factors[src._bus_utilisation],
+            np.full(4, 0.4 * 116.1),
+        )
+
+        outlet.custom_properties["temperature"] = -5  # out of range
+        src._update_source_gains(converter)
+        np.testing.assert_allclose(
+            converter.inputs[src._bus_source].max,
+            np.zeros(4),
+        )
+        assert converter.conversion_factors[src._bus_source] == pytest.approx(
+            -0.05 * 116.1
+        )
+        np.testing.assert_allclose(
+            converter.conversion_factors[src._bus_utilisation],
+            np.full(4, -0.05 * 116.1),
+        )
+
+    def test_conductive_source(self):
         src = HeatSource(
             label=self.label,
             reservoir_temperature=self.reservoir_temperature,
@@ -51,7 +97,7 @@ class TestHeatSource:
         assert len(src.inbound_interfaces[EnergyType.HEAT]) == 1
         assert len(src.outbound_interfaces[EnergyType.HEAT]) == 1
 
-    def test_non_thermal_initialisation(self):
+    def test_non_thermal_gain_source(self):
         non_thermal_gains = np.array([0, 1, 0.8, 0.4])
 
         src = HeatSource(

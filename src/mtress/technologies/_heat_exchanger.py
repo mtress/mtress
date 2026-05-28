@@ -225,7 +225,14 @@ class AbstactHeatExchanger(AbstractTechnology):
         [cold_bus] = input_nodes - {self._bus_source, self._bus_utilisation}
         cold_temperature = cold_bus.custom_properties["temperature"]
 
-        gains = self._normalised_gains(warm_temperature)
+        if (self.minimum_working_temperature
+            <= cold_temperature
+            < warm_temperature
+            <= self.maximum_working_temperature
+        ):
+            gains = self._normalised_gains(warm_temperature)
+        else:
+            gains = np.zeros(len(self.reservoir_temperature))
         heat_factor = self.specific_heat_capacity * (
             warm_temperature - cold_temperature
         )
