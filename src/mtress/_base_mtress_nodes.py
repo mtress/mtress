@@ -26,6 +26,20 @@ class SubNetwork(ABC, Node):
 
     @abstractmethod
     def establish_interconnections(self):
+        """Interconnect with other parts of the `mtress.EnergySystem`.
+
+        Implementations collect information from other parts of the
+        `mtress.EnergySystem` and autoconnect based on that information.
+        Even if information from other parts was available on initialisation
+        (e.g. because a parent node is a specific mtress class), it should only
+        be collected and considered at this point, when the system and all its
+        componentents are considered "final" by the user.
+
+        On initialisation, we build based on local information and are
+        completely compatible to a `solph.EnergySystem`, even if this means we
+        have to a alter subnodes in `establish_interconnections`.
+        """
+
         pass
 
     def add_constraints(self, model: solph.Model):
