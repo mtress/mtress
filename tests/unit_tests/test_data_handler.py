@@ -111,3 +111,37 @@ class TestDataHandler:
         data_series = pd.Series(data=data_list[1:], index=shorter_date_range)
         with pytest.raises(KeyError, match="2021-07-10 00:00:00"):
             data_handler.get_timeseries(data_series, kind=TimeseriesType.POINT)
+
+        longer_tz_aware_date_range = pd.date_range(
+            start="2021-07-9 00:00:00",
+            end="2021-07-11 00:00:00",
+            freq="15min",
+            tz="Europe/Berlin",
+        )
+        tz_aware_data_series = pd.Series(
+            data=list(range(len(longer_tz_aware_date_range))),
+            index=longer_tz_aware_date_range,
+        )
+        with pytest.raises(ValueError, match="None and Europe/Berlin"):
+            data_handler.get_timeseries(
+                tz_aware_data_series,
+                kind=TimeseriesType.POINT,
+            )
+
+        data_handler.timeindex = data_handler.timeindex.tz_localize("UTC")
+
+        with pytest.raises(ValueError, match="UTC and None"):
+            data_handler.get_timeseries(
+                data_series,
+                kind=TimeseriesType.POINT,
+            )
+
+        point_data_list = list(
+            data_handler.get_timeseries(
+                tz_aware_data_series,
+                kind=TimeseriesType.POINT,
+            )
+        )
+
+        # 104: 24*4 (started one day before) + 4 (time zone) + 4 (DST)
+        assert point_data_list == [104, 105, 106, 107, 108]

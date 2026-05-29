@@ -155,8 +155,8 @@ class BatteryStorage(AbstractTechnology):
         else:
             inflow_capacity = self.nominal_capacity * self.charging_C_Rate
             outflow_capacity = self.nominal_capacity * self.discharging_C_Rate
-            invest_relation_input_capacity = (None,)
-            invest_relation_output_capacity = (None,)
+            invest_relation_input_capacity=None
+            invest_relation_output_capacity=None
 
         self._battery_node = self.subnode(
             GenericStorage,

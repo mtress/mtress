@@ -265,7 +265,7 @@ class FuelCell(AbstractFuelCell):
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
-                    nominal_value=self.nominal_power,
+                    nominal_capacity=self.nominal_power
                 ),
                 self.heat_bus: Flow(
                     custom_properties={
@@ -445,10 +445,10 @@ class OffsetFuelCell(AbstractFuelCell):
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
-                    nominal_value=self.nominal_power,
-                    max=self.maximum_load,
-                    min=self.minimum_load,
-                    nonconvex=solph.NonConvex(),
+                    nominal_capacity=self.nominal_power,
+                    maximum=self.maximum_load,
+                    minimum=self.minimum_load,
+                    nonconvex=solph.NonConvex()
                 ),
                 self.heat_bus: Flow(
                     custom_properties={

@@ -357,8 +357,9 @@ class GenericElectricVehicle(BatteryStorage):
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
-                    nominal_value=self.nominal_capacity * self.charging_C_Rate,
-                    max=self._solph_model.data.get_timeseries(
+                    nominal_capacity=self.nominal_capacity
+                    * self.charging_C_Rate,
+                    maximum=self._solph_model.data.get_timeseries(
                         self.plugged_in_profile, kind=TimeseriesType.INTERVAL
                     ),
                 )
@@ -369,14 +370,14 @@ class GenericElectricVehicle(BatteryStorage):
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
-                    nominal_value=self.nominal_capacity
+                    nominal_capacity=self.nominal_capacity
                     * self.discharging_C_Rate,
-                    max=self._solph_model.data.get_timeseries(
+                    maximum=self._solph_model.data.get_timeseries(
                         self.plugged_in_profile, kind=TimeseriesType.INTERVAL
                     ),
                 )
             },
-            nominal_storage_capacity=self.nominal_capacity,
+            nominal_capacity=self.nominal_capacity,
             loss_rate=self.loss_rate,
             min_storage_level=self.min_soc,
             initial_storage_level=self.initial_soc,

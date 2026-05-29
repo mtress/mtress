@@ -116,7 +116,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                                 "unit": "kg/h",
                                 "energy_type": EnergyType.HEAT,
                             },
-                            nominal_value=self.power_limit,
+                            nominal_capacity=self.power_limit,
                         )
                     },
                     outputs={
@@ -125,7 +125,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                                 "unit": "kg/h",
                                 "energy_type": EnergyType.HEAT,
                             },
-                            nominal_value=self.power_limit,
+                            nominal_capacity=self.power_limit,
                         )
                     }
                     | gain_flow,
@@ -152,7 +152,7 @@ class LayeredHeatStorage(AbstractHeatStorage):
                             }
                         )
                     },
-                    nominal_storage_capacity=self.volume * H2O_DENSITY,
+                    nominal_capacity=self.volume * H2O_DENSITY,
                     balanced=self.balanced,
                     initial_storage_level=initial_storage_level,
                 )

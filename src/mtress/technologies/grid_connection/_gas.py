@@ -109,7 +109,7 @@ class GasGridConnection(AbstractGridConnection):
                 node_type=Source,
                 outputs={
                     self.b_grid_import: Flow(
-                        nominal_value=maximum_load,
+                        nominal_capacity=maximum_load,
                         variable_costs=self.working_rate,
                         custom_properties={
                             "unit": "kg/h",

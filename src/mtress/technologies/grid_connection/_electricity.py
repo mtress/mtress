@@ -5,7 +5,7 @@ from typing import Optional
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Sink, Source
 
-from mtress._data_handler import TimeseriesSpecifier
+from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import ElectricityCarrier
 
 from ..._constants import EnergyType
@@ -81,7 +81,9 @@ class ElectricityGridConnection(AbstractGridConnection):
                             "energy_type": EnergyType.ELECTRICITY,
                         },
                         nominal_capacity=self.grid_export_limit,
-                        variable_costs=-self.revenue,
+                        variable_costs=-self._energy_system.data.get_timeseries(
+                            self.revenue, kind=TimeseriesType.INTERVAL
+                        ),
                     )
                 },
             )
@@ -89,7 +91,8 @@ class ElectricityGridConnection(AbstractGridConnection):
         if self.working_rate is not None:
             if self.demand_rate:
                 maximum_load = Investment(
-                    ep_costs=self.demand_rate, max=self.grid_import_limit
+                    ep_costs=self.demand_rate,
+                    maximum=self.grid_import_limit
                 )
             else:
                 maximum_load = self.grid_import_limit
@@ -103,8 +106,10 @@ class ElectricityGridConnection(AbstractGridConnection):
                             "unit": "W",
                             "energy_type": EnergyType.ELECTRICITY,
                         },
-                        nominal_value=maximum_load,
-                        variable_costs=self.working_rate,
+                        nominal_capacity=maximum_load,
+                        variable_costs=self._energy_system.data.get_timeseries(
+                            self.working_rate, kind=TimeseriesType.INTERVAL
+                        ),
                     )
                 },
             )

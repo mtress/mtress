@@ -330,7 +330,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         pass
 
     def _source_constraints(self):
-        model = self._solph_model.model
+        model = self._energy_system.model
         name = str(self.node) + "_power_limit"
 
         def _equate_flow_groups_rule(m):
@@ -368,7 +368,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                         "energy_type": EnergyType.HEAT,
                     },
                     variable_costs=-(
-                        self._solph_model.data.get_timeseries(
+                        self._energy_system.data.get_timeseries(
                             self.revenue,
                             kind=TimeseriesType.INTERVAL,
                         )
@@ -437,7 +437,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                             "unit": "W",
                             "energy_type": EnergyType.HEAT,
                         },
-                        max=internal_sequence,
+                        maximum=internal_sequence,
                         nominal_capacity=self.nominal_power,
                     ),
                 },

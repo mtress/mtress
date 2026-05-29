@@ -66,7 +66,9 @@ class Electricity(AbstractDemand):
                         "energy_type": EnergyType.ELECTRICITY,
                     },
                     nominal_capacity=1,
-                    fix=self._time_series,
+                    fix=self._energy_system.data.get_timeseries(
+                        self._time_series, kind=TimeseriesType.INTERVAL
+                    ),
                 )
             },
         )

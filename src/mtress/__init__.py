@@ -14,7 +14,7 @@ from ._location import Location
 from ._energy_system import EnergySystem
 from ._constants import EnergyType
 
-__version__ = "26.1.27a1"
+__version__ = "26.6.1a1"
 
 __all__ = [
     "AbstractCarrier",
@@ -24,3 +24,4 @@ __all__ = [
     "EnergyType",
     "Location",
 ]
+

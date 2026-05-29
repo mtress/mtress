@@ -72,9 +72,13 @@ class RenewableElectricitySource(AbstractTechnology):
                     "unit": "W",
                     "energy_type": EnergyType.ELECTRICITY,
                 },
-                nominal_capacity=self._nominal_power,
-                variable_costs=self._working_rate,
-                fix=self._specific_generation,
+                nominal_capacity=self.nominal_power,
+                variable_costs=self._energy_system.data.get_timeseries(
+                    self.working_rate, kind=TimeseriesType.INTERVAL
+                ),
+                fix=self._energy_system.data.get_timeseries(
+                    self.specific_generation, kind=TimeseriesType.INTERVAL
+                ),
             )
         else:
             flow = Flow(
@@ -82,9 +86,13 @@ class RenewableElectricitySource(AbstractTechnology):
                     "unit": "W",
                     "energy_type": EnergyType.ELECTRICITY,
                 },
-                nominal_capacity=self._nominal_power,
-                variable_costs=self._working_rate,
-                max=self._specific_generation,
+                nominal_capacity=self.nominal_power,
+                variable_costs=self._energy_system.data.get_timeseries(
+                    self.working_rate, kind=TimeseriesType.INTERVAL
+                ),
+                maximum=self._energy_system.data.get_timeseries(
+                    self.specific_generation, kind=TimeseriesType.INTERVAL
+                ),
             )
 
         self.subnode(

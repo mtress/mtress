@@ -323,7 +323,7 @@ class TestOffsetFuelCell:
             timeindex={
                 "start": "2022-06-01 08:00:00",
                 "end": "2022-06-01 09:00:00",
-                "freq": "60T",
+                "freq": "60min",
                 "tz": "Europe/Berlin",
             },
         )

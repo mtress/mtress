@@ -54,7 +54,7 @@ class GasCompressor(AbstractTechnology):
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
-                    nominal_value=self.nominal_power,
+                    nominal_capacity=self.nominal_power,
                 )
             },
         )
