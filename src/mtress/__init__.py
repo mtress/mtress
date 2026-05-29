@@ -12,7 +12,7 @@ from ._meta_model import Connection, MetaModel
 from ._solph_model import SolphModel
 
 
-__version__ = "26.1.27a1"
+__version__ = "26.5"
 
 __all__ = [
     "Connection",
@@ -20,3 +20,4 @@ __all__ = [
     "MetaModel",
     "SolphModel",
 ]
+
