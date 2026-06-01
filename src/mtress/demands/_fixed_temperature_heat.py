@@ -63,10 +63,10 @@ class AbstractFixedTemperature(AbstractDemand):
 
         self._time_series = time_series
 
-        self._build_core()
+        self.__build_core()
 
 
-    def _build_core(self):
+    def __build_core(self):
         # core component of any fixed temp demand
         self._output_node = self.subnode(
             Bus,
@@ -113,9 +113,9 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
 
         self.min_flow_temperature = min_flow_temperature
 
-        self._build_core()
+        self.__build_core()
 
-    def _build_core(self):
+    def __build_core(self):
 
         self._sink = self.subnode(
             Sink,
@@ -299,11 +299,9 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
 
         self.max_flow_temperature = max_flow_temperature
 
-        self._build_core()
+        self.__build_core()
 
-    def _build_core(self):
-        super()._build_core()
-
+    def __build_core(self):
         self._source = self.subnode(
             Source,
             local_name="source",

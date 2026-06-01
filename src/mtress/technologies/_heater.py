@@ -118,8 +118,6 @@ class ResistiveHeater(AbstractHeater):
         self._build_core()
 
     def _build_core(self):
-        super()._build_core()
-
         # add technology specific inlet
         self._in_electricity = self.subnode(
             Bus,
@@ -327,7 +325,6 @@ class GasBoiler(AbstractHeater):
         self.efficiency = efficiency
 
     def build_core(self):
-        super()._build_core()
 
         gas_carrier = self.location.get_carrier(GasCarrier)
         _, pressure_level = gas_carrier.get_surrounding_levels(

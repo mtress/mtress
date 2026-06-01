@@ -43,7 +43,6 @@ class HeatGridConnection(AbstractGridConnection, AbstactHeatExchanger):
     def build_core(self):
         """Build core structure of oemof.solph representation."""
         super().build_core()
-        super()._build_core()
 
     def establish_interconnections(self) -> None:
 

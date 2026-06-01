@@ -126,7 +126,6 @@ class AbstractElectrolyser(AbstractHeater):
         self.hydrogen_output_pressure = hydrogen_output_pressure
 
     def build_core(self):
-        super()._build_core()
 
         self._inbus = self.subnode(
             Bus,
@@ -231,7 +230,6 @@ class Electrolyser(AbstractElectrolyser):
     def _build_core(self):
         """Build core structure of oemof.solph representation."""
         super().build_core()
-        super()._build_core()
         self._electrolyser_node = self.subnode(
             Converter,
             local_name="electrolyser",
