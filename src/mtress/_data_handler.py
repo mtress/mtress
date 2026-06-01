@@ -5,6 +5,8 @@ from enum import IntEnum
 import numpy as np
 import pandas as pd
 
+from oemof.solph._plumbing import _FakeSequence
+
 TimeseriesSpecifier = str | pd.Series | list | float
 
 
@@ -75,6 +77,11 @@ class DataHandler:
 
             case float() | int() as value:
                 return pd.Series(data=value, index=target_index)
+
+            case _FakeSequence() as fs:
+                return _FakeSequence(value=fs.value, length=len(target_index))
+
+                pd.Series(data=value.value, index=target_index)
 
             case _:
                 raise ValueError(
