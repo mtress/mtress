@@ -4,6 +4,7 @@ from typing import Optional
 import numpy as np
 
 from oemof.solph import Bus, Flow, Investment
+from oemof.solph._plumbing import sequence
 from oemof.solph.components import Converter, Sink, Source
 from pyomo import environ as po
 
@@ -11,6 +12,7 @@ from .._energy_system import EnergySystem as mtress_EnergySystem
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from .._base_mtress_nodes import AbstractTechnology
 from .._location import Location
+from ..carriers import HeatCarrier
 
 from .._constants import EnergyType
 
@@ -104,9 +106,9 @@ class AbstactHeatExchanger(AbstractTechnology):
 
         self.specific_heat_capacity = 1.161
 
-        self._build_core()
+        self.__build_core()
 
-    def _build_core(self):
+    def __build_core(self):
         self.node_t_max = self.subnode(
             Bus,
             local_name=f"T_max",
@@ -121,12 +123,20 @@ class AbstactHeatExchanger(AbstractTechnology):
             local_name=f"T_min",
             custom_properties={
                 "temperature": self.minimum_working_temperature,
-                "preliminiary": "min",
+                "preliminary": "min",
             },
         )
 
         self.inbound_interfaces[EnergyType.HEAT] = []
         self.outbound_interfaces[EnergyType.HEAT] = []
+
+    @property
+    def reservoir_temperature(self):
+        return self._reservoir_temperature
+
+    @reservoir_temperature.setter
+    def reservoir_temperature(self, value):
+        self._reservoir_temperature = sequence(value)
 
     def _build_core_sink(self):
         self.inbound_interfaces[EnergyType.HEAT].append(self.node_t_max)
@@ -149,6 +159,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                         "energy_type": EnergyType.HEAT,
                     },
                     nominal_capacity=self.nominal_power,
+                    variable_costs=self.working_rate,
                 )
             },
         )
@@ -236,9 +247,13 @@ class AbstactHeatExchanger(AbstractTechnology):
         heat_factor = self.specific_heat_capacity * (
             warm_temperature - cold_temperature
         )
-        inverted_gains = np.array(
-            [1 / g if g > 0 else 1 for g in gains]
-        )
+        if len(gains) > 1:
+            inverted_gains = np.array(
+                [1 / g if g > 0 else 1 for g in gains]
+            )
+        else:
+            g = gains.value
+            inverted_gains = 1 / g if g > 0 else 1
 
         converter.conversion_factors[self._bus_source] = heat_factor
         converter.conversion_factors[self._bus_utilisation] = (
@@ -251,8 +266,8 @@ class AbstactHeatExchanger(AbstractTechnology):
     def _establish_interconnections(self):
         """Shared establish interconnection code for all HeatExchangers.
 
-        This does not implement establish_interconnections, so that the class
-        stays private.
+        This does not implement establish_interconnections,
+        so that the class stays abstract.
         """
 
         self.reservoir_temperature = self._energy_system.data.get_timeseries(
@@ -271,12 +286,15 @@ class AbstactHeatExchanger(AbstractTechnology):
                 self.reservoir_temperature - temperature
             ) * self.conductivity_gain_factor
             return np.clip(unbound_gains, 0, 1)
-        else:
+        elif self.reservoir_temperature.size is not None:
             # This means full power step at reservoir_temperature.
             # Only makes sense when non_thermal_gains are zero (see above).
             return [
                 0 if temperature > t else 1 for t in self.reservoir_temperature
             ]
+        else:
+            t = self.reservoir_temperature.value
+            return sequence(0 if temperature > t else 1)
 
     def _define_source(self):
         if isinstance(self._energy_system, mtress_EnergySystem):
@@ -286,16 +304,17 @@ class AbstactHeatExchanger(AbstractTechnology):
                     kind=TimeseriesType.INTERVAL,
                 )
             )
-
         if isinstance(self._parent, Location):
-            highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
+            heat_carrier = self._parent.get_carrier(HeatCarrier)
+
+            highest_warm_level, _ = heat_carrier.get_surrounding_levels(
                 self.maximum_working_temperature,
             )
 
-            _, cold_level = self.heat_carrier.get_surrounding_levels(
+            _, cold_level = heat_carrier.get_surrounding_levels(
                 self.minimum_working_temperature
             )
-            _, lowest_warm_level = self.heat_carrier.get_surrounding_levels(
+            _, lowest_warm_level = heat_carrier.get_surrounding_levels(
                 max(
                     min(
                         min(self.reservoir_temperature),
@@ -306,10 +325,10 @@ class AbstactHeatExchanger(AbstractTechnology):
             )
 
             active_levels = sorted(
-                self.heat_carrier.levels[
-                    self.heat_carrier.levels.index(
+                heat_carrier.levels[
+                    heat_carrier.levels.index(
                         lowest_warm_level
-                    ) : self.heat_carrier.levels.index(highest_warm_level)
+                    ) : heat_carrier.levels.index(highest_warm_level)
                     + 1
                 ],
                 reverse=True,
@@ -319,10 +338,10 @@ class AbstactHeatExchanger(AbstractTechnology):
                 cold_temperature,
                 warm_temperature,
             ) in zip(active_levels[1:] + [cold_level], active_levels):
-                heat_bus_warm_source = self.heat_carrier.level_nodes[
+                heat_bus_warm_source = heat_carrier.level_nodes[
                     warm_temperature
                 ]
-                heat_bus_cold_source = self.heat_carrier.level_nodes[
+                heat_bus_cold_source = heat_carrier.level_nodes[
                     cold_temperature
                 ]
 
@@ -377,11 +396,11 @@ class AbstactHeatExchanger(AbstractTechnology):
             },
         )
 
-        highest_warm_level, _ = self.heat_carrier.get_surrounding_levels(
+        highest_warm_level, _ = heat_carrier.get_surrounding_levels(
             self.maximum_working_temperature
         )
 
-        _, lowest_warm_level = self.heat_carrier.get_surrounding_levels(
+        _, lowest_warm_level = heat_carrier.get_surrounding_levels(
             max(
                 min(self.reservoir_temperature),
                 self.minimum_working_temperature,
@@ -389,10 +408,10 @@ class AbstactHeatExchanger(AbstractTechnology):
         )
 
         active_levels = sorted(
-            self.heat_carrier.levels[
-                self.heat_carrier.levels.index(
+            heat_carrier.levels[
+                heat_carrier.levels.index(
                     lowest_warm_level
-                ) : self.heat_carrier.levels.index(highest_warm_level)
+                ) : heat_carrier.levels.index(highest_warm_level)
                 + 1
             ],
             reverse=True,
@@ -402,12 +421,12 @@ class AbstactHeatExchanger(AbstractTechnology):
             warm_level = active_levels[i]
             cold_level = active_levels[i + 1]
 
-            heat_content = self.heat_carrier.specific_heat_capacity * (
+            heat_content = heat_carrier.specific_heat_capacity * (
                 warm_level - cold_level
             )
 
-            heat_bus_warm_sink = self.heat_carrier.level_nodes[warm_level]
-            heat_bus_cold_sink = self.heat_carrier.level_nodes[cold_level]
+            heat_bus_warm_sink = heat_carrier.level_nodes[warm_level]
+            heat_bus_cold_sink = heat_carrier.level_nodes[cold_level]
 
             internal_sequence = [
                 1 if temp <= cold_level else 0
