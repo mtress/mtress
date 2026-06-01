@@ -153,6 +153,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             local_name="heat_source",
         )
 
+        # for absolute normalised power
         self._heat_reservoir = self.subnode(
             Source,
             local_name="source_reservoir",
@@ -173,6 +174,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             local_name="utilisation",
         )
 
+        # for efficiency normalised power
         self._source_utilisation = self.subnode(
             Source,
             local_name="source_utilisation",
@@ -312,54 +314,6 @@ class AbstactHeatExchanger(AbstractTechnology):
             t = self.reservoir_temperature.value
             return sequence(0 if temperature > t else 1)
 
-    def _define_source(self):
-        if isinstance(self._energy_system, mtress_EnergySystem):
-            self._heat_reservoir.outputs[self._bus_source].variable_costs = (
-                self._energy_system.data.get_timeseries(
-                    self.working_rate,
-                    kind=TimeseriesType.INTERVAL,
-                )
-            )
-        if isinstance(self._parent, Location):
-            heat_carrier = self._parent.get_carrier(HeatCarrier)
-
-            highest_warm_level, _ = heat_carrier.get_surrounding_levels(
-                self.maximum_working_temperature,
-            )
-
-            _, cold_level = heat_carrier.get_surrounding_levels(
-                self.minimum_working_temperature
-            )
-            _, lowest_warm_level = heat_carrier.get_surrounding_levels(
-                max(
-                    min(
-                        min(self.reservoir_temperature),
-                        self.minimum_working_temperature,
-                    ),
-                    (cold_level + self.minimum_delta),
-                )
-            )
-
-            active_levels = sorted(
-                heat_carrier.levels[
-                    heat_carrier.levels.index(
-                        lowest_warm_level
-                    ) : heat_carrier.levels.index(highest_warm_level)
-                    + 1
-                ],
-                reverse=True,
-            )
-
-            for (
-                cold_temperature,
-                warm_temperature,
-            ) in zip(active_levels[1:] + [cold_level], active_levels):
-                heat_bus_warm_source = heat_carrier.level_nodes[
-                    warm_temperature
-                ]
-                heat_bus_cold_source = heat_carrier.level_nodes[
-                    cold_temperature
-                ]
 
     def _sink_constraints(self):
         pass
@@ -523,7 +477,7 @@ class HeatSource(AbstactHeatExchanger):
 
     def establish_interconnections(self) -> None:
         self._establish_interconnections()
-        self._define_source()
+        self._update_source_converters()
 
     def add_constraints(self) -> None:
         """Add constraints to the model."""
@@ -617,8 +571,8 @@ class HeatExchanger(AbstactHeatExchanger):
 
     def establish_interconnections(self) -> None:
         self._establish_interconnections()
+        self._update_source_converters()
         self._define_sink()
-        self._define_source()
 
     def add_constraints(self) -> None:
         """Add constraints to the model."""
