@@ -57,7 +57,7 @@ class TestHeatSource:
 
         # set outlet temperature to lower value and update converter
         outlet.custom_properties["temperature"] = 40
-        src._update_source_gains(converter)
+        src._update_source_converters()
         assert converter.inputs[src._bus_source].max == [0, 0, 1, 0]
         assert converter.conversion_factors[src._bus_source] == pytest.approx(
             0.4 * 116.1
@@ -68,7 +68,7 @@ class TestHeatSource:
         )
 
         outlet.custom_properties["temperature"] = -5  # out of range
-        src._update_source_gains(converter)
+        src._update_source_converters()
         np.testing.assert_allclose(
             converter.inputs[src._bus_source].max,
             np.zeros(4),
@@ -80,6 +80,23 @@ class TestHeatSource:
             converter.conversion_factors[src._bus_utilisation],
             np.full(4, -0.05 * 116.1),
         )
+
+
+        external_inbound = solph.Bus(
+            label=f"T_30",
+            custom_properties={
+                "temperature": 30,
+            },
+        )
+        src.inbound_interfaces[EnergyType.HEAT].append(external_inbound)
+
+        assert len(src.subnodes) == 7  # no new subnodes, yet
+
+        assert len(src.inbound_interfaces[EnergyType.HEAT]) == 2
+        assert len(src.outbound_interfaces[EnergyType.HEAT]) == 1
+
+        src._update_source_converters()
+        assert len(src.subnodes) == 8  # created new converter
 
     def test_conductive_source(self):
         src = HeatSource(

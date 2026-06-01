@@ -106,6 +106,8 @@ class AbstactHeatExchanger(AbstractTechnology):
 
         self.specific_heat_capacity = 1.161
 
+        self._io_converter = {}
+
         self.__build_core()
 
     def __build_core(self):
@@ -143,6 +145,8 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.outbound_interfaces[EnergyType.HEAT].append(self.node_t_min)
 
     def _build_core_source(self):
+        self.inbound_interfaces[EnergyType.HEAT].append(self.node_t_min)
+        self.outbound_interfaces[EnergyType.HEAT].append(self.node_t_max)
 
         self._bus_source = self.subnode(
             Bus,
@@ -182,15 +186,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                 )
             },
         )
-
-        converter = self._add_source_converter(
-            self.node_t_min,
-            self.node_t_max,
-        )
-        self._update_source_gains(converter)
-
-        self.inbound_interfaces[EnergyType.HEAT].append(self.node_t_min)
-        self.outbound_interfaces[EnergyType.HEAT].append(self.node_t_max)
+        self._update_source_converters()
 
     def _add_source_converter(self, cold_bus: Bus, warm_bus: Bus) -> Converter:
         return self.subnode(
@@ -227,13 +223,22 @@ class AbstactHeatExchanger(AbstractTechnology):
             },
         )
 
-    def _update_source_gains(self, converter: Converter) -> None:
+    def _update_source_converters(self) -> None:
+        for cold_bus in self.inbound_interfaces[EnergyType.HEAT]:
+            for warm_bus in self.outbound_interfaces[EnergyType.HEAT]:
+                if (cold_bus, warm_bus) not in self._io_converter:
+                    self._io_converter[(cold_bus, warm_bus)] = (
+                        self._add_source_converter(
+                            cold_bus,
+                            warm_bus,
+                        )
+                    )
+                self._update_source_gains(cold_bus, warm_bus)
 
-        [warm_bus] = converter.outputs.keys()
+    def _update_source_gains(self, cold_bus: Bus, warm_bus: Bus) -> None:
+
+        converter = self._io_converter[(cold_bus, warm_bus)]
         warm_temperature = warm_bus.custom_properties["temperature"]
-
-        input_nodes = set(converter.inputs.keys())
-        [cold_bus] = input_nodes - {self._bus_source, self._bus_utilisation}
         cold_temperature = cold_bus.custom_properties["temperature"]
 
         if (self.minimum_working_temperature
