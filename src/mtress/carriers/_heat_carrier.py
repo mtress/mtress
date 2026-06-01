@@ -82,12 +82,17 @@ class HeatCarrier(AbstractLayeredCarrier):
         self.outbound_interfaces[EnergyType.HEAT] = self.subnodes
 
     def establish_interconnections(self):
-        # collect fixed temparature levels
-        interfaces = self.parent.get_interfaces(EnergyType.HEAT)
+        # collect temparature levels
+        interfaces = set(self.parent.get_interfaces(EnergyType.HEAT))
+
+        # prevent duplicates from own node
+        interfaces -= set(self.subnodes)
+
         temps = [
             t
             for i in interfaces
             if (t := i.custom_properties.get("temperature")) is not None
+            and "preliminary" not in i.custom_properties
         ]
 
         # add nodes and update levels
