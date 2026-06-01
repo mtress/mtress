@@ -27,7 +27,7 @@ class TestHeatSource:
             self.reservoir_temperature,
         )
 
-        assert len(src.subnodes) == 7
+        assert len(src.subnodes) == 6
 
         assert len(src.inbound_interfaces) == 1
         assert len(src.outbound_interfaces) == 1
@@ -40,55 +40,48 @@ class TestHeatSource:
                 subnode, solph.components.Converter
             )
         ]
-        assert len(converters) == 1
-
-        [converter] = converters
-        assert converter.inputs[src._bus_source].max == [0, 0, 0, 0]
-        assert converter.conversion_factors[src._bus_source] == pytest.approx(
-            116.1
-        )
-        np.testing.assert_allclose(
-            converter.conversion_factors[src._bus_utilisation],
-            np.full(4, 116.1),
-        )
-
+        assert len(converters) == 0 # only outlet is hother than reservoir
         [outlet] = src.outbound_interfaces[EnergyType.HEAT]
         assert outlet.custom_properties["temperature"] == 100
 
         # set outlet temperature to lower value and update converter
-        outlet.custom_properties["temperature"] = 40
+        outlet.custom_properties["temperature"] = 50
         src._update_source_converters()
+
+        assert len(src.subnodes) == 7
+        converters = [
+            subnode for subnode in src.subnodes if isinstance(
+                subnode, solph.components.Converter
+            )
+        ]
+        [converter] = converters
+        np.testing.assert_allclose(
+            converter.conversion_factors[src._bus_utilisation],
+            np.full(4, 0.5*116.1),
+        )
         assert converter.inputs[src._bus_source].max == [0, 0, 1, 0]
         assert converter.conversion_factors[src._bus_source] == pytest.approx(
-            0.4 * 116.1
+            0.5 * 116.1
         )
         np.testing.assert_allclose(
             converter.conversion_factors[src._bus_utilisation],
-            np.full(4, 0.4 * 116.1),
+            np.full(4, 0.5 * 116.1),
         )
 
-        outlet.custom_properties["temperature"] = -5  # out of range
+        outlet.custom_properties["temperature"] = 100
         src._update_source_converters()
-        np.testing.assert_allclose(
-            converter.inputs[src._bus_source].max,
-            np.zeros(4),
-        )
+        assert converter.inputs[src._bus_source].max == [0, 0, 0, 0]
         assert converter.conversion_factors[src._bus_source] == pytest.approx(
-            -0.05 * 116.1
-        )
-        np.testing.assert_allclose(
-            converter.conversion_factors[src._bus_utilisation],
-            np.full(4, -0.05 * 116.1),
+            116.1
         )
 
-
-        external_inbound = solph.Bus(
-            label=f"T_30",
+        b_t30 = solph.Bus(
+            label="T_30",
             custom_properties={
                 "temperature": 30,
             },
         )
-        src.inbound_interfaces[EnergyType.HEAT].append(external_inbound)
+        src.inbound_interfaces[EnergyType.HEAT].append(b_t30)
 
         assert len(src.subnodes) == 7  # no new subnodes, yet
 
@@ -96,7 +89,35 @@ class TestHeatSource:
         assert len(src.outbound_interfaces[EnergyType.HEAT]) == 1
 
         src._update_source_converters()
-        assert len(src.subnodes) == 8  # created new converter
+        assert len(src.subnodes) == 7  # created new converter
+
+        src.outbound_interfaces[EnergyType.HEAT].append(b_t30)
+        assert len(src.inbound_interfaces[EnergyType.HEAT]) == 2
+        assert len(src.outbound_interfaces[EnergyType.HEAT]) == 2
+
+        src._update_source_converters()
+        # created new converter: (40 -> 30)
+        assert len(src.subnodes) == 8
+
+        b_t130 = solph.Bus(
+            label="T_130",
+            custom_properties={
+                "temperature": 130,  # highter than maximum
+            },
+        )
+        src.inbound_interfaces[EnergyType.HEAT].append(b_t130)
+        src._update_source_converters()
+        assert len(src.subnodes) == 8  # created no converters
+
+        b_t60 = solph.Bus(
+            label="T_60",
+            custom_properties={
+                "temperature": 60,  # highter than max(reservoir_temperauture)
+            },
+        )
+        src.inbound_interfaces[EnergyType.HEAT].append(b_t60)
+        src._update_source_converters()
+        assert len(src.subnodes) == 8  # created no converters
 
     def test_conductive_source(self):
         src = HeatSource(

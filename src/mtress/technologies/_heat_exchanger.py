@@ -226,14 +226,25 @@ class AbstactHeatExchanger(AbstractTechnology):
     def _update_source_converters(self) -> None:
         for cold_bus in self.inbound_interfaces[EnergyType.HEAT]:
             for warm_bus in self.outbound_interfaces[EnergyType.HEAT]:
-                if (cold_bus, warm_bus) not in self._io_converter:
-                    self._io_converter[(cold_bus, warm_bus)] = (
-                        self._add_source_converter(
-                            cold_bus,
-                            warm_bus,
-                        )
+                t_cold = cold_bus.custom_properties["temperature"]
+                t_warm = warm_bus.custom_properties["temperature"]
+                if (t_cold < t_warm < self.reservoir_temperature.max()
+                    and not (
+                        t_warm
+                        > self.maximum_working_temperature
+                        or t_cold
+                        < self.minimum_working_temperature
                     )
-                self._update_source_gains(cold_bus, warm_bus)
+                ):
+                    if (cold_bus, warm_bus) not in self._io_converter:
+                        self._io_converter[(cold_bus, warm_bus)] = (
+                            self._add_source_converter(
+                                cold_bus,
+                                warm_bus,
+                            )
+                        )
+                if (cold_bus, warm_bus) in self._io_converter:
+                    self._update_source_gains(cold_bus, warm_bus)
 
     def _update_source_gains(self, cold_bus: Bus, warm_bus: Bus) -> None:
 
