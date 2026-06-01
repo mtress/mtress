@@ -18,41 +18,44 @@ def test_basic_initialisation():
 
 def test_temperature_levels():
     temperatures = [-10, 10, 35, 75, 80]
-    heat_carrier = HeatCarrier(label="heat", temperature_levels=temperatures)
-    heat_carrier._levels = temperatures
-    assert heat_carrier.levels == temperatures
+    hc = HeatCarrier(label="heat", temperature_levels=temperatures)
+    hc._levels = temperatures
+    assert hc.levels == temperatures
 
-    assert heat_carrier.get_surrounding_levels(15) == (10, 35)
+    assert len(hc.inbound_interfaces[EnergyType.HEAT]) == len(temperatures)
+    assert len(hc.outbound_interfaces[EnergyType.HEAT]) == len(temperatures)
+
+    assert hc.get_surrounding_levels(15) == (10, 35)
 
     # neither matches an existing level
-    assert heat_carrier.get_levels_between(9, 36) == [10, 35]
+    assert hc.get_levels_between(9, 36) == [10, 35]
     # maximum matching existing level
-    assert heat_carrier.get_levels_between(9, 35) == [10, 35]
+    assert hc.get_levels_between(9, 35) == [10, 35]
     # minimum matching existing level
-    assert heat_carrier.get_levels_between(10, 36) == [10, 35]
+    assert hc.get_levels_between(10, 36) == [10, 35]
     # both matching existing levels
-    assert heat_carrier.get_levels_between(10, 35) == [10, 35]
+    assert hc.get_levels_between(10, 35) == [10, 35]
     # all levels below a given value
-    assert heat_carrier.get_levels_between(-math.inf, 35) == [-10, 10, 35]
+    assert hc.get_levels_between(-math.inf, 35) == [-10, 10, 35]
     # all levels above a given value
-    assert heat_carrier.get_levels_between(10, math.inf) == [10, 35, 75, 80]
+    assert hc.get_levels_between(10, math.inf) == [10, 35, 75, 80]
     # one intermediate level
-    assert heat_carrier.get_levels_between(9, 11) == [10]
+    assert hc.get_levels_between(9, 11) == [10]
     # no intermediate levels
-    assert heat_carrier.get_levels_between(12, 13) == []
+    assert hc.get_levels_between(12, 13) == []
     # test first two levels
-    assert heat_carrier.get_levels_between(-15, 15) == [-10, 10]
+    assert hc.get_levels_between(-15, 15) == [-10, 10]
     # test last two levels
-    assert heat_carrier.get_levels_between(70, 85) == [75, 80]
+    assert hc.get_levels_between(70, 85) == [75, 80]
     # minimum and maximum match, coincide with a level
-    assert heat_carrier.get_levels_between(10, 10) == [10]
+    assert hc.get_levels_between(10, 10) == [10]
     # minimum and maximum match, do not coincide with a level
-    assert heat_carrier.get_levels_between(15, 15) == []
+    assert hc.get_levels_between(15, 15) == []
 
     # wrong order, not matching existing levels
     with pytest.raises(ValueError):
-        heat_carrier.get_levels_between(36, 9)
+        hc.get_levels_between(36, 9)
 
     # wrong order, matching existing levels
     with pytest.raises(ValueError):
-        heat_carrier.get_levels_between(35, 10)
+        hc.get_levels_between(35, 10)
