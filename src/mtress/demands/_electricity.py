@@ -47,16 +47,16 @@ class Electricity(AbstractDemand):
         )
         self._time_series = time_series
 
-        self._build_core()
+        self.__build_core()
 
-    def _build_core(self):
+    def __build_core(self):
 
         self._input_node = self.subnode(
             Bus,
             local_name="input",
         )
 
-        self.subnode(
+        self._sink = self.subnode(
             Sink,
             local_name="sink",
             inputs={
@@ -66,15 +66,20 @@ class Electricity(AbstractDemand):
                         "energy_type": EnergyType.ELECTRICITY,
                     },
                     nominal_capacity=1,
-                    fix=self._energy_system.data.get_timeseries(
-                        self._time_series, kind=TimeseriesType.INTERVAL
-                    ),
+                    fix=self._time_series,
                 )
             },
         )
         self.inbound_interfaces[EnergyType.ELECTRICITY] = [self._input_node]
 
     def establish_interconnections(self):
+        self._sink.inputs[self._input_node].fix = (
+            self._energy_system.data.get_timeseries(
+                self._time_series,
+                kind=TimeseriesType.INTERVAL,
+            )
+        )
+
         if self.parent:
             electricity_carrier = self.parent.get_carrier(ElectricityCarrier)
 
