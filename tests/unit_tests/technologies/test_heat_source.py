@@ -36,11 +36,11 @@ class TestHeatSource:
         assert len(src.outbound_interfaces[EnergyType.HEAT]) == 1
 
         converters = [
-            subnode for subnode in src.subnodes if isinstance(
-                subnode, solph.components.Converter
-            )
+            subnode
+            for subnode in src.subnodes
+            if isinstance(subnode, solph.components.Converter)
         ]
-        assert len(converters) == 0 # only outlet is hother than reservoir
+        assert len(converters) == 0  # only outlet is hother than reservoir
         [outlet] = src.outbound_interfaces[EnergyType.HEAT]
         assert outlet.custom_properties["temperature"] == 100
 
@@ -50,14 +50,14 @@ class TestHeatSource:
 
         assert len(src.subnodes) == 7
         converters = [
-            subnode for subnode in src.subnodes if isinstance(
-                subnode, solph.components.Converter
-            )
+            subnode
+            for subnode in src.subnodes
+            if isinstance(subnode, solph.components.Converter)
         ]
         [converter] = converters
         np.testing.assert_allclose(
             converter.conversion_factors[src._bus_utilisation],
-            np.full(4, 0.5*116.1),
+            np.full(4, 0.5 * 116.1),
         )
         assert converter.inputs[src._bus_source].max == [0, 0, 1, 0]
         assert converter.conversion_factors[src._bus_source] == pytest.approx(
