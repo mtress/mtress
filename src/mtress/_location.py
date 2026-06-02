@@ -1,8 +1,10 @@
 """Locations in a meta model."""
 
+from oemof.network import Node
+
 from ._constants import EnergyType
 from ._base_mtress_nodes import SubNetwork
-from .carriers._layered_carrier import AbstractCarrier
+from ._base_mtress_nodes import AbstractCarrier
 from ._base_mtress_nodes import AbstractTechnology
 
 
@@ -77,16 +79,17 @@ class Location(SubNetwork):
             local_name=carrier.__name__,
         )
 
-    def get_technology(
+    def get_nodes_by_type(
         self,
-        technology,
-    ) -> AbstractTechnology:
+        node_type,
+    ) -> list[Node]:
         """
-        Get components by technology.
+        Get subnodes of the specified type.
 
-        :param technology: Technology type
+        :param node_type: Technology type
         """
-        return [sn for sn in self.subnodes if isinstance(sn, technology)]
+
+        return [sn for sn in self.subnodes if isinstance(sn, node_type)]
 
     def establish_interconnections(self):
         pass
