@@ -69,5 +69,5 @@ class AbstractComponent(NamedElement):
     def establish_interconnections(self) -> None:
         """Build interconnections with other nodes."""
 
-    def add_constraints(self) -> None:
+    def add_constraints(self, model) -> None:
         """Add constraints to the model."""

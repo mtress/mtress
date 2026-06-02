@@ -169,9 +169,8 @@ class LayeredHeatStorage(AbstractHeatStorage):
                         )
                     }
 
-    def add_constraints(self):
+    def add_constraints(self, model):
         """Add constraints to the model."""
-        model = self._solph_model.model
 
         # >= && <= should be replaced by ==
         shared_limit(

@@ -174,7 +174,7 @@ class AbstractHomogenousStorage(AbstractComponent):
             **solph_storage_arguments,
         )
 
-    def add_constraints(self):
+    def add_constraints(self, model):
         """Add constraints."""
         contraint_args = {
             "model": self._solph_model.model,
