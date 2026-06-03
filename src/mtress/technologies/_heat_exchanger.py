@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 import warnings
 
-from oemof.solph import Bus, Flow, Investment
+from oemof.solph import Bus, Investment
 from oemof.solph._plumbing import sequence
 from oemof.solph.components import Converter, Sink, Source
 from pyomo import environ as po
@@ -15,7 +15,10 @@ from .._base_mtress_nodes import AbstractTechnology
 from .._location import Location
 from ..carriers import HeatCarrier
 
+from .._energy_types import EnergyFlowHeat
 from .._energy_types import EnergyType
+from .._energy_types import TemperatureBus
+from .._energy_types import MassFlowHeat
 
 
 class AbstactHeatExchanger(AbstractTechnology):
@@ -113,19 +116,19 @@ class AbstactHeatExchanger(AbstractTechnology):
 
     def __build_core(self):
         self.node_t_max = self.subnode(
-            Bus,
+            TemperatureBus,
             local_name=f"T_max",
+            temperature=self.maximum_working_temperature,
             custom_properties={
-                "temperature": self.maximum_working_temperature,
                 "preliminary": "max",
             },
         )
 
         self.node_t_min = self.subnode(
-            Bus,
+            TemperatureBus,
             local_name=f"T_min",
+            temperature=self.minimum_working_temperature,
             custom_properties={
-                "temperature": self.minimum_working_temperature,
                 "preliminary": "min",
             },
         )
@@ -154,11 +157,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             label="sink",
             node_type=Sink,
             inputs={
-                self._bus_sink: Flow(
-                    custom_properties={
-                        "unit": "W",
-                        "energy_type": EnergyType.HEAT,
-                    },
+                self._bus_sink: EnergyFlowHeat(
                     variable_costs=-self.revenue,
                 )
             },
@@ -180,11 +179,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             Source,
             local_name="source_reservoir",
             outputs={
-                self._bus_source: Flow(
-                    custom_properties={
-                        "unit": "W",
-                        "energy_type": EnergyType.HEAT,
-                    },
+                self._bus_source: EnergyFlowHeat(
                     nominal_capacity=self.nominal_power,
                     variable_costs=self.working_rate,
                 )
@@ -201,12 +196,8 @@ class AbstactHeatExchanger(AbstractTechnology):
             Source,
             local_name="source_utilisation",
             outputs={
-                self._bus_utilisation: Flow(
+                self._bus_utilisation: EnergyFlowHeat(
                     nominal_capacity=self.nominal_power,
-                    custom_properties={
-                        "unit": "W",
-                        "energy_type": EnergyType.HEAT,
-                    },
                 )
             },
         )
@@ -217,25 +208,11 @@ class AbstactHeatExchanger(AbstractTechnology):
             Converter,
             local_name=f"sink_{warm_bus.custom_properties['temperature']}",
             inputs={
-                warm_bus: Flow(
-                    custom_properties={
-                        "unit": "kg/h",
-                        "energy_type": EnergyType.HEAT,
-                    }
-                ),
+                warm_bus: MassFlowHeat(),
             },
             outputs={
-                cold_bus: Flow(
-                    custom_properties={
-                        "unit": "kg/h",
-                        "energy_type": EnergyType.HEAT,
-                    }
-                ),
-                self._bus_sink: Flow(
-                    custom_properties={
-                        "unit": "W",
-                        "energy_type": EnergyType.HEAT,
-                    },
+                cold_bus: MassFlowHeat(),
+                self._bus_sink: EnergyFlowHeat(
                     nominal_capacity=self.nominal_power,
                 ),
             },
@@ -246,33 +223,14 @@ class AbstactHeatExchanger(AbstractTechnology):
             Converter,
             local_name=f"source_{warm_bus.custom_properties['temperature']}",
             inputs={
-                self._bus_source: Flow(
-                    custom_properties={
-                        "unit": "W",
-                        "energy_type": EnergyType.HEAT,
-                    },
+                self._bus_source: EnergyFlowHeat(
                     nominal_capacity=self.nominal_power,
                 ),
-                cold_bus: Flow(
-                    custom_properties={
-                        "unit": "kg/h",
-                        "energy_type": EnergyType.HEAT,
-                    }
-                ),
-                self._bus_utilisation: Flow(
-                    custom_properties={
-                        "unit": "kg/h",
-                        "energy_type": EnergyType.HEAT,
-                    }
-                ),
+                cold_bus: MassFlowHeat(),
+                self._bus_utilisation: MassFlowHeat(),
             },
             outputs={
-                warm_bus: Flow(
-                    custom_properties={
-                        "unit": "kg/h",
-                        "energy_type": EnergyType.HEAT,
-                    }
-                )
+                warm_bus: MassFlowHeat(),
             },
         )
 
