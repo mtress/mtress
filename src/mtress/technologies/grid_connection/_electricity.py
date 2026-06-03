@@ -8,7 +8,7 @@ from oemof.solph.components import Sink, Source
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import ElectricityCarrier
 
-from ..._constants import EnergyType
+from ..._energy_types import EnergyType
 from ._abstract_grid_connection import AbstractGridConnection
 
 
@@ -91,8 +91,7 @@ class ElectricityGridConnection(AbstractGridConnection):
         if self.working_rate is not None:
             if self.demand_rate:
                 maximum_load = Investment(
-                    ep_costs=self.demand_rate,
-                    maximum=self.grid_import_limit
+                    ep_costs=self.demand_rate, maximum=self.grid_import_limit
                 )
             else:
                 maximum_load = self.grid_import_limit

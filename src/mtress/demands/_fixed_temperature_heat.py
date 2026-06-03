@@ -4,7 +4,7 @@ from oemof.solph import Bus, Flow
 from oemof.solph._plumbing import _FakeSequence
 from oemof.solph.components import Converter, Sink, Source
 
-from .._constants import EnergyType
+from .._energy_types import EnergyType
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import HeatCarrier
 from .._base_mtress_nodes import AbstractDemand
@@ -64,7 +64,6 @@ class AbstractFixedTemperature(AbstractDemand):
         self._time_series = time_series
 
         self.__build_core()
-
 
     def __build_core(self):
         # core component of any fixed temp demand

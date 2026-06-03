@@ -20,7 +20,7 @@ from ..physics import calc_cop
 from .._base_mtress_nodes import AbstractTechnology
 from .._location import Location
 
-from .._constants import EnergyType
+from .._energy_types import EnergyType
 
 
 @dataclass

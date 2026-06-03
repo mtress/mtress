@@ -6,7 +6,7 @@ Tests for the MTRESS gas carrier.
 import pytest
 
 from oemof.network import Node
-from mtress._constants import EnergyType
+from mtress._energy_types import EnergyType
 from mtress.carriers import GasCarrier
 from mtress.physics import HYDROGEN, NATURAL_GAS
 

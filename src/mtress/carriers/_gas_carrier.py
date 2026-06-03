@@ -2,7 +2,7 @@
 
 from oemof.solph import Bus, Flow
 
-from .._constants import EnergyType
+from .._energy_types import EnergyType
 from ._layered_carrier import AbstractLayeredCarrier
 
 

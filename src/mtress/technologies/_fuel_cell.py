@@ -13,7 +13,7 @@ from ..carriers import ElectricityCarrier, GasCarrier
 from ..physics import HYDROGEN, Gas
 from ._heater import AbstractHeater
 
-from .._constants import EnergyType
+from .._energy_types import EnergyType
 
 LOGGER = logging.getLogger(__file__)
 
@@ -265,7 +265,7 @@ class FuelCell(AbstractFuelCell):
                         "unit": "W",
                         "energy_type": EnergyType.ELECTRICITY,
                     },
-                    nominal_capacity=self.nominal_power
+                    nominal_capacity=self.nominal_power,
                 ),
                 self.heat_bus: Flow(
                     custom_properties={
@@ -448,7 +448,7 @@ class OffsetFuelCell(AbstractFuelCell):
                     nominal_capacity=self.nominal_power,
                     maximum=self.maximum_load,
                     minimum=self.minimum_load,
-                    nonconvex=solph.NonConvex()
+                    nonconvex=solph.NonConvex(),
                 ),
                 self.heat_bus: Flow(
                     custom_properties={

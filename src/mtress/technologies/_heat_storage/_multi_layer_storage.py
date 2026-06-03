@@ -20,7 +20,7 @@ from mtress.physics import H2O_DENSITY, H2O_HEAT_CAPACITY, SECONDS_PER_HOUR
 
 from ._abstract_heat_storage import AbstractHeatStorage
 
-from ..._constants import EnergyType
+from ..._energy_types import EnergyType
 
 
 class LayeredHeatStorage(AbstractHeatStorage):

@@ -9,7 +9,7 @@ from mtress._data_handler import TimeseriesSpecifier
 from mtress.carriers import HeatCarrier
 from ._abstract_grid_connection import AbstractGridConnection
 
-from ..._constants import EnergyType
+from ..._energy_types import EnergyType
 
 
 class HeatGridConnection(AbstractGridConnection, AbstactHeatExchanger):

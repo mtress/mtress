@@ -6,7 +6,7 @@ Tests for the MTRESS heat carrier.
 import math
 
 import pytest
-from mtress._constants import EnergyType
+from mtress._energy_types import EnergyType
 from mtress.carriers import HeatCarrier
 
 

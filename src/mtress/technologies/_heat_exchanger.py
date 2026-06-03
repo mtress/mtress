@@ -15,7 +15,7 @@ from .._base_mtress_nodes import AbstractTechnology
 from .._location import Location
 from ..carriers import HeatCarrier
 
-from .._constants import EnergyType
+from .._energy_types import EnergyType
 
 
 class AbstactHeatExchanger(AbstractTechnology):

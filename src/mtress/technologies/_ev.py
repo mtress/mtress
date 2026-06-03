@@ -11,7 +11,7 @@ from ..carriers import ElectricityCarrier
 from .._helpers._util import enable_templating
 from ._battery_storage import BatteryStorage, BatteryStorageTemplate
 
-from .._constants import EnergyType
+from .._energy_types import EnergyType
 
 from pandas import Series
 from numbers import Real

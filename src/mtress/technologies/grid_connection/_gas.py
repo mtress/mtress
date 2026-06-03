@@ -9,7 +9,7 @@ from mtress.physics import Gas
 
 from ._abstract_grid_connection import AbstractGridConnection
 
-from ..._constants import EnergyType
+from ..._energy_types import EnergyType
 
 LOGGER = logging.getLogger(__file__)
 

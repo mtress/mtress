@@ -20,7 +20,7 @@ from oemof.solph.components import (
     Source,
 )
 
-from .._constants import EnergyType
+from .._energy_types import EnergyType
 
 # Define shapes for the component types
 SHAPES = {

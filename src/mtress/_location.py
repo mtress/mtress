@@ -2,7 +2,7 @@
 
 from oemof.network import Node
 
-from ._constants import EnergyType
+from ._energy_types import EnergyType
 from ._base_mtress_nodes import SubNetwork
 from ._base_mtress_nodes import AbstractCarrier
 from ._base_mtress_nodes import AbstractTechnology

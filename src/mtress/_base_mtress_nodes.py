@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from oemof import solph
 from oemof.network import Node
 
-from ._constants import EnergyType
+from ._energy_types import EnergyType
 
 
 class SubNetwork(ABC, Node):

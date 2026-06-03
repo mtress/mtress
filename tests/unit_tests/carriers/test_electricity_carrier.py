@@ -1,6 +1,6 @@
 from oemof.network import Node
 
-from mtress._constants import EnergyType
+from mtress._energy_types import EnergyType
 from mtress.carriers import ElectricityCarrier
 
 

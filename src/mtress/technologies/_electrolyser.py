@@ -13,7 +13,7 @@ from ..carriers import ElectricityCarrier, GasCarrier, HeatCarrier
 from ..physics import HYDROGEN
 from ._heater import AbstractHeater
 
-from .._constants import EnergyType
+from .._energy_types import EnergyType
 
 LOGGER = logging.getLogger(__file__)
 

@@ -6,7 +6,7 @@ import pyomo.environ as pyo
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import GenericStorage
 
-from .._constants import EnergyType
+from .._energy_types import EnergyType
 from .._data_handler import TimeseriesSpecifier
 from .._helpers._util import enable_templating
 from ..carriers import ElectricityCarrier
@@ -155,8 +155,8 @@ class BatteryStorage(AbstractTechnology):
         else:
             inflow_capacity = self.nominal_capacity * self.charging_C_Rate
             outflow_capacity = self.nominal_capacity * self.discharging_C_Rate
-            invest_relation_input_capacity=None
-            invest_relation_output_capacity=None
+            invest_relation_input_capacity = None
+            invest_relation_output_capacity = None
 
         self._battery_node = self.subnode(
             GenericStorage,

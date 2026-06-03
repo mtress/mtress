@@ -14,7 +14,7 @@ SPDX-License-Identifier: MIT
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Source
 
-from .._constants import EnergyType
+from .._energy_types import EnergyType
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier
 from .._base_mtress_nodes import AbstractTechnology

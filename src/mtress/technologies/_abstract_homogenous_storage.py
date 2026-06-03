@@ -19,7 +19,7 @@ from oemof.solph.constraints import storage_level_constraint
 from .._abstract_component import AbstractComponent
 from .._oemof_storage_multiplexer import storage_multiplexer_constraint
 
-from .._constants import EnergyType
+from .._energy_types import EnergyType
 
 
 class Implementation(Enum):

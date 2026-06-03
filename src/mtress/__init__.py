@@ -12,7 +12,7 @@ from ._base_mtress_nodes import AbstractDemand
 from ._base_mtress_nodes import AbstractTechnology
 from ._location import Location
 from ._energy_system import EnergySystem
-from ._constants import EnergyType
+from ._energy_types import EnergyType
 
 __version__ = "26.6.1a1"
 
@@ -24,4 +24,3 @@ __all__ = [
     "EnergyType",
     "Location",
 ]
-
