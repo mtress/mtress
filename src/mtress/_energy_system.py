@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The solph representation of the MTRESS meta model.
+"""The MTRESS flavour of the solph EnergySystem.
 
 SPDX-FileCopyrightText: Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)
 
@@ -51,7 +51,6 @@ class EnergySystem(solph.EnergySystem):
         self.data = DataHandler(timeindex)
 
         super().__init__(timeindex=timeindex)
-
 
     def establish_interconnections(self):
         """Autoconnect all applicable Nodes (of type SubNetwork)."""
