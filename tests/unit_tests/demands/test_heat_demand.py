@@ -1,35 +1,66 @@
-from oemof.network import Node
+# -*- coding: utf-8 -*-
 
 from mtress import demands
+from mtress import EnergyType
 
 
-def test_basic_initialisation_heating():
+def assert_heat_exchanger(node, flow_temperature, return_temperature):
+    assert node._time_series == [1, 2, 3]
+    assert node.flow_temperature == flow_temperature
+    assert node.return_temperature == return_temperature
 
-    hd = demands.FixedTemperatureHeating(
-        label="demand1",
-        min_flow_temperature=40,
-        return_temperature=30,
-        time_series=[1, 2, 3],
+    assert len(node.inbound_interfaces) == 1
+    assert len(node.inbound_interfaces[EnergyType.HEAT]) == 1
+    [flow_node] = node.inbound_interfaces[EnergyType.HEAT]
+    assert flow_node.temperature == flow_temperature
+
+    assert len(node.outbound_interfaces) == 1
+    assert len(node.outbound_interfaces[EnergyType.HEAT]) == 1
+    [return_node] = node.outbound_interfaces[EnergyType.HEAT]
+    assert return_node.temperature == return_temperature
+
+    assert len(node._subnodes) == 4
+
+    assert (
+        node._converter.conversion_factors[node._demand]
+        == abs(flow_temperature - return_temperature)
+        * node.specific_heat_capacity
     )
-    assert hd._time_series == [1, 2, 3]
-    assert hd.min_flow_temperature == 40
-    assert hd.return_temperature == 30
-
-    assert len(hd.inbound_interfaces) == 1
-    assert len(hd.outbound_interfaces) == 1
 
 
-def test_basic_initialisation_cooling():
+class TestHeatDemand:
+    def default_node(self):
+        return demands.FixedTemperatureHeating(
+            label="demand",
+            min_flow_temperature=40,
+            return_temperature=30,
+            time_series=[1, 2, 3],
+        )
 
-    cd = demands.FixedTemperatureCooling(
-        label="demand1",
-        return_temperature=40,
-        max_flow_temperature=20,
-        time_series=[1, 2, 3],
-    )
-    assert cd._time_series == [1, 2, 3]
-    assert cd.return_temperature == 40
-    assert cd.max_flow_temperature == 20
+    def test_basic_initialisation(self):
+        node = self.default_node()
+        assert_heat_exchanger(node, flow_temperature=40, return_temperature=30)
 
-    assert len(cd.inbound_interfaces) == 1
-    assert len(cd.outbound_interfaces) == 1
+    def test_change_flow(self):
+        node = self.default_node()
+        node.flow_temperature = 50
+        assert_heat_exchanger(node, flow_temperature=50, return_temperature=30)
+
+
+class TestCoolingDemand:
+    def default_node(self):
+        return demands.FixedTemperatureCooling(
+            label="demand",
+            return_temperature=40,
+            max_flow_temperature=20,
+            time_series=[1, 2, 3],
+        )
+
+    def test_basic_initialisation(self):
+        node = self.default_node()
+        assert_heat_exchanger(node, flow_temperature=20, return_temperature=40)
+
+    def test_change_flow(self):
+        node = self.default_node()
+        node.flow_temperature = 10
+        assert_heat_exchanger(node, flow_temperature=10, return_temperature=40)
