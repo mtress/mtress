@@ -4,6 +4,7 @@ from oemof.solph import Model
 from mtress import (
     EnergySystem,
     Location,
+    carriers,
     demands,
     technologies,
 )
@@ -28,9 +29,14 @@ house_1.subnode(
     technologies.HeatSource,
     local_name="air_HE",
     reservoir_temperature=25,  # any possible source
-    maximum_working_temperature=40,
+    maximum_working_temperature=20,
     minimum_working_temperature=10,
     nominal_power=1e4,
+)
+
+house_1.subnode(
+    carriers.HeatCarrier,
+    local_name="hc",
 )
 
 # Add demands
@@ -50,5 +56,5 @@ myresults = model.solve()
 
 graph_graphviz(
     energy_system.nodes,
-    path="1_heat_exchanger_model",
+    path="1_heat_exchanger_model.png",
 )

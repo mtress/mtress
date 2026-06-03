@@ -97,7 +97,8 @@ class HeatCarrier(AbstractLayeredCarrier):
 
         # add nodes and update levels
         for t in temps:
-            self.add_level(t)
+            if t not in self._levels:
+                self.add_level(t)
 
     def add_level(self, t):
         self._levels.append(t)

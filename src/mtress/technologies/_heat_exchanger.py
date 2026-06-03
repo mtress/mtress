@@ -293,7 +293,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             warm_temperature - cold_temperature
         )
 
-        converter.conversion_factors[self._bus_sink] = heat_factor
+        converter.conversion_factors[self._bus_sink] = sequence(heat_factor)
 
         converter.outputs[self._bus_sink].max = losses
 
@@ -320,11 +320,11 @@ class AbstactHeatExchanger(AbstractTechnology):
             g = gains.value
             inverted_gains = 1 / g if g > 0 else 1
 
-        converter.conversion_factors[self._bus_source] = heat_factor
-        converter.conversion_factors[self._bus_utilisation] = (
+        converter.conversion_factors[self._bus_source] = sequence(heat_factor)
+        converter.conversion_factors[self._bus_utilisation] = sequence(
             heat_factor * inverted_gains
         )
-        converter.inputs[self._bus_source].max = gains
+        converter.inputs[self._bus_source].max = sequence(gains)
 
         pass
 
@@ -334,11 +334,22 @@ class AbstactHeatExchanger(AbstractTechnology):
         This does not implement establish_interconnections,
         so that the class stays abstract.
         """
+        heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
 
         self.reservoir_temperature = self._energy_system.data.get_timeseries(
             self.reservoir_temperature,
             kind=TimeseriesType.INTERVAL,
         )
+
+        for in_node in self.inbound_interfaces[EnergyType.HEAT]:
+            in_node.inputs[
+                heat_carrier.level_nodes[in_node.temperature]
+            ] = MassFlowHeat()
+
+        for out_node in self.outbound_interfaces[EnergyType.HEAT]:
+            out_node.outputs[
+                heat_carrier.level_nodes[out_node.temperature]
+            ] = MassFlowHeat()
 
     def _establish_interconnections_sink(self):
         self._heat_sink.inputs[self._bus_sink].variable_costs = (

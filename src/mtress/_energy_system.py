@@ -6,11 +6,15 @@ SPDX-FileCopyrightText: Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)
 SPDX-License-Identifier: MIT
 """
 
-from typing import Iterable
+from typing import List
 
 import pandas as pd
 from oemof import solph
+from oemof.network import Node
 
+from ._base_mtress_nodes import AbstractCarrier
+from ._base_mtress_nodes import AbstractDemand
+from ._base_mtress_nodes import AbstractTechnology
 from ._base_mtress_nodes import SubNetwork
 
 from ._data_handler import DataHandler
@@ -53,21 +57,28 @@ class EnergySystem(solph.EnergySystem):
         super().__init__(timeindex=timeindex)
 
     def establish_interconnections(self):
-        """Autoconnect all applicable Nodes (of type SubNetwork)."""
-        for sn in self._mtress_nodes:
+        """Autoconnect all applicable Nodes."""
+        for sn in self._nodes_by_type(AbstractCarrier):
+            sn.establish_interconnections()
+
+        for sn in self._nodes_by_type(AbstractDemand):
+            sn.establish_interconnections()
+
+        for sn in self._nodes_by_type(AbstractTechnology):
             sn.establish_interconnections()
 
     def add_constraints(self, model: solph.Model):
         """Add constraints coded into every SubNetwork."""
-        for sn in self._mtress_nodes:
+        for sn in self._nodes_by_type(SubNetwork):
             sn.add_constraints(model)
 
-    @property
-    def _mtress_nodes(self) -> Iterable[SubNetwork]:
-        """Iterator over all SubNetworks."""
-        for component in self.nodes:
-            if isinstance(component, SubNetwork):
-                yield component
+    def _nodes_by_type(
+        self,
+        node_type,
+    ) -> List[Node]:
+        # We do not want an iterable although we only iterate,
+        # as we add new items while iterating. Thus, we need a snapshot.
+        return [n for n in self.nodes if isinstance(n, node_type)]
 
     def graph(
         self,

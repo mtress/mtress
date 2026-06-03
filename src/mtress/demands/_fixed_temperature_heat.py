@@ -1,7 +1,7 @@
 """Room heating technologies."""
 
 from oemof.solph import Bus, Flow
-from oemof.solph._plumbing import _FakeSequence
+from oemof.solph._plumbing import sequence
 from oemof.solph.components import Converter, Sink, Source
 
 from .._energy_types import EnergyFlowHeat
@@ -104,7 +104,7 @@ class AbstractFixedTemperature(AbstractDemand):
         self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
 
     def _update_conversion_factor(self):
-        self._converter.conversion_factors[self._demand] = (
+        self._converter.conversion_factors[self._demand] = sequence(
             abs(self._input_node.temperature - self._output_node.temperature)
             * self.specific_heat_capacity
         )
