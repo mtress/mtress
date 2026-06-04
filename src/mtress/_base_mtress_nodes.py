@@ -53,8 +53,9 @@ class AbstractCarrier(SubNetwork):
         self,
         label,
         *,
-        parent_node=None,
-        custom_properties=None,
+        parent_node,
+        custom_properties,
+        autoconnect_on_initialisation,
     ):
         """Initialize carrier."""
 
@@ -63,6 +64,9 @@ class AbstractCarrier(SubNetwork):
             parent_node=parent_node,
             custom_properties=custom_properties,
         )
+
+        if autoconnect_on_initialisation:
+            self.establish_interconnections()
 
 
 class AbstractDemand(SubNetwork):

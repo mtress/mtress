@@ -17,20 +17,22 @@ class AbstractLayeredCarrier(AbstractCarrier):
         self,
         label,
         *,
-        parent_node=None,
-        custom_properties=None,
+        parent_node,
+        custom_properties,
+        autoconnect_on_initialisation,
     ):
         """Initialize carrier.
 
         :param levels: Sorted (ascending) quality levels
         """
+        self._levels = []
+
         super().__init__(
             label,
             parent_node=parent_node,
             custom_properties=custom_properties,
+            autoconnect_on_initialisation=autoconnect_on_initialisation,
         )
-
-        self._levels = []
 
     def get_surrounding_levels(self, level):
         return self._get_surrounding_levels(level, self._levels)

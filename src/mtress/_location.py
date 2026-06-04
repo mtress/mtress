@@ -77,6 +77,7 @@ class Location(SubNetwork):
         return self.subnode(
             carrier,
             local_name=carrier.__name__,
+            autoconnect_on_initialisation=True,
         )
 
     def get_nodes_by_type(

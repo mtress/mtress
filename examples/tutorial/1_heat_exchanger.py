@@ -34,11 +34,6 @@ house_1.subnode(
     nominal_power=1e4,
 )
 
-house_1.subnode(
-    carriers.HeatCarrier,
-    local_name="hc",
-)
-
 # Add demands
 house_1.subnode(
     demands.FixedTemperatureHeating,

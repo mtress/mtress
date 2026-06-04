@@ -52,23 +52,25 @@ class HeatCarrier(AbstractLayeredCarrier):
         custom_properties=None,
         temperature_levels: list[int] = None,
         specific_heat_capacity=1.161,
+        autoconnect_on_initialisation=False,
     ):
         """
         Initialize heat energy carrier and add components.
 
         :param specific_heat_capacity: heat capacity (in Wh/kg/K)
         """
+        # Properties for solph interfaces
+        self.level_nodes = {}
+
         super().__init__(
             label,
             parent_node=parent_node,
             custom_properties=custom_properties,
+            autoconnect_on_initialisation=autoconnect_on_initialisation,
         )
         if temperature_levels is None:
             temperature_levels = []
         self.specific_heat_capacity = specific_heat_capacity
-
-        # Properties for solph interfaces
-        self.level_nodes = {}
 
         self._build_core(temperature_levels)
 
