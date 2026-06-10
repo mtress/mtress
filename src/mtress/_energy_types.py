@@ -10,6 +10,7 @@ from enum import IntEnum
 
 from oemof.solph import Bus
 from oemof.solph import Flow
+from oemof.solph._plumbing import sequence
 
 
 class EnergyType(IntEnum):
@@ -19,25 +20,29 @@ class EnergyType(IntEnum):
     GAS = 3
 
 
+class QualityStatus(IntEnum):
+    """Status of an energy quality, """
+    UNDEFINED = 0
+    PRELIMINARY_MIN = 1
+    PRELIMINARY_MAX = 2
+    INFERRED = 3
+    FIXED = 4
+
+
 class TemperatureBus(Bus):
     def __init__(
         self,
         temperature,
+        quality_status=QualityStatus.FIXED,
         label=None,
         *,
         inputs=None,
         outputs=None,
+        specific_heat_capacity=1.161,
         parent_node=None,
         balanced=True,
         custom_properties=None,
     ):
-        if custom_properties is None:
-            custom_properties = {}
-        custom_properties.update(
-            {
-                "temperature": temperature,
-            }
-        )
         super().__init__(
             label,
             inputs=inputs,
@@ -46,7 +51,27 @@ class TemperatureBus(Bus):
             balanced=balanced,
             custom_properties=custom_properties,
         )
-        self._temperature = temperature
+        self.quality_status = quality_status
+        self.specific_heat_capacity = specific_heat_capacity
+        self.temperature = temperature
+
+    @property
+    def quality_status(self):
+        return self._status
+
+    @quality_status.setter
+    def quality_status(self, value):
+        self.custom_properties["quality_status"] = value
+        self._quality_status = value
+
+    @property
+    def specific_heat_capacity(self):
+        return self._specific_heat_capacity
+
+    @specific_heat_capacity.setter
+    def specific_heat_capacity(self, value):
+        self.custom_properties["specific_heat_capacity"] = value
+        self._specific_heat_capacity = value
 
     @property
     def temperature(self):
@@ -54,6 +79,7 @@ class TemperatureBus(Bus):
 
     @temperature.setter
     def temperature(self, value):
+        value = sequence(value)
         self.custom_properties["temperature"] = value
         self._temperature = value
 

@@ -11,13 +11,15 @@ SPDX-FileCopyrightText: Lucas Schmeling
 SPDX-License-Identifier: MIT
 """
 
-from oemof.solph import Bus
+from collections.abc import Iterable
 
+from .._base_mtress_nodes import AbstractCarrier
 from .._energy_types import EnergyType
-from ._layered_carrier import AbstractLayeredCarrier
+from .._energy_types import QualityStatus
+from .._energy_types import TemperatureBus
 
 
-class HeatCarrier(AbstractLayeredCarrier):
+class HeatCarrier(AbstractCarrier):
     """
     Connector class for modelling power flows with variable temperature levels.
 
@@ -50,7 +52,7 @@ class HeatCarrier(AbstractLayeredCarrier):
         *,
         parent_node=None,
         custom_properties=None,
-        temperature_levels: list[int] = None,
+        temperature_levels=None,
         specific_heat_capacity=1.161,
         autoconnect_on_initialisation=False,
     ):
@@ -59,9 +61,6 @@ class HeatCarrier(AbstractLayeredCarrier):
 
         :param specific_heat_capacity: heat capacity (in Wh/kg/K)
         """
-        # Properties for solph interfaces
-        self.level_nodes = {}
-
         super().__init__(
             label,
             parent_node=parent_node,
@@ -83,6 +82,12 @@ class HeatCarrier(AbstractLayeredCarrier):
         self.inbound_interfaces[EnergyType.HEAT] = self.subnodes
         self.outbound_interfaces[EnergyType.HEAT] = self.subnodes
 
+    @property
+    def temperatures(self) -> Iterable:
+        for node in self._subnodes:
+            node : TemperatureBus
+            yield node.temperature
+
     def establish_interconnections(self):
         # collect temparature levels
         interfaces = set(self.parent.get_interfaces(EnergyType.HEAT))
@@ -94,19 +99,20 @@ class HeatCarrier(AbstractLayeredCarrier):
             t
             for i in interfaces
             if (t := i.custom_properties.get("temperature")) is not None
-            and "preliminary" not in i.custom_properties
+            and i.custom_properties.get(
+                "quality_status", QualityStatus.UNDEFINED
+            ) == QualityStatus.FIXED
         ]
 
         # add nodes and update levels
         for t in temps:
-            if t not in self._levels:
+            if t not in self.temperatures:
                 self.add_level(t)
 
     def add_level(self, t):
-        self._levels.append(t)
-        t_bus = self.subnode(
-            Bus,
-            local_name=f"T_{t}",
-            custom_properties={"temperature": t},
+        return self.subnode(
+            TemperatureBus,
+            local_name=f"hn_{len(self.subnodes)}",
+            temperature=t,
+            quality_status=QualityStatus.INFERRED,
         )
-        self.level_nodes[t] = t_bus

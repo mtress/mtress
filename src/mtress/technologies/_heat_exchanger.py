@@ -5,6 +5,7 @@ import numpy as np
 import warnings
 
 from oemof.solph import Bus, Investment
+from oemof.solph._plumbing import ConvertingProperty
 from oemof.solph._plumbing import sequence
 from oemof.solph.components import Converter, Sink, Source
 from pyomo import environ as po
@@ -17,6 +18,7 @@ from ..carriers import HeatCarrier
 
 from .._energy_types import EnergyFlowHeat
 from .._energy_types import EnergyType
+from .._energy_types import QualityStatus
 from .._energy_types import TemperatureBus
 from .._energy_types import MassFlowHeat
 
@@ -119,30 +121,23 @@ class AbstactHeatExchanger(AbstractTechnology):
             TemperatureBus,
             local_name=f"T_max",
             temperature=self.maximum_working_temperature,
-            custom_properties={
-                "preliminary": "max",
-            },
+            specific_heat_capacity=self.specific_heat_capacity,
+            quality_status=QualityStatus.PRELIMINARY_MAX,
         )
 
         self.node_t_min = self.subnode(
             TemperatureBus,
             local_name=f"T_min",
             temperature=self.minimum_working_temperature,
-            custom_properties={
-                "preliminary": "min",
-            },
+            specific_heat_capacity=self.specific_heat_capacity,
+            quality_status=QualityStatus.PRELIMINARY_MIN,
         )
 
         self.inbound_interfaces[EnergyType.HEAT] = []
         self.outbound_interfaces[EnergyType.HEAT] = []
 
-    @property
-    def reservoir_temperature(self):
-        return self._reservoir_temperature
+    reservoir_temperature = ConvertingProperty()
 
-    @reservoir_temperature.setter
-    def reservoir_temperature(self, value):
-        self._reservoir_temperature = sequence(value)
 
     def _build_core_sink(self):
         self.inbound_interfaces[EnergyType.HEAT].append(self.node_t_max)
@@ -239,8 +234,9 @@ class AbstactHeatExchanger(AbstractTechnology):
             for cold_bus in self.outbound_interfaces[EnergyType.HEAT]:
                 t_cold = cold_bus.custom_properties["temperature"]
                 t_warm = warm_bus.custom_properties["temperature"]
-                if self.reservoir_temperature.min() < t_cold < t_warm and not (
-                    t_warm > self.maximum_working_temperature
+                if self.reservoir_temperature.min() < t_cold.max() and (
+                    t_cold.min() < t_warm.max()) and not (
+                    t_warm.min() > self.maximum_working_temperature
                     or t_cold < self.minimum_working_temperature
                 ):
                     if (warm_bus, cold_bus) not in self._io_converter:
@@ -258,9 +254,10 @@ class AbstactHeatExchanger(AbstractTechnology):
             for warm_bus in self.outbound_interfaces[EnergyType.HEAT]:
                 t_cold = cold_bus.custom_properties["temperature"]
                 t_warm = warm_bus.custom_properties["temperature"]
-                if t_cold < t_warm < self.reservoir_temperature.max() and not (
-                    t_warm > self.maximum_working_temperature
-                    or t_cold < self.minimum_working_temperature
+                if t_cold.min() < t_warm.max() and (
+                    t_warm.min() < self.reservoir_temperature.max()) and not (
+                    t_warm.min() > self.maximum_working_temperature
+                    or t_cold.max() < self.minimum_working_temperature
                 ):
                     if (cold_bus, warm_bus) not in self._io_converter:
                         self._io_converter[(cold_bus, warm_bus)] = (
@@ -304,8 +301,10 @@ class AbstactHeatExchanger(AbstractTechnology):
 
         if (
             self.minimum_working_temperature
-            <= cold_temperature
-            < warm_temperature
+            <= cold_temperature.max() and
+            cold_temperature.min()
+            < warm_temperature.max() and
+            warm_temperature.min()
             <= self.maximum_working_temperature
         ):
             gains = self._normalised_gains(warm_temperature)
@@ -382,11 +381,17 @@ class AbstactHeatExchanger(AbstractTechnology):
             # This means full power step at reservoir_temperature.
             # Only makes sense when non_thermal_gains are zero (see above).
             return [
-                0 if temperature > t else 1 for t in self.reservoir_temperature
+                t_low < t_high for t_low, t_high in zip(
+                    temperature, self.reservoir_temperature
+                )
             ]
         else:
             t = self.reservoir_temperature.value
-            return sequence(0 if temperature > t else 1)
+            try:
+                return sequence(0 if temperature.value > t else 1)
+            except:
+                return sequence(0 if temperature > t else 1)
+
 
     def _sink_constraints(self, model):
         pass

@@ -83,12 +83,14 @@ class AbstractFixedTemperature(AbstractDemand):
             TemperatureBus,
             local_name=f"flow",
             temperature=self.flow_temperature,
+            specific_heat_capacity=self.specific_heat_capacity,
         )
 
         self._output_node = self.subnode(
             TemperatureBus,
             local_name=f"return",
             temperature=self.return_temperature,
+            specific_heat_capacity=self.specific_heat_capacity,
         )
 
         self._converter = self.subnode(
