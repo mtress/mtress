@@ -28,8 +28,8 @@ energy_system.add(house_1)
 house_1.subnode(
     technologies.HeatSource,
     local_name="air_HE",
-    reservoir_temperature=25,  # any possible source
-    maximum_working_temperature=20,
+    reservoir_temperature=45,  # any possible source
+    maximum_working_temperature=30,
     minimum_working_temperature=10,
     nominal_power=1e4,
 )
@@ -45,9 +45,9 @@ house_1.subnode(
 
 energy_system.establish_interconnections()
 
-model = Model(energy_system)
+# model = Model(energy_system)
 
-myresults = model.solve()
+# myresults = model.solve()
 
 graph_graphviz(
     energy_system.nodes,

@@ -5,7 +5,7 @@ import numpy as np
 import warnings
 
 from oemof.solph import Bus, Investment
-from oemof.solph._plumbing import ConvertingProperty
+from oemof.solph._plumbing import Apply
 from oemof.solph._plumbing import sequence
 from oemof.solph.components import Converter, Sink, Source
 from pyomo import environ as po
@@ -136,8 +136,7 @@ class AbstactHeatExchanger(AbstractTechnology):
         self.inbound_interfaces[EnergyType.HEAT] = []
         self.outbound_interfaces[EnergyType.HEAT] = []
 
-    reservoir_temperature = ConvertingProperty()
-
+    reservoir_temperature = Apply(sequence)
 
     def _build_core_sink(self):
         self.inbound_interfaces[EnergyType.HEAT].append(self.node_t_max)
@@ -201,7 +200,7 @@ class AbstactHeatExchanger(AbstractTechnology):
     def _add_sink_converter(self, cold_bus: Bus, warm_bus: Bus) -> Converter:
         return self.subnode(
             Converter,
-            local_name=f"sink_{warm_bus.custom_properties['temperature']}",
+            local_name=f"sink_{warm_bus.label[0]}",
             inputs={
                 warm_bus: MassFlowHeat(),
             },
@@ -216,7 +215,7 @@ class AbstactHeatExchanger(AbstractTechnology):
     def _add_source_converter(self, cold_bus: Bus, warm_bus: Bus) -> Converter:
         return self.subnode(
             Converter,
-            local_name=f"source_{warm_bus.custom_properties['temperature']}",
+            local_name=f"source_{warm_bus.label[0]}",
             inputs={
                 self._bus_source: EnergyFlowHeat(
                     nominal_capacity=self.nominal_power,
@@ -341,14 +340,14 @@ class AbstactHeatExchanger(AbstractTechnology):
         )
 
         for in_node in self.inbound_interfaces[EnergyType.HEAT]:
-            in_node.inputs[
-                heat_carrier.level_nodes[in_node.temperature]
-            ] = MassFlowHeat()
+            in_node.inputs[heat_carrier.get_input_for(in_node)[0]] = (
+                MassFlowHeat()
+            )
 
         for out_node in self.outbound_interfaces[EnergyType.HEAT]:
-            out_node.outputs[
-                heat_carrier.level_nodes[out_node.temperature]
-            ] = MassFlowHeat()
+            out_node.outputs[heat_carrier.get_input_for(out_node)[-1]] = (
+                MassFlowHeat()
+            )
 
     def _establish_interconnections_sink(self):
         self._heat_sink.inputs[self._bus_sink].variable_costs = (
@@ -391,7 +390,6 @@ class AbstactHeatExchanger(AbstractTechnology):
                 return sequence(0 if temperature.value > t else 1)
             except:
                 return sequence(0 if temperature > t else 1)
-
 
     def _sink_constraints(self, model):
         pass

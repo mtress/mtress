@@ -88,6 +88,26 @@ class HeatCarrier(AbstractCarrier):
             node : TemperatureBus
             yield node.temperature
 
+    def get_input_for(self, bus: TemperatureBus) -> list[TemperatureBus]:
+        matching_nodes = []
+
+        match bus.quality_status:
+            case QualityStatus.FIXED:
+                for node in self._subnodes:
+                    if (node.temperature == bus.temperature).all():
+                        matching_nodes.append(node)
+            case QualityStatus.PRELIMINARY_MAX:
+                for node in self._subnodes:
+                    if (node.temperature <= bus.temperature).all():
+                        matching_nodes.append(node)
+            case QualityStatus.PRELIMINARY_MIN:
+                for node in self._subnodes:
+                    if (node.temperature >= bus.temperature).all():
+                        matching_nodes.append(node)
+
+        matching_nodes.sort()
+        return matching_nodes
+
     def establish_interconnections(self):
         # collect temparature levels
         interfaces = set(self.parent.get_interfaces(EnergyType.HEAT))
@@ -106,13 +126,16 @@ class HeatCarrier(AbstractCarrier):
 
         # add nodes and update levels
         for t in temps:
-            if t not in self.temperatures:
+            t_is_known = any(
+                (t_known == t).any() for t_known in self.temperatures
+            )
+            if not t_is_known:
                 self.add_level(t)
 
     def add_level(self, t):
         return self.subnode(
             TemperatureBus,
-            local_name=f"hn_{len(self.subnodes)}",
+            local_name=f"{t}",
             temperature=t,
             quality_status=QualityStatus.INFERRED,
         )

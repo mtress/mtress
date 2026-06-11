@@ -7,6 +7,7 @@ from oemof.solph.components import Converter, Sink, Source
 from .._energy_types import EnergyFlowHeat
 from .._energy_types import EnergyType
 from .._energy_types import MassFlowHeat
+from .._energy_types import QualityStatus
 from .._energy_types import TemperatureBus
 from .._data_handler import TimeseriesSpecifier
 from ..carriers import HeatCarrier
@@ -122,12 +123,16 @@ class AbstractFixedTemperature(AbstractDemand):
         if self.specific_heat_capacity != heat_carrier.specific_heat_capacity:
             raise ValueError("Specific heat capacities need to match")
 
-        self._input_node.inputs[
-            heat_carrier.level_nodes[self._input_node.temperature]
-        ] = MassFlowHeat()
-        self._output_node.outputs[
-            heat_carrier.level_nodes[self._output_node.temperature]
-        ] = MassFlowHeat()
+        input_node: TemperatureBus = heat_carrier.get_input_for(
+            self._input_node
+        )[0]
+        self.flow_temperature = input_node.temperature
+        self._input_node.inputs[input_node] = MassFlowHeat()
+
+        output_node: TemperatureBus = heat_carrier.get_input_for(
+            self._output_node
+        )[0]
+        self._output_node.outputs[output_node] = MassFlowHeat()
 
 
 class FixedTemperatureHeating(AbstractFixedTemperature):
@@ -183,14 +188,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         self._update_conversion_factor()
 
     def establish_interconnections(self):
-        heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
-
-        self.flow_temperature, _ = heat_carrier.get_surrounding_levels(
-            self.min_flow_temperature
-        )
-
         self._establish_interconnections()
-        self._update_conversion_factor()
 
 
 class FixedTemperatureCooling(AbstractFixedTemperature):

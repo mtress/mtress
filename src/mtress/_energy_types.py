@@ -57,7 +57,7 @@ class TemperatureBus(Bus):
 
     @property
     def quality_status(self):
-        return self._status
+        return self._quality_status
 
     @quality_status.setter
     def quality_status(self, value):
