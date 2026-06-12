@@ -15,6 +15,7 @@ from collections.abc import Iterable
 
 from .._base_mtress_nodes import AbstractCarrier
 from .._energy_types import EnergyType
+from .._energy_types import EnergyQuality
 from .._energy_types import QualityStatus
 from .._energy_types import TemperatureBus
 
@@ -77,7 +78,7 @@ class HeatCarrier(AbstractCarrier):
         """Build core structure of oemof.solph representation."""
 
         for temperature in temperature_levels:
-            self.add_level(temperature)
+            self.add_level(temperature, fixed=True)
 
         self.inbound_interfaces[EnergyType.HEAT] = self.subnodes
         self.outbound_interfaces[EnergyType.HEAT] = self.subnodes
@@ -88,54 +89,50 @@ class HeatCarrier(AbstractCarrier):
             node : TemperatureBus
             yield node.temperature
 
-    def get_input_for(self, bus: TemperatureBus) -> list[TemperatureBus]:
+    @staticmethod
+    def _have_overlap(bus1: TemperatureBus, bus2: TemperatureBus):
+        return (
+            (bus1.energy_quality.minimum <= bus2.energy_quality.maximum).any()
+            and (
+                bus2.energy_quality.minimum <= bus1.energy_quality.maximum
+            ).any()
+        )
+
+    def get_input_node(self, bus: TemperatureBus) -> list[TemperatureBus]:
         matching_nodes = []
 
-        match bus.quality_status:
-            case QualityStatus.FIXED:
-                for node in self._subnodes:
-                    if (node.temperature == bus.temperature).all():
-                        matching_nodes.append(node)
-            case QualityStatus.PRELIMINARY_MAX:
-                for node in self._subnodes:
-                    if (node.temperature <= bus.temperature).all():
-                        matching_nodes.append(node)
-            case QualityStatus.PRELIMINARY_MIN:
-                for node in self._subnodes:
-                    if (node.temperature >= bus.temperature).all():
-                        matching_nodes.append(node)
+        for node in self.parent.child_outbound_interfaces(EnergyType.HEAT):
+            if node.parent is not bus.parent and HeatCarrier._have_overlap(
+                node, bus
+            ):
+                matching_nodes.append(node)
 
-        matching_nodes.sort()
+        matching_nodes.sort(key=lambda node: node.temperature.min())
+        return matching_nodes
+
+    def get_output_node(self, bus: TemperatureBus) -> list[TemperatureBus]:
+        matching_nodes = []
+
+        for node in self.parent.child_inbound_interfaces(EnergyType.HEAT):
+            if node.parent is not bus.parent and HeatCarrier._have_overlap(
+                node, bus
+            ):
+                matching_nodes.append(node)
+
+        matching_nodes.sort(key=lambda node: node.temperature.min())
         return matching_nodes
 
     def establish_interconnections(self):
-        # collect temparature levels
-        interfaces = set(self.parent.get_interfaces(EnergyType.HEAT))
+        pass
 
-        # prevent duplicates from own node
-        interfaces -= set(self.subnodes)
-
-        temps = [
-            t
-            for i in interfaces
-            if (t := i.custom_properties.get("temperature")) is not None
-            and i.custom_properties.get(
-                "quality_status", QualityStatus.UNDEFINED
-            ) == QualityStatus.FIXED
-        ]
-
-        # add nodes and update levels
-        for t in temps:
-            t_is_known = any(
-                (t_known == t).any() for t_known in self.temperatures
-            )
-            if not t_is_known:
-                self.add_level(t)
-
-    def add_level(self, t):
+    def add_level(self, t, *, fixed):
+        if fixed:
+            label = f"{t}"
+        else:
+            label = f"tn_{len(self.subnodes)}"
         return self.subnode(
             TemperatureBus,
-            local_name=f"{t}",
-            temperature=t,
+            local_name=label,
+            temperature=EnergyQuality(t, fixed=fixed),
             quality_status=QualityStatus.INFERRED,
         )

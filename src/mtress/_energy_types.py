@@ -24,8 +24,8 @@ class EnergyType(IntEnum):
 class EnergyQuality:
     """energy quality"""
     _value = Apply(sequence)
-    minimum = Apply(sequence)
-    maximum = Apply(sequence)
+    _minimum = Apply(sequence)
+    _maximum = Apply(sequence)
 
     def __init__(
         self,
@@ -37,7 +37,31 @@ class EnergyQuality:
         self._value = value
         self.minimum = minimum
         self.maximum = maximum
-        self.final = fixed
+        self.fixed = fixed
+
+    @property
+    def minimum(self):
+        if self.fixed:
+            return self._value
+        else:
+            return self._minimum
+
+    @minimum.setter
+    def minimum(self, value):
+        # TODO: forbid overwriting final values
+        self._minimum = value
+
+    @property
+    def maximum(self):
+        if self.fixed:
+            return self._value
+        else:
+            return self._maximum
+
+    @maximum.setter
+    def maximum(self, value):
+        # TODO: forbid overwriting final values
+        self._maximum = value
 
     @property
     def value(self):

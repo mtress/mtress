@@ -50,14 +50,19 @@ class Location(SubNetwork):
             custom_properties=custom_properties,
         )
 
-    def get_interfaces(self, et: EnergyType):
-        # collect all in- and outbound interfaces of given EnergyType
+    def child_inbound_interfaces(self, et: EnergyType):
+        # iterate all inbound interfaces of given EnergyType
         interfaces = []
         for sn in self.subnodes:
-            i_i = sn.inbound_interfaces.get(et, [])
-            interfaces += i_i
-            o_i = sn.outbound_interfaces.get(et, [])
-            interfaces += o_i
+            interfaces += sn.inbound_interfaces.get(et, [])
+        for i in interfaces:
+            yield i
+
+    def child_outbound_interfaces(self, et: EnergyType):
+        # iterate all outbound interfaces of given EnergyType
+        interfaces = []
+        for sn in self.subnodes:
+            interfaces += sn.outbound_interfaces.get(et, [])
         for i in interfaces:
             yield i
 

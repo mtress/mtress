@@ -347,12 +347,12 @@ class AbstactHeatExchanger(AbstractTechnology):
         )
 
         for in_node in self.inbound_interfaces[EnergyType.HEAT]:
-            in_node.inputs[heat_carrier.get_input_for(in_node)[0]] = (
+            in_node.inputs[heat_carrier.get_input_node(in_node)[0]] = (
                 MassFlowHeat()
             )
 
         for out_node in self.outbound_interfaces[EnergyType.HEAT]:
-            out_node.outputs[heat_carrier.get_input_for(out_node)[-1]] = (
+            out_node.outputs[heat_carrier.get_output_node(out_node)[0]] = (
                 MassFlowHeat()
             )
 
