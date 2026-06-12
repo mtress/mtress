@@ -80,7 +80,7 @@ class AbstactHeatExchanger(AbstractTechnology):
 
 
         The heat is (partly) taken from the reservoir. If there are no
-        non_thermal_gains, its temperatre needs to be above (strictly greater)
+        non_thermal_gains, its temperature needs to be above (strictly greater)
         the target temperature.
         """
         super().__init__(
@@ -347,16 +347,16 @@ class AbstactHeatExchanger(AbstractTechnology):
         )
 
         for in_node in self.inbound_interfaces[EnergyType.HEAT]:
-            in_node.inputs[heat_carrier.get_input_node(in_node)[0]] = (
-                MassFlowHeat()
-            )
+            upstream_node = heat_carrier.get_input_node(in_node)
+            in_node.inputs[upstream_node] = MassFlowHeat()
+            in_node.temperature = upstream_node.temperature
 
         for out_node in self.outbound_interfaces[EnergyType.HEAT]:
-            out_node.outputs[heat_carrier.get_output_node(out_node)[0]] = (
-                MassFlowHeat()
-            )
+            downstream_node = heat_carrier.get_output_node(out_node)
+            out_node.outputs[downstream_node] = MassFlowHeat()
+            out_node.temperature = downstream_node.temperature
 
-    def _establish_interconnections_sink(self):
+    def _align_timeindex_sink(self):
         self._heat_sink.inputs[self._bus_sink].variable_costs = (
             self._energy_system.data.get_timeseries(
                 self.revenue,
@@ -364,7 +364,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             )
         )
 
-    def _establish_interconnections_source(self):
+    def _align_timeindex_source(self):
         self._heat_reservoir.outputs[self._bus_source].variable_costs = (
             self._energy_system.data.get_timeseries(
                 self.working_rate,

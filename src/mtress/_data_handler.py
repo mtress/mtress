@@ -81,8 +81,6 @@ class DataHandler:
             case _FakeSequence() as fs:
                 return _FakeSequence(value=fs.value, length=len(target_index))
 
-                pd.Series(data=value.value, index=target_index)
-
             case _:
                 raise ValueError(
                     f"Time series specifier {specifier} not supported"

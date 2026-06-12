@@ -10,6 +10,7 @@ from enum import IntEnum
 
 from oemof.solph import Bus
 from oemof.solph import Flow
+from oemof.solph._plumbing import _FakeSequence
 from oemof.solph._plumbing import Apply
 from oemof.solph._plumbing import sequence
 
@@ -145,6 +146,15 @@ class TemperatureBus(Bus):
     def temperature(self, value):
         self._temperature.value = value
         self.custom_properties["temperature"] = self.temperature
+
+    def align_timeindex(self):
+        n_time_intervals = len(self._energy_system.timeincrement)
+        if isinstance(self.energy_quality.value, _FakeSequence):
+            self.energy_quality.value.size = n_time_intervals
+        if isinstance(self.energy_quality.minimum, _FakeSequence):
+            self.energy_quality.minimum.size = n_time_intervals
+        if isinstance(self.energy_quality.maximum, _FakeSequence):
+            self.energy_quality.maximum.size = n_time_intervals
 
 
 class MassFlowHeat(Flow):

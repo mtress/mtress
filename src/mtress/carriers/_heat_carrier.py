@@ -13,6 +13,8 @@ SPDX-License-Identifier: MIT
 
 from collections.abc import Iterable
 
+import numpy as np
+
 from .._base_mtress_nodes import AbstractCarrier
 from .._energy_types import EnergyType
 from .._energy_types import EnergyQuality
@@ -55,7 +57,6 @@ class HeatCarrier(AbstractCarrier):
         custom_properties=None,
         temperature_levels=None,
         specific_heat_capacity=1.161,
-        autoconnect_on_initialisation=False,
     ):
         """
         Initialize heat energy carrier and add components.
@@ -66,7 +67,6 @@ class HeatCarrier(AbstractCarrier):
             label,
             parent_node=parent_node,
             custom_properties=custom_properties,
-            autoconnect_on_initialisation=autoconnect_on_initialisation,
         )
         if temperature_levels is None:
             temperature_levels = []
@@ -79,9 +79,6 @@ class HeatCarrier(AbstractCarrier):
 
         for temperature in temperature_levels:
             self.add_level(temperature, fixed=True)
-
-        self.inbound_interfaces[EnergyType.HEAT] = self.subnodes
-        self.outbound_interfaces[EnergyType.HEAT] = self.subnodes
 
     @property
     def temperatures(self) -> Iterable:
@@ -98,29 +95,45 @@ class HeatCarrier(AbstractCarrier):
             ).any()
         )
 
-    def get_input_node(self, bus: TemperatureBus) -> list[TemperatureBus]:
+    def get_input_node(self, bus: TemperatureBus) -> TemperatureBus:
         matching_nodes = []
 
         for node in self.parent.child_outbound_interfaces(EnergyType.HEAT):
-            if node.parent is not bus.parent and HeatCarrier._have_overlap(
-                node, bus
-            ):
+            if HeatCarrier._have_overlap(node, bus):
                 matching_nodes.append(node)
 
-        matching_nodes.sort(key=lambda node: node.temperature.min())
-        return matching_nodes
+        matching_nodes.sort(
+            key=lambda node: (node.temperature.min(), node.parent != self)
+        )
+        best_node = matching_nodes[0]
+        if best_node.parent is self:
+            return best_node
+        else:
+            minimum_temperature = np.minimum(
+                best_node.energy_quality.minimum.to_numpy(),
+                bus.energy_quality.minimum.to_numpy(),
+            )
+            return self.add_level(minimum_temperature, fixed=True)
 
-    def get_output_node(self, bus: TemperatureBus) -> list[TemperatureBus]:
+    def get_output_node(self, bus: TemperatureBus) -> TemperatureBus:
         matching_nodes = []
 
         for node in self.parent.child_inbound_interfaces(EnergyType.HEAT):
-            if node.parent is not bus.parent and HeatCarrier._have_overlap(
-                node, bus
-            ):
+            if HeatCarrier._have_overlap(node, bus):
                 matching_nodes.append(node)
 
-        matching_nodes.sort(key=lambda node: node.temperature.min())
-        return matching_nodes
+        matching_nodes.sort(
+            key=lambda node: (node.temperature.min(), node.parent != self)
+        )
+        best_node = matching_nodes[0]
+        if best_node.parent is self:
+            return best_node
+        else:
+            minimum_temperature = np.minimum(
+                best_node.energy_quality.minimum.to_numpy(),
+                bus.energy_quality.minimum.to_numpy(),
+            )
+            return self.add_level(minimum_temperature, fixed=True)
 
     def establish_interconnections(self):
         pass
@@ -130,9 +143,13 @@ class HeatCarrier(AbstractCarrier):
             label = f"{t}"
         else:
             label = f"tn_{len(self.subnodes)}"
-        return self.subnode(
+        node = self.subnode(
             TemperatureBus,
             local_name=label,
             temperature=EnergyQuality(t, fixed=fixed),
             quality_status=QualityStatus.INFERRED,
         )
+        self.inbound_interfaces[EnergyType.HEAT] = self.subnodes
+        self.outbound_interfaces[EnergyType.HEAT] = self.subnodes
+
+        return node

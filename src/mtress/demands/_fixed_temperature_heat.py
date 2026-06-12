@@ -1,6 +1,7 @@
 """Room heating technologies."""
 
 from oemof.solph import Bus, Flow
+from oemof.solph._plumbing import _FakeSequence
 from oemof.solph._plumbing import sequence
 from oemof.solph.components import Converter, Sink, Source
 
@@ -108,8 +109,9 @@ class AbstractFixedTemperature(AbstractDemand):
 
     def _update_conversion_factor(self):
         self._converter.conversion_factors[self._demand] = sequence(
-            abs(self._input_node.temperature - self._output_node.temperature)
-            * self.specific_heat_capacity
+            abs(
+                self._input_node.temperature - self._output_node.temperature
+            ) * self.specific_heat_capacity
         )
 
     def _establish_interconnections(self):
@@ -125,13 +127,13 @@ class AbstractFixedTemperature(AbstractDemand):
 
         input_node: TemperatureBus = heat_carrier.get_input_node(
             self._input_node
-        )[0]
+        )
         self.flow_temperature = input_node.temperature
         self._input_node.inputs[input_node] = MassFlowHeat()
 
         output_node: TemperatureBus = heat_carrier.get_output_node(
             self._output_node
-        )[0]
+        )
         self._output_node.outputs[output_node] = MassFlowHeat()
 
 

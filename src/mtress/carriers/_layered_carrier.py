@@ -19,7 +19,6 @@ class AbstractLayeredCarrier(AbstractCarrier):
         *,
         parent_node,
         custom_properties,
-        autoconnect_on_initialisation,
     ):
         """Initialize carrier.
 
@@ -31,7 +30,6 @@ class AbstractLayeredCarrier(AbstractCarrier):
             label,
             parent_node=parent_node,
             custom_properties=custom_properties,
-            autoconnect_on_initialisation=autoconnect_on_initialisation,
         )
 
     def get_surrounding_levels(self, level):

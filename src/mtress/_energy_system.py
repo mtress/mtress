@@ -17,6 +17,8 @@ from ._base_mtress_nodes import AbstractDemand
 from ._base_mtress_nodes import AbstractTechnology
 from ._base_mtress_nodes import SubNetwork
 
+from ._energy_types import TemperatureBus
+
 from ._data_handler import DataHandler
 from ._helpers._visualization import graph_cytoscape, graph_graphviz
 
@@ -57,7 +59,10 @@ class EnergySystem(solph.EnergySystem):
         super().__init__(timeindex=timeindex)
 
     def establish_interconnections(self):
-        """Autoconnect all applicable Nodes."""
+        """Set time index and autoconnect all applicable Nodes."""
+        for sn in self._nodes_by_type(TemperatureBus):
+            sn.align_timeindex()
+
         for sn in self._nodes_by_type(AbstractCarrier):
             sn.establish_interconnections()
 
