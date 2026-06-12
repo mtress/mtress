@@ -324,8 +324,6 @@ class AbstactHeatExchanger(AbstractTechnology):
         )
         converter.inputs[self._bus_source].max = sequence(gains)
 
-        pass
-
     def _establish_interconnections(self):
         """Shared establish interconnection code for all HeatExchangers.
 
