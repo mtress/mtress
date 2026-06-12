@@ -7,7 +7,7 @@ from oemof.solph.components import Converter, Sink, Source
 from .._energy_types import EnergyFlowHeat
 from .._energy_types import EnergyType
 from .._energy_types import MassFlowHeat
-from .._energy_types import EnergyQuality
+from .._energy_types import QualityStatus
 from .._energy_types import TemperatureBus
 from .._data_handler import TimeseriesSpecifier
 from ..carriers import HeatCarrier
@@ -69,18 +69,28 @@ class AbstractFixedTemperature(AbstractDemand):
 
         self.__build_core()
 
+    @property
+    def flow_temperature(self):
+        return self._flow_temperature
+
+    @flow_temperature.setter
+    def flow_temperature(self, value):
+        self._flow_temperature = value
+        self._input_node.temperature = self.flow_temperature
+        self._update_conversion_factor()
+
     def __build_core(self):
         self._input_node = self.subnode(
             TemperatureBus,
             local_name=f"flow",
-            temperature=EnergyQuality([self.flow_temperature]),
+            temperature=self.flow_temperature,
             specific_heat_capacity=self.specific_heat_capacity,
         )
 
         self._output_node = self.subnode(
             TemperatureBus,
             local_name=f"return",
-            temperature=EnergyQuality([self.return_temperature], fixed=True),
+            temperature=self.return_temperature,
             specific_heat_capacity=self.specific_heat_capacity,
         )
 
@@ -159,11 +169,12 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         if not min_flow_temperature > return_temperature:
             raise ValueError("Flow must be higher than return temperature")
 
-        self._input_node.temperature.minimum = min_flow_temperature
+        self.min_flow_temperature = min_flow_temperature
 
         self.__build_core()
 
     def __build_core(self):
+
         self._demand = self.subnode(
             Sink,
             local_name="sink",
@@ -213,7 +224,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         if not max_flow_temperature < return_temperature:
             raise ValueError("Flow must be lower than return temperature")
 
-        self._input_node.temperature.maximum = max_flow_temperature
+        self.max_flow_temperature = max_flow_temperature
 
         self.__build_core()
 

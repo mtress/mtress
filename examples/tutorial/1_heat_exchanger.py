@@ -43,7 +43,7 @@ house_1.subnode(
     time_series=[50, 50],
 )
 
-# energy_system.establish_interconnections()
+energy_system.establish_interconnections()
 
 # model = Model(energy_system)
 

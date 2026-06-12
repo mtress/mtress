@@ -15,7 +15,7 @@ from collections.abc import Iterable
 
 from .._base_mtress_nodes import AbstractCarrier
 from .._energy_types import EnergyType
-from .._energy_types import EnergyQuality
+from .._energy_types import QualityStatus
 from .._energy_types import TemperatureBus
 
 
@@ -91,6 +91,20 @@ class HeatCarrier(AbstractCarrier):
     def get_input_for(self, bus: TemperatureBus) -> list[TemperatureBus]:
         matching_nodes = []
 
+        match bus.quality_status:
+            case QualityStatus.FIXED:
+                for node in self._subnodes:
+                    if (node.temperature == bus.temperature).all():
+                        matching_nodes.append(node)
+            case QualityStatus.PRELIMINARY_MAX:
+                for node in self._subnodes:
+                    if (node.temperature <= bus.temperature).all():
+                        matching_nodes.append(node)
+            case QualityStatus.PRELIMINARY_MIN:
+                for node in self._subnodes:
+                    if (node.temperature >= bus.temperature).all():
+                        matching_nodes.append(node)
+
         matching_nodes.sort()
         return matching_nodes
 
@@ -105,6 +119,9 @@ class HeatCarrier(AbstractCarrier):
             t
             for i in interfaces
             if (t := i.custom_properties.get("temperature")) is not None
+            and i.custom_properties.get(
+                "quality_status", QualityStatus.UNDEFINED
+            ) == QualityStatus.FIXED
         ]
 
         # add nodes and update levels
@@ -119,5 +136,6 @@ class HeatCarrier(AbstractCarrier):
         return self.subnode(
             TemperatureBus,
             local_name=f"{t}",
-            temperature=EnergyQuality([t]),
+            temperature=t,
+            quality_status=QualityStatus.INFERRED,
         )
