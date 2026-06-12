@@ -10,6 +10,7 @@ from enum import IntEnum
 
 from oemof.solph import Bus
 from oemof.solph import Flow
+from oemof.solph._plumbing import Apply
 from oemof.solph._plumbing import sequence
 
 
@@ -18,6 +19,34 @@ class EnergyType(IntEnum):
     ELECTRICITY = 1
     HEAT = 2
     GAS = 3
+
+
+class EnergyQuality:
+    """energy quality"""
+    _value = Apply(sequence)
+    minimum = Apply(sequence)
+    maximum = Apply(sequence)
+
+    def __init__(
+        self,
+        value,
+        minimum=None,
+        maximum=None,
+        fixed=False,
+    ):
+        self._value = value
+        self.minimum = minimum
+        self.maximum = maximum
+        self.final = fixed
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        # TODO: forbid overwriting final values
+        self._value = value
 
 
 class QualityStatus(IntEnum):
@@ -53,7 +82,14 @@ class TemperatureBus(Bus):
         )
         self.quality_status = quality_status
         self.specific_heat_capacity = specific_heat_capacity
-        self.temperature = temperature
+        if isinstance(temperature, EnergyQuality):
+            self._temperature = temperature
+        else:
+            self._temperature = EnergyQuality(
+                temperature,
+                fixed=(quality_status == QualityStatus.FIXED),
+            )
+        self.custom_properties["temperature"] = self.temperature
 
     @property
     def quality_status(self):
@@ -75,13 +111,12 @@ class TemperatureBus(Bus):
 
     @property
     def temperature(self):
-        return self._temperature
+        return self._temperature.value
 
     @temperature.setter
     def temperature(self, value):
-        value = sequence(value)
-        self.custom_properties["temperature"] = value
-        self._temperature = value
+        self._temperature.value = value
+        self.custom_properties["temperature"] = self.temperature
 
 
 class MassFlowHeat(Flow):
