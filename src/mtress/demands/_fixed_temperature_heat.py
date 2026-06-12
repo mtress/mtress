@@ -5,9 +5,9 @@ from oemof.solph._plumbing import sequence
 from oemof.solph.components import Converter, Sink, Source
 
 from .._energy_types import EnergyFlowHeat
+from .._energy_types import EnergyQuality
 from .._energy_types import EnergyType
 from .._energy_types import MassFlowHeat
-from .._energy_types import QualityStatus
 from .._energy_types import TemperatureBus
 from .._data_handler import TimeseriesSpecifier
 from ..carriers import HeatCarrier
@@ -90,7 +90,7 @@ class AbstractFixedTemperature(AbstractDemand):
         self._output_node = self.subnode(
             TemperatureBus,
             local_name=f"return",
-            temperature=self.return_temperature,
+            temperature=EnergyQuality(self.return_temperature, fixed=True),
             specific_heat_capacity=self.specific_heat_capacity,
         )
 
@@ -169,7 +169,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         if not min_flow_temperature > return_temperature:
             raise ValueError("Flow must be higher than return temperature")
 
-        self.min_flow_temperature = min_flow_temperature
+        self._input_node.energy_quality.minimum = min_flow_temperature
 
         self.__build_core()
 

@@ -113,6 +113,10 @@ class TemperatureBus(Bus):
     def temperature(self):
         return self._temperature.value
 
+    @property
+    def energy_quality(self):
+        return self._temperature
+
     @temperature.setter
     def temperature(self, value):
         self._temperature.value = value
