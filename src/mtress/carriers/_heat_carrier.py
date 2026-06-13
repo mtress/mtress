@@ -95,44 +95,39 @@ class HeatCarrier(AbstractCarrier):
             ).any()
         )
 
-    def get_input_node(self, bus: TemperatureBus) -> TemperatureBus:
+    def _nodes_with_overlap(self, node_list, bus):
         matching_nodes = []
 
-        for node in self.parent.child_outbound_interfaces(EnergyType.HEAT):
-            if HeatCarrier._have_overlap(node, bus):
+        for node in node_list:
+            if node is not bus and HeatCarrier._have_overlap(node, bus):
                 matching_nodes.append(node)
 
         matching_nodes.sort(
             key=lambda node: (node.temperature.min(), node.parent != self)
         )
-        best_node = matching_nodes[0]
+        return matching_nodes
 
-        if best_node.parent is self:
-            return best_node
-        else:
-            minimum_temperature = np.maximum(
-                best_node.energy_quality.minimum.to_numpy(),
-                bus.energy_quality.minimum.to_numpy(),
-            )
-            return self.add_level(minimum_temperature, fixed=True)
+    def get_input_node(self, bus: TemperatureBus) -> TemperatureBus:
+        candidate_nodes = list(
+            self.parent.child_outbound_interfaces(EnergyType.HEAT)
+        )
+        matching_nodes = self._nodes_with_overlap(candidate_nodes, bus)
+        return self._copy_if_needed(matching_nodes[0], bus)
 
     def get_output_node(self, bus: TemperatureBus) -> TemperatureBus:
-        matching_nodes = []
-
-        for node in self.parent.child_inbound_interfaces(EnergyType.HEAT):
-            if HeatCarrier._have_overlap(node, bus):
-                matching_nodes.append(node)
-
-        matching_nodes.sort(
-            key=lambda node: (node.temperature.min(), node.parent != self)
+        candidate_nodes = list(
+            self.parent.child_inbound_interfaces(EnergyType.HEAT)
         )
-        best_node = matching_nodes[0]
-        if best_node.parent is self:
-            return best_node
+        matching_nodes = self._nodes_with_overlap(candidate_nodes, bus)
+        return self._copy_if_needed(matching_nodes[0], bus)
+
+    def _copy_if_needed(self, bus1, bus_to_connect):
+        if bus1.parent is self:
+            return bus1
         else:
             minimum_temperature = np.maximum(
-                best_node.energy_quality.minimum.to_numpy(),
-                bus.energy_quality.minimum.to_numpy(),
+                bus1.energy_quality.minimum.to_numpy(),
+                bus_to_connect.energy_quality.minimum.to_numpy(),
             )
             return self.add_level(minimum_temperature, fixed=True)
 
