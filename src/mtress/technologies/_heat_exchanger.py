@@ -5,6 +5,7 @@ import numpy as np
 import warnings
 
 from oemof.solph import Bus, Investment
+from oemof.solph._plumbing import _FakeSequence
 from oemof.solph._plumbing import Apply
 from oemof.solph._plumbing import sequence
 from oemof.solph.components import Converter, Sink, Source
@@ -393,9 +394,11 @@ class AbstactHeatExchanger(AbstractTechnology):
             ]
         else:
             t = self.reservoir_temperature.value
-            try:
+            if isinstance(temperature, _FakeSequence):
                 return sequence(0 if temperature.value > t else 1)
-            except:
+            elif isinstance(temperature, np.ndarray):
+                return np.array(temperature > t, dtype=float)
+            else:
                 return sequence(0 if temperature > t else 1)
 
     def _sink_constraints(self, model):
