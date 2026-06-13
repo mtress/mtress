@@ -106,10 +106,11 @@ class HeatCarrier(AbstractCarrier):
             key=lambda node: (node.temperature.min(), node.parent != self)
         )
         best_node = matching_nodes[0]
+
         if best_node.parent is self:
             return best_node
         else:
-            minimum_temperature = np.minimum(
+            minimum_temperature = np.maximum(
                 best_node.energy_quality.minimum.to_numpy(),
                 bus.energy_quality.minimum.to_numpy(),
             )
@@ -129,7 +130,7 @@ class HeatCarrier(AbstractCarrier):
         if best_node.parent is self:
             return best_node
         else:
-            minimum_temperature = np.minimum(
+            minimum_temperature = np.maximum(
                 best_node.energy_quality.minimum.to_numpy(),
                 bus.energy_quality.minimum.to_numpy(),
             )
