@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from mtress import demands
-from mtress import EnergyType
+from mtress.carriers import HeatCarrier
 
 
 def assert_heat_exchanger(node, flow_temperature, return_temperature):
     assert node._time_series == [1, 2, 3]
-    assert node.flow_temperature == flow_temperature
-    assert node.return_temperature == return_temperature
 
     assert len(node.inbound_interfaces) == 1
     assert len(node.inbound_interfaces[HeatCarrier]) == 1

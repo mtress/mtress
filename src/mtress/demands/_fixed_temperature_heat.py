@@ -70,9 +70,6 @@ class AbstractFixedTemperature(AbstractDemand):
 
         self._time_series = time_series
 
-        self.__build_core()
-
-    def __build_core(self):
         self._reference_input = self.subnode(
             TemperatureBus,
             local_name=f"reference",
@@ -80,7 +77,7 @@ class AbstractFixedTemperature(AbstractDemand):
             specific_heat_capacity=self.specific_heat_capacity,
         )
         self.outbound_interfaces[HeatCarrier] = []
-        self._output_node = self._outbound_node(self._return_temperature)
+        self._output_node = self._outbound_node(return_temperature)
 
         self.inbound_interfaces[HeatCarrier] = [self._reference_input]
 
@@ -114,26 +111,27 @@ class AbstractFixedTemperature(AbstractDemand):
         self.outbound_interfaces[HeatCarrier].append(node)
         return node
 
+    def _create_converter(self, source, target):
+        converter = self.subnode(
+            Converter,
+            local_name=f"{source.label[0]}->{target.label[0]}",
+            inputs={source: MassFlowHeat()},
+            outputs={target: MassFlowHeat()},
+        )
+        self._converters[(source, target)] = converter
+        return converter
+
     def _create_missing_converters(self):
         for ii in self.inbound_interfaces[HeatCarrier]:
             for oi in self.outbound_interfaces[HeatCarrier]:
                 if (ii, oi) not in self._converters:
-                    self._converters[(ii, oi)] = self.subnode(
-                        Converter,
-                        local_name=f"{ii.label[0]}->{oi.label[0]}",
-                        inputs={self._reference_input: MassFlowHeat()},
-                        outputs={self._output_node: MassFlowHeat()},
-                    )
+                    self._create_converter(ii, oi)
 
     def _update_conversion_factors(self):
         for nodes, converter in self._converters.items():
             converter.conversion_factors[self._demand] = abs(
                     nodes[0].temperature - nodes[1].temperature
                 ) * self.specific_heat_capacity
-
-    @abstractmethod
-    def _connect_demand(self):
-        pass
 
     def _establish_interconnections(self):
         """Shared establish interconnection code for all HeatExchangers.
@@ -207,16 +205,21 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
                 )
             },
         )
-        self._connect_demand()
+        self._converters[self._reference_input, self._output_node].outputs[
+            self._demand_bus
+        ] = MassFlowHeat()
         self._update_conversion_factors()
 
-    def _connect_demand(self):
-        for converter in self._converters.values():
-            converter.outputs[self._demand_bus] = MassFlowHeat()
+    def _inbound_node(self, temperature):
+        node = super()._inbound_node(temperature)
+        converter = self._create_converter(node, self._output_node)
+        converter.outputs[self._demand_bus] = EnergyFlowHeat()
 
+        return node
 
     def establish_interconnections(self):
         self._establish_interconnections()
+        self._update_conversion_factors()
 
 
 class FixedTemperatureCooling(AbstractFixedTemperature):
@@ -267,20 +270,15 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
                 )
             },
         )
-        self._connect_demand()
         self._update_conversion_factors()
 
-    def _connect_demand(self):
-        for converter in self._converters.values():
-            converter.inputs[self._demand_bus] = EnergyFlowHeat()
+    def _inbound_node(self, temperature):
+        node = super()._inbound_node(temperature)
+        converter = self._create_converter(node, self._output_node)
+        converter.inputs[self._demand_bus] = EnergyFlowHeat()
+
+        return node
 
     def establish_interconnections(self):
-        if self.parent:
-            heat_carrier: HeatCarrier = self.parent.get_carrier(HeatCarrier)
-
-            _, self.flow_temperature = heat_carrier.get_surrounding_levels(
-                self.max_flow_temperature
-            )
-
         self._establish_interconnections()
         self._update_conversion_factors()

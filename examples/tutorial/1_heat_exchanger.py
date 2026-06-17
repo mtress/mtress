@@ -43,13 +43,15 @@ house_1.subnode(
 )
 
 # Add demands
-house_1.subnode(
+hd = house_1.subnode(
     demands.FixedTemperatureHeating,
     local_name="heat_demand",
     min_flow_temperature=20,
     return_temperature=10,
     time_series=[50, 50],
 )
+
+hd._inbound_node(25)
 
 energy_system.establish_interconnections()
 
