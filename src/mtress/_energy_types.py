@@ -70,8 +70,15 @@ class EnergyQuality:
 
     @value.setter
     def value(self, value):
-        # TODO: forbid overwriting final values
-        self._value = value
+        if not self.fixed:
+            self.fixed = True
+            self._value = value
+        else:
+            raise RuntimeError(
+                "Tried to change the value of an 'EnergyQuality' that has a"
+                + " fixed value. (Setting a value after initialisation fixes"
+                + " that value)."
+            )
 
 
 class QualityStatus(IntEnum):

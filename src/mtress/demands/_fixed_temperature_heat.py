@@ -1,5 +1,7 @@
 """Room heating technologies."""
 
+from abc import abstractmethod
+
 from oemof.solph import Bus, Flow
 from oemof.solph._plumbing import _FakeSequence
 from oemof.solph._plumbing import sequence
@@ -63,56 +65,61 @@ class AbstractFixedTemperature(AbstractDemand):
         )
 
         self._flow_temperature = flow_temperature
-        self.return_temperature = return_temperature
+        self._return_temperature = return_temperature
         self.specific_heat_capacity = specific_heat_capacity
 
         self._time_series = time_series
 
         self.__build_core()
 
-    @property
-    def flow_temperature(self):
-        return self._flow_temperature
-
-    @flow_temperature.setter
-    def flow_temperature(self, value):
-        self._flow_temperature = value
-        self._input_node.temperature = self.flow_temperature
-        self._update_conversion_factor()
-
     def __build_core(self):
-        self._input_node = self.subnode(
+        self._reference_input = self.subnode(
             TemperatureBus,
-            local_name=f"flow",
-            temperature=self.flow_temperature,
+            local_name=f"reference",
+            temperature=self._flow_temperature,
             specific_heat_capacity=self.specific_heat_capacity,
         )
 
         self._output_node = self.subnode(
             TemperatureBus,
-            local_name=f"{self.return_temperature}",
-            temperature=EnergyQuality(self.return_temperature, fixed=True),
+            local_name=f"{self._return_temperature}",
+            temperature=EnergyQuality(self._return_temperature, fixed=True),
             specific_heat_capacity=self.specific_heat_capacity,
         )
 
-        self._converter = self.subnode(
-            Converter,
-            local_name="heat_exchanger",
-            inputs={self._input_node: MassFlowHeat()},
-            outputs={self._output_node: MassFlowHeat()},
+        self.inbound_interfaces[EnergyType.HEAT] = [self._reference_input]
+        self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
+
+        self._converters = {}
+        self._demand_bus = self.subnode(
+            Bus,
+            local_name="demand",
         )
+
+        self._create_missing_converters()
 
         self._demand = None
 
-        self.inbound_interfaces[EnergyType.HEAT] = [self._input_node]
-        self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
+    def _create_missing_converters(self):
+        for ii in self.inbound_interfaces[EnergyType.HEAT]:
+            for oi in self.outbound_interfaces[EnergyType.HEAT]:
+                if (ii, oi) not in self._converters:
+                    self._converters[(ii, oi)] = self.subnode(
+                        Converter,
+                        local_name=f"{ii.label[0]}->{oi.label[0]}",
+                        inputs={self._reference_input: MassFlowHeat()},
+                        outputs={self._output_node: MassFlowHeat()},
+                    )
 
-    def _update_conversion_factor(self):
-        self._converter.conversion_factors[self._demand] = sequence(
-            abs(
-                self._input_node.temperature - self._output_node.temperature
-            ) * self.specific_heat_capacity
-        )
+    def _update_conversion_factors(self):
+        for nodes, converter in self._converters.items():
+            converter.conversion_factors[self._demand] = abs(
+                    self._reference_input.temperature - self._output_node.temperature
+                ) * self.specific_heat_capacity
+
+    @abstractmethod
+    def _connect_demand(self):
+        pass
 
     def _establish_interconnections(self):
         """Shared establish interconnection code for all HeatExchangers.
@@ -126,10 +133,10 @@ class AbstractFixedTemperature(AbstractDemand):
             raise ValueError("Specific heat capacities need to match")
 
         input_node: TemperatureBus = heat_carrier.nodes_to_connect(
-            self._input_node
+            self._reference_input
         )[0]
         self.flow_temperature = input_node.temperature
-        self._input_node.inputs[input_node] = MassFlowHeat()
+        self._reference_input.inputs[input_node] = MassFlowHeat()
 
         output_node: TemperatureBus = heat_carrier.nodes_to_connect(
             self._output_node
@@ -171,23 +178,28 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         if not min_flow_temperature > return_temperature:
             raise ValueError("Flow must be higher than return temperature")
 
-        self._input_node.energy_quality.minimum = min_flow_temperature
+        self._reference_input.energy_quality.minimum = min_flow_temperature
 
         self.__build_core()
 
     def __build_core(self):
-
         self._demand = self.subnode(
             Sink,
             local_name="sink",
             inputs={
-                self._converter: EnergyFlowHeat(
+                self._demand_bus: EnergyFlowHeat(
                     nominal_capacity=1,
                     fix=self._time_series,
                 )
             },
         )
-        self._update_conversion_factor()
+        self._connect_demand()
+        self._update_conversion_factors()
+
+    def _connect_demand(self):
+        for converter in self._converters.values():
+            converter.outputs[self._demand_bus] = MassFlowHeat()
+
 
     def establish_interconnections(self):
         self._establish_interconnections()
@@ -226,7 +238,7 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         if not max_flow_temperature < return_temperature:
             raise ValueError("Flow must be lower than return temperature")
 
-        self.max_flow_temperature = max_flow_temperature
+        self._reference_input.energy_quality.maximum = max_flow_temperature
 
         self.__build_core()
 
@@ -235,13 +247,18 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             Source,
             local_name="source",
             outputs={
-                self._converter: EnergyFlowHeat(
+                self._converters: EnergyFlowHeat(
                     nominal_capacity=1,
                     fix=self._time_series,
                 )
             },
         )
-        self._update_conversion_factor()
+        self._connect_demand()
+        self._update_conversion_factors()
+
+    def _connect_demand(self):
+        for converter in self._converters.values():
+            converter.inputs[self._demand_bus] = EnergyFlowHeat()
 
     def establish_interconnections(self):
         if self.parent:
@@ -252,4 +269,4 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             )
 
         self._establish_interconnections()
-        self._update_conversion_factor()
+        self._update_conversion_factors()

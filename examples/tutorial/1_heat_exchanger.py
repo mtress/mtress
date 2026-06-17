@@ -27,7 +27,7 @@ energy_system.add(house_1)
 house_1.subnode(
     carriers.HeatCarrier,
     local_name="HC",
-    temperature_levels=[10, 20],
+    temperature_levels=[10, 20, 30],
 )
 
 

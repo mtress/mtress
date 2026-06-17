@@ -95,10 +95,10 @@ class HeatCarrier(AbstractCarrier):
             ).any()
         )
 
-    def _nodes_with_overlap(self, node_list, bus):
+    def nodes_to_connect(self, bus: TemperatureBus) -> list[TemperatureBus]:
         matching_nodes = []
 
-        for node in node_list:
+        for node in self._subnodes:
             if (
                 node.parent is not bus.parent
                 and HeatCarrier._have_overlap(node, bus)
@@ -106,15 +106,15 @@ class HeatCarrier(AbstractCarrier):
                 matching_nodes.append(node)
 
         matching_nodes.sort(
-            key=lambda node: (node.temperature.min(), node.parent != self)
+            key=lambda node: (node.temperature.min())
         )
         return matching_nodes
 
-    def nodes_to_connect(self, bus: TemperatureBus) -> list[TemperatureBus]:
-        return self._nodes_with_overlap(self._subnodes, bus)
-
     def establish_interconnections(self):
         pass
+        # TODO: Iterate over known interfaces and create copies
+        # for ...:
+        #     self.add_level()
 
     def add_level(self, t, *, fixed):
         if fixed:
