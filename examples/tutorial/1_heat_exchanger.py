@@ -24,12 +24,19 @@ energy_system = EnergySystem(
 house_1 = Location(label="house_1")
 energy_system.add(house_1)
 
+house_1.subnode(
+    carriers.HeatCarrier,
+    local_name="HC",
+    temperature_levels=[10, 20],
+)
+
+
 # Add technologies
 house_1.subnode(
     technologies.HeatSource,
     local_name="air_HE",
     reservoir_temperature=45,  # any possible source
-    maximum_working_temperature=30,
+    maximum_working_temperature=40,
     minimum_working_temperature=10,
     minimum_delta=5,
     nominal_power=1e4,

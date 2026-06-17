@@ -110,29 +110,8 @@ class HeatCarrier(AbstractCarrier):
         )
         return matching_nodes
 
-    def get_input_node(self, bus: TemperatureBus) -> TemperatureBus:
-        candidate_nodes = list(
-            self.parent.child_outbound_interfaces(EnergyType.HEAT)
-        )
-        matching_nodes = self._nodes_with_overlap(candidate_nodes, bus)
-        return self._copy_if_needed(matching_nodes[0], bus)
-
-    def get_output_node(self, bus: TemperatureBus) -> TemperatureBus:
-        candidate_nodes = list(
-            self.parent.child_inbound_interfaces(EnergyType.HEAT)
-        )
-        matching_nodes = self._nodes_with_overlap(candidate_nodes, bus)
-        return self._copy_if_needed(matching_nodes[0], bus)
-
-    def _copy_if_needed(self, bus1, bus_to_connect):
-        if bus1.parent is self:
-            return bus1
-        else:
-            minimum_temperature = np.maximum(
-                bus1.energy_quality.minimum.to_numpy(),
-                bus_to_connect.energy_quality.minimum.to_numpy(),
-            )
-            return self.add_level(minimum_temperature, fixed=True)
+    def nodes_to_connect(self, bus: TemperatureBus) -> list[TemperatureBus]:
+        return self._nodes_with_overlap(self._subnodes, bus)
 
     def establish_interconnections(self):
         pass

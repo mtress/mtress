@@ -125,15 +125,15 @@ class AbstractFixedTemperature(AbstractDemand):
         if self.specific_heat_capacity != heat_carrier.specific_heat_capacity:
             raise ValueError("Specific heat capacities need to match")
 
-        input_node: TemperatureBus = heat_carrier.get_input_node(
+        input_node: TemperatureBus = heat_carrier.nodes_to_connect(
             self._input_node
-        )
+        )[0]
         self.flow_temperature = input_node.temperature
         self._input_node.inputs[input_node] = MassFlowHeat()
 
-        output_node: TemperatureBus = heat_carrier.get_output_node(
+        output_node: TemperatureBus = heat_carrier.nodes_to_connect(
             self._output_node
-        )
+        )[0]
         self._output_node.outputs[output_node] = MassFlowHeat()
 
 
