@@ -81,20 +81,10 @@ class EnergyQuality:
             )
 
 
-class QualityStatus(IntEnum):
-    """Status of an energy quality, """
-    UNDEFINED = 0
-    PRELIMINARY_MIN = 1
-    PRELIMINARY_MAX = 2
-    INFERRED = 3
-    FIXED = 4
-
-
 class TemperatureBus(Bus):
     def __init__(
         self,
         temperature,
-        quality_status=QualityStatus.FIXED,
         label=None,
         *,
         inputs=None,
@@ -112,15 +102,11 @@ class TemperatureBus(Bus):
             balanced=balanced,
             custom_properties=custom_properties,
         )
-        self.quality_status = quality_status
         self.specific_heat_capacity = specific_heat_capacity
         if isinstance(temperature, EnergyQuality):
             self._temperature = temperature
         else:
-            self._temperature = EnergyQuality(
-                temperature,
-                fixed=(quality_status == QualityStatus.FIXED),
-            )
+            self._temperature = EnergyQuality(temperature)
         self.custom_properties["temperature"] = self.temperature
 
     @property

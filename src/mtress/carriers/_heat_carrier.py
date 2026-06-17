@@ -18,7 +18,6 @@ import numpy as np
 from .._base_mtress_nodes import AbstractCarrier
 from .._energy_types import EnergyType
 from .._energy_types import EnergyQuality
-from .._energy_types import QualityStatus
 from .._energy_types import TemperatureBus
 
 
@@ -88,12 +87,21 @@ class HeatCarrier(AbstractCarrier):
 
     @staticmethod
     def _have_overlap(bus1: TemperatureBus, bus2: TemperatureBus):
-        return (
-            (bus1.energy_quality.minimum <= bus2.energy_quality.maximum).any()
-            and (
-                bus2.energy_quality.minimum <= bus1.energy_quality.maximum
-            ).any()
-        )
+        b1_min = bus1.energy_quality.minimum
+        b1_max = bus1.energy_quality.maximum
+        b2_min = bus2.energy_quality.minimum
+        b2_max = bus2.energy_quality.maximum
+
+        if b1_min is None or b2_max is None:
+            cond1 = True
+        else:
+            cond1 = (b1_min <= b2_max).any()
+        if b2_min is None or b1_max is None:
+            cond2 = True
+        else:
+            cond2 = (b2_min <= b1_max).any()
+
+        return cond1 and cond2
 
     def nodes_to_connect(self, bus: TemperatureBus) -> list[TemperatureBus]:
         matching_nodes = []
@@ -125,7 +133,6 @@ class HeatCarrier(AbstractCarrier):
             TemperatureBus,
             local_name=label,
             temperature=EnergyQuality(t, fixed=fixed),
-            quality_status=QualityStatus.INFERRED,
         )
         self.inbound_interfaces[EnergyType.HEAT] = self.subnodes
         self.outbound_interfaces[EnergyType.HEAT] = self.subnodes

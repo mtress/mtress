@@ -114,7 +114,7 @@ class AbstractFixedTemperature(AbstractDemand):
     def _update_conversion_factors(self):
         for nodes, converter in self._converters.items():
             converter.conversion_factors[self._demand] = abs(
-                    self._reference_input.temperature - self._output_node.temperature
+                    nodes[0].temperature - nodes[1].temperature
                 ) * self.specific_heat_capacity
 
     @abstractmethod
@@ -138,9 +138,9 @@ class AbstractFixedTemperature(AbstractDemand):
         self.flow_temperature = input_node.temperature
         self._reference_input.inputs[input_node] = MassFlowHeat()
 
-        output_node: TemperatureBus = heat_carrier.get_output_node(
+        output_node: TemperatureBus = heat_carrier.nodes_to_connect(
             self._output_node
-        )
+        )[0]
         self._output_node.outputs[output_node] = MassFlowHeat()
 
 

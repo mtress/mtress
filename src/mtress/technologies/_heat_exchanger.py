@@ -20,7 +20,6 @@ from ..carriers import HeatCarrier
 from .._energy_types import EnergyFlowHeat
 from .._energy_types import EnergyQuality
 from .._energy_types import EnergyType
-from .._energy_types import QualityStatus
 from .._energy_types import TemperatureBus
 from .._energy_types import MassFlowHeat
 
@@ -128,7 +127,6 @@ class AbstactHeatExchanger(AbstractTechnology):
                 maximum=self.maximum_working_temperature,
             ),
             specific_heat_capacity=self.specific_heat_capacity,
-            quality_status=QualityStatus.PRELIMINARY_MAX,
         )
 
         self.node_t_min = self.subnode(
@@ -140,7 +138,6 @@ class AbstactHeatExchanger(AbstractTechnology):
                 maximum=self.maximum_working_temperature - self.minimum_delta,
             ),
             specific_heat_capacity=self.specific_heat_capacity,
-            quality_status=QualityStatus.PRELIMINARY_MIN,
         )
 
         self.inbound_interfaces[EnergyType.HEAT] = []
