@@ -28,13 +28,23 @@ class EnergyQuality:
     _minimum = Apply(sequence)
     _maximum = Apply(sequence)
 
+    infere = object()
+
     def __init__(
         self,
         value,
         minimum=None,
         maximum=None,
-        fixed=False,
+        fixed=infere,
     ):
+        if fixed is self.infere:
+            fixed = minimum is None and maximum is None
+        elif fixed == True:
+            if minimum is not None or maximum is not None:
+                raise ValueError(
+                    "Argument 'fixed' cannot be true"
+                    + " if minimum or maximum is set."
+                )
         self._value = value
         self.minimum = minimum
         self.maximum = maximum
