@@ -77,11 +77,11 @@ class AbstractFixedTemperature(AbstractDemand):
     @flow_temperature.setter
     def flow_temperature(self, value):
         self._flow_temperature = value
-        self._input_node.temperature = self.flow_temperature
+        self._reference_input.temperature = self.flow_temperature
         self._update_conversion_factor()
 
     def __build_core(self):
-        self._input_node = self.subnode(
+        self._reference_input = self.subnode(
             TemperatureBus,
             local_name=f"flow",
             temperature=self.flow_temperature,
@@ -98,20 +98,22 @@ class AbstractFixedTemperature(AbstractDemand):
         self._converter = self.subnode(
             Converter,
             local_name="heat_exchanger",
-            inputs={self._input_node: MassFlowHeat()},
+            inputs={self._reference_input: MassFlowHeat()},
             outputs={self._output_node: MassFlowHeat()},
         )
 
         self._demand = None
 
-        self.inbound_interfaces[EnergyType.HEAT] = [self._input_node]
+        self.inbound_interfaces[EnergyType.HEAT] = [self._reference_input]
         self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
 
     def _update_conversion_factor(self):
         self._converter.conversion_factors[self._demand] = sequence(
             abs(
-                self._input_node.temperature - self._output_node.temperature
-            ) * self.specific_heat_capacity
+                self._reference_input.temperature
+                - self._output_node.temperature
+            )
+            * self.specific_heat_capacity
         )
 
     def _establish_interconnections(self):
@@ -125,15 +127,15 @@ class AbstractFixedTemperature(AbstractDemand):
         if self.specific_heat_capacity != heat_carrier.specific_heat_capacity:
             raise ValueError("Specific heat capacities need to match")
 
-        input_node: TemperatureBus = heat_carrier.nodes_to_connect(
-            self._input_node
-        )[0]
-        self.flow_temperature = input_node.temperature
-        self._input_node.inputs[input_node] = MassFlowHeat()
+        input_nodes: TemperatureBus = heat_carrier.get_input_node(
+            self._reference_input
+        )
+        self.flow_temperature = input_nodes[0].temperature
+        self._reference_input.inputs[input_nodes[0]] = MassFlowHeat()
 
-        output_node: TemperatureBus = heat_carrier.nodes_to_connect(
+        output_node: TemperatureBus = heat_carrier.get_output_node(
             self._output_node
-        )[0]
+        )
         self._output_node.outputs[output_node] = MassFlowHeat()
 
 
@@ -171,7 +173,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         if not min_flow_temperature > return_temperature:
             raise ValueError("Flow must be higher than return temperature")
 
-        self._input_node.energy_quality.minimum = min_flow_temperature
+        self._reference_input.energy_quality.minimum = min_flow_temperature
 
         self.__build_core()
 
