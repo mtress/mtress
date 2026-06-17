@@ -138,9 +138,9 @@ class AbstractFixedTemperature(AbstractDemand):
         self.flow_temperature = input_node.temperature
         self._reference_input.inputs[input_node] = MassFlowHeat()
 
-        output_node: TemperatureBus = heat_carrier.nodes_to_connect(
+        output_node: TemperatureBus = heat_carrier.get_output_node(
             self._output_node
-        )[0]
+        )
         self._output_node.outputs[output_node] = MassFlowHeat()
 
 
