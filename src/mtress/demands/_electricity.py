@@ -70,7 +70,7 @@ class Electricity(AbstractDemand):
                 )
             },
         )
-        self.inbound_interfaces[EnergyType.ELECTRICITY] = [self._input_node]
+        self.inbound_interfaces[ElectricityCarrier] = [self._input_node]
 
     def establish_interconnections(self):
         self._sink.inputs[self._input_node].fix = (

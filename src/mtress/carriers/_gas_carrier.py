@@ -52,8 +52,8 @@ class GasCarrier(AbstractLayeredCarrier):
     def _build_core(self):
         """Build core structure of oemof.solph representation."""
 
-        self.inbound_interfaces[EnergyType.GAS] = self.subnodes
-        self.outbound_interfaces[EnergyType.GAS] = self.subnodes
+        self.inbound_interfaces[GasCarrier] = self.subnodes
+        self.outbound_interfaces[GasCarrier] = self.subnodes
 
     # @property
     # def inputs(self):

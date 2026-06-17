@@ -100,7 +100,7 @@ class RenewableElectricitySource(AbstractTechnology):
             local_name="source",
             outputs={self._output_node: flow},
         )
-        self.outbound_interfaces[EnergyType.ELECTRICITY] = [self._output_node]
+        self.outbound_interfaces[ElectricityCarrier] = [self._output_node]
 
     def establish_interconnections(self):
         if self.parent:

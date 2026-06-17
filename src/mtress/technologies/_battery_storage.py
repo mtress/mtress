@@ -144,8 +144,8 @@ class BatteryStorage(AbstractTechnology):
             Bus,
             local_name="i/o",
         )
-        self.inbound_interfaces[EnergyType.ELECTRICITY] = [self._bus]
-        self.outbound_interfaces[EnergyType.ELECTRICITY] = [self._bus]
+        self.inbound_interfaces[ElectricityCarrier] = [self._bus]
+        self.outbound_interfaces[ElectricityCarrier] = [self._bus]
 
         if isinstance(self.nominal_capacity, Investment):
             inflow_capacity = Investment()

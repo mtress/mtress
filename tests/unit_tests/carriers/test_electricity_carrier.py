@@ -9,5 +9,5 @@ def test_basic_initialisation():
     ec = ElectricityCarrier(label=label)
     assert ec.label == label
 
-    assert len(ec.inbound_interfaces[EnergyType.ELECTRICITY]) == 2
-    assert len(ec.outbound_interfaces[EnergyType.ELECTRICITY]) == 2
+    assert len(ec.inbound_interfaces[ElectricityCarrier]) == 2
+    assert len(ec.outbound_interfaces[ElectricityCarrier]) == 2

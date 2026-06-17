@@ -60,8 +60,8 @@ class AbstractHeater(AbstractTechnology):
         )
         self._temp_nodes[self._minimum_temperature] = self._in_min_temp
 
-        self.inbound_interfaces[EnergyType.HEAT] = [self._in_min_temp]
-        self.outbound_interfaces[EnergyType.HEAT] = [self._out_max_temp]
+        self.inbound_interfaces[HeatCarrier] = [self._in_min_temp]
+        self.outbound_interfaces[HeatCarrier] = [self._out_max_temp]
 
     def get_temp_node(self, temp: float) -> Bus:
         node = self._temp_nodes.get(temp)
@@ -123,7 +123,7 @@ class ResistiveHeater(AbstractHeater):
             Bus,
             local_name="input_electricity",
         )
-        self.inbound_interfaces[EnergyType.ELECTRICITY] = [
+        self.inbound_interfaces[ElectricityCarrier] = [
             self._in_electricity
         ]
 

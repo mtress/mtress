@@ -61,11 +61,11 @@ class ElectricityGridConnection(AbstractGridConnection):
             local_name="grid_export",
         )
 
-        self.inbound_interfaces[EnergyType.ELECTRICITY] = [
+        self.inbound_interfaces[ElectricityCarrier] = [
             self.grid_import,
             self.grid_export,
         ]
-        self.outbound_interfaces[EnergyType.ELECTRICITY] = [
+        self.outbound_interfaces[ElectricityCarrier] = [
             self.grid_import,
             self.grid_export,
         ]

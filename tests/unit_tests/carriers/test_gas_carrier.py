@@ -14,8 +14,8 @@ from mtress.physics import HYDROGEN, NATURAL_GAS
 def test_basic_initialisation():
     gc = GasCarrier(label="label")
 
-    assert len(gc.inbound_interfaces[EnergyType.GAS]) == 0
-    assert len(gc.outbound_interfaces[EnergyType.GAS]) == 0
+    assert len(gc.inbound_interfaces[GasCarrier]) == 0
+    assert len(gc.outbound_interfaces[GasCarrier]) == 0
 
 
 def test_gas_carrier_levels():

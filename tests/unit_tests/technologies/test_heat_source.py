@@ -32,8 +32,8 @@ class TestHeatSource:
         assert len(src.inbound_interfaces) == 1
         assert len(src.outbound_interfaces) == 1
 
-        assert len(src.inbound_interfaces[EnergyType.HEAT]) == 1
-        assert len(src.outbound_interfaces[EnergyType.HEAT]) == 1
+        assert len(src.inbound_interfaces[HeatCarrier]) == 1
+        assert len(src.outbound_interfaces[HeatCarrier]) == 1
 
         converters = [
             subnode
@@ -41,7 +41,7 @@ class TestHeatSource:
             if isinstance(subnode, solph.components.Converter)
         ]
         assert len(converters) == 0  # only outlet is hother than reservoir
-        [outlet] = src.outbound_interfaces[EnergyType.HEAT]
+        [outlet] = src.outbound_interfaces[HeatCarrier]
         assert outlet.custom_properties["temperature"] == 100
 
         # set outlet temperature to lower value and update converter
@@ -81,19 +81,19 @@ class TestHeatSource:
                 "temperature": 30,
             },
         )
-        src.inbound_interfaces[EnergyType.HEAT].append(b_t30)
+        src.inbound_interfaces[HeatCarrier].append(b_t30)
 
         assert len(src.subnodes) == 7  # no new subnodes, yet
 
-        assert len(src.inbound_interfaces[EnergyType.HEAT]) == 2
-        assert len(src.outbound_interfaces[EnergyType.HEAT]) == 1
+        assert len(src.inbound_interfaces[HeatCarrier]) == 2
+        assert len(src.outbound_interfaces[HeatCarrier]) == 1
 
         src._update_source_converters()
         assert len(src.subnodes) == 7  # created new converter
 
-        src.outbound_interfaces[EnergyType.HEAT].append(b_t30)
-        assert len(src.inbound_interfaces[EnergyType.HEAT]) == 2
-        assert len(src.outbound_interfaces[EnergyType.HEAT]) == 2
+        src.outbound_interfaces[HeatCarrier].append(b_t30)
+        assert len(src.inbound_interfaces[HeatCarrier]) == 2
+        assert len(src.outbound_interfaces[HeatCarrier]) == 2
 
         src._update_source_converters()
         # created new converter: (40 -> 30)
@@ -105,7 +105,7 @@ class TestHeatSource:
                 "temperature": 130,  # highter than maximum
             },
         )
-        src.inbound_interfaces[EnergyType.HEAT].append(b_t130)
+        src.inbound_interfaces[HeatCarrier].append(b_t130)
         src._update_source_converters()
         assert len(src.subnodes) == 8  # created no converters
 
@@ -115,7 +115,7 @@ class TestHeatSource:
                 "temperature": 60,  # highter than max(reservoir_temperauture)
             },
         )
-        src.inbound_interfaces[EnergyType.HEAT].append(b_t60)
+        src.inbound_interfaces[HeatCarrier].append(b_t60)
         src._update_source_converters()
         assert len(src.subnodes) == 8  # created no converters
 
@@ -132,8 +132,8 @@ class TestHeatSource:
         assert len(src.inbound_interfaces) == 1
         assert len(src.outbound_interfaces) == 1
 
-        assert len(src.inbound_interfaces[EnergyType.HEAT]) == 1
-        assert len(src.outbound_interfaces[EnergyType.HEAT]) == 1
+        assert len(src.inbound_interfaces[HeatCarrier]) == 1
+        assert len(src.outbound_interfaces[HeatCarrier]) == 1
 
     def test_non_thermal_gain_source(self):
         non_thermal_gains = np.array([0, 1, 0.8, 0.4])
@@ -151,8 +151,8 @@ class TestHeatSource:
         assert len(src.inbound_interfaces) == 1
         assert len(src.outbound_interfaces) == 1
 
-        assert len(src.inbound_interfaces[EnergyType.HEAT]) == 1
-        assert len(src.outbound_interfaces[EnergyType.HEAT]) == 1
+        assert len(src.inbound_interfaces[HeatCarrier]) == 1
+        assert len(src.outbound_interfaces[HeatCarrier]) == 1
 
     def test_minimum_delta_limit_check(self):
         with pytest.raises(ValueError, match="minimum_delta has to be > 1 °C"):

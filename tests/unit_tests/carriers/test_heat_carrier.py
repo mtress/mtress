@@ -12,8 +12,8 @@ from mtress.carriers import HeatCarrier
 
 def test_basic_initialisation():
     hc = HeatCarrier(label="label")
-    assert len(hc.inbound_interfaces[EnergyType.HEAT]) == 0
-    assert len(hc.outbound_interfaces[EnergyType.HEAT]) == 0
+    assert len(hc.inbound_interfaces[HeatCarrier]) == 0
+    assert len(hc.outbound_interfaces[HeatCarrier]) == 0
 
 
 def test_temperature_levels():
@@ -22,8 +22,8 @@ def test_temperature_levels():
     hc._levels = temperatures
     assert hc.levels == temperatures
 
-    assert len(hc.inbound_interfaces[EnergyType.HEAT]) == len(temperatures)
-    assert len(hc.outbound_interfaces[EnergyType.HEAT]) == len(temperatures)
+    assert len(hc.inbound_interfaces[HeatCarrier]) == len(temperatures)
+    assert len(hc.outbound_interfaces[HeatCarrier]) == len(temperatures)
 
     assert hc.get_surrounding_levels(15) == (10, 35)
 

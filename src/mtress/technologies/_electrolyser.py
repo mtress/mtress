@@ -131,14 +131,14 @@ class AbstractElectrolyser(AbstractHeater):
             Bus,
             local_name="input",
         )
-        self.inbound_interfaces[EnergyType.ELECTRICITY] = [self._inbus]
+        self.inbound_interfaces[ElectricityCarrier] = [self._inbus]
 
         self._gas_bus = self.subnode(
             Bus,
             local_name="h2_output",
         )
 
-        self.outbound_interfaces[EnergyType.GAS] = [
+        self.outbound_interfaces[GasCarrier] = [
             self._gas_bus[self.hydrogen_output_pressure]
         ]
 

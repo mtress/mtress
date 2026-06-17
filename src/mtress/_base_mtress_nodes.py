@@ -21,8 +21,12 @@ class SubNetwork(ABC, Node):
             custom_properties=custom_properties,
         )
 
-        self.inbound_interfaces: dict[EnergyType : list[solph.Bus]] = {}
-        self.outbound_interfaces: dict[EnergyType : list[solph.Bus]] = {}
+        self.inbound_interfaces: dict[
+            type[AbstractCarrier] : list[solph.Bus]
+        ] = {}
+        self.outbound_interfaces: dict[
+            type[AbstractCarrier] : list[solph.Bus]
+        ] = {}
 
     @abstractmethod
     def establish_interconnections(self):

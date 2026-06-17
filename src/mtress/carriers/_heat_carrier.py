@@ -134,7 +134,7 @@ class HeatCarrier(AbstractCarrier):
             local_name=label,
             temperature=EnergyQuality(t, fixed=fixed),
         )
-        self.inbound_interfaces[EnergyType.HEAT] = self.subnodes
-        self.outbound_interfaces[EnergyType.HEAT] = self.subnodes
+        self.inbound_interfaces[HeatCarrier] = self.subnodes
+        self.outbound_interfaces[HeatCarrier] = self.subnodes
 
         return node

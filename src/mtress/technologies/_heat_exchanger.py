@@ -136,18 +136,19 @@ class AbstactHeatExchanger(AbstractTechnology):
                 value=self.minimum_working_temperature,
                 minimum=self.minimum_working_temperature,
                 maximum=self.maximum_working_temperature - self.minimum_delta,
+                fixed=False,
             ),
             specific_heat_capacity=self.specific_heat_capacity,
         )
 
-        self.inbound_interfaces[EnergyType.HEAT] = []
-        self.outbound_interfaces[EnergyType.HEAT] = []
+        self.inbound_interfaces[HeatCarrier] = []
+        self.outbound_interfaces[HeatCarrier] = []
 
     reservoir_temperature = Apply(sequence)
 
     def _build_core_sink(self):
-        self.inbound_interfaces[EnergyType.HEAT].append(self.node_t_max)
-        self.outbound_interfaces[EnergyType.HEAT].append(self.node_t_min)
+        self.inbound_interfaces[HeatCarrier].append(self.node_t_max)
+        self.outbound_interfaces[HeatCarrier].append(self.node_t_min)
 
         self._bus_sink = self.create_solph_node(
             label="output",
@@ -167,8 +168,8 @@ class AbstactHeatExchanger(AbstractTechnology):
         self._update_source_converters()
 
     def _build_core_source(self):
-        self.inbound_interfaces[EnergyType.HEAT].append(self.node_t_min)
-        self.outbound_interfaces[EnergyType.HEAT].append(self.node_t_max)
+        self.inbound_interfaces[HeatCarrier].append(self.node_t_min)
+        self.outbound_interfaces[HeatCarrier].append(self.node_t_max)
 
         self._bus_source = self.subnode(
             Bus,
@@ -236,8 +237,8 @@ class AbstactHeatExchanger(AbstractTechnology):
         )
 
     def _update_sink_converters(self) -> None:
-        for warm_bus in self.inbound_interfaces[EnergyType.HEAT]:
-            for cold_bus in self.outbound_interfaces[EnergyType.HEAT]:
+        for warm_bus in self.inbound_interfaces[HeatCarrier]:
+            for cold_bus in self.outbound_interfaces[HeatCarrier]:
                 t_cold = cold_bus.custom_properties["temperature"]
                 t_warm = warm_bus.custom_properties["temperature"]
                 if self.reservoir_temperature.min() < t_cold.max() and (
@@ -256,8 +257,8 @@ class AbstactHeatExchanger(AbstractTechnology):
                     self._update_sink_losses(warm_bus, cold_bus)
 
     def _update_source_converters(self) -> None:
-        for cold_bus in self.inbound_interfaces[EnergyType.HEAT]:
-            for warm_bus in self.outbound_interfaces[EnergyType.HEAT]:
+        for cold_bus in self.inbound_interfaces[HeatCarrier]:
+            for warm_bus in self.outbound_interfaces[HeatCarrier]:
                 t_cold = cold_bus.custom_properties["temperature"]
                 t_warm = warm_bus.custom_properties["temperature"]
                 if t_cold.min() < t_warm.max() and (
@@ -344,12 +345,12 @@ class AbstactHeatExchanger(AbstractTechnology):
             kind=TimeseriesType.INTERVAL,
         )
 
-        for in_node in self.inbound_interfaces[EnergyType.HEAT]:
+        for in_node in self.inbound_interfaces[HeatCarrier]:
             upstream_node = heat_carrier.nodes_to_connect(in_node)[0]
             in_node.inputs[upstream_node] = MassFlowHeat()
             in_node.temperature = upstream_node.temperature
 
-        for out_node in self.outbound_interfaces[EnergyType.HEAT]:
+        for out_node in self.outbound_interfaces[HeatCarrier]:
             downstream_node = heat_carrier.nodes_to_connect(out_node)[0]
             out_node.outputs[downstream_node] = MassFlowHeat()
             out_node.temperature = downstream_node.temperature

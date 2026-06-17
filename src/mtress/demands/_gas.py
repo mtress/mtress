@@ -85,7 +85,7 @@ class GasDemand(AbstractDemand):
             },
         )
 
-        self.inbound_interfaces[EnergyType.GAS] = [self._input_node]
+        self.inbound_interfaces[GasCarrier] = [self._input_node]
 
     def establish_interconnections(self):
         if self.parent:

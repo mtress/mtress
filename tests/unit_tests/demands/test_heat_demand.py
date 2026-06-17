@@ -10,13 +10,13 @@ def assert_heat_exchanger(node, flow_temperature, return_temperature):
     assert node.return_temperature == return_temperature
 
     assert len(node.inbound_interfaces) == 1
-    assert len(node.inbound_interfaces[EnergyType.HEAT]) == 1
-    [flow_node] = node.inbound_interfaces[EnergyType.HEAT]
+    assert len(node.inbound_interfaces[HeatCarrier]) == 1
+    [flow_node] = node.inbound_interfaces[HeatCarrier]
     assert flow_node.temperature == flow_temperature
 
     assert len(node.outbound_interfaces) == 1
-    assert len(node.outbound_interfaces[EnergyType.HEAT]) == 1
-    [return_node] = node.outbound_interfaces[EnergyType.HEAT]
+    assert len(node.outbound_interfaces[HeatCarrier]) == 1
+    [return_node] = node.outbound_interfaces[HeatCarrier]
     assert return_node.temperature == return_temperature
 
     assert len(node._subnodes) == 4

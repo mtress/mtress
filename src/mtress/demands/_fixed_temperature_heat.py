@@ -76,19 +76,13 @@ class AbstractFixedTemperature(AbstractDemand):
         self._reference_input = self.subnode(
             TemperatureBus,
             local_name=f"reference",
-            temperature=self._flow_temperature,
+            temperature=EnergyQuality(self._flow_temperature, fixed=False),
             specific_heat_capacity=self.specific_heat_capacity,
         )
+        self.outbound_interfaces[HeatCarrier] = []
+        self._output_node = self._outbound_node(self._return_temperature)
 
-        self._output_node = self.subnode(
-            TemperatureBus,
-            local_name=f"{self._return_temperature}",
-            temperature=EnergyQuality(self._return_temperature, fixed=True),
-            specific_heat_capacity=self.specific_heat_capacity,
-        )
-
-        self.inbound_interfaces[EnergyType.HEAT] = [self._reference_input]
-        self.outbound_interfaces[EnergyType.HEAT] = [self._output_node]
+        self.inbound_interfaces[HeatCarrier] = [self._reference_input]
 
         self._converters = {}
         self._demand_bus = self.subnode(
@@ -100,9 +94,29 @@ class AbstractFixedTemperature(AbstractDemand):
 
         self._demand = None
 
+    def _inbound_node(self, temperature):
+        node = self.subnode(
+            TemperatureBus,
+            local_name=f"{temperature}",
+            temperature=temperature,
+            specific_heat_capacity=self.specific_heat_capacity,
+        )
+        self.inbound_interfaces[HeatCarrier].append(node)
+        return node
+
+    def _outbound_node(self, temperature):
+        node = self.subnode(
+            TemperatureBus,
+            local_name=f"{temperature}",
+            temperature=EnergyQuality(temperature, fixed=True),
+            specific_heat_capacity=self.specific_heat_capacity,
+        )
+        self.outbound_interfaces[HeatCarrier].append(node)
+        return node
+
     def _create_missing_converters(self):
-        for ii in self.inbound_interfaces[EnergyType.HEAT]:
-            for oi in self.outbound_interfaces[EnergyType.HEAT]:
+        for ii in self.inbound_interfaces[HeatCarrier]:
+            for oi in self.outbound_interfaces[HeatCarrier]:
                 if (ii, oi) not in self._converters:
                     self._converters[(ii, oi)] = self.subnode(
                         Converter,
