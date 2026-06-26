@@ -21,3 +21,8 @@ authors:
     affiliation: "Deutsches Zentrum für Luft- und Raumfart (DLR)"
     family-names: Oltmanns
     given-names: Keno
+  -
+    affiliation: "Deutsches Zentrum für Luft- und Raumfart (DLR)"
+    family-names: "Ellermann"
+    given-names: Julius
+    orcid: "https://orcid.org/0009-0001-1203-2646"
