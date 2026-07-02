@@ -114,7 +114,7 @@ class HeatCarrier(AbstractCarrier):
                 matching_nodes.append(node)
 
         matching_nodes.sort(
-            key=lambda node: (node.temperature.min())
+            key=lambda node: (-node.temperature.min())
         )
         return matching_nodes
 

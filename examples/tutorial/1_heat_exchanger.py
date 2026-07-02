@@ -51,8 +51,6 @@ hd = house_1.subnode(
     time_series=[50, 50],
 )
 
-hd._inbound_node(25)
-
 energy_system.establish_interconnections()
 
 # model = Model(energy_system)
