@@ -1,6 +1,7 @@
 """Room heating technologies."""
 
 from abc import abstractmethod
+from collections import deque
 
 from oemof.solph import Bus, Flow
 from oemof.solph._plumbing import _FakeSequence
@@ -147,7 +148,8 @@ class AbstractFixedTemperature(AbstractDemand):
         input_nodes: list[TemperatureBus] = heat_carrier.nodes_to_connect(
             self._reference_input
         )
-        input_node = input_nodes.pop()
+
+        input_node = self._pop_reference_input(input_nodes)
         self.flow_temperature = input_node.temperature
         self._reference_input.inputs[input_node] = MassFlowHeat()
 
@@ -155,10 +157,16 @@ class AbstractFixedTemperature(AbstractDemand):
             new_input = self._inbound_node(input_node.temperature)
             new_input.inputs[input_node] = MassFlowHeat()
 
-        output_node: list[TemperatureBus] = heat_carrier.nodes_to_connect(
+        [output_node] = heat_carrier.nodes_to_connect(
             self._output_node
-        )[0]
+        )
         self._output_node.outputs[output_node] = MassFlowHeat()
+
+    @abstractmethod
+    def _pop_reference_input(
+        self, nodes: deque[TemperatureBus]
+    ) -> TemperatureBus:
+        pass
 
 
 class FixedTemperatureHeating(AbstractFixedTemperature):
@@ -222,6 +230,9 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
 
         return node
 
+    def _pop_reference_input(self, nodes: deque[TemperatureBus]):
+        return nodes.popleft()
+
     def establish_interconnections(self):
         self._establish_interconnections()
         self._update_conversion_factors()
@@ -269,12 +280,15 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
             Source,
             local_name="source",
             outputs={
-                self._converters: EnergyFlowHeat(
+                self._demand_bus: EnergyFlowHeat(
                     nominal_capacity=1,
                     fix=self._time_series,
                 )
             },
         )
+        self._converters[self._reference_input, self._output_node].inputs[
+            self._demand_bus
+        ] = MassFlowHeat()
         self._update_conversion_factors()
 
     def _inbound_node(self, temperature):
@@ -283,6 +297,9 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
         converter.inputs[self._demand_bus] = EnergyFlowHeat()
 
         return node
+
+    def _pop_reference_input(self, nodes: deque[TemperatureBus]):
+        return nodes.pop()
 
     def establish_interconnections(self):
         self._establish_interconnections()

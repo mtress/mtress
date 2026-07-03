@@ -12,6 +12,7 @@ SPDX-License-Identifier: MIT
 """
 
 from collections.abc import Iterable
+from collections import deque
 
 import numpy as np
 
@@ -103,7 +104,7 @@ class HeatCarrier(AbstractCarrier):
 
         return cond1 and cond2
 
-    def nodes_to_connect(self, bus: TemperatureBus) -> list[TemperatureBus]:
+    def nodes_to_connect(self, bus: TemperatureBus) -> deque[TemperatureBus]:
         matching_nodes = []
 
         for node in self._subnodes:
@@ -114,9 +115,9 @@ class HeatCarrier(AbstractCarrier):
                 matching_nodes.append(node)
 
         matching_nodes.sort(
-            key=lambda node: (-node.temperature.min())
+            key=lambda node: node.temperature.min()
         )
-        return matching_nodes
+        return deque(matching_nodes)
 
     def establish_interconnections(self):
         pass
