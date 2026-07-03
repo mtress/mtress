@@ -79,7 +79,7 @@ class DataHandler:
                 return pd.Series(data=value, index=target_index)
 
             case _FakeSequence() as fs:
-                return _FakeSequence(value=fs.value, length=len(target_index))
+                return pd.Series(data=fs.value, index=target_index)
 
             case _:
                 raise ValueError(

@@ -4,6 +4,8 @@ from typing import Optional
 import numpy as np
 import warnings
 
+from collections.abc import Iterable
+
 from oemof.solph import Bus, Investment
 from oemof.solph._plumbing import _FakeSequence
 from oemof.solph._plumbing import Apply
@@ -320,11 +322,10 @@ class AbstactHeatExchanger(AbstractTechnology):
         heat_factor = self.specific_heat_capacity * (
             warm_temperature - cold_temperature
         )
-        if len(gains) > 1:
+        if isinstance(gains, Iterable):
             inverted_gains = np.array([1 / g if g > 0 else 1 for g in gains])
         else:
-            g = gains.value
-            inverted_gains = 1 / g if g > 0 else 1
+            inverted_gains = 1 / gains if gains > 0 else 1
 
         converter.conversion_factors[self._bus_source] = sequence(heat_factor)
         converter.conversion_factors[self._bus_utilisation] = sequence(
@@ -382,7 +383,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                 self.reservoir_temperature - temperature
             ) * self.conductivity_gain_factor
             return np.clip(unbound_gains, 0, 1)
-        elif self.reservoir_temperature.size is not None:
+        elif not isinstance(self.reservoir_temperature, _FakeSequence):
             # This means full power step at reservoir_temperature.
             # Only makes sense when non_thermal_gains are zero (see above).
             return [
@@ -392,9 +393,7 @@ class AbstactHeatExchanger(AbstractTechnology):
             ]
         else:
             t = self.reservoir_temperature.value
-            if isinstance(temperature, _FakeSequence):
-                return sequence(0 if temperature.value > t else 1)
-            elif isinstance(temperature, np.ndarray):
+            if isinstance(temperature, np.ndarray):
                 return np.array(temperature > t, dtype=float)
             else:
                 return sequence(0 if temperature > t else 1)
