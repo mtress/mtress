@@ -14,10 +14,9 @@ SPDX-License-Identifier: MIT
 from collections.abc import Iterable
 from collections import deque
 
-import numpy as np
+from oemof.solph._plumbing import sequence
 
 from .._base_mtress_nodes import AbstractCarrier
-from .._energy_types import EnergyType
 from .._energy_types import EnergyQuality
 from .._energy_types import TemperatureBus
 
@@ -96,13 +95,13 @@ class HeatCarrier(AbstractCarrier):
         if b1_min is None or b2_max is None:
             cond1 = True
         else:
-            cond1 = (b1_min <= b2_max).any()
+            cond1 = (b1_min <= b2_max)
         if b2_min is None or b1_max is None:
             cond2 = True
         else:
-            cond2 = (b2_min <= b1_max).any()
+            cond2 = (b2_min <= b1_max)
 
-        return cond1 and cond2
+        return (cond1 & cond2).any()
 
     def nodes_to_connect(self, bus: TemperatureBus) -> deque[TemperatureBus]:
         matching_nodes = []
