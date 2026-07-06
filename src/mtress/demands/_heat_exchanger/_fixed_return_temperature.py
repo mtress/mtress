@@ -3,78 +3,17 @@
 from abc import abstractmethod
 from collections import deque
 
-from oemof.solph import Bus, Flow
-from oemof.solph._plumbing import _FakeSequence
-from oemof.solph._plumbing import sequence
-from oemof.solph.components import Converter, Sink, Source
+from oemof.solph import Bus
+from oemof.solph.components import Sink, Source
 
-from .._energy_types import EnergyFlowHeat
-from .._energy_types import EnergyQuality
-from .._energy_types import EnergyType
-from .._energy_types import MassFlowHeat
-from .._energy_types import TemperatureBus
-from .._data_handler import TimeseriesSpecifier
-from ..carriers import HeatCarrier
-from .._base_mtress_nodes import AbstractTechnology
+from ..._energy_types import EnergyFlowHeat
+from ..._energy_types import EnergyQuality
+from ..._energy_types import MassFlowHeat
+from ..._energy_types import TemperatureBus
+from ..._data_handler import TimeseriesSpecifier
+from ...carriers import HeatCarrier
 
-
-class AbstractHeatExchanger(AbstractTechnology):
-
-    def __init__(
-        self,
-        label,
-        *,
-        reference_input,
-        reference_output,
-        reservoir_flow: EnergyFlowHeat,
-        specific_heat_capacity,
-        parent_node=None,
-        custom_properties=None,
-    ):
-        super().__init__(
-            label,
-            parent_node=parent_node,
-            custom_properties=custom_properties,
-        )
-
-        self.specific_heat_capacity = specific_heat_capacity
-
-        self._reservoir_flow = reservoir_flow
-        self._converters = {}
-
-        self._reference_input = self._temperature_node(
-            reference_input,
-            "ref_input",
-        )
-        self._reference_output = self._temperature_node(
-            reference_output,
-            "ref_output",
-        )
-
-        self.inbound_interfaces.append(self._reference_input)
-        self.outbound_interfaces.append(self._reference_output)
-
-    def _create_converter(self, source, target):
-        converter = self.subnode(
-            Converter,
-            local_name=f"{source.label[0]}->{target.label[0]}",
-            inputs={source: MassFlowHeat()},
-            outputs={target: MassFlowHeat()},
-        )
-        self._converters[(source, target)] = converter
-        return converter
-
-    def _temperature_node(self, temperature, local_name=None):
-        if local_name is None:
-            local_name = f"{temperature}"
-        node = self.subnode(
-            TemperatureBus,
-            local_name=local_name,
-            temperature=temperature,
-            specific_heat_capacity=self.specific_heat_capacity,
-        )
-        return node
-
+from ._abstract_heat_exchanger import AbstractHeatExchanger
 
 class FixedReturnTemperature(AbstractHeatExchanger):
     """
@@ -132,9 +71,9 @@ class FixedReturnTemperature(AbstractHeatExchanger):
         self._return_temperature = return_temperature
         self.specific_heat_capacity = specific_heat_capacity
 
-        self._demand_bus = self.subnode(
+        self._reservoir = self.subnode(
             Bus,
-            local_name="demand",
+            local_name="reservoir",
         )
 
         self._create_missing_converters()
@@ -238,10 +177,10 @@ class FixedTemperatureHeating(FixedReturnTemperature):
         self._demand = self.subnode(
             Sink,
             local_name="sink",
-            inputs={self._demand_bus: self._reservoir_flow},
+            inputs={self._reservoir: self._reservoir_flow},
         )
         self._converters[self._reference_input, self._reference_output].outputs[
-            self._demand_bus
+            self._reservoir
         ] = MassFlowHeat()
         self._update_conversion_factors()
 
@@ -249,7 +188,7 @@ class FixedTemperatureHeating(FixedReturnTemperature):
         node = super()._temperature_node(temperature)
         self.inbound_interfaces.append(node)
         converter = self._create_converter(node, self._reference_output)
-        converter.outputs[self._demand_bus] = EnergyFlowHeat()
+        converter.outputs[self._reservoir] = EnergyFlowHeat()
 
         return node
 
@@ -262,13 +201,14 @@ class FixedTemperatureHeating(FixedReturnTemperature):
 
 
 class FixedTemperatureCooling(FixedReturnTemperature):
+
     def __init__(
         self,
         label,
         *,
         max_flow_temperature: float,
         return_temperature: float,
-        time_series,
+        time_series: TimeseriesSpecifier,
         specific_heat_capacity: float = 1.161,
         parent_node=None,
         custom_properties=None,
@@ -305,10 +245,10 @@ class FixedTemperatureCooling(FixedReturnTemperature):
         self._demand = self.subnode(
             Source,
             local_name="source",
-            outputs={self._demand_bus: self._reservoir_flow},
+            outputs={self._reservoir: self._reservoir_flow},
         )
         self._converters[self._reference_input, self._reference_output].inputs[
-            self._demand_bus
+            self._reservoir
         ] = MassFlowHeat()
         self._update_conversion_factors()
 
@@ -316,7 +256,7 @@ class FixedTemperatureCooling(FixedReturnTemperature):
         node = super()._temperature_node(temperature)
         self.inbound_interfaces.append(node)
         converter = self._create_converter(node, self._reference_output)
-        converter.inputs[self._demand_bus] = EnergyFlowHeat()
+        converter.inputs[self._reservoir] = EnergyFlowHeat()
 
         return node
 

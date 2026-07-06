@@ -1,7 +1,7 @@
 """Energy demands."""
 
 from ._electricity import Electricity
-from ._fixed_temperature_heat import (
+from ._heat_exchanger._fixed_return_temperature import (
     FixedTemperatureCooling,
     FixedTemperatureHeating,
 )
