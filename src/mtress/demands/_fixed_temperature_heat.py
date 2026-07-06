@@ -18,7 +18,63 @@ from ..carriers import HeatCarrier
 from .._base_mtress_nodes import AbstractTechnology
 
 
-class AbstractFixedTemperature(AbstractTechnology):
+class AbstractHeatExchanger(AbstractTechnology):
+
+    def __init__(
+        self,
+        label,
+        *,
+        reference_input,
+        reference_output,
+        specific_heat_capacity,
+        parent_node=None,
+        custom_properties=None,
+    ):
+        super().__init__(
+            label,
+            parent_node=parent_node,
+            custom_properties=custom_properties,
+        )
+
+        self.specific_heat_capacity = specific_heat_capacity
+
+        self._converters = {}
+
+        self._reference_input = self._temperature_node(
+            reference_input,
+            "ref_input",
+        )
+        self._reference_output = self._temperature_node(
+            reference_output,
+            "ref_output",
+        )
+
+        self.inbound_interfaces.append(self._reference_input)
+        self.outbound_interfaces.append(self._reference_output)
+
+    def _create_converter(self, source, target):
+        converter = self.subnode(
+            Converter,
+            local_name=f"{source.label[0]}->{target.label[0]}",
+            inputs={source: MassFlowHeat()},
+            outputs={target: MassFlowHeat()},
+        )
+        self._converters[(source, target)] = converter
+        return converter
+
+    def _temperature_node(self, temperature, local_name=None):
+        if local_name is None:
+            local_name = f"{temperature}"
+        node = self.subnode(
+            TemperatureBus,
+            local_name=local_name,
+            temperature=temperature,
+            specific_heat_capacity=self.specific_heat_capacity,
+        )
+        return node
+
+
+class FixedTemperatureDemand(AbstractHeatExchanger):
     """
     Superclass for heating or coolig with a fixed return temperature.
 
@@ -59,10 +115,14 @@ class AbstractFixedTemperature(AbstractTechnology):
         :param flow_temperature: Flow temperature
         :param return_temperature: Return temperature
         """
+
         super().__init__(
             label,
             parent_node=parent_node,
+            reference_input=EnergyQuality(flow_temperature, fixed=False),
+            reference_output=return_temperature,
             custom_properties=custom_properties,
+            specific_heat_capacity=specific_heat_capacity,
         )
 
         self._flow_temperature = flow_temperature
@@ -71,17 +131,6 @@ class AbstractFixedTemperature(AbstractTechnology):
 
         self._time_series = time_series
 
-        self._reference_input = self.subnode(
-            TemperatureBus,
-            local_name=f"reference",
-            temperature=EnergyQuality(self._flow_temperature, fixed=False),
-            specific_heat_capacity=self.specific_heat_capacity,
-        )
-        self._output_node = self._outbound_node(return_temperature)
-
-        self.inbound_interfaces.append(self._reference_input)
-
-        self._converters = {}
         self._demand_bus = self.subnode(
             Bus,
             local_name="demand",
@@ -90,36 +139,6 @@ class AbstractFixedTemperature(AbstractTechnology):
         self._create_missing_converters()
 
         self._demand = None
-
-    def _inbound_node(self, temperature):
-        node = self.subnode(
-            TemperatureBus,
-            local_name=f"{temperature}",
-            temperature=temperature,
-            specific_heat_capacity=self.specific_heat_capacity,
-        )
-        self.inbound_interfaces.append(node)
-        return node
-
-    def _outbound_node(self, temperature):
-        node = self.subnode(
-            TemperatureBus,
-            local_name=f"{temperature}",
-            temperature=EnergyQuality(temperature, fixed=True),
-            specific_heat_capacity=self.specific_heat_capacity,
-        )
-        self.outbound_interfaces.append(node)
-        return node
-
-    def _create_converter(self, source, target):
-        converter = self.subnode(
-            Converter,
-            local_name=f"{source.label[0]}->{target.label[0]}",
-            inputs={source: MassFlowHeat()},
-            outputs={target: MassFlowHeat()},
-        )
-        self._converters[(source, target)] = converter
-        return converter
 
     def _create_missing_converters(self):
         for ii in self.inbound_interfaces:
@@ -134,7 +153,7 @@ class AbstractFixedTemperature(AbstractTechnology):
                 ) * self.specific_heat_capacity
 
     def _establish_interconnections(self):
-        """Shared establish interconnection code for all HeatExchangers.
+        """Shared establish interconnection code for FixedTemperatureDemands.
 
         This does not implement establish_interconnections,
         so that the class stays abstract.
@@ -154,12 +173,17 @@ class AbstractFixedTemperature(AbstractTechnology):
 
         for input_node in input_nodes:
             new_input = self._inbound_node(input_node.temperature)
+            self.inbound_interfaces.append(new_input)
             new_input.inputs[input_node] = MassFlowHeat()
 
         [output_node] = heat_carrier.nodes_to_connect(
-            self._output_node
+            self._reference_output
         )
-        self._output_node.outputs[output_node] = MassFlowHeat()
+        self._reference_output.outputs[output_node] = MassFlowHeat()
+
+    @abstractmethod
+    def _inbound_node(self, temperature) -> TemperatureBus:
+        pass
 
     @abstractmethod
     def _pop_reference_input(
@@ -168,7 +192,7 @@ class AbstractFixedTemperature(AbstractTechnology):
         pass
 
 
-class FixedTemperatureHeating(AbstractFixedTemperature):
+class FixedTemperatureHeating(FixedTemperatureDemand):
 
     def __init__(
         self,
@@ -217,14 +241,15 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
                 )
             },
         )
-        self._converters[self._reference_input, self._output_node].outputs[
+        self._converters[self._reference_input, self._reference_output].outputs[
             self._demand_bus
         ] = MassFlowHeat()
         self._update_conversion_factors()
 
     def _inbound_node(self, temperature):
-        node = super()._inbound_node(temperature)
-        converter = self._create_converter(node, self._output_node)
+        node = super()._temperature_node(temperature)
+        self.inbound_interfaces.append(node)
+        converter = self._create_converter(node, self._reference_output)
         converter.outputs[self._demand_bus] = EnergyFlowHeat()
 
         return node
@@ -237,7 +262,7 @@ class FixedTemperatureHeating(AbstractFixedTemperature):
         self._update_conversion_factors()
 
 
-class FixedTemperatureCooling(AbstractFixedTemperature):
+class FixedTemperatureCooling(FixedTemperatureDemand):
     def __init__(
         self,
         label,
@@ -285,14 +310,15 @@ class FixedTemperatureCooling(AbstractFixedTemperature):
                 )
             },
         )
-        self._converters[self._reference_input, self._output_node].inputs[
+        self._converters[self._reference_input, self._reference_output].inputs[
             self._demand_bus
         ] = MassFlowHeat()
         self._update_conversion_factors()
 
     def _inbound_node(self, temperature):
-        node = super()._inbound_node(temperature)
-        converter = self._create_converter(node, self._output_node)
+        node = super()._temperature_node(temperature)
+        self.inbound_interfaces.append(node)
+        converter = self._create_converter(node, self._reference_output)
         converter.inputs[self._demand_bus] = EnergyFlowHeat()
 
         return node
