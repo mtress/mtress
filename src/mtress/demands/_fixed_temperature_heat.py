@@ -15,10 +15,10 @@ from .._energy_types import MassFlowHeat
 from .._energy_types import TemperatureBus
 from .._data_handler import TimeseriesSpecifier
 from ..carriers import HeatCarrier
-from .._base_mtress_nodes import AbstractDemand
+from .._base_mtress_nodes import AbstractTechnology
 
 
-class AbstractFixedTemperature(AbstractDemand):
+class AbstractFixedTemperature(AbstractTechnology):
     """
     Superclass for heating or coolig with a fixed return temperature.
 

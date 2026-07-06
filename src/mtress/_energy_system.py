@@ -13,7 +13,6 @@ from oemof import solph
 from oemof.network import Node
 
 from ._base_mtress_nodes import AbstractCarrier
-from ._base_mtress_nodes import AbstractDemand
 from ._base_mtress_nodes import AbstractTechnology
 from ._base_mtress_nodes import SubNetwork
 
@@ -64,9 +63,6 @@ class EnergySystem(solph.EnergySystem):
             sn.align_timeindex()
 
         for sn in self._nodes_by_type(AbstractCarrier):
-            sn.establish_interconnections()
-
-        for sn in self._nodes_by_type(AbstractDemand):
             sn.establish_interconnections()
 
         for sn in self._nodes_by_type(AbstractTechnology):

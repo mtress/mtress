@@ -6,10 +6,10 @@ from oemof.solph.components import Sink
 from .._energy_types import EnergyType
 from .._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..carriers import ElectricityCarrier as ElectricityCarrier
-from .._base_mtress_nodes import AbstractDemand
+from .._base_mtress_nodes import AbstractTechnology
 
 
-class Electricity(AbstractDemand):
+class Electricity(AbstractTechnology):
     """
     Class representing an electricity demand.
 

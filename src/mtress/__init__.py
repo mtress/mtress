@@ -8,7 +8,6 @@ SPDX-License-Identifier: MIT
 """
 
 from ._base_mtress_nodes import AbstractCarrier
-from ._base_mtress_nodes import AbstractDemand
 from ._base_mtress_nodes import AbstractTechnology
 from ._location import Location
 from ._energy_system import EnergySystem
@@ -18,7 +17,6 @@ __version__ = "26.6.1a1"
 
 __all__ = [
     "AbstractCarrier",
-    "AbstractDemand",
     "AbstractTechnology",
     "EnergySystem",
     "EnergyType",
