@@ -35,10 +35,10 @@ house_1.subnode(
 house_1.subnode(
     technologies.HeatSource,
     local_name="air_HE",
-    reservoir_temperature=45,  # any possible source
+    reservoir_temperature=[45,35],  # any possible source
     maximum_working_temperature=40,
     minimum_working_temperature=5,
-    minimum_delta=5,
+    minimum_delta_reservoir=5,
     nominal_power=1e4,
 )
 
