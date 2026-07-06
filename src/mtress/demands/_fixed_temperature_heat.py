@@ -26,6 +26,7 @@ class AbstractHeatExchanger(AbstractTechnology):
         *,
         reference_input,
         reference_output,
+        reservoir_flow: EnergyFlowHeat,
         specific_heat_capacity,
         parent_node=None,
         custom_properties=None,
@@ -38,6 +39,7 @@ class AbstractHeatExchanger(AbstractTechnology):
 
         self.specific_heat_capacity = specific_heat_capacity
 
+        self._reservoir_flow = reservoir_flow
         self._converters = {}
 
         self._reference_input = self._temperature_node(
@@ -74,7 +76,7 @@ class AbstractHeatExchanger(AbstractTechnology):
         return node
 
 
-class FixedTemperatureDemand(AbstractHeatExchanger):
+class FixedReturnTemperature(AbstractHeatExchanger):
     """
     Superclass for heating or coolig with a fixed return temperature.
 
@@ -104,7 +106,7 @@ class FixedTemperatureDemand(AbstractHeatExchanger):
         *,
         flow_temperature: float,
         return_temperature: float,
-        time_series: TimeseriesSpecifier,
+        reservoir_flow: EnergyFlowHeat,
         specific_heat_capacity: float = 1.161,
         parent_node=None,
         custom_properties=None,
@@ -121,15 +123,14 @@ class FixedTemperatureDemand(AbstractHeatExchanger):
             parent_node=parent_node,
             reference_input=EnergyQuality(flow_temperature, fixed=False),
             reference_output=return_temperature,
-            custom_properties=custom_properties,
+            reservoir_flow=reservoir_flow,
             specific_heat_capacity=specific_heat_capacity,
+            custom_properties=custom_properties,
         )
 
         self._flow_temperature = flow_temperature
         self._return_temperature = return_temperature
         self.specific_heat_capacity = specific_heat_capacity
-
-        self._time_series = time_series
 
         self._demand_bus = self.subnode(
             Bus,
@@ -192,7 +193,7 @@ class FixedTemperatureDemand(AbstractHeatExchanger):
         pass
 
 
-class FixedTemperatureHeating(FixedTemperatureDemand):
+class FixedTemperatureHeating(FixedReturnTemperature):
 
     def __init__(
         self,
@@ -217,7 +218,10 @@ class FixedTemperatureHeating(FixedTemperatureDemand):
             label,
             flow_temperature=min_flow_temperature,
             return_temperature=return_temperature,
-            time_series=time_series,
+            reservoir_flow=EnergyFlowHeat(
+                nominal_capacity=1,
+                fix=time_series,
+            ),
             specific_heat_capacity=specific_heat_capacity,
             parent_node=parent_node,
             custom_properties=custom_properties,
@@ -234,12 +238,7 @@ class FixedTemperatureHeating(FixedTemperatureDemand):
         self._demand = self.subnode(
             Sink,
             local_name="sink",
-            inputs={
-                self._demand_bus: EnergyFlowHeat(
-                    nominal_capacity=1,
-                    fix=self._time_series,
-                )
-            },
+            inputs={self._demand_bus: self._reservoir_flow},
         )
         self._converters[self._reference_input, self._reference_output].outputs[
             self._demand_bus
@@ -262,7 +261,7 @@ class FixedTemperatureHeating(FixedTemperatureDemand):
         self._update_conversion_factors()
 
 
-class FixedTemperatureCooling(FixedTemperatureDemand):
+class FixedTemperatureCooling(FixedReturnTemperature):
     def __init__(
         self,
         label,
@@ -286,7 +285,10 @@ class FixedTemperatureCooling(FixedTemperatureDemand):
             label,
             flow_temperature=max_flow_temperature,
             return_temperature=return_temperature,
-            time_series=time_series,
+            reservoir_flow=EnergyFlowHeat(
+                nominal_capacity=1,
+                fix=time_series,
+            ),
             specific_heat_capacity=specific_heat_capacity,
             parent_node=parent_node,
             custom_properties=custom_properties,
@@ -303,12 +305,7 @@ class FixedTemperatureCooling(FixedTemperatureDemand):
         self._demand = self.subnode(
             Source,
             local_name="source",
-            outputs={
-                self._demand_bus: EnergyFlowHeat(
-                    nominal_capacity=1,
-                    fix=self._time_series,
-                )
-            },
+            outputs={self._demand_bus: self._reservoir_flow},
         )
         self._converters[self._reference_input, self._reference_output].inputs[
             self._demand_bus
