@@ -21,12 +21,11 @@ class SubNetwork(ABC, Node):
             custom_properties=custom_properties,
         )
 
-        self.inbound_interfaces: dict[
-            type[AbstractCarrier] : list[solph.Bus]
-        ] = {}
-        self.outbound_interfaces: dict[
-            type[AbstractCarrier] : list[solph.Bus]
-        ] = {}
+        # These are lists for now. We might want to have type specific
+        # getters when we update technologies that actually support more than
+        # one carrier.
+        self.inbound_interfaces: list[solph.Bus] = []
+        self.outbound_interfaces: list[solph.Bus] = []
 
     @abstractmethod
     def establish_interconnections(self):

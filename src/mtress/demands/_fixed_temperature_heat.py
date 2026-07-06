@@ -77,10 +77,9 @@ class AbstractFixedTemperature(AbstractDemand):
             temperature=EnergyQuality(self._flow_temperature, fixed=False),
             specific_heat_capacity=self.specific_heat_capacity,
         )
-        self.outbound_interfaces[HeatCarrier] = []
         self._output_node = self._outbound_node(return_temperature)
 
-        self.inbound_interfaces[HeatCarrier] = [self._reference_input]
+        self.inbound_interfaces.append(self._reference_input)
 
         self._converters = {}
         self._demand_bus = self.subnode(
@@ -99,7 +98,7 @@ class AbstractFixedTemperature(AbstractDemand):
             temperature=temperature,
             specific_heat_capacity=self.specific_heat_capacity,
         )
-        self.inbound_interfaces[HeatCarrier].append(node)
+        self.inbound_interfaces.append(node)
         return node
 
     def _outbound_node(self, temperature):
@@ -109,7 +108,7 @@ class AbstractFixedTemperature(AbstractDemand):
             temperature=EnergyQuality(temperature, fixed=True),
             specific_heat_capacity=self.specific_heat_capacity,
         )
-        self.outbound_interfaces[HeatCarrier].append(node)
+        self.outbound_interfaces.append(node)
         return node
 
     def _create_converter(self, source, target):
@@ -123,8 +122,8 @@ class AbstractFixedTemperature(AbstractDemand):
         return converter
 
     def _create_missing_converters(self):
-        for ii in self.inbound_interfaces[HeatCarrier]:
-            for oi in self.outbound_interfaces[HeatCarrier]:
+        for ii in self.inbound_interfaces:
+            for oi in self.outbound_interfaces:
                 if (ii, oi) not in self._converters:
                     self._create_converter(ii, oi)
 
