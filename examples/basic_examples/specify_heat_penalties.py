@@ -26,7 +26,7 @@ energy_system.add_location(house_1)
 
 house_1.add(carriers.HeatCarrier(temperature_levels=[10, 20, 30, 40, 55]))
 house_1.add(
-    demands.FixedTemperatureHeating(
+    demands.FixedReturnHeating(
         name="space_heating",
         min_flow_temperature=30,
         return_temperature=20,

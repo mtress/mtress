@@ -57,7 +57,7 @@ house_1.add(
 )
 house_1.add(carriers.HeatCarrier(temperature_levels=[20, 80]))
 house_1.add(
-    demands.FixedTemperatureHeating(
+    demands.FixedReturnHeating(
         name="heat_demand",
         time_series=20e3,
         min_flow_temperature=80,

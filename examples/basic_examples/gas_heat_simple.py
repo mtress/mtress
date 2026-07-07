@@ -40,7 +40,7 @@ house_1.add(carriers.HeatCarrier(temperature_levels=[20, 30, 50]))
 
 # Add demands
 house_1.add(
-    demands.FixedTemperatureHeating(
+    demands.FixedReturnHeating(
         name="hot water",
         min_flow_temperature=50,
         return_temperature=20,

@@ -44,7 +44,7 @@ house_1.subnode(
 
 # Add demands
 hd = house_1.subnode(
-    demands.FixedTemperatureHeating,
+    demands.FixedReturnHeating,
     local_name="heat_demand",
     min_flow_temperature=20,
     return_temperature=10,

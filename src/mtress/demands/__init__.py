@@ -2,8 +2,8 @@
 
 from ._electricity import Electricity
 from ._heat_exchanger._fixed_return_temperature import (
-    FixedTemperatureCooling,
-    FixedTemperatureHeating,
+    FixedReturnCooling,
+    FixedReturnHeating,
 )
 from ._gas import GasDemand
 
