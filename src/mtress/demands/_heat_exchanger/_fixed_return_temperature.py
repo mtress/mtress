@@ -108,7 +108,6 @@ class FixedReturnTemperature(AbstractHeatExchanger):
         )
 
         input_node = self._pop_reference_input(input_nodes)
-        self.flow_temperature = input_node.temperature
         self._reference_input.inputs[input_node] = MassFlowHeat()
 
         for input_node in input_nodes:
