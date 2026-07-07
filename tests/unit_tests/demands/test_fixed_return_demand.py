@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from mtress import demands
-from mtress.carriers import HeatCarrier
 
 
 def assert_heat_exchanger(node, flow_temperature, return_temperature):
-    assert len(node.inbound_interfaces) == 1
     assert len(node.inbound_interfaces) == 1
     [flow_node] = node.inbound_interfaces
     assert flow_node.temperature == flow_temperature

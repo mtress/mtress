@@ -13,6 +13,8 @@ from oemof.solph._plumbing import sequence
 
 def maxseq(a, b):
     """Get the element-wise maximum of two sequences"""
+    a = sequence(a)
+    b = sequence(b)
     mask_a_bigger = a > b
 
     return sequence(
@@ -21,6 +23,8 @@ def maxseq(a, b):
 
 def minseq(a, b):
     """Get the element-wise minimum of two sequences"""
+    a = sequence(a)
+    b = sequence(b)
     mask_a_bigger = a > b
 
     return sequence(
