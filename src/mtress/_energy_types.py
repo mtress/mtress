@@ -94,7 +94,7 @@ class EnergyQuality:
 class TemperatureBus(Bus):
     def __init__(
         self,
-        temperature,
+        temperature: EnergyQuality | float,
         label=None,
         *,
         inputs=None,
