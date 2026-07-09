@@ -2,8 +2,8 @@
 
 from oemof.solph import Bus
 
+from .._base_mtress_nodes import AbstractCarrier
 from .._energy_types import EnergyType
-from ._layered_carrier import AbstractCarrier
 
 
 class ElectricityCarrier(AbstractCarrier):
@@ -56,8 +56,8 @@ class ElectricityCarrier(AbstractCarrier):
             local_name="feed_in",
         )
 
-        self.inbound_interfaces[ElectricityCarrier] = self.subnodes
-        self.outbound_interfaces[ElectricityCarrier] = self.subnodes
+        self.inbound_interfaces = self.subnodes
+        self.outbound_interfaces = self.subnodes
 
     def establish_interconnections(self):
         pass
