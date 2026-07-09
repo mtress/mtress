@@ -23,4 +23,6 @@ examples/*/*.lp
 examples/*/*.png
 examples/*/*.gv
 examples/*/*.gif
+tests/*/*.png
+tests/*/*/*.png
 
