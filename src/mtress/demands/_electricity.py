@@ -3,10 +3,10 @@
 from oemof.solph import Bus, Flow
 from oemof.solph.components import Sink
 
-from .._energy_types import EnergyType
-from .._data_handler import TimeseriesSpecifier, TimeseriesType
-from ..carriers import ElectricityCarrier as ElectricityCarrier
 from .._base_mtress_nodes import AbstractTechnology
+from .._data_handler import TimeseriesSpecifier, TimeseriesType
+from .._energy_types import EnergyType
+from ..carriers import ElectricityCarrier as ElectricityCarrier
 
 
 class Electricity(AbstractTechnology):
@@ -70,7 +70,7 @@ class Electricity(AbstractTechnology):
                 )
             },
         )
-        self.inbound_interfaces[ElectricityCarrier] = [self._input_node]
+        self.inbound_interfaces.append(self._input_node)
 
     def establish_interconnections(self):
         self._sink.inputs[self._input_node].fix = (
