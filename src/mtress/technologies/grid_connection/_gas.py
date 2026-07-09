@@ -7,8 +7,7 @@ from oemof.solph.components import Sink, Source
 from mtress.carriers import GasCarrier
 from mtress.physics import Gas
 
-from ._abstract_grid_connection import AbstractGridConnection
-
+from ..._base_mtress_nodes import AbstractGridConnection
 from ..._energy_types import EnergyType
 
 LOGGER = logging.getLogger(__file__)
