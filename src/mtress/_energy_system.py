@@ -12,13 +12,14 @@ import pandas as pd
 from oemof import solph
 from oemof.network import Node
 
-from ._base_mtress_nodes import AbstractCarrier
-from ._base_mtress_nodes import AbstractTechnology
-from ._base_mtress_nodes import SubNetwork
-
-from ._energy_types import TemperatureBus
-
+from ._base_mtress_nodes import (
+    AbstractCarrier,
+    AbstractGridConnection,
+    AbstractTechnology,
+    SubNetwork,
+)
 from ._data_handler import DataHandler
+from ._energy_types import TemperatureBus
 from ._helpers._visualization import graph_cytoscape, graph_graphviz
 
 
@@ -66,6 +67,9 @@ class EnergySystem(solph.EnergySystem):
             sn.establish_interconnections()
 
         for sn in self._nodes_by_type(AbstractTechnology):
+            sn.establish_interconnections()
+
+        for sn in self._nodes_by_type(AbstractGridConnection):
             sn.establish_interconnections()
 
     def add_constraints(self, model: solph.Model):
