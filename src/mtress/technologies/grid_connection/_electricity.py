@@ -8,8 +8,8 @@ from oemof.solph.components import Sink, Source
 from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import ElectricityCarrier
 
+from ..._base_mtress_nodes import AbstractGridConnection
 from ..._energy_types import EnergyType
-from ._abstract_grid_connection import AbstractGridConnection
 
 
 class ElectricityGridConnection(AbstractGridConnection):
@@ -61,14 +61,10 @@ class ElectricityGridConnection(AbstractGridConnection):
             local_name="grid_export",
         )
 
-        self.inbound_interfaces[ElectricityCarrier] = [
-            self.grid_import,
-            self.grid_export,
-        ]
-        self.outbound_interfaces[ElectricityCarrier] = [
-            self.grid_import,
-            self.grid_export,
-        ]
+        self.inbound_interfaces.append(self.grid_import)
+        self.inbound_interfaces.append(self.grid_export)
+        self.outbound_interfaces.append(self.grid_import)
+        self.outbound_interfaces.append(self.grid_export)
 
         if self.revenue is not None:
             self.subnode(
