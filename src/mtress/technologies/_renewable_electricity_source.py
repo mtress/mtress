@@ -14,10 +14,10 @@ SPDX-License-Identifier: MIT
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import Source
 
-from .._energy_types import EnergyType
-from .._data_handler import TimeseriesSpecifier, TimeseriesType
-from ..carriers import ElectricityCarrier
 from .._base_mtress_nodes import AbstractTechnology
+from .._data_handler import TimeseriesSpecifier, TimeseriesType
+from .._energy_types import EnergyType
+from ..carriers import ElectricityCarrier
 
 
 class RenewableElectricitySource(AbstractTechnology):
@@ -31,7 +31,7 @@ class RenewableElectricitySource(AbstractTechnology):
         specific_generation: TimeseriesSpecifier,
         working_rate: TimeseriesSpecifier = 0,
         fixed: bool = True,
-        location=None,
+        parent_node=None,
         custom_properties=None,
     ):
         """
@@ -48,7 +48,7 @@ class RenewableElectricitySource(AbstractTechnology):
         """
         super().__init__(
             label,
-            location=location,
+            parent_node=parent_node,
             custom_properties=custom_properties,
         )
 
@@ -72,12 +72,12 @@ class RenewableElectricitySource(AbstractTechnology):
                     "unit": "W",
                     "energy_type": EnergyType.ELECTRICITY,
                 },
-                nominal_capacity=self.nominal_power,
+                nominal_capacity=self._nominal_power,
                 variable_costs=self._energy_system.data.get_timeseries(
-                    self.working_rate, kind=TimeseriesType.INTERVAL
+                    self._working_rate, kind=TimeseriesType.INTERVAL
                 ),
                 fix=self._energy_system.data.get_timeseries(
-                    self.specific_generation, kind=TimeseriesType.INTERVAL
+                    self._specific_generation, kind=TimeseriesType.INTERVAL
                 ),
             )
         else:
@@ -86,12 +86,12 @@ class RenewableElectricitySource(AbstractTechnology):
                     "unit": "W",
                     "energy_type": EnergyType.ELECTRICITY,
                 },
-                nominal_capacity=self.nominal_power,
+                nominal_capacity=self._nominal_power,
                 variable_costs=self._energy_system.data.get_timeseries(
-                    self.working_rate, kind=TimeseriesType.INTERVAL
+                    self._working_rate, kind=TimeseriesType.INTERVAL
                 ),
                 maximum=self._energy_system.data.get_timeseries(
-                    self.specific_generation, kind=TimeseriesType.INTERVAL
+                    self._specific_generation, kind=TimeseriesType.INTERVAL
                 ),
             )
 
@@ -100,7 +100,7 @@ class RenewableElectricitySource(AbstractTechnology):
             local_name="source",
             outputs={self._output_node: flow},
         )
-        self.outbound_interfaces[ElectricityCarrier] = [self._output_node]
+        self.outbound_interfaces = [self._output_node]
 
     def establish_interconnections(self):
         if self.parent:
