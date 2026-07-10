@@ -6,11 +6,11 @@ import pyomo.environ as pyo
 from oemof.solph import Bus, Flow, Investment
 from oemof.solph.components import GenericStorage
 
-from .._energy_types import EnergyType
+from .._base_mtress_nodes import AbstractTechnology
 from .._data_handler import TimeseriesSpecifier
+from .._energy_types import EnergyType
 from .._helpers._util import enable_templating
 from ..carriers import ElectricityCarrier
-from .._base_mtress_nodes import AbstractTechnology
 
 
 @dataclass(frozen=True)
@@ -101,7 +101,7 @@ class BatteryStorage(AbstractTechnology):
         fixed_losses_absolute: TimeseriesSpecifier = 0.0,
         one_sense_per_time_step: bool = False,
         shared_limit: bool = True,
-        location=None,
+        parent_node=None,
         custom_properties=None,
     ):
         """
@@ -110,7 +110,7 @@ class BatteryStorage(AbstractTechnology):
 
         super().__init__(
             label,
-            location=location,
+            parent_node=parent_node,
             custom_properties=custom_properties,
         )
 
@@ -144,8 +144,8 @@ class BatteryStorage(AbstractTechnology):
             Bus,
             local_name="i/o",
         )
-        self.inbound_interfaces[ElectricityCarrier] = [self._bus]
-        self.outbound_interfaces[ElectricityCarrier] = [self._bus]
+        self.inbound_interfaces = [self._bus]
+        self.outbound_interfaces = [self._bus]
 
         if isinstance(self.nominal_capacity, Investment):
             inflow_capacity = Investment()
