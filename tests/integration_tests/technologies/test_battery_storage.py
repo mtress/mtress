@@ -1,62 +1,72 @@
-from oemof.solph import Results
+from oemof.solph import Model
 
-from mtress import Location, MetaModel, SolphModel, carriers
+from mtress import EnergySystem, Location, carriers, demands
 from mtress._helpers._visualization import graph_graphviz
 from mtress.technologies import BatteryStorage, grid_connection
 
 
 def test_basic_initialisation():
-    energy_system = MetaModel()
+    energy_system = EnergySystem(
+        timeindex={
+            "start": "2021-07-10 00:00:00",
+            "end": "2021-07-10 02:00:00",
+            "freq": "60min",
+        },
+    )
 
     loc = Location("house")
 
-    energy_system.add_location(loc)
+    energy_system.add(loc)
 
-    ec = carriers.ElectricityCarrier(location=loc)
+    ec = loc.subnode(
+        carriers.ElectricityCarrier,
+        local_name="EC",
+    )
 
-    bs = BatteryStorage(
-        "battery",
-        location=loc,
+    bs = loc.subnode(
+        BatteryStorage,
+        local_name="battery",
         nominal_capacity=1000,
     )
+
     assert bs.label == ("battery", "house")
     assert bs.parent == loc
 
     assert len(bs.inbound_interfaces) == 1
     assert len(bs.outbound_interfaces) == 1
 
-    egc = grid_connection.ElectricityGridConnection(
-        working_rate=0.3,
-        location=loc,
+    ed = loc.subnode(
+        demands.Electricity,
+        local_name="demand",
+        time_series=[0, 10],
     )
 
-    solph_representation = SolphModel(
-        energy_system,
-        timeindex={
-            "start": "2021-07-10 00:00:00",
-            "end": "2021-07-10 03:00:00",
-            "freq": "60min",
-        },
+    egc = loc.subnode(
+        grid_connection.ElectricityGridConnection,
+        local_name="EGC",
+        working_rate=[0, 0.3],
     )
 
-    solph_representation.graph(
+    energy_system.establish_interconnections()
+
+    energy_system.graph(
         path="tests/integration_tests/technologies/test_battery_storage.png"
     )
 
-    solved_model = solph_representation.solve(solve_kwargs={"tee": False})
+    model = Model(energy_system)
 
-    myresults = Results(solved_model)
-    flows = myresults["flow"]
-    solph_representation.graph(
+    results = model.solve()
+    flows = results["flow"]
+    energy_system.graph(
         flow_results=flows,
         path="tests/integration_tests/technologies/test_battery_storage_results.png",
     )
 
 
 def test_unit():
-    from oemof.solph import EnergySystem
+    from oemof.solph import EnergySystem as ESSolph
 
-    es = EnergySystem()
+    es = ESSolph()
 
     bs = BatteryStorage(
         "battery",
