@@ -107,10 +107,7 @@ class HeatCarrier(AbstractCarrier):
         matching_nodes = []
 
         for node in self._subnodes:
-            if (
-                node.parent is not bus.parent
-                and HeatCarrier._have_overlap(node, bus)
-            ):
+            if HeatCarrier._have_overlap(node, bus):
                 matching_nodes.append(node)
 
         matching_nodes.sort(

@@ -45,6 +45,8 @@ class EnergyQuality:
                     "Argument 'fixed' cannot be true"
                     + " if minimum or maximum is set."
                 )
+        # We always need a value to be able to use the quality for preliminary
+        # calculations (i.e. before establish_interconnection).
         self._value = value
         self.minimum = minimum
         self.maximum = maximum
