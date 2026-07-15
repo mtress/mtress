@@ -11,14 +11,15 @@ SPDX-FileCopyrightText: Lucas Schmeling
 SPDX-License-Identifier: MIT
 """
 
-from collections.abc import Iterable
 from collections import deque
+from collections.abc import Iterable
 
-from oemof.solph._plumbing import sequence
+import numpy as np
 
-from .._base_mtress_nodes import AbstractCarrier
-from .._energy_types import EnergyQuality
-from .._energy_types import TemperatureBus
+from mtress._location import Location
+
+from .._base_mtress_nodes import AbstractCarrier, AbstractTechnology
+from .._energy_types import EnergyQuality, TemperatureBus
 
 
 class HeatCarrier(AbstractCarrier):
@@ -82,26 +83,30 @@ class HeatCarrier(AbstractCarrier):
     @property
     def temperatures(self) -> Iterable:
         for node in self._subnodes:
-            node : TemperatureBus
+            node: TemperatureBus
             yield node.temperature
 
     @staticmethod
-    def _have_overlap(bus1: TemperatureBus, bus2: TemperatureBus):
+    def _have_overlap(bus1: TemperatureBus, bus2: TemperatureBus) -> bool:
+        overlap = HeatCarrier._overlap(bus1=bus1, bus2=bus2)
+        return len(overlap) >= 1
+
+    @staticmethod
+    def _overlap(bus1: TemperatureBus, bus2: TemperatureBus) -> tuple:
         b1_min = bus1.energy_quality.minimum
         b1_max = bus1.energy_quality.maximum
         b2_min = bus2.energy_quality.minimum
         b2_max = bus2.energy_quality.maximum
 
-        if b1_min is None or b2_max is None:
-            cond1 = True
-        else:
-            cond1 = (b1_min <= b2_max)
-        if b2_min is None or b1_max is None:
-            cond2 = True
-        else:
-            cond2 = (b2_min <= b1_max)
+        upper_limit = min(b1_max, b2_max)
+        lower_limit = max(b1_min, b2_min)
 
-        return (cond1 & cond2).any()
+        if lower_limit < upper_limit:
+            return (lower_limit, upper_limit)
+        elif lower_limit == upper_limit:
+            return (lower_limit,)
+        else:
+            return tuple()
 
     def nodes_to_connect(self, bus: TemperatureBus) -> deque[TemperatureBus]:
         matching_nodes = []
@@ -110,16 +115,35 @@ class HeatCarrier(AbstractCarrier):
             if HeatCarrier._have_overlap(node, bus):
                 matching_nodes.append(node)
 
-        matching_nodes.sort(
-            key=lambda node: node.temperature.min()
-        )
+        matching_nodes.sort(key=lambda node: node.temperature.min())
         return deque(matching_nodes)
 
     def establish_interconnections(self):
-        pass
-        # TODO: Iterate over known interfaces and create copies
-        # for ...:
-        #     self.add_level()
+        self.parent: Location
+        technologies = self.parent.get_nodes_by_type(AbstractTechnology)
+        inbound_nodes = []
+        outbound_nodes = []
+        for tech in technologies:
+            tech: AbstractTechnology
+            inbound_nodes += [
+                x
+                for x in tech.inbound_interfaces
+                if isinstance(x, TemperatureBus)
+            ]
+            outbound_nodes += [
+                x
+                for x in tech.outbound_interfaces
+                if isinstance(x, TemperatureBus)
+            ]
+
+        # test
+        t = set()
+        for n in inbound_nodes + outbound_nodes:
+            n: TemperatureBus
+            t.add(n.temperature.value)
+
+        for x in t:
+            self.add_level(x, fixed=True)
 
     def add_level(self, t, *, fixed):
         if fixed:
