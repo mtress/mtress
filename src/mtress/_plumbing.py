@@ -15,18 +15,18 @@ def maxseq(a, b):
     """Get the element-wise maximum of two sequences"""
     a = sequence(a)
     b = sequence(b)
-    mask_a_bigger = a > b
+    a_bigger_mask = a > b
 
     return sequence(
-        a * mask_a_bigger + b * (1 - mask_a_bigger)
+        a * a_bigger_mask + b * (1 - a_bigger_mask)
     )
 
 def minseq(a, b):
     """Get the element-wise minimum of two sequences"""
     a = sequence(a)
     b = sequence(b)
-    mask_a_bigger = a > b
+    a_smaller_mask = a < b
 
     return sequence(
-        a * (1 - mask_a_bigger) + b * mask_a_bigger
+        a * a_smaller_mask + b * (1 - a_smaller_mask)
     )
