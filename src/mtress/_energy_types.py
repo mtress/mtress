@@ -6,6 +6,8 @@ SPDX-FileCopyrightText: Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)
 SPDX-License-Identifier: MIT
 """
 
+import sys
+
 from enum import IntEnum
 
 import numpy as np
@@ -58,7 +60,7 @@ class EnergyQuality:
         elif self._minimum is not None:
             return self._minimum
         else:
-            return -np.inf
+            return -sys.float_info.max
 
     @minimum.setter
     def minimum(self, value):
@@ -72,7 +74,7 @@ class EnergyQuality:
         elif self._maximum is not None:
             return self._maximum
         else:
-            return np.inf
+            return sys.float_info.max
 
     @maximum.setter
     def maximum(self, value):

@@ -146,7 +146,7 @@ class SteppedReturnHeating(IncrementalTemperature):
         if self.specific_heat_capacity != heat_carrier.specific_heat_capacity:
             raise ValueError("Specific heat capacities need to match")
 
-        input_nodes: list[TemperatureBus] = heat_carrier.nodes_to_connect(
+        input_nodes: deque[TemperatureBus] = heat_carrier.nodes_to_connect(
             self._reference_input
         )
 

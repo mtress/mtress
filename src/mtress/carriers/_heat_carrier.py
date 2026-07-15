@@ -16,8 +16,11 @@ from collections.abc import Iterable
 
 import numpy as np
 
+from oemof.solph import _plumbing
+
 from mtress._location import Location
 
+from .._plumbing import maxseq, minseq
 from .._base_mtress_nodes import AbstractCarrier, AbstractTechnology
 from .._energy_types import EnergyQuality, TemperatureBus
 
@@ -98,15 +101,29 @@ class HeatCarrier(AbstractCarrier):
         b2_min = bus2.energy_quality.minimum
         b2_max = bus2.energy_quality.maximum
 
-        upper_limit = min(b1_max, b2_max)
-        lower_limit = max(b1_min, b2_min)
+        lower_limit = maxseq(b1_min, b2_min)
+        upper_limit = minseq(b1_max, b2_max)
 
-        if lower_limit < upper_limit:
-            return (lower_limit, upper_limit)
-        elif lower_limit == upper_limit:
-            return (lower_limit,)
-        else:
-            return tuple()
+        correct_order_mask = lower_limit < upper_limit
+
+        if correct_order_mask.max() == 1:
+            if not isinstance(correct_order_mask, _plumbing._FakeSequence):
+                correct_order_mask = [
+                    x if x else np.nan for x in correct_order_mask
+                ]
+
+            return (
+                lower_limit * correct_order_mask,
+                upper_limit * correct_order_mask,
+            )
+
+        both_same_mask = lower_limit == upper_limit
+        if both_same_mask.max() == 1:
+            if not isinstance(both_same_mask, _plumbing._FakeSequence):
+                both_same_mask = [x if x else np.nan for x in both_same_mask]
+            return (lower_limit * both_same_mask, )
+
+        return tuple()
 
     def nodes_to_connect(self, bus: TemperatureBus) -> deque[TemperatureBus]:
         matching_nodes = []
@@ -119,6 +136,8 @@ class HeatCarrier(AbstractCarrier):
         return deque(matching_nodes)
 
     def establish_interconnections(self):
+        return
+
         self.parent: Location
         technologies = self.parent.get_nodes_by_type(AbstractTechnology)
         inbound_nodes = []
