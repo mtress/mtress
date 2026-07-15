@@ -2,10 +2,7 @@
 
 from oemof.network import Node
 
-from ._energy_types import EnergyType
-from ._base_mtress_nodes import SubNetwork
-from ._base_mtress_nodes import AbstractCarrier
-from ._base_mtress_nodes import AbstractTechnology
+from ._base_mtress_nodes import AbstractCarrier, SubNetwork
 
 
 class Location(SubNetwork):
@@ -49,22 +46,6 @@ class Location(SubNetwork):
             parent_node=parent_node,
             custom_properties=custom_properties,
         )
-
-    def child_inbound_interfaces(self, et: EnergyType):
-        # iterate all inbound interfaces of given EnergyType
-        interfaces = []
-        for sn in self.subnodes:
-            interfaces += sn.inbound_interfaces.get(et, [])
-        for i in interfaces:
-            yield i
-
-    def child_outbound_interfaces(self, et: EnergyType):
-        # iterate all outbound interfaces of given EnergyType
-        interfaces = []
-        for sn in self.subnodes:
-            interfaces += sn.outbound_interfaces.get(et, [])
-        for i in interfaces:
-            yield i
 
     def get_carrier(
         self,
