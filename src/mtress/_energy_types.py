@@ -8,11 +8,9 @@ SPDX-License-Identifier: MIT
 
 from enum import IntEnum
 
-from oemof.solph import Bus
-from oemof.solph import Flow
-from oemof.solph._plumbing import _FakeSequence
-from oemof.solph._plumbing import Apply
-from oemof.solph._plumbing import sequence
+import numpy as np
+from oemof.solph import Bus, Flow
+from oemof.solph._plumbing import Apply, _FakeSequence, sequence
 
 
 class EnergyType(IntEnum):
@@ -24,6 +22,7 @@ class EnergyType(IntEnum):
 
 class EnergyQuality:
     """energy quality"""
+
     _value = Apply(sequence)
     _minimum = Apply(sequence)
     _maximum = Apply(sequence)
@@ -56,8 +55,10 @@ class EnergyQuality:
     def minimum(self):
         if self.fixed:
             return self._value
-        else:
+        elif self._minimum is not None:
             return self._minimum
+        else:
+            return -np.inf
 
     @minimum.setter
     def minimum(self, value):
@@ -68,8 +69,10 @@ class EnergyQuality:
     def maximum(self):
         if self.fixed:
             return self._value
-        else:
+        elif self._maximum is not None:
             return self._maximum
+        else:
+            return np.inf
 
     @maximum.setter
     def maximum(self, value):
