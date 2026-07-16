@@ -12,8 +12,8 @@ from ._gas import GasDemand
 
 __all__ = [
     "Electricity",
-    "FixedTemperatureCooling",
-    "FixedTemperatureHeating",
+    "FixedReturnCooling",
+    "FixedReturnHeating",
     "GasDemand",
-    "SteppedReturnHeating"
+    "SteppedReturnHeating",
 ]

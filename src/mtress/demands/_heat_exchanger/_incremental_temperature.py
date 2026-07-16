@@ -102,9 +102,9 @@ class SteppedReturnHeating(IncrementalTemperature):
             local_name="reservoir",
         )
         self.subnode(
-            Source,
-            local_name="source_reservoir",
-            outputs={self._reservoir: self._reservoir_flow},
+            Sink,
+            local_name="sink_reservoir",
+            inputs={self._reservoir: self._reservoir_flow},
         )
 
         self._utilisation = self.subnode(
@@ -122,8 +122,8 @@ class SteppedReturnHeating(IncrementalTemperature):
         converter = self._converters[
             (self._reference_input, self._reference_output)
         ]
-        converter.inputs[self._reservoir] = EnergyFlowHeat()
         converter.inputs[self._utilisation] = Flow()
+        converter.outputs[self._reservoir] = EnergyFlowHeat()
 
     def _create_missing_converters(self):
         pass
@@ -146,26 +146,52 @@ class SteppedReturnHeating(IncrementalTemperature):
         if self.specific_heat_capacity != heat_carrier.specific_heat_capacity:
             raise ValueError("Specific heat capacities need to match")
 
-        input_nodes: deque[TemperatureBus] = heat_carrier.nodes_to_connect(
-            self._reference_input
+        self._create_io_nodes(
+            input_nodes=heat_carrier.nodes_to_connect(self._reference_input),
+            output_nodes=heat_carrier.nodes_to_connect(self._reference_output),
         )
 
-        input_node = self._pop_reference_input(input_nodes)
-        self.flow_temperature = input_node.temperature
-        self._reference_input.inputs[input_node] = MassFlowHeat()
-
-        for input_node in input_nodes:
-            new_input = self._inbound_node(input_node.temperature)
-            self.inbound_interfaces.append(new_input)
-            new_input.inputs[input_node] = MassFlowHeat()
-
-        [output_node] = heat_carrier.nodes_to_connect(self._reference_output)
+    def _create_io_nodes(
+        self,
+        input_nodes: deque[TemperatureBus],
+        output_nodes: deque[TemperatureBus],
+    ):
+        output_node = self._pop_next_node(output_nodes)
         self._reference_output.outputs[output_node] = MassFlowHeat()
 
-    def _inbound_node(self, temperature) -> TemperatureBus:
-        pass
+        input_node = self._pop_next_node(input_nodes)
 
-    def _pop_reference_input(
+        while (output_nodes[0] is not input_node):
+            output_node = self._pop_next_node(output_nodes)
+            obn = self._outbound_node(output_node.temperature)
+            obn.outputs[output_node] = MassFlowHeat()
+
+        io_node = self._pop_next_node(output_nodes)
+        trn = self._transitional_node(io_node.temperature)
+        trn.outputs[io_node] = MassFlowHeat()
+        trn.inputs[io_node] = MassFlowHeat()
+
+    def _inbound_node(self, temperature) -> TemperatureBus:
+        node = super()._temperature_node(temperature)
+        self.inbound_interfaces.append(node)
+
+        return node
+
+    def _outbound_node(self, temperature) -> TemperatureBus:
+        node = super()._temperature_node(temperature)
+        self.outbound_interfaces.append(node)
+
+        return node
+
+    def _transitional_node(self, temperature) -> TemperatureBus:
+        node = super()._temperature_node(temperature)
+
+        self.inbound_interfaces.append(node)
+        self.outbound_interfaces.append(node)
+
+        return node
+
+    def _pop_next_node(
         self, nodes: deque[TemperatureBus]
     ) -> TemperatureBus:
-        pass
+        return nodes.popleft()
