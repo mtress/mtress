@@ -9,24 +9,24 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
-from oemof.solph._plumbing import sequence
+
+import numpy as np
+from oemof.solph import _plumbing
 
 def maxseq(a, b):
     """Get the element-wise maximum of two sequences"""
-    a = sequence(a)
-    b = sequence(b)
-    mask_a_bigger = a > b
+    if isinstance(a, _plumbing._FakeSequence):
+        a = a.value
+    if isinstance(b, _plumbing._FakeSequence):
+        b = b.value
 
-    return sequence(
-        a * mask_a_bigger + b * (1 - mask_a_bigger)
-    )
+    return _plumbing.sequence(np.maximum(a, b))
 
 def minseq(a, b):
     """Get the element-wise minimum of two sequences"""
-    a = sequence(a)
-    b = sequence(b)
-    mask_a_bigger = a > b
+    if isinstance(a, _plumbing._FakeSequence):
+        a = a.value
+    if isinstance(b, _plumbing._FakeSequence):
+        b = b.value
 
-    return sequence(
-        a * (1 - mask_a_bigger) + b * mask_a_bigger
-    )
+    return _plumbing.sequence(np.minimum(a, b))
