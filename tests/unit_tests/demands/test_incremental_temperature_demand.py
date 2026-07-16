@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
+
+from collections import deque
+
 import numpy as np
 
 from mtress import demands
+from mtress._energy_types import TemperatureBus
 
 
 def assert_heat_exchanger(node, flow_temperature, return_temperature):
@@ -14,7 +18,6 @@ def assert_heat_exchanger(node, flow_temperature, return_temperature):
     assert len(node.outbound_interfaces) == 1
     [return_node] = node.outbound_interfaces
     np.testing.assert_almost_equal(return_node.temperature, return_temperature)
-
 
 
 class TestHeatingDemand:
@@ -40,6 +43,18 @@ class TestHeatingDemand:
             return_temperature=return_temperature,
         )
 
+    def test_create_io_nodes(self):
+        node = self.default_node()
+
+        node20 = TemperatureBus(20)
+        node30 = TemperatureBus(30)
+        node40 = TemperatureBus(40)
+
+        node._create_io_nodes(
+            input_nodes=deque(node30, node40),
+            output_nodes=deque(node20, node30),
+        )
+
 if __name__ == "__main__":
     import networkx as nx
     import matplotlib.pyplot as plt
@@ -60,6 +75,16 @@ if __name__ == "__main__":
         minimum_delta_reservoir=2.5,
     )
 
+    node20 = TemperatureBus(20, label="20")
+    node30 = TemperatureBus(30, label="30")
+    node40 = TemperatureBus(40, label="40")
+    node50 = TemperatureBus(50, label="50")
+
+    node._create_io_nodes(
+        input_nodes=deque([node30, node40, node50]),
+        output_nodes=deque([node20, node30, node40]),
+    )
+
     energy_system = EnergySystem(
         timeindex={
             "start": "2022-01-10 00:00:00",
@@ -68,6 +93,7 @@ if __name__ == "__main__":
         },
     )
     energy_system.add(location)
+    energy_system.add(node20, node30, node40, node50)
 
     graph_graphviz(
         energy_system.nodes,

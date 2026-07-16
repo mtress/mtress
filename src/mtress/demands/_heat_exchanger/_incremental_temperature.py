@@ -160,16 +160,25 @@ class SteppedReturnHeating(IncrementalTemperature):
         self._reference_output.outputs[output_node] = MassFlowHeat()
 
         input_node = self._pop_next_node(input_nodes)
+        self._reference_input.inputs[input_node] = MassFlowHeat()
 
-        while (output_nodes[0] is not input_node):
+        while output_nodes and input_node is not output_nodes[0]:
             output_node = self._pop_next_node(output_nodes)
             obn = self._outbound_node(output_node.temperature)
             obn.outputs[output_node] = MassFlowHeat()
 
-        io_node = self._pop_next_node(output_nodes)
-        trn = self._transitional_node(io_node.temperature)
-        trn.outputs[io_node] = MassFlowHeat()
-        trn.inputs[io_node] = MassFlowHeat()
+        self._pop_next_node(output_nodes)
+        while input_nodes and output_nodes:
+            io_node = self._pop_next_node(input_nodes)
+            assert io_node == self._pop_next_node(output_nodes)
+            ion = self._transitional_node(io_node.temperature)
+            ion.inputs[io_node] = MassFlowHeat()
+            ion.outputs[io_node] = MassFlowHeat()
+
+        while input_nodes:
+            input_node = self._pop_next_node(input_nodes)
+            ibn = self._inbound_node(input_node.temperature)
+            ibn.inputs[input_node] = MassFlowHeat()
 
     def _inbound_node(self, temperature) -> TemperatureBus:
         node = super()._temperature_node(temperature)
