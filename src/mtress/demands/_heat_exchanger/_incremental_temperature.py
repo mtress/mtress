@@ -117,16 +117,53 @@ class SteppedReturnHeating(IncrementalTemperature):
             outputs={self._utilisation: Flow(nominal_capacity=1)},
         )
 
-        self._create_converter(self._reference_input, self._reference_output)
-
-        converter = self._converters[
-            (self._reference_input, self._reference_output)
-        ]
-        converter.inputs[self._utilisation] = Flow()
-        converter.outputs[self._reservoir] = EnergyFlowHeat()
+        self._create_missing_converters()
 
     def _create_missing_converters(self):
-        pass
+        in_nodes = set(self.inbound_interfaces)
+        out_nodes = set(self.outbound_interfaces)
+        io_nodes = in_nodes & out_nodes
+        in_nodes -= io_nodes
+        out_nodes -= io_nodes
+
+        out_nodes = list(out_nodes)
+        io_nodes = list(io_nodes)
+        in_nodes = list(in_nodes)
+
+        out_nodes.sort(key=lambda n: n.temperature.min())
+        io_nodes.sort(key=lambda n: n.temperature.min())
+        in_nodes.sort(key=lambda n: n.temperature.min())
+
+        if io_nodes:
+            in_node = io_nodes[0]
+        else:
+            in_node = in_nodes[0]
+
+        for out_node in out_nodes:
+            if (in_node, out_node) not in self._converters:
+                converter =  self._create_converter(in_node, out_node)
+                converter.inputs[self._utilisation] = Flow()
+                converter.outputs[self._reservoir] = EnergyFlowHeat()
+
+        if len(io_nodes) >= 2:
+            for in_node, out_node in zip(io_nodes[1:], io_nodes):
+                if (in_node, out_node) not in self._converters:
+                    converter =  self._create_converter(in_node, out_node)
+                    converter.inputs[self._utilisation] = Flow()
+                    converter.outputs[self._reservoir] = EnergyFlowHeat()
+
+        if io_nodes:
+            out_node = io_nodes[-1]
+        else:
+            out_node = out_nodes[-1]
+
+        for in_node in in_nodes:
+            if (in_node, out_node) not in self._converters:
+                converter =  self._create_converter(in_node, out_node)
+                converter.inputs[self._utilisation] = Flow()
+                converter.outputs[self._reservoir] = EnergyFlowHeat()
+
+
 
     def _update_conversion_factors(self):
         for nodes, converter in self._converters.items():
@@ -178,8 +215,10 @@ class SteppedReturnHeating(IncrementalTemperature):
                 ion = self._transitional_node(io_node.temperature)
             elif io_node is reference_output_node:
                 ion = self._reference_output
+                self.inbound_interfaces.append(ion)
             else:
                 ion = self._reference_input
+                self.outbound_interfaces.append(ion)
             ion.inputs[io_node] = MassFlowHeat()
             ion.outputs[io_node] = MassFlowHeat()
 
