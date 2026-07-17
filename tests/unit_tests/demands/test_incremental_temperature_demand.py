@@ -62,3 +62,50 @@ class TestHeatingDemand:
             assert len(input_node.outputs) == 1
         for output_node in output_nodes:
             assert len(output_node.inputs) == 1
+
+if __name__ == "__main__":
+    import networkx as nx
+    import matplotlib.pyplot as plt
+
+    from mtress._helpers._visualization import graph_graphviz
+    from mtress import EnergySystem, Location
+
+    energy_system = EnergySystem(
+        timeindex={
+            "start": "2022-01-10 00:00:00",
+            "end": "2022-01-10 02:00:00",
+            "freq": "60min",
+        },
+    )
+
+    location = Location("loc")
+    energy_system.add(location)
+
+    node = location.subnode(
+        demands.SteppedReturnHeating,
+        local_name="stepped heater",
+        reservoir_temperature=[12, 15, -3],
+        nominal_power=12,
+        maximum_working_temperature=92.0,
+        minimum_working_temperature=10.0,
+        minimum_delta_medium=5.0,
+        minimum_delta_reservoir=2.5,
+    )
+
+    node20 = TemperatureBus(20, label="20")
+    node30 = TemperatureBus(30, label="30")
+    node40 = TemperatureBus(40, label="40")
+    node50 = TemperatureBus(50, label="50")
+
+    node._create_io_nodes(
+        input_nodes=[node30, node40, node50],
+        output_nodes=[node20, node30, node40],
+    )
+    node._create_missing_converters()
+
+    energy_system.add(node20, node30, node40, node50)
+
+    graph_graphviz(
+        energy_system.nodes,
+        path="stepped_heat_demand.png",
+    )
