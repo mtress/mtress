@@ -209,8 +209,3 @@ class SteppedReturnHeating(IncrementalTemperature):
         self.outbound_interfaces.append(node)
 
         return node
-
-    def _pop_next_node(
-        self, nodes: deque[TemperatureBus]
-    ) -> TemperatureBus:
-        return nodes.popleft()
