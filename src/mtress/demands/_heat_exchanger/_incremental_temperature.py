@@ -147,37 +147,47 @@ class SteppedReturnHeating(IncrementalTemperature):
             raise ValueError("Specific heat capacities need to match")
 
         self._create_io_nodes(
-            input_nodes=heat_carrier.nodes_to_connect(self._reference_input),
-            output_nodes=heat_carrier.nodes_to_connect(self._reference_output),
+            pure_input_nodes=heat_carrier.nodes_to_connect(self._reference_input),
+            pure_output_nodes=heat_carrier.nodes_to_connect(self._reference_output),
         )
 
     def _create_io_nodes(
         self,
-        input_nodes: deque[TemperatureBus],
-        output_nodes: deque[TemperatureBus],
+        input_nodes: list[TemperatureBus],
+        output_nodes: list[TemperatureBus],
     ):
-        output_node = self._pop_next_node(output_nodes)
-        self._reference_output.outputs[output_node] = MassFlowHeat()
+        reference_output_node = output_nodes[0]
+        reference_input_node = input_nodes[0]
 
-        input_node = self._pop_next_node(input_nodes)
-        self._reference_input.inputs[input_node] = MassFlowHeat()
+        input_nodes = set(input_nodes)
+        output_nodes = set(output_nodes)
+        transitional_nodes = input_nodes & output_nodes
+        input_nodes -= transitional_nodes
+        output_nodes -= transitional_nodes
 
-        while output_nodes and input_node is not output_nodes[0]:
-            output_node = self._pop_next_node(output_nodes)
-            obn = self._outbound_node(output_node.temperature)
+
+        for output_node in output_nodes:
+            if output_node is not reference_output_node:
+                obn = self._outbound_node(output_node.temperature)
+            else:
+                obn = self._reference_output
             obn.outputs[output_node] = MassFlowHeat()
 
-        self._pop_next_node(output_nodes)
-        while input_nodes and output_nodes:
-            io_node = self._pop_next_node(input_nodes)
-            assert io_node == self._pop_next_node(output_nodes)
-            ion = self._transitional_node(io_node.temperature)
+        for io_node in transitional_nodes:
+            if io_node not in (reference_input_node, reference_output_node):
+                ion = self._transitional_node(io_node.temperature)
+            elif io_node is reference_output_node:
+                ion = self._reference_output
+            else:
+                ion = self._reference_input
             ion.inputs[io_node] = MassFlowHeat()
             ion.outputs[io_node] = MassFlowHeat()
 
-        while input_nodes:
-            input_node = self._pop_next_node(input_nodes)
-            ibn = self._inbound_node(input_node.temperature)
+        for input_node in input_nodes:
+            if input_node is not reference_input_node:
+                ibn = self._inbound_node(input_node.temperature)
+            else:
+                ibn = self._reference_output
             ibn.inputs[input_node] = MassFlowHeat()
 
     def _inbound_node(self, temperature) -> TemperatureBus:
