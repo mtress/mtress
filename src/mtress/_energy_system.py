@@ -14,7 +14,6 @@ from oemof.network import Node
 
 from ._base_mtress_nodes import (
     AbstractCarrier,
-    AbstractGridConnection,
     AbstractTechnology,
     SubNetwork,
 )
@@ -67,9 +66,6 @@ class EnergySystem(solph.EnergySystem):
             sn.establish_interconnections()
 
         for sn in self._nodes_by_type(AbstractTechnology):
-            sn.establish_interconnections()
-
-        for sn in self._nodes_by_type(AbstractGridConnection):
             sn.establish_interconnections()
 
     def add_constraints(self, model: solph.Model):

@@ -6,7 +6,6 @@ from mtress import (
     Location,
     carriers,
     demands,
-    technologies,
 )
 
 from mtress._helpers._visualization import graph_graphviz
@@ -30,17 +29,6 @@ house_1.subnode(
     temperature_levels=[2, 5, 10, 11, [19,21], 20, [30, 30.5]],
 )
 
-
-# Add technologies
-house_1.subnode(
-    technologies.HeatSource,
-    local_name="air_HE",
-    reservoir_temperature=[45,35],  # any possible source
-    maximum_working_temperature=40,
-    minimum_working_temperature=5,
-    minimum_delta_reservoir=5,
-    nominal_power=1e4,
-)
 
 # Add demands
 hd = house_1.subnode(
