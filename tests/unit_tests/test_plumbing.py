@@ -4,9 +4,13 @@ Tests for the MTRESS solph model.
 """
 
 import numpy as np
+import pytest
+from oemof.network import Node, Sink, Source
 from oemof.solph._plumbing import sequence
 
-from mtress._plumbing import (maxseq, minseq)
+from mtress._plumbing import maxseq
+from mtress._plumbing import minseq
+from mtress._plumbing import TypeAccessContainer
 
 def test_maxseq():
     a = np.array([1, 2, 4])
@@ -41,3 +45,29 @@ def test_minseq():
     np.testing.assert_equal(minseq(a, f), np.array([0, 2, 4]))
 
     assert minseq(c, d) == c
+
+
+def test_type_access_container():
+    tanc = TypeAccessContainer(Node)
+
+    node = Node("node")
+    sink = Sink("sink")
+    source = Source("source")
+
+    tanc.add(node, sink, source)
+
+    assert tanc[Node] == {node, sink, source}
+    assert tanc[Sink] == {sink}
+    assert tanc[Source] == {source}
+
+    tasc = TypeAccessContainer(Sink)
+
+    with pytest.raises(ValueError):
+        tasc.add(node)
+    tasc.add(sink)
+    with pytest.raises(ValueError):
+        tasc.add(source)
+
+    assert Node not in tasc
+    assert tasc[Sink] == {sink}
+    assert Source not in tasc

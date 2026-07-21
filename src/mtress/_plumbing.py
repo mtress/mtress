@@ -9,9 +9,13 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
+from collections import UserDict
 
 import numpy as np
 from oemof.solph import _plumbing
+
+from ._base_mtress_nodes import SubNetwork
+
 
 def maxseq(a, b):
     """Get the element-wise maximum of two sequences"""
@@ -30,3 +34,20 @@ def minseq(a, b):
         b = b.value
 
     return _plumbing.sequence(np.minimum(a, b))
+
+
+class TypeAccessContainer(UserDict):
+    """Container that allows entry access by type down to a defined base type.
+    """
+    def __init__(self, deepest_parent_class=SubNetwork):
+        super().__init__(None)
+        self._deepest_parent_class = deepest_parent_class
+
+    def add(self, *objects):
+        for obj in objects:
+            types = type(obj).__mro__
+            types = types[: types.index(self._deepest_parent_class) + 1]
+            for object_type in types:
+                if object_type not in self:
+                    self[object_type] = set()
+                self[object_type].add(obj)
