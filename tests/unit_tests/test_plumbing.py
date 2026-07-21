@@ -83,3 +83,14 @@ def test_type_access_container_iterator():
     tanc.add(sink, source)
 
     assert {node for node in tanc} == {sink, source}
+
+def test_type_access_container_length():
+
+    tanc = TypeAccessContainer(Node)
+
+    sink = Sink("sink")
+    source = Source("source")
+
+    tanc.add(sink, source)
+
+    assert len(tanc) == 2

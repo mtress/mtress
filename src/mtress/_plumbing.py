@@ -41,9 +41,13 @@ class TypeAccessContainer(UserDict):
         super().__init__(None)
         self._deepest_parent_class = deepest_parent_class
 
+        self._all_objects = set()
+
     def __iter__(self):
-        emptyset = set()
-        return iter(emptyset.union(*self.data.values()))
+        return iter(self._all_objects)
+
+    def __len__(self):
+        return len(self._all_objects)
 
     def add(self, *objects):
         for obj in objects:
@@ -52,4 +56,5 @@ class TypeAccessContainer(UserDict):
             for object_type in types:
                 if object_type not in self:
                     self[object_type] = set()
+                self._all_objects.add(obj)
                 self[object_type].add(obj)
