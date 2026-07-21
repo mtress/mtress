@@ -3,6 +3,7 @@
 from oemof.network import Node
 
 from ._base_mtress_nodes import AbstractCarrier, SubNetwork
+from ._plumbing import TypeAccessContainer
 
 
 class Location(SubNetwork):
@@ -47,6 +48,8 @@ class Location(SubNetwork):
             custom_properties=custom_properties,
         )
 
+        self._subnodes_by_type = TypeAccessContainer(Node)
+
     def get_carrier(
         self,
         carrier,
@@ -56,9 +59,8 @@ class Location(SubNetwork):
 
         :param carrier: Carrier type to obtain
         """
-        for sn in self.subnodes:
-            if isinstance(sn, carrier):
-                return sn
+        if carrier in self._subnodes_by_type:
+            return list(self._subnodes_by_type[carrier])[0]
 
         return self.subnode(
             carrier,
@@ -68,14 +70,19 @@ class Location(SubNetwork):
     def get_nodes_by_type(
         self,
         node_type,
-    ) -> list[Node]:
+    ) -> set[Node]:
         """
         Get subnodes of the specified type.
 
         :param node_type: Technology type
         """
 
-        return [sn for sn in self.subnodes if isinstance(sn, node_type)]
+        return self._subnodes_by_type[node_type]
+
+    def subnode(self, class_, local_name, *args, **kwargs):
+        new_node = super().subnode(class_, local_name, *args, **kwargs)
+        self._subnodes_by_type.add(new_node)
+        return new_node
 
     def establish_interconnections(self):
         pass
