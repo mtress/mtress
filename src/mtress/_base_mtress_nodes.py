@@ -3,7 +3,8 @@ from abc import ABC, abstractmethod
 from oemof import solph
 from oemof.network import Node
 
-from ._energy_types import EnergyType
+from ._plumbing import TypeAccessContainer
+
 
 
 class SubNetwork(ABC, Node):
@@ -24,8 +25,8 @@ class SubNetwork(ABC, Node):
         # These are lists for now. We might want to have type specific
         # getters when we update technologies that actually support more than
         # one carrier.
-        self.inbound_interfaces: list[solph.Bus] = []
-        self.outbound_interfaces: list[solph.Bus] = []
+        self.inbound_interfaces = TypeAccessContainer(solph.Bus)
+        self.outbound_interfaces = TypeAccessContainer(solph.Bus)
 
     @abstractmethod
     def establish_interconnections(self):

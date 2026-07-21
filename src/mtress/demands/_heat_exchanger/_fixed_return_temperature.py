@@ -112,7 +112,7 @@ class FixedReturnTemperature(AbstractHeatExchanger):
 
         for input_node in input_nodes:
             new_input = self._inbound_node(input_node.temperature)
-            self.inbound_interfaces.append(new_input)
+            self.inbound_interfaces.add(new_input)
             new_input.inputs[input_node] = MassFlowHeat()
 
         [output_node] = heat_carrier.nodes_to_connect(
@@ -185,7 +185,7 @@ class FixedReturnHeating(FixedReturnTemperature):
 
     def _inbound_node(self, temperature):
         node = super()._temperature_node(temperature)
-        self.inbound_interfaces.append(node)
+        self.inbound_interfaces.add(node)
         converter = self._create_converter(node, self._reference_output)
         converter.outputs[self._reservoir] = EnergyFlowHeat()
 

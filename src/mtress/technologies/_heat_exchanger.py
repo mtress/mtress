@@ -240,10 +240,10 @@ class HeatSource(AbstactHeatExchanger):
 
     def _build_core_source(self):
 
-        #maximum_outlet_temperature = np.amin(
+        # maximum_outlet_temperature = np.amin(
         #    self.maximum_working_temperature,
         #    self.reservoir_temperature - self.minimum_delta_reservoir
-        #)
+        # )
 
         node_t_max = self.subnode(
             TemperatureBus,
@@ -272,9 +272,9 @@ class HeatSource(AbstactHeatExchanger):
             ),
             specific_heat_capacity=self.specific_heat_capacity,
         )
-        
-        self.inbound_interfaces.append(node_t_min)
-        self.outbound_interfaces.append(node_t_max)
+
+        self.inbound_interfaces.add(node_t_min)
+        self.outbound_interfaces.add(node_t_max)
 
         self._bus_source = self.subnode(
             Bus,
@@ -327,8 +327,8 @@ class HeatSource(AbstactHeatExchanger):
         )
 
     def _update_source_converters(self) -> None:
-        for cold_bus in self.inbound_interfaces:
-            for warm_bus in self.outbound_interfaces:
+        for cold_bus in self.inbound_interfaces[TemperatureBus]:
+            for warm_bus in self.outbound_interfaces[TemperatureBus]:
                 t_cold = cold_bus.custom_properties["temperature"]
                 t_warm = warm_bus.custom_properties["temperature"]
                 if t_cold.min() < t_warm.max() and (
@@ -375,7 +375,6 @@ class HeatSource(AbstactHeatExchanger):
             heat_factor * inverted_gains
         )
         converter.inputs[self._bus_source].max = sequence(gains)
-
 
     def establish_interconnections(self) -> None:
         self._establish_interconnections()

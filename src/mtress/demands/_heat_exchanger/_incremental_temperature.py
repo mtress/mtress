@@ -215,10 +215,10 @@ class SteppedReturnHeating(IncrementalTemperature):
                 ion = self._transitional_node(io_node.temperature)
             elif io_node is reference_output_node:
                 ion = self._reference_output
-                self.inbound_interfaces.append(ion)
+                self.inbound_interfaces.add(ion)
             else:
                 ion = self._reference_input
-                self.outbound_interfaces.append(ion)
+                self.outbound_interfaces.add(ion)
             ion.inputs[io_node] = MassFlowHeat()
             ion.outputs[io_node] = MassFlowHeat()
 
@@ -231,20 +231,20 @@ class SteppedReturnHeating(IncrementalTemperature):
 
     def _inbound_node(self, temperature) -> TemperatureBus:
         node = super()._temperature_node(temperature)
-        self.inbound_interfaces.append(node)
+        self.inbound_interfaces.add(node)
 
         return node
 
     def _outbound_node(self, temperature) -> TemperatureBus:
         node = super()._temperature_node(temperature)
-        self.outbound_interfaces.append(node)
+        self.outbound_interfaces.add(node)
 
         return node
 
     def _transitional_node(self, temperature) -> TemperatureBus:
         node = super()._temperature_node(temperature)
 
-        self.inbound_interfaces.append(node)
-        self.outbound_interfaces.append(node)
+        self.inbound_interfaces.add(node)
+        self.outbound_interfaces.add(node)
 
         return node

@@ -41,8 +41,8 @@ class AbstractHeatExchanger(AbstractTechnology):
             "ref_output",
         )
 
-        self.inbound_interfaces.append(self._reference_input)
-        self.outbound_interfaces.append(self._reference_output)
+        self.inbound_interfaces.add(self._reference_input)
+        self.outbound_interfaces.add(self._reference_output)
 
     def _create_converter(self, source, target):
         converter = self.subnode(

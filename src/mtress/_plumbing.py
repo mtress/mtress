@@ -14,8 +14,6 @@ from collections import UserDict
 import numpy as np
 from oemof.solph import _plumbing
 
-from ._base_mtress_nodes import SubNetwork
-
 
 def maxseq(a, b):
     """Get the element-wise maximum of two sequences"""
@@ -39,9 +37,13 @@ def minseq(a, b):
 class TypeAccessContainer(UserDict):
     """Container that allows entry access by type down to a defined base type.
     """
-    def __init__(self, deepest_parent_class=SubNetwork):
+    def __init__(self, deepest_parent_class):
         super().__init__(None)
         self._deepest_parent_class = deepest_parent_class
+
+    def __iter__(self):
+        emptyset = set()
+        return iter(emptyset.union(*self.data.values()))
 
     def add(self, *objects):
         for obj in objects:

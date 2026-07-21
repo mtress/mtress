@@ -47,7 +47,7 @@ def test_minseq():
     assert minseq(c, d) == c
 
 
-def test_type_access_container():
+def test_type_access_container_add():
     tanc = TypeAccessContainer(Node)
 
     node = Node("node")
@@ -71,3 +71,15 @@ def test_type_access_container():
     assert Node not in tasc
     assert tasc[Sink] == {sink}
     assert Source not in tasc
+
+
+def test_type_access_container_iterator():
+
+    tanc = TypeAccessContainer(Node)
+
+    sink = Sink("sink")
+    source = Source("source")
+
+    tanc.add(sink, source)
+
+    assert {node for node in tanc} == {sink, source}
