@@ -5,7 +5,7 @@ from mtress import (
     EnergySystem,
     Location,
     carriers,
-    demands,
+    technologies,
 )
 
 from mtress._helpers._visualization import graph_graphviz
@@ -32,11 +32,11 @@ house_1.subnode(
 
 # Add demands
 hd = house_1.subnode(
-    demands.FixedReturnHeater,
+    technologies.FixedReturnHeater,
     local_name="heat_demand",
     min_flow_temperature=20,
     return_temperature=10,
-    time_series=[50, 50],
+    demand_load=[50, 50],
 )
 
 energy_system.establish_interconnections()

@@ -1,4 +1,4 @@
-"""Energy demands."""
+"""Module for technologies."""
 
 from ._heat_exchanger._fixed_return_temperature import (
     FixedReturnHeatExtractor,

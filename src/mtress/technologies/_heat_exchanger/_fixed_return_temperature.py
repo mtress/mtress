@@ -139,7 +139,8 @@ class FixedReturnHeater(FixedReturnTemperature):
         *,
         min_flow_temperature: float,
         return_temperature: float,
-        time_series: TimeseriesSpecifier,
+        nominal_power: float = 1.0,
+        demand_load: TimeseriesSpecifier = None,
         specific_heat_capacity: float = 1.161,
         parent_node=None,
         custom_properties=None,
@@ -157,8 +158,8 @@ class FixedReturnHeater(FixedReturnTemperature):
             flow_temperature=min_flow_temperature,
             return_temperature=return_temperature,
             reservoir_flow=EnergyFlowHeat(
-                nominal_capacity=1,
-                fix=time_series,
+                nominal_capacity=nominal_power,
+                fix=demand_load,
             ),
             specific_heat_capacity=specific_heat_capacity,
             parent_node=parent_node,
@@ -207,7 +208,8 @@ class FixedReturnHeatExtractor(FixedReturnTemperature):
         *,
         max_flow_temperature: float,
         return_temperature: float,
-        time_series: TimeseriesSpecifier,
+        nominal_power: float = 1.0,
+        demand_load: TimeseriesSpecifier,
         specific_heat_capacity: float = 1.161,
         parent_node=None,
         custom_properties=None,
@@ -218,15 +220,16 @@ class FixedReturnHeatExtractor(FixedReturnTemperature):
         :param max_flow_temperature: maximum temperature
             that can be used for cooling
         :param return_temperature: return temperature
-        :param time_series: demand time series (in W)
+        :param demand_load: demand time series (in W)
         """
+
         super().__init__(
             label,
             flow_temperature=max_flow_temperature,
             return_temperature=return_temperature,
             reservoir_flow=EnergyFlowHeat(
-                nominal_capacity=1,
-                fix=time_series,
+                nominal_capacity=nominal_power,
+                fix=demand_load,
             ),
             specific_heat_capacity=specific_heat_capacity,
             parent_node=parent_node,

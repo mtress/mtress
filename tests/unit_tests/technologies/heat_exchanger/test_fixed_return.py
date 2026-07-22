@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from mtress import demands
+from mtress import technologies
 
 
 def assert_heat_exchanger(node, flow_temperature, return_temperature):
@@ -23,11 +23,11 @@ def assert_heat_exchanger(node, flow_temperature, return_temperature):
 
 class TestHeatDemand:
     def default_node(self):
-        return demands.FixedReturnHeater(
+        return technologies.FixedReturnHeater(
             label="demand",
             min_flow_temperature=40,
             return_temperature=30,
-            time_series=[1, 2, 3],
+            demand_load=[1, 2, 3],
         )
 
     def test_basic_initialisation(self):
@@ -37,11 +37,11 @@ class TestHeatDemand:
 
 class TestCoolingDemand:
     def default_node(self):
-        return demands.FixedReturnHeatExtractor(
+        return technologies.FixedReturnHeatExtractor(
             label="demand",
             return_temperature=40,
             max_flow_temperature=20,
-            time_series=[1, 2, 3],
+            demand_load=[1, 2, 3],
         )
 
     def test_basic_initialisation(self):

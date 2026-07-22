@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-from collections import deque
-
 import numpy as np
 
-from mtress import demands
+from mtress import technologies
 from mtress._energy_types import TemperatureBus
 
 
@@ -22,7 +20,7 @@ def assert_heat_exchanger(node, flow_temperature, return_temperature):
 
 class TestHeatingDemand:
     def default_node(self):
-        return demands.SteppedReturnHeater(
+        return technologies.SteppedReturnHeater(
             label="demand",
             reservoir_temperature=[12, 15, -3],
             nominal_power=12,
@@ -82,7 +80,7 @@ if __name__ == "__main__":
     energy_system.add(location)
 
     node = location.subnode(
-        demands.SteppedReturnHeater,
+        technologies.SteppedReturnHeater,
         local_name="stepped heater",
         reservoir_temperature=[12, 15, -3],
         nominal_power=12,
