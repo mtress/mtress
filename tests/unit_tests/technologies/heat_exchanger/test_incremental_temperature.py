@@ -4,7 +4,7 @@
 import numpy as np
 
 from mtress import technologies
-from mtress._energy_types import TemperatureBus
+from mtress.carriers.heat import TemperatureBus
 
 
 def assert_heat_exchanger(node, flow_temperature, return_temperature):

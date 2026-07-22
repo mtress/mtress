@@ -18,7 +18,7 @@ from ._base_mtress_nodes import (
     SubNetwork,
 )
 from ._data_handler import DataHandler
-from ._energy_types import TemperatureBus
+from .carriers.heat import TemperatureBus
 from ._helpers._visualization import graph_cytoscape, graph_graphviz
 
 

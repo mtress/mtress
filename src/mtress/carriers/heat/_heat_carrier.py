@@ -4,9 +4,7 @@
 Basic heat layer functionality.
 
 SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
-SPDX-FileCopyrightText: kehag Energiehandel GMbH
 SPDX-FileCopyrightText: Patrik Schönfeldt
-SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
@@ -20,9 +18,10 @@ from oemof.solph import _plumbing
 
 from mtress._location import Location
 
-from .._plumbing import maxseq, minseq
-from .._base_mtress_nodes import AbstractCarrier, AbstractTechnology
-from .._energy_types import EnergyQuality, TemperatureBus
+from ..._plumbing import maxseq, minseq
+from ..._base_mtress_nodes import AbstractCarrier, AbstractTechnology
+from ..._energy_types import EnergyQuality
+from ._heat_bus import TemperatureBus
 
 
 class HeatCarrier(AbstractCarrier):

@@ -2,9 +2,9 @@
 
 from oemof.solph.components import Converter
 
-from ..._energy_types import EnergyFlowHeat
-from ..._energy_types import MassFlowHeat
-from ..._energy_types import TemperatureBus
+from ...carriers.heat import EnergyFlowHeat
+from ...carriers.heat import MassFlowHeat
+from ...carriers.heat import TemperatureBus
 from ..._base_mtress_nodes import AbstractTechnology
 
 

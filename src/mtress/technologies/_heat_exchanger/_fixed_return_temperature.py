@@ -6,10 +6,10 @@ from collections import deque
 from oemof.solph import Bus
 from oemof.solph.components import Sink, Source
 
-from ..._energy_types import EnergyFlowHeat
+from ...carriers.heat import EnergyFlowHeat
 from ..._energy_types import EnergyQuality
-from ..._energy_types import MassFlowHeat
-from ..._energy_types import TemperatureBus
+from ...carriers.heat import MassFlowHeat
+from ...carriers.heat import TemperatureBus
 from ..._data_handler import TimeseriesSpecifier
 from ...carriers import HeatCarrier
 
