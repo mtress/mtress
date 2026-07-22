@@ -77,7 +77,7 @@ house_1.add(
 )
 # Add heat demands
 house_1.add(
-    demands.FixedReturnHeating(
+    demands.FixedReturnHeater(
         name="heat_demand",
         min_flow_temperature=80,
         return_temperature=20,

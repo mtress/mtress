@@ -1,15 +1,15 @@
 """Energy demands."""
 
 from ._heat_exchanger._fixed_return_temperature import (
-    FixedReturnCooling,
-    FixedReturnHeating,
+    FixedReturnHeatExtractor,
+    FixedReturnHeater,
 )
 from ._heat_exchanger._incremental_temperature import (
-    SteppedReturnHeating,
+    SteppedReturnHeater,
 )
 
 __all__ = [
-    "FixedReturnCooling",
-    "FixedReturnHeating",
-    "SteppedReturnHeating",
+    "FixedReturnHeatExtractor",
+    "FixedReturnHeater",
+    "SteppedReturnHeater",
 ]

@@ -56,7 +56,7 @@ house_1.add(
     demands.Electricity(name="Electricity_demand", time_series=[10, 15])
 )
 house_1.add(
-    demands.FixedReturnHeating(
+    demands.FixedReturnHeater(
         name="Heating_demand",
         min_flow_temperature=20,
         return_temperature=10,
@@ -65,7 +65,7 @@ house_1.add(
 )
 
 house_1.add(
-    demands.FixedReturnCooling(
+    demands.FixedReturnHeatExtractor(
         name="Cooling_demand",
         return_temperature=30,
         max_flow_temperature=10,

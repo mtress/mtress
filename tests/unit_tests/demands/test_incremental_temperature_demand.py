@@ -22,7 +22,7 @@ def assert_heat_exchanger(node, flow_temperature, return_temperature):
 
 class TestHeatingDemand:
     def default_node(self):
-        return demands.SteppedReturnHeating(
+        return demands.SteppedReturnHeater(
             label="demand",
             reservoir_temperature=[12, 15, -3],
             nominal_power=12,
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     energy_system.add(location)
 
     node = location.subnode(
-        demands.SteppedReturnHeating,
+        demands.SteppedReturnHeater,
         local_name="stepped heater",
         reservoir_temperature=[12, 15, -3],
         nominal_power=12,

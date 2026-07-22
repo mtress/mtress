@@ -53,7 +53,7 @@ house_1.add(
 )
 
 house_1.add(
-    demands.FixedReturnHeating(
+    demands.FixedReturnHeater(
         name="space_heating",
         min_flow_temperature=25,
         return_temperature=10,

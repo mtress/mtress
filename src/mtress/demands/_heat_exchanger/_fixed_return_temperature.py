@@ -131,7 +131,7 @@ class FixedReturnTemperature(AbstractHeatExchanger):
         pass
 
 
-class FixedReturnHeating(FixedReturnTemperature):
+class FixedReturnHeater(FixedReturnTemperature):
 
     def __init__(
         self,
@@ -199,7 +199,7 @@ class FixedReturnHeating(FixedReturnTemperature):
         self._update_conversion_factors()
 
 
-class FixedReturnCooling(FixedReturnTemperature):
+class FixedReturnHeatExtractor(FixedReturnTemperature):
 
     def __init__(
         self,

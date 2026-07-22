@@ -23,7 +23,7 @@ def assert_heat_exchanger(node, flow_temperature, return_temperature):
 
 class TestHeatDemand:
     def default_node(self):
-        return demands.FixedReturnHeating(
+        return demands.FixedReturnHeater(
             label="demand",
             min_flow_temperature=40,
             return_temperature=30,
@@ -37,7 +37,7 @@ class TestHeatDemand:
 
 class TestCoolingDemand:
     def default_node(self):
-        return demands.FixedReturnCooling(
+        return demands.FixedReturnHeatExtractor(
             label="demand",
             return_temperature=40,
             max_flow_temperature=20,
