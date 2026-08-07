@@ -1,13 +1,8 @@
 import os
+
 from oemof.solph import Model
 
-from mtress import (
-    EnergySystem,
-    Location,
-    carriers,
-    technologies,
-)
-
+from mtress import EnergySystem, Location, carriers, technologies
 from mtress._helpers._visualization import graph_graphviz
 
 os.chdir(os.path.dirname(__file__))
@@ -26,7 +21,7 @@ energy_system.add(house_1)
 house_1.subnode(
     carriers.HeatCarrier,
     local_name="HC",
-    temperature_levels=[2, 5, 10, 11, [19,21], 20, [30, 30.5]],
+    temperature_levels=[2, 5, 10, 11, [19, 21], 20, [30, 30.5]],
 )
 
 
