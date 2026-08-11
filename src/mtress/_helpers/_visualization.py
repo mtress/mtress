@@ -805,7 +805,7 @@ def generate_graph_graphviz(
             if flows:
                 flow = edge_attributes["flow"].mean()
                 unit = edge_attributes.get("unit", "")
-                if flow > 0:
+                if flow > 0 or any(edge_attributes["flow"]):
                     graph.edge(
                         source,
                         target,
@@ -874,7 +874,7 @@ def generate_graph_cytoscape(graph_elements: dict, flows: bool) -> dict:
                 flow = edge_attr["flow"]
                 unit = edge_attr.get("unit", "")
                 flow_mean = flow.mean()
-                if flow_mean > 0:
+                if flow_mean > 0 or any(flow):
                     e["data"]["flow"] = flow
                     e["data"]["unit"] = unit
                     e["style"] = {
