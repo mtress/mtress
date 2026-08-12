@@ -23,7 +23,7 @@ from mtress import (
     Location,
     carriers,
     demands,
-    technologies,
+    components,
 )
 from mtress._helpers._visualization import graph_graphviz
 
@@ -46,7 +46,7 @@ ec: carriers.ElectricityCarrier = house_1.subnode(
 )
 
 house_1.subnode(
-    technologies.ElectricityGridConnection,
+    components.ElectricityGridConnection,
     "EGC",
     working_rate=35,
 )

@@ -1,5 +1,3 @@
-"""Room heating technologies."""
-
 from oemof.solph.components import Converter
 
 from ...carriers.heat import EnergyFlowHeat

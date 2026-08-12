@@ -1,5 +1,3 @@
-"""Room heating technologies."""
-
 from abc import abstractmethod
 from collections import deque
 
@@ -10,7 +8,6 @@ from ...carriers.heat import EnergyFlowHeat
 from ..._energy_types import EnergyQuality
 from ...carriers.heat import MassFlowHeat
 from ...carriers.heat import TemperatureBus
-from ..._data_handler import TimeseriesSpecifier
 from ...carriers import HeatCarrier
 
 from ._abstract_heat_exchanger import AbstractHeatExchanger
@@ -131,7 +128,7 @@ class FixedReturnTemperature(AbstractHeatExchanger):
         pass
 
 
-class FixedReturnHeater(FixedReturnTemperature):
+class FixedReturnHeatSink(FixedReturnTemperature):
 
     def __init__(
         self,
@@ -139,8 +136,7 @@ class FixedReturnHeater(FixedReturnTemperature):
         *,
         min_flow_temperature: float,
         return_temperature: float,
-        nominal_power: float = 1.0,
-        demand_load: TimeseriesSpecifier = None,
+        nominal_power: float,
         specific_heat_capacity: float = 1.161,
         parent_node=None,
         custom_properties=None,
@@ -159,7 +155,6 @@ class FixedReturnHeater(FixedReturnTemperature):
             return_temperature=return_temperature,
             reservoir_flow=EnergyFlowHeat(
                 nominal_capacity=nominal_power,
-                fix=demand_load,
             ),
             specific_heat_capacity=specific_heat_capacity,
             parent_node=parent_node,
@@ -200,7 +195,7 @@ class FixedReturnHeater(FixedReturnTemperature):
         self._update_conversion_factors()
 
 
-class FixedReturnHeatExtractor(FixedReturnTemperature):
+class FixedReturnHeatSource(FixedReturnTemperature):
 
     def __init__(
         self,
@@ -208,8 +203,7 @@ class FixedReturnHeatExtractor(FixedReturnTemperature):
         *,
         max_flow_temperature: float,
         return_temperature: float,
-        nominal_power: float = 1.0,
-        demand_load: TimeseriesSpecifier,
+        nominal_power: float,
         specific_heat_capacity: float = 1.161,
         parent_node=None,
         custom_properties=None,
@@ -229,7 +223,6 @@ class FixedReturnHeatExtractor(FixedReturnTemperature):
             return_temperature=return_temperature,
             reservoir_flow=EnergyFlowHeat(
                 nominal_capacity=nominal_power,
-                fix=demand_load,
             ),
             specific_heat_capacity=specific_heat_capacity,
             parent_node=parent_node,

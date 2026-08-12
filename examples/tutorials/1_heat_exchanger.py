@@ -2,7 +2,7 @@ import os
 
 from oemof.solph import Model
 
-from mtress import EnergySystem, Location, carriers, technologies
+from mtress import EnergySystem, Location, carriers, components, demands
 from mtress._helpers._visualization import graph_graphviz
 
 os.chdir(os.path.dirname(__file__))
@@ -27,11 +27,11 @@ house_1.subnode(
 
 # Add demands
 hd = house_1.subnode(
-    technologies.FixedReturnHeater,
+    demands.FixedReturnHeatDemand,
     local_name="heat_demand",
     min_flow_temperature=20,
     return_temperature=10,
-    demand_load=[50, 50],
+    time_series=[50, 50],
 )
 
 energy_system.establish_interconnections()

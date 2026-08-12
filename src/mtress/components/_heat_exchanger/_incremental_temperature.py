@@ -1,5 +1,3 @@
-"""Room heating technologies."""
-
 from abc import abstractmethod
 from collections import deque
 
@@ -48,7 +46,7 @@ class IncrementalTemperature(AbstractHeatExchanger):
         )
 
 
-class SteppedReturnHeater(IncrementalTemperature):
+class SteppedReturnHeatSink(IncrementalTemperature):
 
     def __init__(
         self,

@@ -16,7 +16,7 @@ import os
 
 from oemof.solph import Model
 
-from mtress import EnergySystem, Location, carriers, demands, technologies
+from mtress import EnergySystem, Location, carriers, demands, components
 from mtress._helpers._visualization import graph_graphviz
 
 os.chdir(os.path.dirname(__file__))
@@ -38,7 +38,7 @@ house_1.subnode(
 )
 
 house_1.subnode(
-    technologies.ElectricityGridConnection,
+    components.ElectricityGridConnection,
     "EGC",
     working_rate=35,
 )
