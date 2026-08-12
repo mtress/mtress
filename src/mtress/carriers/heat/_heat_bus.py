@@ -10,11 +10,13 @@ from oemof.solph import Bus
 from oemof.solph._plumbing import _FakeSequence
 
 from mtress._energy_types import EnergyQuality
+from mtress._data_handler import TimeseriesSpecifier
 
 class TemperatureBus(Bus):
+
     def __init__(
         self,
-        temperature: EnergyQuality | float,
+        temperature: EnergyQuality | TimeseriesSpecifier,
         label=None,
         *,
         inputs=None,
