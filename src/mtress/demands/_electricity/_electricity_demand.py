@@ -9,7 +9,7 @@ from ..._energy_types import EnergyType
 from ...carriers import ElectricityCarrier as ElectricityCarrier
 
 
-class Electricity(AbstractTechnology):
+class ElectricityDemand(AbstractTechnology):
     """
     Class representing an electricity demand.
 

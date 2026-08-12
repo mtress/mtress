@@ -1,11 +1,10 @@
 """Heat demands."""
 
 from ..._data_handler import TimeseriesSpecifier
-
 from ...components import FixedReturnHeatSink
 
 
-class FixedReturnHeatDemand(FixedReturnHeatSink):
+class HeatDemandFixedReturn(FixedReturnHeatSink):
 
     def __init__(
         self,
