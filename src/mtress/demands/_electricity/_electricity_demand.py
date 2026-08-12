@@ -20,7 +20,6 @@ class ElectricityDemand(ElectricitySink):
         parent_node=None,
         custom_properties=None,
     ):
-        """Initialize electricity energy carrier and add components."""
         super().__init__(
             label,
             parent_node=parent_node,
