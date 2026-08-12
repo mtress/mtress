@@ -22,9 +22,6 @@ class SubNetwork(ABC, Node):
             custom_properties=custom_properties,
         )
 
-        # These are lists for now. We might want to have type specific
-        # getters when we update technologies that actually support more than
-        # one carrier.
         self.inbound_interfaces = TypeAccessContainer(solph.Bus)
         self.outbound_interfaces = TypeAccessContainer(solph.Bus)
 
