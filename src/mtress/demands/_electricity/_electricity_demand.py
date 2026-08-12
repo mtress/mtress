@@ -7,29 +7,10 @@ from ..._base_mtress_nodes import AbstractTechnology
 from ..._data_handler import TimeseriesSpecifier, TimeseriesType
 from ..._energy_types import EnergyType
 from ...carriers import ElectricityCarrier as ElectricityCarrier
+from ...components import ElectricitySink
 
 
-class ElectricityDemand(AbstractTechnology):
-    """
-    Class representing an electricity demand.
-
-    Functionality: Demands contain time series (in Wh) of energy that is
-        needed. The electricity demand automatically connects to its
-        corresponding electricity  carrier. A name identifying the demand
-        has to be given that is unique for the location, because multiple
-        demands of one type can exist for one location.
-
-    Procedure: Create a simple electricity demand by doing the following:
-
-            demands.Electricity(location=house_1, time_series=[0, 0.5, 9])
-
-    Notice: The different types of demands have different complexity:
-        Electricity demand does not need any further specification,
-        heat and gas demand need a specified temperature or pressure
-        level, respectively. Further, energy from electricity and the
-        gaseous carriers is just consumed, heat demands have a returning
-        energy flow.
-    """
+class ElectricityDemand(ElectricitySink):
 
     def __init__(
         self,
@@ -45,47 +26,4 @@ class ElectricityDemand(AbstractTechnology):
             parent_node=parent_node,
             custom_properties=custom_properties,
         )
-        self._time_series = time_series
-
-        self.__build_core()
-
-    def __build_core(self):
-
-        self._input_node = self.subnode(
-            Bus,
-            local_name="input",
-        )
-
-        self._sink = self.subnode(
-            Sink,
-            local_name="sink",
-            inputs={
-                self._input_node: Flow(
-                    custom_properties={
-                        "unit": "W",
-                        "energy_type": EnergyType.ELECTRICITY,
-                    },
-                    nominal_capacity=1,
-                    fix=self._time_series,
-                )
-            },
-        )
-        self.inbound_interfaces.add(self._input_node)
-
-    def establish_interconnections(self):
-        self._sink.inputs[self._input_node].fix = (
-            self._energy_system.data.get_timeseries(
-                self._time_series,
-                kind=TimeseriesType.INTERVAL,
-            )
-        )
-
-        if self.parent:
-            electricity_carrier = self.parent.get_carrier(ElectricityCarrier)
-
-            self._input_node.inputs[electricity_carrier.distribution] = Flow(
-                custom_properties={
-                    "unit": "W",
-                    "energy_type": EnergyType.ELECTRICITY,
-                }
-            )
+        self._sink_flow.fix = time_series
