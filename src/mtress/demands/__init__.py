@@ -1,7 +1,7 @@
 """Demands of any energy type."""
 
-from .electricity._electricity import Electricity
-from .heat._heat_demand import FixedReturnHeatDemand
+from ._electricity._electricity_demand import ElectricityDemand
+from ._heat._heat_demand import HeatDemandFixedReturn
 
 __all__ = [
     "Electricity",
