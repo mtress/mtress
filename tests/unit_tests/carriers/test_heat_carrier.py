@@ -3,7 +3,7 @@
 Tests for the MTRESS heat carrier.
 """
 
-from ..helpers import assert_every_element_is_same
+from mtress._helpers._testing import assert_every_element_is_same
 
 from mtress.carriers import HeatCarrier
 from mtress.carriers.heat import TemperatureBus
