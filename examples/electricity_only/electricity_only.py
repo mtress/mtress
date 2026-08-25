@@ -16,7 +16,7 @@ import os
 
 from oemof.solph import Model
 
-from mtress import EnergySystem, Location, carriers, demands, components
+from mtress import EnergySystem, Location, carriers, components, demands
 from mtress._helpers._visualization import graph_graphviz
 
 os.chdir(os.path.dirname(__file__))
@@ -44,7 +44,7 @@ house_1.subnode(
 )
 
 house_1.subnode(
-    demands.Electricity,
+    demands.ElectricityDemand,
     "electricity demand 1",
     time_series=[0, 0.5],
 )
