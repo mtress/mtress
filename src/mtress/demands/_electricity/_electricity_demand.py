@@ -22,6 +22,7 @@ class ElectricityDemand(ElectricitySink):
     ):
         super().__init__(
             label,
+            nominal_power=1.0,
             parent_node=parent_node,
             custom_properties=custom_properties,
         )
