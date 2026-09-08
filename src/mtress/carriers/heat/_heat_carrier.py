@@ -94,6 +94,17 @@ class HeatCarrier(AbstractCarrier):
         overlap = HeatCarrier._overlap(bus1=bus1, bus2=bus2)
         return len(overlap) >= 1
 
+    def _create_overlap_nodes(
+            self,
+            buses1: Iterable[TemperatureBus],
+            buses2: Iterable[TemperatureBus],
+        ):
+        for bus1 in buses1:
+            for bus2 in buses2:
+                if (bus1.parent is not bus2.parent) or bus1.parent is None:
+                    for temperature in HeatCarrier._overlap(bus1, bus2):
+                        self.add_level(temperature, fixed=True)
+
     @staticmethod
     def _overlap(bus1: TemperatureBus, bus2: TemperatureBus) -> tuple:
         """
@@ -143,7 +154,6 @@ class HeatCarrier(AbstractCarrier):
         return deque(matching_nodes)
 
     def establish_interconnections(self):
-        return
 
         self.parent: Location
         technologies = self.parent.get_nodes_by_type(AbstractTechnology)
@@ -162,14 +172,7 @@ class HeatCarrier(AbstractCarrier):
                 if isinstance(x, TemperatureBus)
             ]
 
-        # test
-        t = set()
-        for n in inbound_nodes + outbound_nodes:
-            n: TemperatureBus
-            t.add(n.temperature.value)
-
-        for x in t:
-            self.add_level(x, fixed=True)
+        self._create_overlap_nodes(inbound_nodes, outbound_nodes)
 
     def add_level(self, temperature, *, fixed):
         quality = EnergyQuality(temperature, fixed=fixed)
