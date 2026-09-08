@@ -14,7 +14,8 @@ from collections.abc import Iterable
 
 import numpy as np
 
-from oemof.solph import _plumbing
+from oemof.solph._plumbing import _FakeSequence
+from oemof.solph._plumbing import sequence
 
 from mtress._location import Location
 
@@ -105,22 +106,25 @@ class HeatCarrier(AbstractCarrier):
 
         correct_order_mask = lower_limit < upper_limit
 
+        length = None
         if correct_order_mask.max() == 1:
-            if not isinstance(correct_order_mask, _plumbing._FakeSequence):
+            if not isinstance(correct_order_mask, _FakeSequence):
+                length = len(correct_order_mask)
                 correct_order_mask = [
                     x if x else np.nan for x in correct_order_mask
                 ]
 
             return (
-                lower_limit * correct_order_mask,
-                upper_limit * correct_order_mask,
+                correct_order_mask * sequence(lower_limit, length),
+                correct_order_mask * sequence(upper_limit, length),
             )
 
         both_same_mask = lower_limit == upper_limit
         if both_same_mask.max() == 1:
-            if not isinstance(both_same_mask, _plumbing._FakeSequence):
+            if not isinstance(both_same_mask, _FakeSequence):
+                length = len(correct_order_mask)
                 both_same_mask = [x if x else np.nan for x in both_same_mask]
-            return (lower_limit * both_same_mask, )
+            return (both_same_mask * sequence(lower_limit, length), )
 
         return tuple()
 

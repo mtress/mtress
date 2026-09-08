@@ -15,6 +15,13 @@ import numpy as np
 from oemof.solph import _plumbing
 
 
+def sequence_equal(a, b) -> bool:
+    if isinstance(a, _plumbing._FakeSequence):
+        a = a.value
+    if isinstance(b, _plumbing._FakeSequence):
+        b = b.value
+    return np.array_equal(a, b, equal_nan=True)
+
 def maxseq(a, b):
     """Get the element-wise maximum of two sequences"""
     if isinstance(a, _plumbing._FakeSequence):
