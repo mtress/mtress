@@ -96,6 +96,10 @@ class HeatCarrier(AbstractCarrier):
 
     @staticmethod
     def _overlap(bus1: TemperatureBus, bus2: TemperatureBus) -> tuple:
+        """
+        returns tuple[minimum_of_overlap, maximum_of_overlap, ]
+        or returns tuple[both_same, ], or empty tuple
+        """
         b1_min = bus1.energy_quality.minimum
         b1_max = bus1.energy_quality.maximum
         b2_min = bus2.energy_quality.minimum
@@ -167,15 +171,22 @@ class HeatCarrier(AbstractCarrier):
         for x in t:
             self.add_level(x, fixed=True)
 
-    def add_level(self, t, *, fixed):
+    def add_level(self, temperature, *, fixed):
+        quality = EnergyQuality(temperature, fixed=fixed)
+
+        for node in self.subnodes:
+            node: TemperatureBus
+            if quality == node.energy_quality:
+                return node
+
         if fixed:
-            label = f"{t}"
+            local_name = f"{temperature}"
         else:
-            label = f"tn_{len(self.subnodes)}"
+            local_name = f"tn_{len(self.subnodes)}"
         node = self.subnode(
             TemperatureBus,
-            local_name=label,
-            temperature=EnergyQuality(t, fixed=fixed),
+            local_name=local_name,
+            temperature=quality,
         )
         self.inbound_interfaces.add(node)
         self.outbound_interfaces.add(node)

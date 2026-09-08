@@ -94,3 +94,8 @@ class EnergyQuality:
                 + " fixed value. (Setting a value after initialisation fixes"
                 + " that value)."
             )
+
+    def __eq__(self, other):
+        return (
+            self.minimum == other.minimum and self.maximum == other.maximum
+        )
