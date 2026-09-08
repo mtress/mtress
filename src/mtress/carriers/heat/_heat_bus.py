@@ -17,8 +17,8 @@ class TemperatureBus(Bus):
     def __init__(
         self,
         temperature: EnergyQuality | TimeseriesSpecifier,
-        label=None,
         *,
+        label=None,
         inputs=None,
         outputs=None,
         specific_heat_capacity=1.161,
