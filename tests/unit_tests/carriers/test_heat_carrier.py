@@ -92,6 +92,27 @@ def test_heat_carrier_overlap():
     assert sequence_equal(overlap_minimum_leaves_range[1], [35, 35, np.nan])
 
 
+def test_create_overlap_nodes():
+    hc = HeatCarrier(label="heat", temperature_levels=[50])
+
+    assert len(hc.inbound_interfaces) == 1
+    assert len(hc.outbound_interfaces) == 1
+
+    nodes1 = [
+        TemperatureBus(EnergyQuality(value=50, minimum=[25, 32])),
+        TemperatureBus(EnergyQuality(value=55)),
+    ]
+    nodes2 = [
+        TemperatureBus(EnergyQuality(value=30)),
+        TemperatureBus(EnergyQuality(value=50, maximum=[60, 80])),
+    ]
+
+    hc._create_overlap_nodes(nodes1, nodes2)
+
+    assert len(hc.inbound_interfaces) == 5
+    assert len(hc.outbound_interfaces) == 5
+
+
 def test_nodes_to_connect():
     temperatures = [-10, 10, 20, [35, 36], 75]
     hc = HeatCarrier(label="heat", temperature_levels=temperatures)
