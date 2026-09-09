@@ -77,6 +77,9 @@ class HeatCarrier(AbstractCarrier):
 
         self._build_core(temperature_levels)
 
+        if isinstance(self._parent, Location):
+            self.establish_interconnections()
+
     def _build_core(self, temperature_levels):
         """Build core structure of oemof.solph representation."""
 
