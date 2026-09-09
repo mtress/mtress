@@ -12,6 +12,8 @@ from enum import IntEnum
 
 from oemof.solph._plumbing import Apply, sequence
 
+from ._plumbing import sequence_equal
+
 
 class EnergyType(IntEnum):
     UNDEFINED = 0
@@ -97,5 +99,6 @@ class EnergyQuality:
 
     def __eq__(self, other):
         return (
-            self.minimum == other.minimum and self.maximum == other.maximum
+            sequence_equal(self.minimum, other.minimum)
+            and sequence_equal (self.maximum, other.maximum)
         )
