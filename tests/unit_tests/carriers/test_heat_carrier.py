@@ -29,20 +29,19 @@ def test_init_temperature_levels():
     assert len(hc.outbound_interfaces[TemperatureBus]) == len(temperatures)
 
 
-def test_unique_levels():
+def test_level_autocreation():
     hc = HeatCarrier(label="heat")
     assert len(hc.inbound_interfaces) == 0
     assert len(hc.outbound_interfaces) == 0
 
-    level10 = hc.add_level(10, fixed=True)
+    level10_1 = hc.get_level(10)
     assert len(hc.inbound_interfaces) == 1
     assert len(hc.outbound_interfaces) == 1
 
-
-    level10_2 = hc.add_level(10, fixed=True)
+    level10_2 = hc.get_level(10)
     assert len(hc.inbound_interfaces) == 1
     assert len(hc.outbound_interfaces) == 1
-    assert level10_2 == level10
+    assert level10_2 == level10_1
 
 
 def test_heat_carrier_overlap():

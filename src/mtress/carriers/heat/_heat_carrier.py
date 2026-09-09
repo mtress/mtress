@@ -81,7 +81,7 @@ class HeatCarrier(AbstractCarrier):
         """Build core structure of oemof.solph representation."""
 
         for temperature in temperature_levels:
-            self.add_level(temperature, fixed=True)
+            self.get_level(temperature)
 
     @property
     def temperatures(self) -> Iterable:
@@ -103,7 +103,7 @@ class HeatCarrier(AbstractCarrier):
             for bus2 in buses2:
                 if (bus1.parent is not bus2.parent) or bus1.parent is None:
                     for temperature in HeatCarrier._overlap(bus1, bus2):
-                        self.add_level(temperature, fixed=True)
+                        self.get_level(temperature)
 
     @staticmethod
     def _overlap(bus1: TemperatureBus, bus2: TemperatureBus) -> tuple:
@@ -174,18 +174,15 @@ class HeatCarrier(AbstractCarrier):
 
         self._create_overlap_nodes(inbound_nodes, outbound_nodes)
 
-    def add_level(self, temperature, *, fixed):
-        quality = EnergyQuality(temperature, fixed=fixed)
+    def get_level(self, temperature) -> TemperatureBus:
+        quality = EnergyQuality(temperature)
 
         for node in self.subnodes:
             node: TemperatureBus
             if quality == node.energy_quality:
                 return node
 
-        if fixed:
-            local_name = f"{temperature}"
-        else:
-            local_name = f"tn_{len(self.subnodes)}"
+        local_name = f"{temperature}"
         node = self.subnode(
             TemperatureBus,
             local_name=local_name,
