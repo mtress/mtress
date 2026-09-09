@@ -42,9 +42,6 @@ class SubNetwork(ABC, Node):
 
         pass
 
-    def add_constraints(self, model: solph.Model):
-        pass
-
 
 class AbstractCarrier(SubNetwork):
     """Abstract carrier class to ensure a unified interface."""
