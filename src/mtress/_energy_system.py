@@ -15,7 +15,6 @@ from oemof.network import Node
 from ._base_mtress_nodes import (
     AbstractCarrier,
     AbstractTechnology,
-    SubNetwork,
 )
 from ._data_handler import DataHandler
 from .carriers.heat import TemperatureBus
