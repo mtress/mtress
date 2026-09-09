@@ -8,8 +8,7 @@ SPDX-License-Identifier: MIT
 
 from oemof.solph import Flow
 
-from mtress._energy_types import EnergyType
-
+from ..._helpers._visualization import EnergyType
 
 class EnergyFlowElectricity(Flow):
     def __init__(self, **kwargs):

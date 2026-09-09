@@ -8,18 +8,9 @@ SPDX-License-Identifier: MIT
 
 import sys
 
-from enum import IntEnum
-
 from oemof.solph._plumbing import Apply, sequence
 
 from ._plumbing import sequence_equal
-
-
-class EnergyType(IntEnum):
-    UNDEFINED = 0
-    ELECTRICITY = 1
-    HEAT = 2
-    GAS = 3
 
 
 class EnergyQuality:

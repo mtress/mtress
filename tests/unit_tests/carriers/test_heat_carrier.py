@@ -9,7 +9,7 @@ from mtress._helpers._testing import assert_every_element_is_same
 
 from mtress.carriers import HeatCarrier
 from mtress.carriers.heat import TemperatureBus
-from mtress._energy_types import EnergyQuality
+from mtress._energy_quality import EnergyQuality
 from mtress._plumbing import sequence_equal
 
 

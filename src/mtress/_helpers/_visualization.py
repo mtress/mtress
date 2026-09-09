@@ -2,6 +2,7 @@
 
 import logging
 from copy import deepcopy
+from enum import IntEnum
 
 import dash_cytoscape as cyto
 import pandas as pd
@@ -20,7 +21,12 @@ from oemof.solph.components import (
     Source,
 )
 
-from .._energy_types import EnergyType
+class EnergyType(IntEnum):
+    UNDEFINED = 0
+    ELECTRICITY = 1
+    HEAT = 2
+    GAS = 3
+
 
 # Define shapes for the component types
 SHAPES = {

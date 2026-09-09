@@ -8,8 +8,8 @@ from oemof.solph.components import GenericStorage
 
 from ..._base_mtress_nodes import AbstractTechnology
 from ..._data_handler import TimeseriesSpecifier
-from ..._energy_types import EnergyType
 from ..._helpers._util import enable_templating
+from ..._helpers._visualization import EnergyType
 from ...carriers import ElectricityCarrier
 from ...carriers.electricity import ElectricityBus, EnergyFlowElectricity
 

@@ -10,7 +10,7 @@ from mtress._plumbing import (
 )
 
 from ...carriers.heat import EnergyFlowHeat
-from ..._energy_types import EnergyQuality
+from ..._energy_quality import EnergyQuality
 from ...carriers.heat import MassFlowHeat
 from ...carriers.heat import TemperatureBus
 from ..._data_handler import TimeseriesSpecifier

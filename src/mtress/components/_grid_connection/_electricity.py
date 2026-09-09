@@ -9,7 +9,7 @@ from mtress._data_handler import TimeseriesSpecifier, TimeseriesType
 from mtress.carriers import ElectricityCarrier
 
 from ..._base_mtress_nodes import AbstractTechnology
-from ..._energy_types import EnergyType
+from ..._helpers._visualization import EnergyType
 
 
 class ElectricityGridConnection(AbstractTechnology):

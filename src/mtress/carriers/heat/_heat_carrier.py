@@ -21,7 +21,7 @@ from mtress._location import Location
 
 from ..._plumbing import maxseq, minseq
 from ..._base_mtress_nodes import AbstractCarrier, AbstractTechnology
-from ..._energy_types import EnergyQuality
+from ..._energy_quality import EnergyQuality
 from ._heat_bus import TemperatureBus
 
 
