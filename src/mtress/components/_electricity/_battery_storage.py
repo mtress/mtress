@@ -191,57 +191,6 @@ class BatteryStorage(AbstractTechnology):
             invest_relation_output_capacity=invest_relation_output_capacity,
         )
 
-    def add_constraints(self, model):
-        """Add constraints to the model."""
-        if self.one_sense_per_time_step:
-            # charging and discharging cannot happen during the same time step
-            # >> use special ordered sets of type 1
-
-            def rule_sos1_constraint(m, t):
-                return [
-                    m.flow[self._bus, self._battery_node, t],
-                    m.flow[self._battery_node, self._bus, t],
-                ]
-
-            setattr(
-                model,
-                f"{self.label}_sos1_constraint",
-                pyo.SOSConstraint(
-                    model.TIMESTEPS, rule=rule_sos1_constraint, sos=1
-                ),
-            )
-        else:
-            # charging and discharging can happen during the same time step
-            # >> apply a shared limit to reflect time dedicated to one or the
-            # other (charging and discharging are mutually-exclusive, but both
-            # can take place during the same time step)
-            if self.shared_limit:
-
-                def rule_shared_limit(m, t):
-                    return (
-                        # charging
-                        m.flow[
-                            self._bus,
-                            self._battery_node,
-                            t,
-                        ]
-                        +
-                        # discharging
-                        m.flow[
-                            self._battery_node,
-                            self._bus,
-                            t,
-                        ]
-                    ) <= (
-                        self.discharging_C_Rate + self.charging_C_Rate
-                    ) * self.nominal_capacity / 2
-
-                setattr(
-                    model,
-                    f"{self.label}_shared_limit",
-                    pyo.Constraint(model.TIMESTEPS, rule=rule_shared_limit),
-                )
-
     def establish_interconnections(self):
         if self.parent:
             electricity_carrier: ElectricityCarrier = self.parent.get_carrier(
