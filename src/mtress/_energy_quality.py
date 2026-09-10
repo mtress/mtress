@@ -10,7 +10,7 @@ import sys
 
 from oemof.solph._plumbing import Apply, sequence
 
-from ._plumbing import sequence_equal
+from ._plumbing import sequence_compare
 
 
 class EnergyQuality:
@@ -90,6 +90,6 @@ class EnergyQuality:
 
     def __eq__(self, other):
         return (
-            sequence_equal(self.minimum, other.minimum)
-            and sequence_equal (self.maximum, other.maximum)
+            sequence_compare(self.minimum, other.minimum)
+            and sequence_compare (self.maximum, other.maximum)
         )

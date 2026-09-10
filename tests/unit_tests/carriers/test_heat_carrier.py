@@ -3,6 +3,8 @@
 Tests for the MTRESS heat carrier.
 """
 
+import sys
+
 import numpy as np
 
 from mtress._helpers._testing import assert_every_element_is_same
@@ -10,7 +12,7 @@ from mtress._helpers._testing import assert_every_element_is_same
 from mtress.carriers import HeatCarrier
 from mtress.carriers.heat import TemperatureBus
 from mtress._energy_quality import EnergyQuality
-from mtress._plumbing import sequence_equal
+from mtress._plumbing import sequence_compare
 
 
 def test_basic_initialisation():
@@ -55,7 +57,7 @@ def test_heat_carrier_overlap():
         TemperatureBus([30, 25, 35]),
         TemperatureBus([30, 25, 25]),
     )
-    assert sequence_equal(overlap_diverge, [30, 25, np.nan])
+    assert sequence_compare(overlap_diverge, [30, 25, np.nan])
 
     overlap_cross = HeatCarrier._overlap(
         TemperatureBus([35, 36]),
@@ -73,7 +75,7 @@ def test_heat_carrier_overlap():
         TemperatureBus(EnergyQuality(value=30, minimum=30 ,maximum=40)),
         TemperatureBus([35, 40, 45]),
     )
-    assert sequence_equal(value_leaves_range, [35, 40, np.nan])
+    assert sequence_compare(value_leaves_range, [35, 40, np.nan])
 
     overlap_second_in_first_range = HeatCarrier._overlap(
         TemperatureBus(EnergyQuality(value=32, minimum=25 ,maximum=40)),
@@ -88,8 +90,8 @@ def test_heat_carrier_overlap():
         TemperatureBus(EnergyQuality(value=30, minimum=30, maximum=35)),
     )
     assert len(overlap_minimum_leaves_range) == 2
-    assert sequence_equal(overlap_minimum_leaves_range[0], [30, 32, np.nan])
-    assert sequence_equal(overlap_minimum_leaves_range[1], [35, 35, np.nan])
+    assert sequence_compare(overlap_minimum_leaves_range[0], [30, 32, np.nan])
+    assert sequence_compare(overlap_minimum_leaves_range[1], [35, 35, np.nan])
 
 
 def test_create_overlap_nodes():
@@ -100,17 +102,47 @@ def test_create_overlap_nodes():
 
     nodes1 = [
         TemperatureBus(EnergyQuality(value=50, minimum=[25, 32])),
-        TemperatureBus(EnergyQuality(value=55)),
+        TemperatureBus(EnergyQuality(value=70)),
     ]
     nodes2 = [
+        TemperatureBus(EnergyQuality(value=35, minimum=25)),
         TemperatureBus(EnergyQuality(value=30)),
-        TemperatureBus(EnergyQuality(value=50, maximum=[60, 80])),
+        TemperatureBus(EnergyQuality(value=50, maximum=[60, 65])),
     ]
 
     hc._create_overlap_nodes(nodes1, nodes2)
 
-    assert len(hc.inbound_interfaces) == 5
-    assert len(hc.outbound_interfaces) == 5
+    # preset: 50
+    # nodes 1 / nodes 2 | 25 <= T     | == 30 | T <= [60, 65]
+    # --------------------------------------------------------
+    # [25, 32] <= T     | [25, 32] <= | == 30 | T <= [60, 65]
+    #                   | (no ul)     |       | (no ul, again)
+    # == 70             | == 70       |       |
+
+    expected_levels = [
+        50,  # preset
+        [25, 32],  # 1.1/2.1
+        sys.float_info.max,  # 1.1 / 2.1 and 1.1 / 2.3
+        [30, np.nan],  # 1.1 / 2.2
+        [60, 65],  # 1.1 / 2.3
+        70,  # 1.2 / 2.1
+    ]
+
+    assert len(hc.inbound_interfaces) == 6
+    assert len(hc.outbound_interfaces) == 6
+
+    assert (
+        hc.inbound_interfaces[TemperatureBus]
+        == hc.outbound_interfaces[TemperatureBus]
+    )
+
+    for bus in hc.inbound_interfaces[TemperatureBus]:
+        assert 1 == sum(sequence_compare(
+            bus.energy_quality.value, level, function=np.allclose
+        ) for level in expected_levels)
+
+
+
 
 
 def test_nodes_to_connect():
