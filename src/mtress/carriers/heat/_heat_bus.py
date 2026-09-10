@@ -42,15 +42,6 @@ class TemperatureBus(Bus):
         self.custom_properties["temperature"] = self.temperature
 
     @property
-    def quality_status(self):
-        return self._quality_status
-
-    @quality_status.setter
-    def quality_status(self, value):
-        self.custom_properties["quality_status"] = value
-        self._quality_status = value
-
-    @property
     def specific_heat_capacity(self):
         return self._specific_heat_capacity
 
