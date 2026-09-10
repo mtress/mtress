@@ -23,15 +23,3 @@ class MassFlowGas(Flow):
         )
         super().__init__(**kwargs)
 
-
-class EnergyFlowGas(Flow):
-    def __init__(self, **kwargs):
-        if "custom_properties" not in kwargs:
-            kwargs["custom_properties"] = {}
-        kwargs["custom_properties"].update(
-            {
-                "unit": "W",
-                "energy_type": EnergyType.GAS,
-            }
-        )
-        super().__init__(**kwargs)
