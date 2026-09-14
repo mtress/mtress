@@ -65,27 +65,20 @@ def test_connection_lossless():
             assert len(subnode.outputs) == 1
 
 def test_calculate_losses():
-    temperatures = [30, 35, 40, 50]
-
-    params = {
-        "u_value": 1,  # W/(m2*K)
-        "diameter": 10,  # m
-        "temp_h": 100,  # deg C
-        "temp_c": 50,  # deg C
-        "temp_env": 10,  # deg C
-    }
+    temperatures = [10, 30, 35, 40, 50]
 
     lhs = LayeredHeatStorage(
         "lhs",
         diameter=10,
         volume=25,
         temperature_levels=temperatures,
+        u_value=1,
     )
 
-    lr, flr, fla = lhs.calculate_losses(
-        **params
-    )
-
-    assert lr == pytest.approx(0.00034876522578188804)
-    assert flr == pytest.approx(0.0002790121806255104)
-    assert fla == pytest.approx(10210.176124166828)
+    assert lhs._loss_rate() == pytest.approx(0.00034876522578188804)
+    assert lhs._fixed_losses_relative(
+        temp_h=100, temp_c=50
+    ) == pytest.approx(0.0002790121806255104)
+    assert lhs._fixed_losses_absolute(
+        temp_h=100, temp_c=50
+    ) == pytest.approx(10210.176124166828)
