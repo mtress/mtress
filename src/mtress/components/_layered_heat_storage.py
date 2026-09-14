@@ -22,7 +22,8 @@ from mtress.carriers.heat import MassFlowHeat
 from mtress.carriers.heat import TemperatureBus
 
 
-H2O_DENSITY = 1000  # kg/m³
+H2O_SPECIFIC_HEAT_CAPACITY = 4179  # J/kg/K @ 50 °C
+H2O_DENSITY = 988 # kg/m³ @ 50 °C
 
 
 class LayeredHeatStorage(AbstractTechnology):
@@ -101,16 +102,13 @@ class LayeredHeatStorage(AbstractTechnology):
                 if self._u_value is not None:
                     loss_flow = {bus: MassFlowHeat(maximum=1)}
 
-    @staticmethod
     def calculate_losses(
+        self,
         u_value,
         diameter,
         temp_h,
         temp_c,
         temp_env,
-        time_increment=1,
-        heat_capacity=4195.52,
-        density=971.803,
     ):
         r"""
         Calculates loss rate and fixed losses for a stratified thermal storage.
@@ -140,19 +138,6 @@ class LayeredHeatStorage(AbstractTechnology):
         temp_env : numeric
             Temperature outside of the storage [deg C]
 
-        time_increment : numeric
-            Time increment of the :class:`oemof.solph.EnergySystem` [h]
-
-        heat_capacity: numeric
-            Average specific heat capacity of storage medium [J/(kg*K)]
-            Default values calculated with CoolProp for a temperature of 80 °C
-            as a simplifying assumption
-
-        density : numeric
-            Average density of storage medium [kg/m3]
-            Default values calculated with CoolProp for a temperature of 80 °C
-            as a simplifying assumption
-
         Returns
         -------
 
@@ -172,8 +157,7 @@ class LayeredHeatStorage(AbstractTechnology):
             4
             * u_value
             * 1
-            / (diameter * density * heat_capacity)
-            * time_increment
+            / (diameter * H2O_DENSITY * H2O_SPECIFIC_HEAT_CAPACITY)
             * 3600  # Ws to Wh
         )
 
@@ -182,8 +166,7 @@ class LayeredHeatStorage(AbstractTechnology):
             * u_value
             * (temp_c - temp_env)
             * 1
-            / ((diameter * density * heat_capacity) * (temp_h - temp_c))
-            * time_increment
+            / ((diameter * H2O_DENSITY * H2O_SPECIFIC_HEAT_CAPACITY) * (temp_h - temp_c))
             * 3600  # Ws to Wh
         )
 
@@ -193,10 +176,7 @@ class LayeredHeatStorage(AbstractTechnology):
             * np.pi
             * diameter**2
             * (temp_h + temp_c - 2 * temp_env)
-            * time_increment
         )
-
-        fixed_losses_absolute *= 1e-6  # Wh to MWh
 
         return loss_rate, fixed_losses_relative, fixed_losses_absolute
 
