@@ -9,10 +9,10 @@ SPDX-License-Identifier: MIT
 """
 
 from oemof import solph
-from oemof.thermal import stratified_thermal_storage
 from pyomo import environ as po
 
 from mtress._base_mtress_nodes import AbstractTechnology
+from mtress.carriers import HeatCarrier
 from mtress.carriers.heat import MassFlowHeat
 from mtress.carriers.heat import TemperatureBus
 
@@ -24,15 +24,16 @@ class LayeredHeatStorage(AbstractTechnology):
     """
     Layered heat storage.
 
-    Layered storage, i.e. one subvolume per temperature level
-    following https://doi.org/10.1016/j.apenergy.2022.118890.
+    Layered storage, i.e. one subvolume per temperature level.
+    The formulation is is more detailed than a warehouse model
+    but less detailed than e.g. the formulation found in
+    https://doi.org/10.1016/j.apenergy.2022.118890.
 
     For simplification, an infitesimal subvolume for each temperature is
-    and will be assumed to be always present, meaning that losses do not skip
-    depleted layers and top-level losses will always consider the highest
-    temeprature.
-    Note that currently, only heat losses through the side are implemented,
-    the storage only works for min_temperature == ambient_temperature.
+    and will be assumed to be always present.
+    This way, losses can contribute to (previously) depleted layers.
+    Note that currently only heat losses through the side are implemented,
+    and the storage only works for min_temperature == ambient_temperature.
     """
 
     def __init__(
@@ -75,21 +76,137 @@ class LayeredHeatStorage(AbstractTechnology):
 
                 bus = self.subnode(
                     TemperatureBus,
+                    local_name=f"b_{temperature:.0f}",
                     temperature=temperature,
                     outputs=loss_flow,
                 )
+                self.inbound_interfaces.add(bus)
+                self.outbound_interfaces.add(bus)
 
                 self.subnode(
-                    label=f"{temperature:.0f}",
-                    node_type=solph.GenericStorage,
+                    solph.components.GenericStorage,
+                    local_name=f"s_{temperature:.0f}",
                     inputs={bus: MassFlowHeat()},
                     outputs={bus: MassFlowHeat()},
                     nominal_capacity=mass_content,
                     balanced=balanced,
+                    custom_properties={"temperature": temperature},
                 )
 
                 if self._u_value is not None:
                     loss_flow = {bus: MassFlowHeat(maximum=1)}
+
+    @classmethod
+    def calculate_losses(
+        u_value,
+        diameter,
+        temp_h,
+        temp_c,
+        temp_env,
+        time_increment=1,
+        heat_capacity=4195.52,
+        density=971.803,
+    ):
+        r"""
+        Calculates loss rate and fixed losses for a stratified thermal storage.
+
+        .. calculate_losses-equations:
+
+        :math:`\beta = U \frac{4}{d\rho c}\Delta t`
+
+        :math:`\gamma = U \frac{4}{d\rho c \Delta T_{HC}}\Delta T_{C0}\Delta t`
+
+        :math:`\delta = U \frac{\pi d^2}{4}\Big(\Delta T_{H0} + \Delta T_{C0}\Big)\Delta t`
+
+        Parameters
+        ----------
+        u_value : numeric
+            Thermal transmittance of storage envelope [W/(m2*K)]
+
+        diameter : numeric
+            Diameter of the storage [m]
+
+        temp_h : numeric
+            Temperature of hot storage medium [deg C]
+
+        temp_c : numeric
+            Temperature of cold storage medium [deg C]
+
+        temp_env : numeric
+            Temperature outside of the storage [deg C]
+
+        time_increment : numeric
+            Time increment of the :class:`oemof.solph.EnergySystem` [h]
+
+        heat_capacity: numeric
+            Average specific heat capacity of storage medium [J/(kg*K)]
+            Default values calculated with CoolProp for a temperature of 80 °C
+            as a simplifying assumption
+
+        density : numeric
+            Average density of storage medium [kg/m3]
+            Default values calculated with CoolProp for a temperature of 80 °C
+            as a simplifying assumption
+
+        Returns
+        -------
+
+        loss_rate : numeric (sequence or scalar)
+            The relative loss of the storage capacity between two consecutive
+            timesteps [-]
+
+        fixed_losses_relative : numeric (sequence or scalar)
+            Losses independent of state of charge between two consecutive
+            timesteps relative to nominal storage capacity [-]
+
+        fixed_losses_absolute : numeric (sequence or scalar)
+            Losses independent of state of charge and independent of
+            nominal storage capacity between two consecutive timesteps [MWh]
+        """
+        loss_rate = (
+            4
+            * u_value
+            * 1
+            / (diameter * density * heat_capacity)
+            * time_increment
+            * 3600  # Ws to Wh
+        )
+
+        fixed_losses_relative = (
+            4
+            * u_value
+            * (temp_c - temp_env)
+            * 1
+            / ((diameter * density * heat_capacity) * (temp_h - temp_c))
+            * time_increment
+            * 3600  # Ws to Wh
+        )
+
+        fixed_losses_absolute = (
+            0.25
+            * u_value
+            * np.pi
+            * diameter**2
+            * (temp_h + temp_c - 2 * temp_env)
+            * time_increment
+        )
+
+        fixed_losses_absolute *= 1e-6  # Wh to MWh
+
+        return loss_rate, fixed_losses_relative, fixed_losses_absolute
+
+    def _connect_to_carrier(self, heat_carrier: HeatCarrier):
+        for inbound_interface in self.inbound_interfaces[TemperatureBus]:
+            [inbound_node] = heat_carrier.nodes_to_connect(inbound_interface)
+            # We assume exactly one matching counterpart. More complex cases
+            # (e.g. crossing levels) should be handled in the HeatCarrier.
+            inbound_node.outputs[inbound_interface] = MassFlowHeat()
+            inbound_node.inputs[inbound_interface] = MassFlowHeat()
+
+
+    def establish_interconnections(self):
+        self._connect_to_carrier(self.parent.get_carrier(HeatCarrier))
+
 
     def add_constraints(self, model):
         """Add constraints to the model."""
@@ -116,7 +233,7 @@ class LayeredHeatStorage(AbstractTechnology):
             ):
 
                 loss_rate, _, fixed_losses = (
-                    stratified_thermal_storage.calculate_losses(
+                    LayeredHeatStorage.calculate_losses(
                         self._u_value,
                         self.diameter,
                         upper_temperature,
