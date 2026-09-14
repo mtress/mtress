@@ -4,9 +4,14 @@
 Storage that has multiple heat layers that are all accessible at all times.
 
 SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
+SPDX-FileCopyrightText: Jann Launer
+SPDX-FileCopyrightText: Patrik Schönfeldt
+SPDX-FileCopyrightText: oemof e.V.
 
 SPDX-License-Identifier: MIT
 """
+
+import numpy as np
 
 from oemof import solph
 from pyomo import environ as po
@@ -96,7 +101,7 @@ class LayeredHeatStorage(AbstractTechnology):
                 if self._u_value is not None:
                     loss_flow = {bus: MassFlowHeat(maximum=1)}
 
-    @classmethod
+    @staticmethod
     def calculate_losses(
         u_value,
         diameter,

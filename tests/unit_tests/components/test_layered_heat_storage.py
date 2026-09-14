@@ -8,6 +8,8 @@ SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
 SPDX-License-Identifier: MIT
 """
 
+import pytest
+
 from mtress.carriers import HeatCarrier
 from mtress.carriers.heat import TemperatureBus
 from mtress.components import LayeredHeatStorage
@@ -61,3 +63,20 @@ def test_connection_lossless():
         else:
             assert len(subnode.inputs) == 1
             assert len(subnode.outputs) == 1
+
+def test_calculate_losses():
+    params = {
+        "u_value": 1,  # W/(m2*K)
+        "diameter": 10,  # m
+        "temp_h": 100,  # deg C
+        "temp_c": 50,  # deg C
+        "temp_env": 10,  # deg C
+    }
+
+    lr, flr, fla = LayeredHeatStorage.calculate_losses(
+        **params
+    )
+
+    assert lr == pytest.approx(0.0003531819182021882)
+    assert flr == pytest.approx(0.00028254553456175054)
+    assert fla == pytest.approx(0.010210176124166827)
