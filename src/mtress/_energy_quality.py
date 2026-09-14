@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT
 
 import sys
 
-from oemof.solph._plumbing import Apply, sequence
+from oemof.solph import _plumbing as sp
 
 from ._plumbing import sequence_compare
 
@@ -16,9 +16,9 @@ from ._plumbing import sequence_compare
 class EnergyQuality:
     """energy quality"""
 
-    _value = Apply(sequence)
-    _minimum = Apply(sequence)
-    _maximum = Apply(sequence)
+    _value =  sp.Apply(sp.sequence)
+    _minimum = sp.Apply(sp.sequence)
+    _maximum = sp.Apply(sp.sequence)
 
     infere = object()
 

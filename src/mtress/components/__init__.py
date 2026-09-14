@@ -9,6 +9,7 @@ from ._heat_exchanger._fixed_return_temperature import (
     FixedReturnHeatSource,
 )
 from ._heat_exchanger._incremental_temperature import SteppedReturnHeatSink
+from ._layered_heat_storage import LayeredHeatStorage
 
 __all__ = [
     "ElectricitySink",
@@ -18,4 +19,5 @@ __all__ = [
     "FixedReturnHeatSink",
     "SteppedReturnHeatSink",
     "ElectricityGridConnection",
+    "LayeredHeatStorage",
 ]
