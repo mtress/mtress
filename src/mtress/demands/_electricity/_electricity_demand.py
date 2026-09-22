@@ -5,7 +5,6 @@ from oemof.solph.components import Sink
 
 from ..._base_mtress_nodes import AbstractTechnology
 from ..._data_handler import TimeseriesSpecifier, TimeseriesType
-from ..._energy_types import EnergyType
 from ...carriers import ElectricityCarrier as ElectricityCarrier
 from ...components import ElectricitySink
 

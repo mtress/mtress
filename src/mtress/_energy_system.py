@@ -15,7 +15,6 @@ from oemof.network import Node
 from ._base_mtress_nodes import (
     AbstractCarrier,
     AbstractTechnology,
-    SubNetwork,
 )
 from ._data_handler import DataHandler
 from .carriers.heat import TemperatureBus
@@ -27,9 +26,6 @@ class EnergySystem(solph.EnergySystem):
 
     After you are done with populating the EnergySystem,
     please call `EnergySystem.establish_interconnections()`.
-
-    After you created a Model from the EnergySystem,
-    please call `EnergySystem.add_constraints(Model)` to add constraints.
     """
 
     def __init__(
@@ -67,11 +63,6 @@ class EnergySystem(solph.EnergySystem):
 
         for sn in self._nodes_by_type(AbstractTechnology):
             sn.establish_interconnections()
-
-    def add_constraints(self, model: solph.Model):
-        """Add constraints coded into every SubNetwork."""
-        for sn in self._nodes_by_type(SubNetwork):
-            sn.add_constraints(model)
 
     def _nodes_by_type(
         self,

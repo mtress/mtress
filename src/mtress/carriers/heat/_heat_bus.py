@@ -9,16 +9,16 @@ SPDX-License-Identifier: MIT
 from oemof.solph import Bus
 from oemof.solph._plumbing import _FakeSequence
 
-from mtress._energy_types import EnergyQuality
 from mtress._data_handler import TimeseriesSpecifier
+from ..._energy_quality import EnergyQuality
 
 class TemperatureBus(Bus):
 
     def __init__(
         self,
         temperature: EnergyQuality | TimeseriesSpecifier,
-        label=None,
         *,
+        label=None,
         inputs=None,
         outputs=None,
         specific_heat_capacity=1.161,
@@ -40,15 +40,6 @@ class TemperatureBus(Bus):
         else:
             self._temperature = EnergyQuality(temperature)
         self.custom_properties["temperature"] = self.temperature
-
-    @property
-    def quality_status(self):
-        return self._quality_status
-
-    @quality_status.setter
-    def quality_status(self, value):
-        self.custom_properties["quality_status"] = value
-        self._quality_status = value
 
     @property
     def specific_heat_capacity(self):

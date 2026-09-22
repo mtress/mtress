@@ -6,7 +6,6 @@ from oemof.network import Node
 from ._plumbing import TypeAccessContainer
 
 
-
 class SubNetwork(ABC, Node):
     # TODO: documentation
     def __init__(
@@ -41,9 +40,6 @@ class SubNetwork(ABC, Node):
         have to a alter subnodes in `establish_interconnections`.
         """
 
-        pass
-
-    def add_constraints(self, model: solph.Model):
         pass
 
 
@@ -82,4 +78,3 @@ class AbstractTechnology(SubNetwork):
             parent_node=parent_node,
             custom_properties=custom_properties,
         )
-

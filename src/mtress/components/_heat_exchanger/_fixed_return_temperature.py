@@ -5,7 +5,7 @@ from oemof.solph import Bus
 from oemof.solph.components import Sink, Source
 
 from ...carriers.heat import EnergyFlowHeat
-from ..._energy_types import EnergyQuality
+from ..._energy_quality import EnergyQuality
 from ...carriers.heat import MassFlowHeat
 from ...carriers.heat import TemperatureBus
 from ...carriers import HeatCarrier

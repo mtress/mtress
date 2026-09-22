@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Tests for the MTRESS solph model.
+Tests of MTRESS extensions for solph plumbing.
+
+SPDX-FileCopyrightText: Deutsches Zentrum für Luft und Raumfahrt
+
+SPDX-License-Identifier: MIT
 """
 
 import numpy as np

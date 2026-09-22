@@ -77,7 +77,10 @@ class Location(SubNetwork):
         :param node_type: Technology type
         """
 
-        return self._subnodes_by_type[node_type]
+        if node_type in self._subnodes_by_type:
+            return self._subnodes_by_type[node_type]
+        else:
+            return set()
 
     def subnode(self, class_, local_name, *args, **kwargs):
         new_node = super().subnode(class_, local_name, *args, **kwargs)

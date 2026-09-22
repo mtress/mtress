@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT
 
 from oemof.solph import Flow
 
-from mtress._energy_types import EnergyType
+from mtress._helpers._visualization import EnergyType
 
 class MassFlowHeat(Flow):
     def __init__(self, **kwargs):

@@ -9,12 +9,14 @@ SPDX-License-Identifier: MIT
 
 from ._location import Location
 from ._energy_system import EnergySystem
-from ._energy_types import EnergyType
+from ._energy_quality import EnergyQuality
+from ._model import Model
 
 __version__ = "26.7.0a1"
 
 __all__ = [
     "EnergySystem",
-    "EnergyType",
+    "EnergyQuality",
     "Location",
+    "Model",
 ]
