@@ -21,6 +21,7 @@ from oemof.solph.components import (
     Source,
 )
 
+
 class EnergyType(IntEnum):
     UNDEFINED = 0
     ELECTRICITY = 1
@@ -691,13 +692,16 @@ def generate_graph(
             else None
         )
 
+        n_types = type(n).__mro__
+        n_type = n_types[n_types.index(Node) - 1]
+
         graph_nodes.setdefault(
             identifier,
             {
                 "label": local_name,
                 "children": children,
                 "parent": parent,
-                "shape": SHAPES.get(type(n), "rectangle"),
+                "shape": SHAPES.get(n_type, "rectangle"),
             },
         )
 
