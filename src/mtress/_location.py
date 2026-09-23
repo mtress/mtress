@@ -48,8 +48,6 @@ class Location(SubNetwork):
             custom_properties=custom_properties,
         )
 
-        self._subnodes_by_type = TypeAccessContainer(Node)
-
     def get_carrier(
         self,
         carrier,
@@ -66,21 +64,6 @@ class Location(SubNetwork):
             carrier,
             local_name=carrier.__name__,
         )
-
-    def get_nodes_by_type(
-        self,
-        node_type,
-    ) -> set[Node]:
-        """
-        Get subnodes of the specified type.
-
-        :param node_type: Technology type
-        """
-
-        if node_type in self._subnodes_by_type:
-            return self._subnodes_by_type[node_type]
-        else:
-            return set()
 
     def subnode(self, class_, local_name, *args, **kwargs):
         new_node = super().subnode(class_, local_name, *args, **kwargs)

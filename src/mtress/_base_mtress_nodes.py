@@ -24,6 +24,23 @@ class SubNetwork(ABC, Node):
         self.inbound_interfaces = TypeAccessContainer(solph.Bus)
         self.outbound_interfaces = TypeAccessContainer(solph.Bus)
 
+        self._subnodes_by_type = TypeAccessContainer(Node)
+
+    def get_nodes_by_type(
+        self,
+        node_type,
+    ) -> set[Node]:
+        """
+        Get subnodes of the specified type.
+
+        :param node_type: Technology type
+        """
+
+        if node_type in self._subnodes_by_type:
+            return self._subnodes_by_type[node_type]
+        else:
+            return set()
+
     @abstractmethod
     def establish_interconnections(self):
         """Interconnect with other parts of the `mtress.EnergySystem`.
