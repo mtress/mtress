@@ -3,6 +3,7 @@
 from oemof.solph import Bus
 
 from ..._base_mtress_nodes import AbstractCarrier
+from ._electricity_bus import ElectricityBus
 
 
 class ElectricityCarrier(AbstractCarrier):
@@ -47,11 +48,11 @@ class ElectricityCarrier(AbstractCarrier):
 
     def _build_core(self):
         self.distribution = self.subnode(
-            Bus,
+            ElectricityBus,
             local_name="distribution",
         )
         self.feed_in = self.subnode(
-            Bus,
+            ElectricityBus,
             local_name="feed_in",
         )
 
