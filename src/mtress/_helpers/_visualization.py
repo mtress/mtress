@@ -770,29 +770,43 @@ def generate_graph_graphviz(
             loc_graph = Digraph(name=f"cluster_{l}")
             loc_graph.attr("graph", label=l)
             for comp in components:
-                comp_graph = Digraph(name=f"cluster_{comp}")
-                comp_graph.attr(
-                    "graph",
-                    label=nodes[comp]["label"],
-                    style="dashed",  # border of component
-                    colour="black",
-                )
-                # 3. determine NODES of COMPONENTS
-                # (children of COMPONENTS)
-                c_n = [k for k, v in nodes.items() if v["parent"] == comp]
-                c[comp] = c_n
+                if nodes[comp]["children"] is not None:
+                    comp_graph = Digraph(name=f"cluster_{comp}")
+                    comp_graph.attr(
+                        "graph",
+                        label=nodes[comp]["label"],
+                        style="dashed",  # border of component
+                        colour="black",
+                    )
+                    # 3. determine NODES of COMPONENTS
+                    # (children of COMPONENTS)
+                    c_n = [k for k, v in nodes.items() if v["parent"] == comp]
+                    c[comp] = c_n
 
-                # draw nodes
-                for n in c_n:
-                    label = nodes[n]["label"]
-                    shape = SHAPES_GRAPHVIZ.get(nodes[n]["shape"], "rectangle")
-                    comp_graph.node(
-                        name=n,
+                    # draw nodes
+                    for n in c_n:
+                        label = nodes[n]["label"]
+                        shape = SHAPES_GRAPHVIZ.get(
+                            nodes[n]["shape"], "rectangle"
+                        )
+                        comp_graph.node(
+                            name=n,
+                            label=label,
+                            shape=shape,
+                        )
+                    # draw component
+                    loc_graph.subgraph(comp_graph)
+                else:
+                    # manually added oemof node to location
+                    label = nodes[comp]["label"]
+                    shape = SHAPES_GRAPHVIZ.get(
+                        nodes[comp]["shape"], "rectangle"
+                    )
+                    loc_graph.node(
+                        name=comp,
                         label=label,
                         shape=shape,
                     )
-                # draw component
-                loc_graph.subgraph(comp_graph)
             # draw location
             graph.subgraph(loc_graph)
         else:  # floaty boy
