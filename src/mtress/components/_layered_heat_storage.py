@@ -129,7 +129,8 @@ class LayeredHeatStorage(AbstractTechnology):
 
     def _fixed_losses_absolute(self, *, temp_h, temp_c) -> float:
         r"""
-        :math:`\delta = U \frac{\pi d^2}{4}\Big(\Delta T_{H0} + \Delta T_{C0}\Big)\Delta t`
+        :math:`\delta = U \frac{\pi d^2}{4}\Big(\Delta T_{H0}
+               + \Delta T_{C0}\Big)\Delta t`
         """
         return (
             0.25

@@ -46,7 +46,9 @@ def minseq(a, b):
 
 
 class TypeAccessContainer(UserDict):
-    """Container that allows entry access by type down to a defined base type."""
+    """
+    Container that allows entry access by type down to a defined base type.
+    """
 
     def __init__(self, deepest_parent_class):
         super().__init__(None)
