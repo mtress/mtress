@@ -10,6 +10,7 @@ from oemof.solph import Flow
 
 from ..._helpers._visualization import EnergyType
 
+
 class EnergyFlowElectricity(Flow):
     def __init__(self, **kwargs):
         if "custom_properties" not in kwargs:

@@ -16,7 +16,7 @@ from ._plumbing import sequence_compare
 class EnergyQuality:
     """energy quality"""
 
-    _value =  sp.Apply(sp.sequence)
+    _value = sp.Apply(sp.sequence)
     _minimum = sp.Apply(sp.sequence)
     _maximum = sp.Apply(sp.sequence)
 
@@ -89,7 +89,6 @@ class EnergyQuality:
             )
 
     def __eq__(self, other):
-        return (
-            sequence_compare(self.minimum, other.minimum)
-            and sequence_compare (self.maximum, other.maximum)
-        )
+        return sequence_compare(
+            self.minimum, other.minimum
+        ) and sequence_compare(self.maximum, other.maximum)

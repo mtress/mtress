@@ -64,6 +64,7 @@ def test_connection_lossless():
             assert len(subnode.inputs) == 1
             assert len(subnode.outputs) == 1
 
+
 def test_calculate_losses():
     temperatures = [10, 30, 35, 40, 50]
 
@@ -76,9 +77,9 @@ def test_calculate_losses():
     )
 
     assert lhs._loss_rate() == pytest.approx(0.00034876522578188804)
-    assert lhs._fixed_losses_relative(
-        temp_h=100, temp_c=50
-    ) == pytest.approx(0.0002790121806255104)
-    assert lhs._fixed_losses_absolute(
-        temp_h=100, temp_c=50
-    ) == pytest.approx(10210.176124166828)
+    assert lhs._fixed_losses_relative(temp_h=100, temp_c=50) == pytest.approx(
+        0.0002790121806255104
+    )
+    assert lhs._fixed_losses_absolute(temp_h=100, temp_c=50) == pytest.approx(
+        10210.176124166828
+    )

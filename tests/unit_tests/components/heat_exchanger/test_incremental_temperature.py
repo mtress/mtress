@@ -61,6 +61,7 @@ class TestHeatSink:
         for output_node in output_nodes:
             assert len(output_node.inputs) == 1
 
+
 if __name__ == "__main__":
     import networkx as nx
     import matplotlib.pyplot as plt

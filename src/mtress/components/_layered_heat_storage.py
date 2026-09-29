@@ -21,9 +21,8 @@ from mtress.carriers import HeatCarrier
 from mtress.carriers.heat import MassFlowHeat
 from mtress.carriers.heat import TemperatureBus
 
-
 H2O_SPECIFIC_HEAT_CAPACITY = 4179  # J/kg/K @ 50 °C
-H2O_DENSITY = 988 # kg/m³ @ 50 °C
+H2O_DENSITY = 988  # kg/m³ @ 50 °C
 
 
 class LayeredHeatStorage(AbstractTechnology):
@@ -72,7 +71,6 @@ class LayeredHeatStorage(AbstractTechnology):
 
         self._build_core(temperature_levels, volume * H2O_DENSITY, balanced)
 
-
     def _build_core(self, temperature_levels, mass_content, balanced):
         """Build core structure of oemof.solph representation."""
 
@@ -80,33 +78,33 @@ class LayeredHeatStorage(AbstractTechnology):
 
         for temperature in sorted(temperature_levels):
 
-                bus = self.subnode(
-                    TemperatureBus,
-                    local_name=f"b_{temperature:.0f}",
-                    temperature=temperature,
-                    outputs=loss_flow,
-                )
-                self.inbound_interfaces.add(bus)
-                self.outbound_interfaces.add(bus)
+            bus = self.subnode(
+                TemperatureBus,
+                local_name=f"b_{temperature:.0f}",
+                temperature=temperature,
+                outputs=loss_flow,
+            )
+            self.inbound_interfaces.add(bus)
+            self.outbound_interfaces.add(bus)
 
-                self.subnode(
-                    solph.components.GenericStorage,
-                    local_name=f"s_{temperature:.0f}",
-                    inputs={bus: MassFlowHeat()},
-                    outputs={bus: MassFlowHeat()},
-                    nominal_capacity=mass_content,
-                    balanced=balanced,
-                    custom_properties={"temperature": temperature},
-                )
+            self.subnode(
+                solph.components.GenericStorage,
+                local_name=f"s_{temperature:.0f}",
+                inputs={bus: MassFlowHeat()},
+                outputs={bus: MassFlowHeat()},
+                nominal_capacity=mass_content,
+                balanced=balanced,
+                custom_properties={"temperature": temperature},
+            )
 
-                if self._u_value is not None:
-                    loss_flow = {bus: MassFlowHeat(maximum=1)}
+            if self._u_value is not None:
+                loss_flow = {bus: MassFlowHeat(maximum=1)}
 
     def _loss_rate(self) -> float:
         r"""
         :math:`\beta = U \frac{4}{d\rho c}\Delta t`
         """
-        return(
+        return (
             4
             * self._u_value
             / (self._diameter * H2O_DENSITY * H2O_SPECIFIC_HEAT_CAPACITY)
@@ -122,7 +120,10 @@ class LayeredHeatStorage(AbstractTechnology):
             * self._u_value
             * (temp_c - self._ambient_temperature)
             * 1
-            / ((self._diameter * H2O_DENSITY * H2O_SPECIFIC_HEAT_CAPACITY) * (temp_h - temp_c))
+            / (
+                (self._diameter * H2O_DENSITY * H2O_SPECIFIC_HEAT_CAPACITY)
+                * (temp_h - temp_c)
+            )
             * 3600  # Ws to Wh
         )
 
@@ -146,10 +147,8 @@ class LayeredHeatStorage(AbstractTechnology):
             inbound_node.outputs[inbound_interface] = MassFlowHeat()
             inbound_node.inputs[inbound_interface] = MassFlowHeat()
 
-
     def establish_interconnections(self):
         self._connect_to_carrier(self.parent.get_carrier(HeatCarrier))
-
 
     def add_constraints(self, model):
         """Add constraints to the model."""

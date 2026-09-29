@@ -30,7 +30,7 @@ from ._gas_definition import (
     Gas,
     calc_biogas_heating_value,
     calc_hydrogen_density,
-    molar_mass
+    molar_mass,
 )
 from ._helper_functions import (
     bar_to_pascal,

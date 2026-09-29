@@ -77,17 +77,14 @@ def calc_biogas_heating_value(
         / (CH4_share * CH4_MOLAR_MASS + CO2_share * CO2_MOLAR_MASS)
     ) * heating_value
 
-def molar_mass(
-    molar_masses: dict, 
-    shares: dict, 
-    tolerance: float = 1e-3
-    ):
+
+def molar_mass(molar_masses: dict, shares: dict, tolerance: float = 1e-3):
     "Calculates the molar mass for a compound from that of its constituents."
     if set(molar_masses.keys()) != set(shares.keys()):
-        raise ValueError('The input sizes must match.')
-    if abs(sum(shares.values())-1.0) > tolerance:
-        raise ValueError('Shares must add up to one.')
-    return sum(molar_masses[key]*shares[key] for key in molar_masses.keys())
+        raise ValueError("The input sizes must match.")
+    if abs(sum(shares.values()) - 1.0) > tolerance:
+        raise ValueError("Shares must add up to one.")
+    return sum(molar_masses[key] * shares[key] for key in molar_masses.keys())
 
 
 @dataclass(frozen=True)
@@ -106,6 +103,7 @@ class Gas:
     # molar mass of gas, given in kg/mol
     molar_mass: float
 
+
 # Object of different predefined gases
 
 HYDROGEN = Gas(
@@ -121,18 +119,13 @@ NATURAL_GAS = Gas(
     HHV=NG_HHV,
     molar_mass=molar_mass(
         molar_masses={
-            'CH4': CH4_MOLAR_MASS, 
-            'C2H6': C2H6_MOLAR_MASS, 
-            'C3H8': C3H8_MOLAR_MASS, 
-            'C4H10': C4H10_MOLAR_MASS
-            }, 
-        shares={
-            'CH4': 0.9, 
-            'C2H6': 0.05, 
-            'C3H8': 0.03, 
-            'C4H10': 0.02
-            }
-        )
+            "CH4": CH4_MOLAR_MASS,
+            "C2H6": C2H6_MOLAR_MASS,
+            "C3H8": C3H8_MOLAR_MASS,
+            "C4H10": C4H10_MOLAR_MASS,
+        },
+        shares={"CH4": 0.9, "C2H6": 0.05, "C3H8": 0.03, "C4H10": 0.02},
+    ),
 )
 
 BIOGAS = Gas(
@@ -140,15 +133,9 @@ BIOGAS = Gas(
     LHV=calc_biogas_heating_value(heating_value=CH4_LHV),
     HHV=calc_biogas_heating_value(heating_value=CH4_HHV),
     molar_mass=molar_mass(
-        molar_masses={
-            'CH4': CH4_MOLAR_MASS, 
-            'CO2': CO2_MOLAR_MASS
-            }, 
-        shares={
-            'CH4': 0.75, 
-            'CO2': 0.25
-            }
-        )
+        molar_masses={"CH4": CH4_MOLAR_MASS, "CO2": CO2_MOLAR_MASS},
+        shares={"CH4": 0.75, "CO2": 0.25},
+    ),
 )
 
 # Bio-methane is primarily considered to have methane and other impurities

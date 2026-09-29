@@ -12,6 +12,7 @@ from ...carriers import HeatCarrier
 
 from ._abstract_heat_exchanger import AbstractHeatExchanger
 
+
 class FixedReturnTemperature(AbstractHeatExchanger):
     """
     Superclass for heating or coolig with a fixed return temperature.
@@ -85,9 +86,10 @@ class FixedReturnTemperature(AbstractHeatExchanger):
 
     def _update_conversion_factors(self):
         for nodes, converter in self._converters.items():
-            converter.conversion_factors[self._demand] = abs(
-                    nodes[0].temperature - nodes[1].temperature
-                ) * self.specific_heat_capacity
+            converter.conversion_factors[self._demand] = (
+                abs(nodes[0].temperature - nodes[1].temperature)
+                * self.specific_heat_capacity
+            )
 
     def _establish_interconnections(self):
         """Shared establish interconnection code for FixedTemperatureDemands.
@@ -112,9 +114,7 @@ class FixedReturnTemperature(AbstractHeatExchanger):
             self.inbound_interfaces.add(new_input)
             new_input.inputs[input_node] = MassFlowHeat()
 
-        [output_node] = heat_carrier.nodes_to_connect(
-            self._reference_output
-        )
+        [output_node] = heat_carrier.nodes_to_connect(self._reference_output)
         self._reference_output.outputs[output_node] = MassFlowHeat()
 
     @abstractmethod
@@ -174,9 +174,9 @@ class FixedReturnHeatSink(FixedReturnTemperature):
             local_name="sink",
             inputs={self._reservoir: self._reservoir_flow},
         )
-        self._converters[self._reference_input, self._reference_output].outputs[
-            self._reservoir
-        ] = MassFlowHeat()
+        self._converters[
+            self._reference_input, self._reference_output
+        ].outputs[self._reservoir] = MassFlowHeat()
         self._update_conversion_factors()
 
     def _inbound_node(self, temperature):

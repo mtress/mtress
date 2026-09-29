@@ -15,7 +15,9 @@ def assert_heat_exchanger(node, flow_temperature, return_temperature):
     assert len(node._subnodes) == 5
 
     assert (
-        node._converters[(flow_node, return_node)].conversion_factors[node._demand]
+        node._converters[(flow_node, return_node)].conversion_factors[
+            node._demand
+        ]
         == abs(flow_temperature - return_temperature)
         * node.specific_heat_capacity
     )

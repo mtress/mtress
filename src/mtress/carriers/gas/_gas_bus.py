@@ -12,6 +12,7 @@ from mtress._data_handler import TimeseriesSpecifier
 
 from ..._energy_quality import EnergyQuality
 
+
 class GasBus(Bus):
 
     def __init__(

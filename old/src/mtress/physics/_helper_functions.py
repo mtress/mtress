@@ -10,6 +10,7 @@ SPDX-FileCopyrightText: Lucas Schmeling
 
 SPDX-License-Identifier: MIT
 """
+
 import numpy as np
 
 from ._constants import SECONDS_PER_HOUR, ZERO_CELSIUS

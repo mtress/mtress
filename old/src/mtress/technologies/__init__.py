@@ -7,11 +7,11 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 SPDX-License-Identifier: MIT
 """
 
-from ._battery_storage import ( 
-    BatteryStorage, 
-    GenericBatteryModelI, 
-    GenericBatteryModelII
-    )
+from ._battery_storage import (
+    BatteryStorage,
+    GenericBatteryModelI,
+    GenericBatteryModelII,
+)
 from ._chp import (
     BIOGAS_CHP,
     BIOMETHANE_CHP,
@@ -20,7 +20,7 @@ from ._chp import (
     HYDROGEN_CHP,
     HYDROGEN_MIXED_CHP,
     NATURALGAS_CHP,
-    NATURALGAS_MGT
+    NATURALGAS_MGT,
 )
 from ._compressor import GasCompressor
 from ._electrolyser import (
@@ -31,11 +31,11 @@ from ._electrolyser import (
     OffsetElectrolyser,
 )
 from ._ev import (
-    ElectricVehicle, 
+    ElectricVehicle,
     GenericElectricVehicle,
-    GenericSegmentB_EV, 
+    GenericSegmentB_EV,
     GenericSegmentC_EV,
-    )
+)
 from ._fuel_cell import AEMFC, AFC, PEMFC, FuelCell, OffsetFuelCell
 from ._heat_exchanger import HeatSink, HeatSource
 from ._heat_pump import HeatPump, COPReference
@@ -72,7 +72,7 @@ __all__ = [
     "ElectricVehicle",
     "GenericElectricVehicle",
     "GenericSegmentB_EV",
-    "GenericSegmentC_EV", 
+    "GenericSegmentC_EV",
     "BatteryStorage",
     "GenericBatteryModelI",
     "GenericBatteryModelII",

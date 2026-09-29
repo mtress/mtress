@@ -48,6 +48,7 @@ class AbstactHeatExchanger(AbstractTechnology):
                 technologies.HeatExchanger(.....)
 
     """
+
     reservoir_temperature = Apply(sequence)
 
     def __init__(
@@ -162,7 +163,8 @@ class AbstactHeatExchanger(AbstractTechnology):
             # This means full power step at reservoir_temperature.
             # Only makes sense when non_thermal_gains are zero (see above).
             return [
-                t_low < t_high for t_low, t_high in zip(
+                t_low < t_high
+                for t_low, t_high in zip(
                     temperature, self.reservoir_temperature
                 )
             ]
@@ -331,10 +333,13 @@ class HeatSource(AbstactHeatExchanger):
             for warm_bus in self.outbound_interfaces[TemperatureBus]:
                 t_cold = cold_bus.custom_properties["temperature"]
                 t_warm = warm_bus.custom_properties["temperature"]
-                if t_cold.min() < t_warm.max() and (
-                    t_warm.min() < self.reservoir_temperature.max()) and not (
-                    t_warm.min() > self.maximum_working_temperature
-                    or t_cold.max() < self.minimum_working_temperature
+                if (
+                    t_cold.min() < t_warm.max()
+                    and (t_warm.min() < self.reservoir_temperature.max())
+                    and not (
+                        t_warm.min() > self.maximum_working_temperature
+                        or t_cold.max() < self.minimum_working_temperature
+                    )
                 ):
                     if (cold_bus, warm_bus) not in self._io_converter:
                         self._io_converter[(cold_bus, warm_bus)] = (
@@ -352,12 +357,9 @@ class HeatSource(AbstactHeatExchanger):
         cold_temperature = cold_bus.custom_properties["temperature"]
 
         if (
-            self.minimum_working_temperature
-            <= cold_temperature.max() and
-            cold_temperature.min()
-            < warm_temperature.max() and
-            warm_temperature.min()
-            <= self.maximum_working_temperature
+            self.minimum_working_temperature <= cold_temperature.max()
+            and cold_temperature.min() < warm_temperature.max()
+            and warm_temperature.min() <= self.maximum_working_temperature
         ):
             gains = self._normalised_gains(warm_temperature)
         else:
@@ -441,7 +443,8 @@ class HeatSink(AbstactHeatExchanger):
             local_name=f"T_max_sink",
             temperature=EnergyQuality(
                 value=self.maximum_working_temperature,
-                minimum=self.minimum_working_temperature + self.minimum_delta_medium,
+                minimum=self.minimum_working_temperature
+                + self.minimum_delta_medium,
                 maximum=self.maximum_working_temperature,
             ),
             specific_heat_capacity=self.specific_heat_capacity,
@@ -453,7 +456,8 @@ class HeatSink(AbstactHeatExchanger):
             temperature=EnergyQuality(
                 value=self.minimum_working_temperature,
                 minimum=self.minimum_working_temperature,
-                maximum=self.maximum_working_temperature - self.minimum_delta_medium,
+                maximum=self.maximum_working_temperature
+                - self.minimum_delta_medium,
                 fixed=False,
             ),
             specific_heat_capacity=self.specific_heat_capacity,
@@ -479,7 +483,6 @@ class HeatSink(AbstactHeatExchanger):
 
         self._update_source_converters()
 
-
     def _add_sink_converter(self, cold_bus: Bus, warm_bus: Bus) -> Converter:
         return self.subnode(
             Converter,
@@ -500,10 +503,13 @@ class HeatSink(AbstactHeatExchanger):
             for cold_bus in self.outbound_interfaces[HeatCarrier]:
                 t_cold = cold_bus.custom_properties["temperature"]
                 t_warm = warm_bus.custom_properties["temperature"]
-                if self.reservoir_temperature.min() < t_cold.max() and (
-                    t_cold.min() < t_warm.max()) and not (
-                    t_warm.min() > self.maximum_working_temperature
-                    or t_cold < self.minimum_working_temperature
+                if (
+                    self.reservoir_temperature.min() < t_cold.max()
+                    and (t_cold.min() < t_warm.max())
+                    and not (
+                        t_warm.min() > self.maximum_working_temperature
+                        or t_cold < self.minimum_working_temperature
+                    )
                 ):
                     if (warm_bus, cold_bus) not in self._io_converter:
                         self._io_converter[(cold_bus, warm_bus)] = (
@@ -543,7 +549,6 @@ class HeatSink(AbstactHeatExchanger):
     def establish_interconnections(self) -> None:
         self._establish_interconnections()
         self._update_sink_converters()
-
 
     def add_constraints(self, model):
         self._sink_constraints(model)

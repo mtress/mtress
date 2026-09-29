@@ -12,6 +12,7 @@ from mtress._plumbing import maxseq
 from mtress._plumbing import minseq
 from mtress._plumbing import TypeAccessContainer
 
+
 def test_maxseq():
     a = np.array([1, 2, 4])
     b = np.array([3, 2, 1])
