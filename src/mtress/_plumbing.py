@@ -48,6 +48,10 @@ def minseq(a, b):
 class TypeAccessContainer(UserDict):
     """
     Container that allows entry access by type down to a defined base type.
+
+    This partly duplicates functionality (but not code) from
+    omeof.network.groupings, which however is considered more complicated
+    to use.
     """
 
     def __init__(self, deepest_parent_class):
