@@ -46,7 +46,7 @@ class IncrementalTemperature(AbstractHeatExchanger):
         )
 
 
-class SteppedReturnHeatSink(IncrementalTemperature):
+class HeatSinkStepped(IncrementalTemperature):
 
     def __init__(
         self,

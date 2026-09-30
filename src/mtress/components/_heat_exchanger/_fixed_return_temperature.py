@@ -15,7 +15,7 @@ from ._abstract_heat_exchanger import AbstractHeatExchanger
 
 class FixedReturnTemperature(AbstractHeatExchanger):
     """
-    Superclass for heating or coolig with a fixed return temperature.
+    Superclass for heating or coolig with a fixed outlet temperature.
 
     Takes energy from the flow temperature level and returns energy at the
     return temperature level.
@@ -41,8 +41,8 @@ class FixedReturnTemperature(AbstractHeatExchanger):
         self,
         label,
         *,
-        flow_temperature: float,
-        return_temperature: float,
+        inlet_temperature: float,
+        outlet_temperature: float,
         reservoir_flow: EnergyFlowHeat,
         specific_heat_capacity: float = 1.161,
         parent_node=None,
@@ -58,15 +58,15 @@ class FixedReturnTemperature(AbstractHeatExchanger):
         super().__init__(
             label,
             parent_node=parent_node,
-            reference_input=EnergyQuality(flow_temperature, fixed=False),
-            reference_output=return_temperature,
+            reference_input=EnergyQuality(inlet_temperature, fixed=False),
+            reference_output=outlet_temperature,
             reservoir_flow=reservoir_flow,
             specific_heat_capacity=specific_heat_capacity,
             custom_properties=custom_properties,
         )
 
-        self._flow_temperature = flow_temperature
-        self._return_temperature = return_temperature
+        self._flow_temperature = inlet_temperature
+        self._return_temperature = outlet_temperature
         self.specific_heat_capacity = specific_heat_capacity
 
         self._reservoir = self.subnode(
@@ -128,14 +128,14 @@ class FixedReturnTemperature(AbstractHeatExchanger):
         pass
 
 
-class FixedReturnHeatSink(FixedReturnTemperature):
+class HeatSinkFixedOutlet(FixedReturnTemperature):
 
     def __init__(
         self,
         label,
         *,
-        min_flow_temperature: float,
-        return_temperature: float,
+        min_inlet_temperature: float,
+        outlet_temperature: float,
         nominal_power: float,
         specific_heat_capacity: float = 1.161,
         parent_node=None,
@@ -151,8 +151,8 @@ class FixedReturnHeatSink(FixedReturnTemperature):
         """
         super().__init__(
             label,
-            flow_temperature=min_flow_temperature,
-            return_temperature=return_temperature,
+            inlet_temperature=min_inlet_temperature,
+            outlet_temperature=outlet_temperature,
             reservoir_flow=EnergyFlowHeat(
                 nominal_capacity=nominal_power,
             ),
@@ -161,10 +161,10 @@ class FixedReturnHeatSink(FixedReturnTemperature):
             custom_properties=custom_properties,
         )
 
-        if not min_flow_temperature > return_temperature:
+        if not min_inlet_temperature > outlet_temperature:
             raise ValueError("Flow must be higher than return temperature")
 
-        self._reference_input.energy_quality.minimum = min_flow_temperature
+        self._reference_input.energy_quality.minimum = min_inlet_temperature
 
         self.__build_core()
 
@@ -219,8 +219,8 @@ class HeatSourceFixedSupply(FixedReturnTemperature):
 
         super().__init__(
             label,
-            flow_temperature=max_flow_temperature,
-            return_temperature=return_temperature,
+            inlet_temperature=max_flow_temperature,
+            outlet_temperature=return_temperature,
             reservoir_flow=EnergyFlowHeat(
                 nominal_capacity=nominal_power,
             ),

@@ -25,10 +25,10 @@ def assert_heat_exchanger(node, flow_temperature, return_temperature):
 
 class TestHeatSink:
     def default_node(self):
-        return components.FixedReturnHeatSink(
+        return components.HeatSinkFixedOutlet(
             label="demand",
-            min_flow_temperature=40,
-            return_temperature=30,
+            min_inlet_temperature=40,
+            outlet_temperature=30,
             nominal_power=5,
         )
 
