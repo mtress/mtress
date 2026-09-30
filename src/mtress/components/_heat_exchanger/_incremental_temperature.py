@@ -177,12 +177,8 @@ class SteppedReturnHeatSink(IncrementalTemperature):
             raise ValueError("Specific heat capacities need to match")
 
         self._create_io_nodes(
-            pure_input_nodes=heat_carrier.nodes_to_connect(
-                self._reference_input
-            ),
-            pure_output_nodes=heat_carrier.nodes_to_connect(
-                self._reference_output
-            ),
+            input_nodes=heat_carrier.nodes_to_connect(self._reference_input),
+            output_nodes=heat_carrier.nodes_to_connect(self._reference_output),
         )
 
     def _create_io_nodes(
