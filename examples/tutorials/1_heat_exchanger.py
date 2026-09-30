@@ -21,9 +21,15 @@ energy_system.add(house_1)
 house_1.subnode(
     carriers.HeatCarrier,
     local_name="HC",
-    temperature_levels=[2, 5, 10, 11, [19, 21], 20, [30, 30.5], 50],
 )
 
+hs = house_1.subnode(
+    components.HeatSourceFixedSupply,
+    local_name="heat_source",
+    max_flow_temperature=20,
+    return_temperature=50,
+    nominal_power= 150,
+)
 
 # Add demands
 hd = house_1.subnode(

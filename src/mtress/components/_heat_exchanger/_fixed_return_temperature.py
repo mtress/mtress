@@ -195,7 +195,7 @@ class FixedReturnHeatSink(FixedReturnTemperature):
         self._update_conversion_factors()
 
 
-class FixedReturnHeatSource(FixedReturnTemperature):
+class HeatSourceFixedSupply(FixedReturnTemperature):
 
     def __init__(
         self,
@@ -249,7 +249,7 @@ class FixedReturnHeatSource(FixedReturnTemperature):
 
     def _inbound_node(self, temperature):
         node = super()._temperature_node(temperature)
-        self.inbound_interfaces.append(node)
+        self.inbound_interfaces.add(node)
         converter = self._create_converter(node, self._reference_output)
         converter.inputs[self._reservoir] = EnergyFlowHeat()
 

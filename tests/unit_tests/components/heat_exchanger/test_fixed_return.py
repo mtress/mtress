@@ -39,7 +39,7 @@ class TestHeatSink:
 
 class TestHeatSource:
     def default_node(self):
-        return components.FixedReturnHeatSource(
+        return components.HeatSourceFixedSupply(
             label="demand",
             return_temperature=40,
             max_flow_temperature=20,
