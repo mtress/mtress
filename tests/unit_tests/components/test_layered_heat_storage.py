@@ -10,6 +10,8 @@ SPDX-License-Identifier: MIT
 
 import pytest
 
+from oemof import solph
+
 from mtress.carriers import HeatCarrier
 from mtress.carriers.heat import TemperatureBus
 from mtress.components import LayeredHeatStorage
@@ -83,3 +85,26 @@ def test_calculate_losses():
     assert lhs._fixed_losses_absolute(temp_h=100, temp_c=50) == pytest.approx(
         10210.176124166828
     )
+
+
+def test_shared_capacity_constraint():
+
+    temperatures = [0, 10, 20]
+
+    es = solph.EnergySystem(timeindex=[0,1])
+
+    lhs = LayeredHeatStorage(
+        "lhs",
+        diameter=10,
+        volume=25,
+        temperature_levels=temperatures,
+    )
+
+    es.add(lhs)
+
+    model = solph.Model(es)
+
+    results = model.solve()
+
+    print(results["storage_content"])
+

@@ -15,6 +15,7 @@ import numpy as np
 
 from oemof import solph
 from pyomo import environ as po
+from pyomo.core.base.block import ScalarBlock
 
 from mtress._base_mtress_nodes import AbstractTechnology
 from mtress.carriers import HeatCarrier
@@ -65,11 +66,13 @@ class LayeredHeatStorage(AbstractTechnology):
             custom_properties=custom_properties,
         )
 
+        self.shared_capacity = volume * H2O_DENSITY
+
         self._ambient_temperature = min(temperature_levels)
         self._u_value = u_value
         self._diameter = diameter
 
-        self._build_core(temperature_levels, volume * H2O_DENSITY, balanced)
+        self._build_core(temperature_levels, self.shared_capacity, balanced)
 
     def _build_core(self, temperature_levels, mass_content, balanced):
         """Build core structure of oemof.solph representation."""
@@ -151,18 +154,39 @@ class LayeredHeatStorage(AbstractTechnology):
     def establish_interconnections(self):
         self._connect_to_carrier(self.parent.get_carrier(HeatCarrier))
 
-    def add_constraints(self, model):
-        """Add constraints to the model."""
+    def constraint_group(self):
+        return LayeredHeatStorageBlock
 
-        # >= && <= should be replaced by ==
-        solph.constraints.shared_limit(
-            model=model,
-            quantity=model.GenericStorageBlock.storage_content,
-            limit_name=f"{self.node.label}_storage_limit",
-            components=self.storage_components.values(),
-            weights=len(self.storage_components) * [1],
-            upper_limit=self.volume * H2O_DENSITY,
-            lower_limit=self.volume * H2O_DENSITY,
+
+class LayeredHeatStorageBlock(ScalarBlock):
+
+    CONSTRAINT_GROUP = True
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+    def _create(self, group=None):
+        m = self.parent_block()
+
+        self.LAYERED_STORAGES = po.Set(initialize=[g for g in group])
+
+        # FIXME: to deactivate below code before adjustment
+        self._u_value = None
+
+        def _shared_capacity_rule(_, n, t):
+            lhs = sum(
+                m.GenericStorageBlock.storage_content[substorage, t]
+                for substorage in n.get_subnodes_of_type(
+                    solph.components.GenericStorage
+                )
+            )
+            return lhs == n.shared_capacity
+
+        self.shared_capacity = po.Constraint(
+            self.LAYERED_STORAGES,
+            m.TIMEPOINTS,
+            rule=_shared_capacity_rule,
         )
 
         if self._u_value is not None:
@@ -193,18 +217,18 @@ class LayeredHeatStorage(AbstractTechnology):
                         fixed_losses
                         + loss_rate
                         * (
-                            model.GenericStorageBlock.storage_content[
+                            m.GenericStorageBlock.storage_content[
                                 self.storage_components[upper_temperature], t
                             ]
                         )
-                    ) == model.flow[
+                    ) == m.flow[
                         self.buses[upper_temperature],
                         self.buses[lower_temperature],
                         t,
                     ]
 
                 setattr(
-                    model,
+                    self,
                     f"{self.node.label}_losses_{upper_temperature}",
-                    po.Constraint(model.TIMESTEPS, rule=equate_variables_rule),
+                    po.Constraint(m.TIMESTEPS, rule=equate_variables_rule),
                 )
