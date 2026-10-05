@@ -26,7 +26,7 @@ class SubNetwork(ABC, Node):
 
         self._subnodes_by_type = TypeAccessContainer(Node)
 
-    def get_nodes_by_type(
+    def get_subnodes_of_type(
         self,
         node_type,
     ) -> set[Node]:

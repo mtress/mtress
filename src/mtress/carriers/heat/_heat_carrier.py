@@ -159,7 +159,7 @@ class HeatCarrier(AbstractCarrier):
     def establish_interconnections(self):
 
         self.parent: Location
-        technologies = self.parent.get_nodes_by_type(AbstractTechnology)
+        technologies = self.parent.get_subnodes_of_type(AbstractTechnology)
         inbound_nodes = []
         outbound_nodes = []
         for tech in technologies:
