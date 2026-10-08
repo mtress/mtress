@@ -65,10 +65,5 @@ class Location(SubNetwork):
             local_name=carrier.__name__,
         )
 
-    def subnode(self, class_, local_name, *args, **kwargs):
-        new_node = super().subnode(class_, local_name, *args, **kwargs)
-        self._subnodes_by_type.add(new_node)
-        return new_node
-
     def establish_interconnections(self):
         pass

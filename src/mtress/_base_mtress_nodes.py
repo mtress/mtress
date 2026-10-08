@@ -26,6 +26,7 @@ class SubNetwork(ABC, Node):
 
         self._subnodes_by_type = TypeAccessContainer(Node)
 
+
     def get_subnodes_of_type(
         self,
         node_type,
@@ -40,6 +41,13 @@ class SubNetwork(ABC, Node):
             return self._subnodes_by_type[node_type]
         else:
             return set()
+
+
+    def subnode(self, class_, local_name, *args, **kwargs):
+        new_node = super().subnode(class_, local_name, *args, **kwargs)
+        self._subnodes_by_type.add(new_node)
+        return new_node
+
 
     @abstractmethod
     def establish_interconnections(self):
