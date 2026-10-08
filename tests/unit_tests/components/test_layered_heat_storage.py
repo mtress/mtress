@@ -91,20 +91,36 @@ def test_shared_capacity_constraint():
 
     temperatures = [0, 10, 20]
 
-    es = solph.EnergySystem(timeindex=[0,1])
+    es = solph.EnergySystem(timeindex=[0,1,2])
 
     lhs = LayeredHeatStorage(
         "lhs",
         diameter=10,
-        volume=25,
+        volume=2.5,
         temperature_levels=temperatures,
+        balanced=False,
     )
 
     es.add(lhs)
+
+    es.add(solph.Bus(
+            "bus",
+            inputs={
+                es.node[("b_10", "lhs")]: solph.Flow(nominal_capacity=1e3, fix=[0, 1]),
+                es.node[("b_20", "lhs")]: solph.Flow(nominal_capacity=1e3, fix=[0.8, 0.12]),
+            },
+            outputs={es.node[("b_0", "lhs")]: solph.Flow()},
+        )
+    )
 
     model = solph.Model(es)
 
     results = model.solve()
 
     print(results["storage_content"])
+    print("")
+    print(results["flow"])
 
+
+if __name__ == "__main__":
+    test_shared_capacity_constraint()
