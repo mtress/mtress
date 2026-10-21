@@ -46,7 +46,7 @@ class IncrementalTemperature(AbstractHeatExchanger):
         )
 
 
-class SteppedReturnHeatSink(IncrementalTemperature):
+class HeatSinkStepped(IncrementalTemperature):
 
     def __init__(
         self,
@@ -58,8 +58,8 @@ class SteppedReturnHeatSink(IncrementalTemperature):
         minimum_delta_medium: float = 1.0,
         minimum_delta_reservoir: float = 1.0,
         conductivity_gain_factor: float | None = None,
-        non_thermal_gains = 0,
-        working_rate = 0,
+        non_thermal_gains=0,
+        working_rate=0,
         parent_node=None,
         custom_properties=None,
     ):
@@ -67,10 +67,7 @@ class SteppedReturnHeatSink(IncrementalTemperature):
             reservoir_temperature,
             minimum_working_temperature,
         )
-        min_output_temperature = (
-            lowest_temperature
-            + minimum_delta_reservoir
-        )
+        min_output_temperature = lowest_temperature + minimum_delta_reservoir
         reference_input = EnergyQuality(
             value=min_output_temperature + minimum_delta_medium,
             maximum=maximum_working_temperature,
@@ -139,14 +136,14 @@ class SteppedReturnHeatSink(IncrementalTemperature):
 
         for out_node in out_nodes:
             if (in_node, out_node) not in self._converters:
-                converter =  self._create_converter(in_node, out_node)
+                converter = self._create_converter(in_node, out_node)
                 converter.inputs[self._utilisation] = Flow()
                 converter.outputs[self._reservoir] = EnergyFlowHeat()
 
         if len(io_nodes) >= 2:
             for in_node, out_node in zip(io_nodes[1:], io_nodes):
                 if (in_node, out_node) not in self._converters:
-                    converter =  self._create_converter(in_node, out_node)
+                    converter = self._create_converter(in_node, out_node)
                     converter.inputs[self._utilisation] = Flow()
                     converter.outputs[self._reservoir] = EnergyFlowHeat()
 
@@ -157,11 +154,9 @@ class SteppedReturnHeatSink(IncrementalTemperature):
 
         for in_node in in_nodes:
             if (in_node, out_node) not in self._converters:
-                converter =  self._create_converter(in_node, out_node)
+                converter = self._create_converter(in_node, out_node)
                 converter.inputs[self._utilisation] = Flow()
                 converter.outputs[self._reservoir] = EnergyFlowHeat()
-
-
 
     def _update_conversion_factors(self):
         for nodes, converter in self._converters.items():
@@ -182,8 +177,8 @@ class SteppedReturnHeatSink(IncrementalTemperature):
             raise ValueError("Specific heat capacities need to match")
 
         self._create_io_nodes(
-            pure_input_nodes=heat_carrier.nodes_to_connect(self._reference_input),
-            pure_output_nodes=heat_carrier.nodes_to_connect(self._reference_output),
+            input_nodes=heat_carrier.nodes_to_connect(self._reference_input),
+            output_nodes=heat_carrier.nodes_to_connect(self._reference_output),
         )
 
     def _create_io_nodes(
@@ -199,7 +194,6 @@ class SteppedReturnHeatSink(IncrementalTemperature):
         transitional_nodes = input_nodes & output_nodes
         input_nodes -= transitional_nodes
         output_nodes -= transitional_nodes
-
 
         for output_node in output_nodes:
             if output_node is not reference_output_node:

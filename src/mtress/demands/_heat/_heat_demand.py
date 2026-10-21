@@ -1,10 +1,10 @@
 """Heat demands."""
 
 from ..._data_handler import TimeseriesSpecifier
-from ...components import FixedReturnHeatSink
+from ...components import HeatSinkFixedOutlet
 
 
-class HeatDemandFixedReturn(FixedReturnHeatSink):
+class HeatDemandFixedReturn(HeatSinkFixedOutlet):
 
     def __init__(
         self,
@@ -19,8 +19,8 @@ class HeatDemandFixedReturn(FixedReturnHeatSink):
     ):
         super().__init__(
             label,
-            min_flow_temperature=min_flow_temperature,
-            return_temperature=return_temperature,
+            min_inlet_temperature=min_flow_temperature,
+            outlet_temperature=return_temperature,
             nominal_power=1.0,
             specific_heat_capacity=specific_heat_capacity,
             parent_node=parent_node,

@@ -9,6 +9,7 @@ import pytest
 from mtress import EnergyQuality
 from mtress._helpers._testing import assert_every_element_is_same
 
+
 def test_basic_initialisation():
     constant_value = 12
     constant_quality = EnergyQuality(constant_value)

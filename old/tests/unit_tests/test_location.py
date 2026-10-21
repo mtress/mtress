@@ -31,12 +31,12 @@ def test_get_nodes_manually_added():
     house_1.add(demand2)
 
     # carriers are returned by get_nodes_by_type
-    assert carrier0 in house_1.get_nodes_by_type(carriers.ElectricityCarrier)
-    assert carrier1 in house_1.get_nodes_by_type(carriers.ElectricityCarrier)
+    assert carrier0 in house_1.get_subnodes_of_type(carriers.ElectricityCarrier)
+    assert carrier1 in house_1.get_subnodes_of_type(carriers.ElectricityCarrier)
 
     # first added carrier of the type is returned
     assert carrier0 == house_1.get_carrier(carriers.ElectricityCarrier)
 
     # demands are returned by get_nodes_by_type
-    assert demand1 in house_1.get_nodes_by_type(demands.Electricity)
-    assert demand2 in house_1.get_nodes_by_type(demands.Electricity)
+    assert demand1 in house_1.get_subnodes_of_type(demands.Electricity)
+    assert demand2 in house_1.get_subnodes_of_type(demands.Electricity)

@@ -15,7 +15,9 @@ def assert_heat_exchanger(node, flow_temperature, return_temperature):
     assert len(node._subnodes) == 5
 
     assert (
-        node._converters[(flow_node, return_node)].conversion_factors[node._demand]
+        node._converters[(flow_node, return_node)].conversion_factors[
+            node._demand
+        ]
         == abs(flow_temperature - return_temperature)
         * node.specific_heat_capacity
     )
@@ -23,10 +25,10 @@ def assert_heat_exchanger(node, flow_temperature, return_temperature):
 
 class TestHeatSink:
     def default_node(self):
-        return components.FixedReturnHeatSink(
+        return components.HeatSinkFixedOutlet(
             label="demand",
-            min_flow_temperature=40,
-            return_temperature=30,
+            min_inlet_temperature=40,
+            outlet_temperature=30,
             nominal_power=5,
         )
 
@@ -37,7 +39,7 @@ class TestHeatSink:
 
 class TestHeatSource:
     def default_node(self):
-        return components.FixedReturnHeatSource(
+        return components.HeatSourceFixedSupply(
             label="demand",
             return_temperature=40,
             max_flow_temperature=20,

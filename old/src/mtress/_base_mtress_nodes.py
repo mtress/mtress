@@ -6,7 +6,6 @@ from oemof.network import Node
 from ._plumbing import TypeAccessContainer
 
 
-
 class SubNetwork(ABC, Node):
     # TODO: documentation
     def __init__(

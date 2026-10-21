@@ -66,20 +66,20 @@ def test_heat_carrier_overlap():
     assert len(overlap_cross) == 0
 
     [constant_in_range] = HeatCarrier._overlap(
-        TemperatureBus(EnergyQuality(value=30, minimum=30 ,maximum=40)),
+        TemperatureBus(EnergyQuality(value=30, minimum=30, maximum=40)),
         TemperatureBus(35),
     )
     assert constant_in_range == 35
 
     [value_leaves_range] = HeatCarrier._overlap(
-        TemperatureBus(EnergyQuality(value=30, minimum=30 ,maximum=40)),
+        TemperatureBus(EnergyQuality(value=30, minimum=30, maximum=40)),
         TemperatureBus([35, 40, 45]),
     )
     assert sequence_compare(value_leaves_range, [35, 40, np.nan])
 
     overlap_second_in_first_range = HeatCarrier._overlap(
-        TemperatureBus(EnergyQuality(value=32, minimum=25 ,maximum=40)),
-        TemperatureBus(EnergyQuality(value=30, minimum=30 ,maximum=35)),
+        TemperatureBus(EnergyQuality(value=32, minimum=25, maximum=40)),
+        TemperatureBus(EnergyQuality(value=30, minimum=30, maximum=35)),
     )
     assert len(overlap_second_in_first_range) == 2
     assert overlap_second_in_first_range[0] == 30
@@ -137,12 +137,12 @@ def test_create_overlap_nodes():
     )
 
     for bus in hc.inbound_interfaces[TemperatureBus]:
-        assert 1 == sum(sequence_compare(
-            bus.energy_quality.value, level, function=np.allclose
-        ) for level in expected_levels)
-
-
-
+        assert 1 == sum(
+            sequence_compare(
+                bus.energy_quality.value, level, function=np.allclose
+            )
+            for level in expected_levels
+        )
 
 
 def test_nodes_to_connect():
@@ -152,17 +152,21 @@ def test_nodes_to_connect():
     ntc_33 = hc.nodes_to_connect(TemperatureBus(temperature=33))
     assert len(ntc_33) == 0
 
-    ntc_9_35 = hc.nodes_to_connect(TemperatureBus(
-        temperature=EnergyQuality(value=None, minimum=9, maximum=35),
-    ))
+    ntc_9_35 = hc.nodes_to_connect(
+        TemperatureBus(
+            temperature=EnergyQuality(value=None, minimum=9, maximum=35),
+        )
+    )
 
     ntc_35 = hc.nodes_to_connect(TemperatureBus(temperature=35))
     assert len(ntc_35) == 1
     assert_every_element_is_same(ntc_35[0].temperature, [35, 36])
 
-    ntc_9_35 = hc.nodes_to_connect(TemperatureBus(
-        temperature=EnergyQuality(value=None, minimum=9, maximum=35),
-    ))
+    ntc_9_35 = hc.nodes_to_connect(
+        TemperatureBus(
+            temperature=EnergyQuality(value=None, minimum=9, maximum=35),
+        )
+    )
 
     assert len(ntc_9_35) == 3
     assert ntc_9_35[0].temperature == 10

@@ -10,6 +10,7 @@ from oemof.solph import Flow
 
 from mtress._helpers._visualization import EnergyType
 
+
 class MassFlowHeat(Flow):
     def __init__(self, **kwargs):
         if "custom_properties" not in kwargs:

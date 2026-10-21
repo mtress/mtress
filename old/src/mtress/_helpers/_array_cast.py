@@ -7,6 +7,7 @@ SPDX-FileCopyrightText: Patrik Schönfeldt
 
 SPDX-License-Identifier: MIT
 """
+
 import numbers
 
 import numpy as np

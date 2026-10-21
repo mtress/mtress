@@ -16,6 +16,7 @@ from mtress._plumbing import maxseq
 from mtress._plumbing import minseq
 from mtress._plumbing import TypeAccessContainer
 
+
 def test_maxseq():
     a = np.array([1, 2, 4])
     b = np.array([3, 2, 1])
@@ -87,6 +88,7 @@ def test_type_access_container_iterator():
     tanc.add(sink, source)
 
     assert {node for node in tanc} == {sink, source}
+
 
 def test_type_access_container_length():
 

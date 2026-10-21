@@ -98,10 +98,10 @@ class HeatCarrier(AbstractCarrier):
         return len(overlap) >= 1
 
     def _create_overlap_nodes(
-            self,
-            buses1: Iterable[TemperatureBus],
-            buses2: Iterable[TemperatureBus],
-        ):
+        self,
+        buses1: Iterable[TemperatureBus],
+        buses2: Iterable[TemperatureBus],
+    ):
         for bus1 in buses1:
             for bus2 in buses2:
                 if (bus1.parent is not bus2.parent) or bus1.parent is None:
@@ -142,7 +142,7 @@ class HeatCarrier(AbstractCarrier):
             if not isinstance(both_same_mask, _FakeSequence):
                 length = len(correct_order_mask)
                 both_same_mask = [x if x else np.nan for x in both_same_mask]
-            return (both_same_mask * sequence(lower_limit, length), )
+            return (both_same_mask * sequence(lower_limit, length),)
 
         return tuple()
 
@@ -159,7 +159,7 @@ class HeatCarrier(AbstractCarrier):
     def establish_interconnections(self):
 
         self.parent: Location
-        technologies = self.parent.get_nodes_by_type(AbstractTechnology)
+        technologies = self.parent.get_subnodes_of_type(AbstractTechnology)
         inbound_nodes = []
         outbound_nodes = []
         for tech in technologies:

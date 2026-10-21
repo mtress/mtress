@@ -5,6 +5,7 @@ from mtress.carriers import HeatCarrier
 from mtress.technologies import HeatSource
 from mtress import EnergyType
 
+
 def test_establish_interconnections():
     location = Location(label="location")
 
@@ -31,4 +32,3 @@ def test_establish_interconnections():
 
     # preliminary temperatures are not taken
     assert hc.levels == temperatures
-

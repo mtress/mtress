@@ -73,6 +73,7 @@ class BatteryStorage(AbstractTechnology):
     :param initial_soc: Initial state of charge of a battery,
         default to 0.5.
     :param min_soc: Minimum state of charge of a battery, default to 0.1.
+    :param max_soc: Maximum state of charge of a battery, default to 1.0.
     :param fixed_losses_absolute: numeric (iterable or scalar), losses per
         hour that are independent of storage content and independent of
         nominal storage capacity.
@@ -99,6 +100,7 @@ class BatteryStorage(AbstractTechnology):
         loss_rate: float = 0.0,
         initial_soc: float = 0.5,
         min_soc: float = 0.1,
+        max_soc: float = 1.0,
         fixed_losses_absolute: TimeseriesSpecifier = 0.0,
         one_sense_per_time_step: bool = False,
         shared_limit: bool = True,
@@ -134,6 +136,7 @@ class BatteryStorage(AbstractTechnology):
         self.loss_rate = loss_rate
         self.initial_soc = initial_soc
         self.min_soc = min_soc
+        self.max_soc = max_soc
         self.fixed_losses_absolute = fixed_losses_absolute
         self.one_sense_per_time_step = one_sense_per_time_step
         self.shared_limit = shared_limit
@@ -183,6 +186,7 @@ class BatteryStorage(AbstractTechnology):
             nominal_capacity=self.nominal_capacity,
             loss_rate=self.loss_rate,
             min_storage_level=self.min_soc,
+            max_storage_level=self.max_soc,
             initial_storage_level=self.initial_soc,
             inflow_conversion_factor=self.charging_efficiency,
             outflow_conversion_factor=self.discharging_efficiency,

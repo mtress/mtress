@@ -14,18 +14,12 @@ energy system.
 
 import os
 
-from oemof.solph import Flow, Model
+from oemof.solph import Model
 from oemof.solph.components import Sink
 
-from mtress import (
-    EnergySystem,
-    EnergyType,
-    Location,
-    carriers,
-    demands,
-    components,
-)
+from mtress import EnergySystem, Location, carriers, components
 from mtress._helpers._visualization import graph_graphviz
+from mtress.carriers.electricity import EnergyFlowElectricity
 
 os.chdir(os.path.dirname(__file__))
 
@@ -55,11 +49,7 @@ house_1.subnode(
     Sink,
     local_name="sink 1",
     inputs={
-        ec.distribution: Flow(
-            custom_properties={
-                "unit": "W",
-                "energy_type": EnergyType.ELECTRICITY,
-            },
+        ec.distribution: EnergyFlowElectricity(
             nominal_capacity=1,
             fix=[1, 0, -1],
         )
@@ -70,11 +60,7 @@ house_1.subnode(
     Sink,
     local_name="sink 2",
     inputs={
-        ec.distribution: Flow(
-            custom_properties={
-                "unit": "W",
-                "energy_type": EnergyType.ELECTRICITY,
-            },
+        ec.distribution: EnergyFlowElectricity(
             nominal_capacity=1,
             fix=[0, 1, 2],
         )

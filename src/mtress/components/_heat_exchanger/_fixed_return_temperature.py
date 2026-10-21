@@ -12,9 +12,10 @@ from ...carriers import HeatCarrier
 
 from ._abstract_heat_exchanger import AbstractHeatExchanger
 
+
 class FixedReturnTemperature(AbstractHeatExchanger):
     """
-    Superclass for heating or coolig with a fixed return temperature.
+    Superclass for heating or coolig with a fixed outlet temperature.
 
     Takes energy from the flow temperature level and returns energy at the
     return temperature level.
@@ -40,8 +41,8 @@ class FixedReturnTemperature(AbstractHeatExchanger):
         self,
         label,
         *,
-        flow_temperature: float,
-        return_temperature: float,
+        inlet_temperature: float,
+        outlet_temperature: float,
         reservoir_flow: EnergyFlowHeat,
         specific_heat_capacity: float = 1.161,
         parent_node=None,
@@ -57,15 +58,15 @@ class FixedReturnTemperature(AbstractHeatExchanger):
         super().__init__(
             label,
             parent_node=parent_node,
-            reference_input=EnergyQuality(flow_temperature, fixed=False),
-            reference_output=return_temperature,
+            reference_input=EnergyQuality(inlet_temperature, fixed=False),
+            reference_output=outlet_temperature,
             reservoir_flow=reservoir_flow,
             specific_heat_capacity=specific_heat_capacity,
             custom_properties=custom_properties,
         )
 
-        self._flow_temperature = flow_temperature
-        self._return_temperature = return_temperature
+        self._flow_temperature = inlet_temperature
+        self._return_temperature = outlet_temperature
         self.specific_heat_capacity = specific_heat_capacity
 
         self._reservoir = self.subnode(
@@ -85,9 +86,10 @@ class FixedReturnTemperature(AbstractHeatExchanger):
 
     def _update_conversion_factors(self):
         for nodes, converter in self._converters.items():
-            converter.conversion_factors[self._demand] = abs(
-                    nodes[0].temperature - nodes[1].temperature
-                ) * self.specific_heat_capacity
+            converter.conversion_factors[self._demand] = (
+                abs(nodes[0].temperature - nodes[1].temperature)
+                * self.specific_heat_capacity
+            )
 
     def _establish_interconnections(self):
         """Shared establish interconnection code for FixedTemperatureDemands.
@@ -112,9 +114,7 @@ class FixedReturnTemperature(AbstractHeatExchanger):
             self.inbound_interfaces.add(new_input)
             new_input.inputs[input_node] = MassFlowHeat()
 
-        [output_node] = heat_carrier.nodes_to_connect(
-            self._reference_output
-        )
+        [output_node] = heat_carrier.nodes_to_connect(self._reference_output)
         self._reference_output.outputs[output_node] = MassFlowHeat()
 
     @abstractmethod
@@ -128,14 +128,14 @@ class FixedReturnTemperature(AbstractHeatExchanger):
         pass
 
 
-class FixedReturnHeatSink(FixedReturnTemperature):
+class HeatSinkFixedOutlet(FixedReturnTemperature):
 
     def __init__(
         self,
         label,
         *,
-        min_flow_temperature: float,
-        return_temperature: float,
+        min_inlet_temperature: float,
+        outlet_temperature: float,
         nominal_power: float,
         specific_heat_capacity: float = 1.161,
         parent_node=None,
@@ -151,8 +151,8 @@ class FixedReturnHeatSink(FixedReturnTemperature):
         """
         super().__init__(
             label,
-            flow_temperature=min_flow_temperature,
-            return_temperature=return_temperature,
+            inlet_temperature=min_inlet_temperature,
+            outlet_temperature=outlet_temperature,
             reservoir_flow=EnergyFlowHeat(
                 nominal_capacity=nominal_power,
             ),
@@ -161,10 +161,10 @@ class FixedReturnHeatSink(FixedReturnTemperature):
             custom_properties=custom_properties,
         )
 
-        if not min_flow_temperature > return_temperature:
+        if not min_inlet_temperature > outlet_temperature:
             raise ValueError("Flow must be higher than return temperature")
 
-        self._reference_input.energy_quality.minimum = min_flow_temperature
+        self._reference_input.energy_quality.minimum = min_inlet_temperature
 
         self.__build_core()
 
@@ -174,9 +174,9 @@ class FixedReturnHeatSink(FixedReturnTemperature):
             local_name="sink",
             inputs={self._reservoir: self._reservoir_flow},
         )
-        self._converters[self._reference_input, self._reference_output].outputs[
-            self._reservoir
-        ] = MassFlowHeat()
+        self._converters[
+            self._reference_input, self._reference_output
+        ].outputs[self._reservoir] = MassFlowHeat()
         self._update_conversion_factors()
 
     def _inbound_node(self, temperature):
@@ -195,7 +195,7 @@ class FixedReturnHeatSink(FixedReturnTemperature):
         self._update_conversion_factors()
 
 
-class FixedReturnHeatSource(FixedReturnTemperature):
+class HeatSourceFixedSupply(FixedReturnTemperature):
 
     def __init__(
         self,
@@ -219,8 +219,8 @@ class FixedReturnHeatSource(FixedReturnTemperature):
 
         super().__init__(
             label,
-            flow_temperature=max_flow_temperature,
-            return_temperature=return_temperature,
+            inlet_temperature=max_flow_temperature,
+            outlet_temperature=return_temperature,
             reservoir_flow=EnergyFlowHeat(
                 nominal_capacity=nominal_power,
             ),
@@ -249,7 +249,7 @@ class FixedReturnHeatSource(FixedReturnTemperature):
 
     def _inbound_node(self, temperature):
         node = super()._temperature_node(temperature)
-        self.inbound_interfaces.append(node)
+        self.inbound_interfaces.add(node)
         converter = self._create_converter(node, self._reference_output)
         converter.inputs[self._reservoir] = EnergyFlowHeat()
 

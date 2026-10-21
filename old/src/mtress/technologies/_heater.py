@@ -123,9 +123,7 @@ class ResistiveHeater(AbstractHeater):
             Bus,
             local_name="input_electricity",
         )
-        self.inbound_interfaces[ElectricityCarrier] = [
-            self._in_electricity
-        ]
+        self.inbound_interfaces[ElectricityCarrier] = [self._in_electricity]
 
         # technology specific converter
         self.subnode(

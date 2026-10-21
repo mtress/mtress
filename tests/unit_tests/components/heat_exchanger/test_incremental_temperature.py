@@ -20,7 +20,7 @@ def assert_heat_exchanger(node, flow_temperature, return_temperature):
 
 class TestHeatSink:
     def default_node(self):
-        return components.SteppedReturnHeatSink(
+        return components.HeatSinkStepped(
             label="demand",
             reservoir_temperature=[12, 15, -3],
             nominal_power=12,
@@ -61,6 +61,7 @@ class TestHeatSink:
         for output_node in output_nodes:
             assert len(output_node.inputs) == 1
 
+
 if __name__ == "__main__":
     import networkx as nx
     import matplotlib.pyplot as plt
@@ -80,7 +81,7 @@ if __name__ == "__main__":
     energy_system.add(location)
 
     node = location.subnode(
-        components.SteppedReturnHeatSink,
+        components.HeatSinkStepped,
         local_name="stepped heater",
         reservoir_temperature=[12, 15, -3],
         nominal_power=12,

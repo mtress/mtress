@@ -34,6 +34,7 @@ def maxseq(a, b):
 
     return _plumbing.sequence(np.maximum(a, b))
 
+
 def minseq(a, b):
     """Get the element-wise minimum of two sequences"""
     if isinstance(a, _plumbing._FakeSequence):
@@ -45,8 +46,14 @@ def minseq(a, b):
 
 
 class TypeAccessContainer(UserDict):
-    """Container that allows entry access by type down to a defined base type.
     """
+    Container that allows entry access by type down to a defined base type.
+
+    This partly duplicates functionality (but not code) from
+    omeof.network.groupings, which however is considered more complicated
+    to use.
+    """
+
     def __init__(self, deepest_parent_class):
         super().__init__(None)
         self._deepest_parent_class = deepest_parent_class
